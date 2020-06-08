@@ -1,9 +1,13 @@
 import unittest
-import pytest
-from .utils import get_tmp_dir
-from pystiche_papers import johnson_alahi_li_2016 as paper
 from os import path
+
+import pytest
+
 from torchvision.datasets.utils import calculate_md5
+
+from pystiche_papers import johnson_alahi_li_2016 as paper
+
+from .utils import get_tmp_dir
 
 
 class TestData(unittest.TestCase):
