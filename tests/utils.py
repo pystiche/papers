@@ -3,7 +3,11 @@ import os
 import shutil
 import tempfile
 
-__all__ = ["get_tmp_dir"]
+import pytest
+
+import torch
+
+__all__ = ["get_tmp_dir", "skip_if_cuda_not_available"]
 
 
 # Copied from
@@ -36,3 +40,8 @@ def get_tmp_dir(**mkdtemp_kwargs):
         yield tmp_dir
     finally:
         shutil.rmtree(tmp_dir, onerror=onerror)
+
+
+skip_if_cuda_not_available = pytest.mark.skipif(
+    not torch.cuda.is_available(), reason="CUDA is not available."
+)
