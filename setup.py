@@ -62,6 +62,12 @@ with open(path.join(PACKAGE_ROOT, version_file), "w") as fh:
     fh.write(__version__)
 package_data = {PACKAGE_NAME: [version_file]}
 
+install_requires = (
+    "pystiche >= 0.4",
+    "torch",
+    "torchvision",
+)
+
 classifiers = (
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: BSD License",
