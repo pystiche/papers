@@ -36,6 +36,9 @@ jobs:
           python gen_torch_cpu_requirements.py --file $REQUIREMENTS_FILE
           pip install -r $REQUIREMENTS_FILE
 
+      - name: Install pystiche
+        run: pip install git+https://github.com/pmeier/pystiche
+
       - name: Install pystiche_papers
         run: pip install .
 
