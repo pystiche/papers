@@ -23,7 +23,7 @@ def johnson_alahi_li_2016_multi_layer_encoder(
     impl_params: bool = True,
 ) -> VGGMultiLayerEncoder:
     return vgg16_multi_layer_encoder(
-        weights="caffe", preprocessing=not impl_params, allow_inplace=True
+        weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True
     )
 
 
