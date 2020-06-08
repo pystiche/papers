@@ -2,8 +2,10 @@ import contextlib
 import os
 import shutil
 import tempfile
-import torch
+
 import pytest
+
+import torch
 
 __all__ = ["get_tmp_dir", "skip_if_cuda_not_available"]
 
