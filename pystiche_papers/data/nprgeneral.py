@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from urllib.parse import urljoin
 
-from pystiche.data import UnknownLicense, DownloadableImage, DownloadableImageCollection
+from pystiche.data import DownloadableImage, DownloadableImageCollection, UnknownLicense
 
 __all__ = ["NPRgeneral"]
 
