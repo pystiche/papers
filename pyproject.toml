@@ -18,6 +18,7 @@ force_grid_wrap = 0
 include_trailing_comma = true
 
 known_standard_library = ["setuptools", "typing_extensions"]
+known_third_party = ["pytest"]
 known_pytorch = ["torch", "torchvision"]
 known_first_party = ["pystiche", "pystiche_papers"]
 sections= ["FUTURE", "STDLIB", "THIRDPARTY", "PYTORCH", "FIRSTPARTY", "LOCALFOLDER"]
