@@ -3,11 +3,12 @@ import hashlib
 import random
 import shutil
 import tempfile
-from collections import OrderedDict, Sequence
+from collections import OrderedDict
+from collections.abc import Sequence
 from os import path
-from typing import Any, Callable, ContextManager, Dict, Iterator, Optional
+from typing import Any, Callable, Dict, Iterator, Optional
 from typing import Sequence as SequenceType
-from typing import Tuple, TypeVar, Union, overload
+from typing import Tuple, TypeVar, Union, cast, overload
 
 import torch
 from torch import nn
@@ -39,7 +40,7 @@ def elementwise(fn: Callable[[In], Out], inputs: In) -> Out:
 
 
 @overload
-def elementwise(fn: Callable[[In], Out], input: SequenceType[In]) -> Tuple[Out, ...]:
+def elementwise(fn: Callable[[In], Out], inputs: SequenceType[In]) -> Tuple[Out, ...]:
     ...
 
 
@@ -47,7 +48,7 @@ def elementwise(
     fn: Callable[[In], Out], inputs: Union[In, SequenceType[In]]
 ) -> Union[Out, Tuple[Out, ...]]:
     if isinstance(inputs, Sequence):
-        return tuple([fn(input) for input in inputs])
+        return tuple(fn(input) for input in inputs)
     return fn(inputs)
 
 
@@ -82,7 +83,7 @@ def same_size_output_padding(stride: Union[int, SequenceType[int]]) -> Tuple[int
 
 
 def is_valid_padding(padding: Union[int, SequenceType[int]]) -> bool:
-    def is_valid(x):
+    def is_valid(x: int) -> bool:
         return x > 0
 
     if isinstance(padding, int):
@@ -96,21 +97,26 @@ def batch_up_image(
     desired_batch_size: Optional[int] = None,
     loader: Optional[DataLoader] = None,
 ) -> torch.Tensor:
+    def extract_batch_size_from_loader(loader: DataLoader) -> int:
+        batch_size = loader.batch_size
+        if batch_size is not None:
+            return batch_size
+
+        try:  # type: ignore[unreachable]
+            return loader.batch_sampler.batch_size
+        except AttributeError:
+            raise RuntimeError
+
     if desired_batch_size is None and loader is None:
         raise RuntimeError
+
+    if desired_batch_size is None:
+        desired_batch_size = extract_batch_size_from_loader(cast(DataLoader, loader))
 
     if is_single_image(image):
         image = make_batched_image(image)
     elif extract_batch_size(image) > 1:
         raise RuntimeError
-
-    if desired_batch_size is None:
-        desired_batch_size = loader.batch_size
-        if desired_batch_size is None:
-            try:
-                desired_batch_size = loader.batch_sampler.batch_size
-            except AttributeError:
-                raise RuntimeError
 
     return image.repeat(desired_batch_size, 1, 1, 1)
 
@@ -118,7 +124,7 @@ def batch_up_image(
 @contextlib.contextmanager
 def paper_replication(
     optim_logger: OptimLogger, title: str, url: str, author: str, year: Union[str, int]
-) -> ContextManager:
+) -> Iterator:
     header = "\n".join(
         (
             "Replication of the paper",

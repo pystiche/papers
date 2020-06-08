@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, cast
 
 import torch
 from torch import nn
@@ -19,5 +19,5 @@ class ResidualBlock(nn.Module):
             shortcut = Identity()
         self.shortcut = shortcut
 
-    def forward(self, x: torch.Tensor):
-        return self.residual(x) + self.shortcut(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.residual(x) + self.shortcut(x))
