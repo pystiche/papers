@@ -35,7 +35,7 @@ Out = TypeVar("Out")
 
 
 @overload
-def elementwise(fn: Callable[[In], Out], inputs: In) -> Out:
+def elementwise(fn: Callable[[In], Out], inputs: In) -> Out:  # type: ignore[misc]
     ...
 
 
@@ -65,7 +65,7 @@ def same_size_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
 def same_size_padding(
     kernel_size: Union[int, SequenceType[int]]
 ) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: (x - 1) // 2, kernel_size)
+    return elementwise(lambda x: (x - 1) // 2, kernel_size)  # type: ignore[no-any-return]
 
 
 @overload
@@ -78,8 +78,10 @@ def same_size_output_padding(stride: SequenceType[int]) -> Tuple[int, ...]:
     ...
 
 
-def same_size_output_padding(stride: Union[int, SequenceType[int]]) -> Tuple[int, ...]:
-    return elementwise(lambda x: x - 1, stride)
+def same_size_output_padding(
+    stride: Union[int, SequenceType[int]]
+) -> Union[int, Tuple[int, ...]]:
+    return elementwise(lambda x: x - 1, stride)  # type: ignore[no-any-return]
 
 
 def is_valid_padding(padding: Union[int, SequenceType[int]]) -> bool:
