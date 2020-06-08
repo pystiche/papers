@@ -1,0 +1,61 @@
+name: lint
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    paths:
+      - "**.py"
+      - "pyproject.toml"
+      - ".flake8"
+      - "mypy.ini"
+      - "requirements-lint.txt"
+      - ".github/workflows/lint.yml"
+
+jobs:
+  code_format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.6"
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install lint requirements
+        run: pip install -r requirements-lint.txt
+
+      - name: Check with isort
+        run: isort --settings-path=pyproject.toml --check-only --jobs=$(nproc) --recursive .
+
+      - name: Check with black
+        run: black --config=pyproject.toml --check .
+
+      - name: Check with flake8
+        run: flake8 --config=.flake8 --jobs=$(nproc) .
+
+  static_typing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.6"
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install pystiche_papers
+        run: pip install --editable .
+
+      - name: Install lint requirements
+        run: pip install -r requirements-lint.txt
+
+      - name: Check with mypy
+        run: mypy --config-file=mypy.ini

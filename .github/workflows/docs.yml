@@ -1,0 +1,57 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    paths:
+      - "pystiche_papers/**"
+      - "docs/**"
+      - "requirements-doc.txt"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.6"
+
+      - name: Install latex requirements
+        run: |
+          sudo apt update -y
+          sudo apt install -y latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install pystiche_papers
+        run: pip install .
+
+      - name: Install doc requirements
+        run: pip install -r requirements-doc.txt
+
+      - name: Build html
+        working-directory: docs
+        run: make html
+
+      - name: Upload html build
+        uses: actions/upload-artifact@v2
+        with:
+          name: html
+          path: docs/build/html
+
+      - name: Build latex
+        working-directory: docs
+        run: make latexpdf
+
+      - name: Upload latex build
+        uses: actions/upload-artifact@v2
+        with:
+          name: latex
+          path: docs/build/latex/pystiche.pdf
