@@ -25,7 +25,7 @@ def gatys_ecker_bethge_2015_multi_layer_encoder(
     impl_params: bool = True,
 ) -> MultiLayerEncoder:
     multi_layer_encoder = vgg19_multi_layer_encoder(
-        weights="caffe", preprocessing=False, allow_inplace=True
+        weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
     if impl_params:
         return multi_layer_encoder
