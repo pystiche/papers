@@ -74,9 +74,7 @@ def transforms(image: str):
     return transform
 
 
-def li_wand_2016_images(
-    root: Optional[str] = None, download: bool = True, overwrite: bool = False
-):
+def li_wand_2016_images():
 
     images = {
         "emma": DownloadableImage(
@@ -139,6 +137,4 @@ def li_wand_2016_images(
         ),
     }
 
-    return DownloadableImageCollection(
-        images, root=root, download=download, overwrite=overwrite
-    )
+    return DownloadableImageCollection(images)

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pystiche.data import (
     CreativeCommonsLicense,
     DownloadableImage,

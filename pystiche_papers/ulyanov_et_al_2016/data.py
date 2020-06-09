@@ -73,9 +73,7 @@ def ulyanov_et_al_2016_style_transform(
     return ComposedTransform(*transforms)
 
 
-def ulyanov_et_al_2016_images(
-    root: Optional[str] = None, download: bool = True, overwrite: bool = False
-):
+def ulyanov_et_al_2016_images():
 
     base_ulyanov = (
         "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/master/data/"
@@ -196,9 +194,6 @@ def ulyanov_et_al_2016_images(
     }
     return DownloadableImageCollection(
         {**texture_images, **content_images, **style_images},
-        root=root,
-        download=download,
-        overwrite=overwrite,
     )
 
 
