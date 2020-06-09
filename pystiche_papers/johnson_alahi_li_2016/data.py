@@ -21,7 +21,7 @@ from pystiche.image.transforms.functional import (
     top_left_crop,
 )
 
-from pystiche_papers.data.utils import FiniteCycleBatchSampler
+from ..data.utils import FiniteCycleBatchSampler
 
 __all__ = [
     "johnson_alahi_li_2016_content_transform",
