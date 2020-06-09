@@ -1,5 +1,4 @@
-import warnings
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple, Union
 
 import torch
 from torch.nn.functional import mse_loss
@@ -9,7 +8,7 @@ import pystiche.ops.functional as F
 from pystiche.enc import Encoder, MultiLayerEncoder
 from pystiche.image.transforms import Transform
 from pystiche.loss import PerceptualLoss
-from pystiche.misc import build_deprecation_message, to_2d_arg
+from pystiche.misc import to_2d_arg
 from pystiche.ops import (
     FeatureReconstructionOperator,
     MRFOperator,
@@ -213,26 +212,6 @@ def li_wand_2016_regularization(
     return LiWand2016TotalVariationOperator(
         impl_params=impl_params, exponent=exponent, score_weight=score_weight
     )
-
-
-class LiWand2016PerceptualLoss(PerceptualLoss):
-    def __init__(
-        self,
-        content_loss: LiWand2016FeatureReconstructionOperator,
-        style_loss: MultiLayerEncodingOperator,
-        regularization: LiWand2016TotalVariationOperator,
-    ):
-        msg = build_deprecation_message(
-            "The class LiWand2016PerceptualLoss",
-            "0.4.0",
-            info="It can be replaced by pystiche.loss.PerceptualLoss.",
-        )
-        warnings.warn(msg)
-        super().__init__(
-            content_loss,
-            style_loss,  # type: ignore[arg-type]
-            regularization=regularization,
-        )
 
 
 def li_wand_2016_perceptual_loss(
