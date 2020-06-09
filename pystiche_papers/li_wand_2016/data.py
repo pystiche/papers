@@ -1,3 +1,5 @@
+import torch
+
 from pystiche.data import (
     CreativeCommonsLicense,
     DownloadableImage,
@@ -5,7 +7,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     NoLicense,
 )
-from pystiche.image.transforms import ComposedTransform, Crop, Resize
+from pystiche.image.transforms import ComposedTransform, Crop, Resize, Transform
 
 __all__ = ["li_wand_2016_images"]
 
@@ -18,20 +20,25 @@ def image_note(url: str, mirror: bool = False) -> str:
 
 
 def transforms(image: str) -> ComposedTransform:
-    origins_and_sizes = {
-        "emma": ((30, 12), (930, 682)),
-        "jenny": ((211, 462), (1843, 1386)),
-        "s": ((159, 486), (1642, 2157)),
-    }
+    image_transform: Transform
+    if image == "emma":
+        image_transform = Crop(origin=(30, 12), size=(930, 682))
+    elif image == "jenny":
 
-    try:
-        origin, size = origins_and_sizes[image]
-    except KeyError:
-        # TODO: add message
+        class MirrorHorizontally(Transform):
+            def forward(self, image: torch.Tensor) -> torch.Tensor:
+                return image.flip(2)
+
+        image_transform = ComposedTransform(
+            Crop(origin=(211, 462), size=(1843, 1386)), MirrorHorizontally()
+        )
+    elif image == "s":
+        image_transform = Crop(origin=(159, 486), size=(2157, 1642))
+    else:
         raise RuntimeError
 
     return ComposedTransform(
-        Crop(origin, size), Resize(384, edge="vert", interpolation_mode="bicubic")
+        image_transform, Resize(384, edge="vert", interpolation_mode="bicubic")
     )
 
 
