@@ -2,9 +2,8 @@ import os
 from argparse import Namespace
 from os import path
 
-import torch
-
 from pystiche.image import write_image
+from pystiche.misc import get_device
 from pystiche.optim import OptimLogger
 from pystiche_papers.li_wand_2016 import li_wand_2016_images, li_wand_2016_nst
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
@@ -13,7 +12,7 @@ from pystiche_papers.utils import abort_if_cuda_memory_exausts
 @abort_if_cuda_memory_exausts
 def figure_6(args):
     images = li_wand_2016_images()
-    images.download(root=args.image_source_dir)
+    images.download(args.image_source_dir)
     positions = ("top", "bottom")
     image_pairs = (
         (images["blue_bottle"], images["self-portrait"]),
@@ -65,11 +64,7 @@ def parse_input():
         image_results_dir = path.join(here, "images", "results")
     image_results_dir = process_dir(image_results_dir)
 
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-    if isinstance(device, str):
-        device = torch.device(device)
-
+    device = get_device(device)
     logger = OptimLogger()
 
     return Namespace(
