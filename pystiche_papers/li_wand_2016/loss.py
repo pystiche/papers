@@ -5,14 +5,13 @@ import torch
 from torch.nn.functional import mse_loss
 
 import pystiche
-from pystiche.misc import to_2d_arg
 import pystiche.ops.functional as F
 from pystiche.enc import Encoder, MultiLayerEncoder
 from pystiche.loss import PerceptualLoss
-from pystiche.misc import build_deprecation_message
+from pystiche.misc import build_deprecation_message, to_2d_arg
 from pystiche.ops import (
-    MRFOperator,
     FeatureReconstructionOperator,
+    MRFOperator,
     MultiLayerEncodingOperator,
     TotalVariationOperator,
 )
@@ -92,8 +91,11 @@ class NormalizeUnfoldGrad(torch.autograd.Function):
 
 normalize_unfold_grad = NormalizeUnfoldGrad.apply  # type: ignore[attr-defined]
 
+
 def extract_normalized_patches2d(
-    input: torch.Tensor, patch_size: Union[int, Sequence[int]], stride: Union[int, Sequence[int]]
+    input: torch.Tensor,
+    patch_size: Union[int, Sequence[int]],
+    stride: Union[int, Sequence[int]],
 ) -> torch.Tensor:
     patch_size = to_2d_arg(patch_size)
     stride = to_2d_arg(stride)
@@ -133,9 +135,7 @@ class LiWand2016MRFOperator(MRFOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        score = F.mrf_loss(
-            input_repr, target_repr, reduction=self.loss_reduction
-        )
+        score = F.mrf_loss(input_repr, target_repr, reduction=self.loss_reduction)
         return score * self.score_correction_factor
 
 
@@ -269,4 +269,5 @@ def li_wand_2016_perceptual_loss(
     return PerceptualLoss(
         content_loss,
         style_loss,  # type: ignore[arg-type]
-        regularization=regularization)
+        regularization=regularization,
+    )
