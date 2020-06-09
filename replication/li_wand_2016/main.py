@@ -1,11 +1,13 @@
 import os
-from os import path
 from argparse import Namespace
+from os import path
+
 import torch
-from pystiche_papers.utils import abort_if_cuda_memory_exausts
+
+from pystiche.image import write_image
 from pystiche.optim import OptimLogger
 from pystiche_papers.li_wand_2016 import li_wand_2016_images, li_wand_2016_nst
-from pystiche.image import write_image
+from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
 
 @abort_if_cuda_memory_exausts
