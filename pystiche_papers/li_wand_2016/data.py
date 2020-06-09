@@ -1,7 +1,3 @@
-from typing import Callable, Tuple
-
-from PIL import Image, ImageOps
-
 from pystiche.data import (
     CreativeCommonsLicense,
     DownloadableImage,
@@ -9,6 +5,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     NoLicense,
 )
+from pystiche.image.transforms import ComposedTransform, Crop, Resize
 
 __all__ = ["li_wand_2016_images"]
 
@@ -20,69 +17,32 @@ def image_note(url: str, mirror: bool = False) -> str:
     return f"{note}. The unprocessed image can be downloaded from {url}"
 
 
-def transforms(image: str) -> Callable[[Image.Image], Image.Image]:
-    def crop_transform(
-        image: Image.Image, left_bottom_coord: Tuple[int, int], width: int, height: int,
-    ) -> Image.Image:
-        left = left_bottom_coord[0]
-        right = left + width
-        upper = left_bottom_coord[1]
-        lower = upper + height
-        box = (left, upper, right, lower)
-        return image.crop(box)
+def transforms(image: str) -> ComposedTransform:
+    origins_and_sizes = {
+        "emma": ((30, 12), (930, 682)),
+        "jenny": ((211, 462), (1843, 1386)),
+        "s": ((159, 486), (1642, 2157)),
+    }
 
-    def resize_transform(image: Image.Image) -> Image.Image:
-        width, height = image.size
-        aspect_ratio = width / height
-        new_height = 384
-        new_width = round(new_height * aspect_ratio)
-        new_size = (new_width, new_height)
-        return image.resize(new_size, Image.BICUBIC)
-
-    if image == "mricon":
-
-        def image_transform(image: Image.Image) -> Image.Image:
-            left_bottom_coord = (12, 30)
-            width = 682
-            height = 930
-            return crop_transform(image, left_bottom_coord, width, height)
-
-    elif image == "lydhode":
-
-        def image_transform(image: Image.Image) -> Image.Image:
-            image = ImageOps.mirror(image)
-            left_bottom_coord = (462, 211)
-            width = 1386
-            height = 1843
-            return crop_transform(image, left_bottom_coord, width, height)
-
-    elif image == "theilr":
-
-        def image_transform(image: Image.Image) -> Image.Image:
-            left_bottom_coord = (486, 159)
-            width = 1642
-            height = 2157
-            return crop_transform(image, left_bottom_coord, width, height)
-
-    else:
+    try:
+        origin, size = origins_and_sizes[image]
+    except KeyError:
         # TODO: add message
         raise RuntimeError
 
-    def transform(image: Image.Image) -> Image.Image:
-        return resize_transform(image_transform(image))
-
-    return transform
+    return ComposedTransform(
+        Crop(origin, size), Resize(384, edge="vert", interpolation_mode="bicubic")
+    )
 
 
 def li_wand_2016_images() -> DownloadableImageCollection:
-
     images = {
         "emma": DownloadableImage(
             "https://live.staticflickr.com/1/2281680_656225393e_o_d.jpg",
             author="monsieuricon (mricon)",
             title="Emma",
             date="17.12.2004",
-            transform=transforms("mricon"),
+            transform=transforms("emma"),
             license=CreativeCommonsLicense(("by", "sa"), "2.0"),
             note=image_note("https://www.flickr.com/photos/mricon/2281680/"),
             md5="7a10a2479864f394b4f06893b9202915",
@@ -93,7 +53,7 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             title="Jenny",
             date="06.02.2015",
             license=CreativeCommonsLicense(("by", "sa"), "2.0"),
-            transform=transforms("lydhode"),
+            transform=transforms("jenny"),
             note=image_note(
                 "https://www.flickr.com/photos/lydhode/16426686859/", mirror=True,
             ),
@@ -123,7 +83,7 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             title="S",
             date="18.09.2011",
             license=CreativeCommonsLicense(("by", "sa"), "2.0"),
-            transform=transforms("theilr"),
+            transform=transforms("s"),
             note=image_note("https://www.flickr.com/photos/theilr/9270411440/"),
             md5="5d78432b5ca703bb85647274a5e41656",
         ),
@@ -136,5 +96,4 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             md5="c39077aaa181fd40d7f2cd00c9c09619",
         ),
     }
-
     return DownloadableImageCollection(images)
