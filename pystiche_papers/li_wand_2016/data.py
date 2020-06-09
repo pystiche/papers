@@ -52,7 +52,7 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             transform=transforms("emma"),
             license=CreativeCommonsLicense(("by", "sa"), "2.0"),
             note=image_note("https://www.flickr.com/photos/mricon/2281680/"),
-            md5="7a10a2479864f394b4f06893b9202915",
+            md5="e3befabfd0215357e580b07e7d0ed05a",
         ),
         "jenny": DownloadableImage(
             "https://live.staticflickr.com/8626/16426686859_f882b3d317_o_d.jpg",
@@ -64,7 +64,7 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             note=image_note(
                 "https://www.flickr.com/photos/lydhode/16426686859/", mirror=True,
             ),
-            md5="5b3442909ff850551c9baea433319508",
+            md5="387eeb2d8cd1bf19d14c263e078bb0a1",
         ),
         "blue_bottle": DownloadableImage(
             "https://raw.githubusercontent.com/chuanli11/CNNMRF/master/data/content/potrait1.jpg",
@@ -92,7 +92,7 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             license=CreativeCommonsLicense(("by", "sa"), "2.0"),
             transform=transforms("s"),
             note=image_note("https://www.flickr.com/photos/theilr/9270411440/"),
-            md5="5d78432b5ca703bb85647274a5e41656",
+            md5="525550983f7fd36d3ec10fba735ad1ef",
         ),
         "composition_viii": DownloadableImage(
             "https://www.wassilykandinsky.net/images/works/50.jpg",
