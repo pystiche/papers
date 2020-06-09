@@ -7,6 +7,7 @@ from torch.nn.functional import mse_loss
 import pystiche
 import pystiche.ops.functional as F
 from pystiche.enc import Encoder, MultiLayerEncoder
+from pystiche.image.transforms import Transform
 from pystiche.loss import PerceptualLoss
 from pystiche.misc import build_deprecation_message, to_2d_arg
 from pystiche.ops import (
@@ -146,10 +147,7 @@ def li_wand_2016_style_loss(
     layer_weights: Union[str, Sequence[float]] = "sum",
     patch_size: Union[int, Tuple[int, int]] = 3,
     stride: Optional[Union[int, Tuple[int, int]]] = None,
-    num_scale_steps: Optional[int] = None,
-    scale_step_width: float = 5e-2,
-    num_rotation_steps: Optional[int] = None,
-    rotation_step_width: float = 7.5,
+    target_transforms: Optional[Iterable[Transform]] = None,
     score_weight: Optional[float] = None,
 ) -> MultiLayerEncodingOperator:
     if multi_layer_encoder is None:
@@ -161,11 +159,17 @@ def li_wand_2016_style_loss(
     if stride is None:
         stride = 2 if impl_params else 1
 
-    if num_scale_steps is None:
+    if target_transforms is None:
         num_scale_steps = 1 if impl_params else 3
-
-    if num_rotation_steps is None:
-        num_rotation_steps = 1 if impl_params else 2
+        scale_step_width = 5e-2
+        num_rotate_steps = 1 if impl_params else 2
+        rotate_step_width = 7.5
+        target_transforms = MRFOperator.scale_and_rotate_transforms(
+            num_scale_steps=num_scale_steps,
+            scale_step_width=scale_step_width,
+            num_rotate_steps=num_rotate_steps,
+            rotate_step_width=rotate_step_width,
+        )
 
     def get_encoding_op(encoder: Encoder, layer_weight: float) -> LiWand2016MRFOperator:
         return LiWand2016MRFOperator(
@@ -173,10 +177,7 @@ def li_wand_2016_style_loss(
             patch_size,
             impl_params=impl_params,
             stride=stride,
-            num_scale_steps=num_scale_steps,
-            scale_step_width=scale_step_width,
-            num_rotation_steps=num_rotation_steps,
-            rotation_step_width=rotation_step_width,
+            target_transforms=target_transforms,
             score_weight=layer_weight,
         )
 
