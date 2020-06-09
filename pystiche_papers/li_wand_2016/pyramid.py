@@ -13,7 +13,7 @@ def li_wand_2016_image_pyramid(
     min_edge_size: int = 64,
     edge: Union[str, Sequence[str]] = "long",
     **octave_image_pyramid_kwargs: Any,
-):
+) -> OctaveImagePyramid:
     if num_steps is None:
         num_steps = 100 if impl_params else 200
 

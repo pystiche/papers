@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Callable
 
 from PIL import Image, ImageOps
 
@@ -20,7 +20,7 @@ def image_note(url: str, mirror: bool = False) -> str:
     return f"{note}. The unprocessed image can be downloaded from {url}"
 
 
-def transforms(image: str):
+def transforms(image: str) -> Callable[[Image.Image], Image.Image]:
     def crop_transform(
         image: Image.Image, left_bottom_coord: Tuple[int, int], width: int, height: int,
     ) -> Image.Image:
@@ -74,7 +74,7 @@ def transforms(image: str):
     return transform
 
 
-def li_wand_2016_images():
+def li_wand_2016_images() -> DownloadableImageCollection:
 
     images = {
         "emma": DownloadableImage(
