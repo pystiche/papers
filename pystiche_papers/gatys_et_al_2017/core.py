@@ -1,4 +1,3 @@
-import logging
 from typing import Callable, Dict, Optional, Tuple, Union
 
 import torch
@@ -6,7 +5,7 @@ import torch
 import pystiche
 from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
 from pystiche.misc import get_input_image
-from pystiche.optim import default_image_pyramid_optim_loop
+from pystiche.optim import OptimLogger, default_image_pyramid_optim_loop
 from pystiche.pyramid import ImagePyramid
 
 from .data import gatys_et_al_2017_images
@@ -38,7 +37,7 @@ def gatys_et_al_2017_nst(
     criterion: Optional[PerceptualLoss] = None,
     pyramid: Optional[ImagePyramid] = None,
     quiet: bool = False,
-    logger: Optional[logging.Logger] = None,
+    logger: Optional[OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
@@ -84,7 +83,7 @@ def gatys_et_al_2017_guided_nst(
     criterion: Optional[GuidedPerceptualLoss] = None,
     pyramid: Optional[ImagePyramid] = None,
     quiet: bool = False,
-    logger: Optional[logging.Logger] = None,
+    logger: Optional[OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,

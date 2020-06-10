@@ -1,6 +1,5 @@
 import torch
 from torch import optim
-from torch.optim.optimizer import Optimizer
 
 from pystiche.enc import MultiLayerEncoder, vgg19_multi_layer_encoder
 from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
@@ -27,5 +26,5 @@ def gatys_et_al_2017_multi_layer_encoder() -> MultiLayerEncoder:
     )
 
 
-def gatys_et_al_2017_optimizer(input_image: torch.Tensor) -> Optimizer:
-    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)
+def gatys_et_al_2017_optimizer(input_image: torch.Tensor) -> optim.LBFGS:  # type: ignore[name-defined]
+    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)  # type: ignore[attr-defined]

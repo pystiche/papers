@@ -8,7 +8,7 @@ from pystiche.data import (
 __all__ = ["gatys_et_al_2017_images"]
 
 
-def gatys_et_al_2017_images():
+def gatys_et_al_2017_images() -> DownloadableImageCollection:
     images = {
         "house": DownloadableImage(
             "https://associateddesigns.com/sites/default/files/plan_images/main/craftsman_house_plan_tillamook_30-519-picart.jpg",

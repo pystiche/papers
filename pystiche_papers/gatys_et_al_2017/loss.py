@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Callable, Dict, Optional, Sequence, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Union, cast
 
 import torch
 
@@ -32,7 +32,7 @@ __all__ = [
 def gatys_et_al_2017_content_loss(
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layer: str = "relu4_2",
-    score_weight=1e0,
+    score_weight: float = 1e0,
 ) -> FeatureReconstructionOperator:
     if multi_layer_encoder is None:
         multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
@@ -71,7 +71,7 @@ class GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
         nums_channels = []
         for layer in layers:
             module = multi_layer_encoder._modules[layer.replace("relu", "conv")]
-            nums_channels.append(module.out_channels)
+            nums_channels.append(cast(int, module.out_channels))
         return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
 
     def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:
@@ -92,7 +92,7 @@ def gatys_et_al_2017_style_loss(
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
-    def get_encoding_op(encoder, layer_weight):
+    def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
     return GatysEtAl2017StyleLoss(
@@ -118,7 +118,7 @@ def gatys_et_al_2017_guided_style_loss(
     if multi_layer_encoder is None:
         multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
 
-    def get_region_op(region, region_weight):
+    def get_region_op(region: str, region_weight: float) -> GatysEtAl2017StyleLoss:
         return gatys_et_al_2017_style_loss(
             impl_params=impl_params,
             multi_layer_encoder=multi_layer_encoder,
@@ -145,7 +145,7 @@ class GatysEtAl2017PerceptualLoss(PerceptualLoss):
             info="It can be replaced by pystiche.loss.PerceptualLoss.",
         )
         warnings.warn(msg)
-        super().__init__(content_loss, style_loss)
+        super().__init__(content_loss, style_loss)  # type: ignore[arg-type]
 
 
 def gatys_et_al_2017_perceptual_loss(
@@ -171,7 +171,7 @@ def gatys_et_al_2017_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss, style_loss)
+    return PerceptualLoss(content_loss, style_loss)  # type: ignore[arg-type]
 
 
 class GatysEtAl2017GuidedPerceptualLoss(GuidedPerceptualLoss):
@@ -186,7 +186,7 @@ class GatysEtAl2017GuidedPerceptualLoss(GuidedPerceptualLoss):
             info="It can be replaced by pystiche.loss.PerceptualLoss.",
         )
         warnings.warn(msg)
-        super().__init__(content_loss, style_loss)
+        super().__init__(content_loss, style_loss)  # type: ignore[arg-type]
 
 
 def gatys_et_al_2017_guided_perceptual_loss(
@@ -214,4 +214,4 @@ def gatys_et_al_2017_guided_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return GuidedPerceptualLoss(content_loss, style_loss)
+    return GuidedPerceptualLoss(content_loss, style_loss)  # type: ignore[arg-type]
