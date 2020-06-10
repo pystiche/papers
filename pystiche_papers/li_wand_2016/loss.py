@@ -246,8 +246,4 @@ def li_wand_2016_perceptual_loss(
         impl_params=impl_params, **regularization_kwargs
     )
 
-    return PerceptualLoss(
-        content_loss,
-        style_loss,  # type: ignore[arg-type]
-        regularization=regularization,
-    )
+    return PerceptualLoss(content_loss, style_loss, regularization=regularization,)

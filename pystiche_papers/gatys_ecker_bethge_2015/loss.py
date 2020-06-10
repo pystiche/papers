@@ -155,4 +155,4 @@ def gatys_ecker_bethge_2015_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss, style_loss)  # type: ignore[arg-type]
+    return PerceptualLoss(content_loss, style_loss)
