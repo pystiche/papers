@@ -83,7 +83,7 @@ def figure_2(args):
             write_image(output_image, output_file)
 
     images = gatys_et_al_2017_images()
-    images.download(root=args.image_source_dir)
+    images.download(args.image_source_dir)
 
     content_image = images["house"].read(device=args.device)
     content_guides = read_guides(
@@ -222,7 +222,7 @@ def figure_3(args):
             write_image(output_image, output_file)
 
     images = gatys_et_al_2017_images()
-    images.download(root=args.image_source_dir)
+    images.download(args.image_source_dir)
     content_image = images["schultenhof"].read(device=args.device)
     style_image = images["starry_night"].read(device=args.device)
 
@@ -261,9 +261,7 @@ def parse_input():
 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
-    if isinstance(device, str):
-        device = torch.device(device)
-
+    device = get_device()
     logger = OptimLogger()
 
     return Namespace(

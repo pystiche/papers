@@ -20,7 +20,7 @@ def gatys_et_al_2017_postprocessor() -> CaffePostprocessing:
     return CaffePostprocessing()
 
 
-def gatys_et_al_2017_multi_layer_encoder() -> MultiLayerEncoder:
+def gatys_et_al_2017_multi_layer_encoder() -> VGGMultiLayerEncoder:
     return vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
