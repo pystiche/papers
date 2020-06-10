@@ -5,6 +5,7 @@ from os import path
 import torch
 
 from pystiche.image import write_image
+from pystiche.misc.misc import get_device
 from pystiche.optim import OptimLogger
 from pystiche_papers.ulyanov_et_al_2016 import (
     ulyanov_et_al_2016_dataset,
@@ -23,7 +24,7 @@ def training_texture(args):
         "bricks",
         "pebble",
         "pixels",
-        # "peppers",
+        "peppers",
     )
 
     dataset = ulyanov_et_al_2016_dataset(
@@ -100,9 +101,8 @@ def training_style(args):
         "karya",
         "tiger",
         "neckarfront",
-        # "che_high",
-        # "the_tower_of_babel"
-        "bird",
+        "che_high",
+        "the_tower_of_babel" "bird",
         "kitty",
     )
     styles = (
@@ -206,9 +206,7 @@ def parse_input():
         model_dir = path.join(here, "data", "models")
     model_dir = process_dir(model_dir)
 
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-    device = get_device()
+    device = get_device(device=device)
     logger = OptimLogger()
 
     return Namespace(
