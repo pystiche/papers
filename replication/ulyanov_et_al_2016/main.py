@@ -40,7 +40,7 @@ def training_texture(args):
     )
 
     images = ulyanov_et_al_2016_images()
-    images.download(root=args.image_source_dir)
+    images.download(args.image_source_dir)
 
     for texture in textures:
         texture_image = images[texture].read(device=args.device)
@@ -129,7 +129,7 @@ def training_style(args):
     )
 
     images = ulyanov_et_al_2016_images()
-    images.download(root=args.image_source_dir)
+    images.download(args.image_source_dir)
 
     for style in styles:
         style_image = images[style].read(device=args.device)
@@ -208,9 +208,7 @@ def parse_input():
 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
-    if isinstance(device, str):
-        device = torch.device(device)
-
+    device = get_device()
     logger = OptimLogger()
 
     return Namespace(
@@ -229,7 +227,4 @@ def parse_input():
 
 if __name__ == "__main__":
     args = parse_input()
-    # args.stylization = False
-    # training_texture(args)
-    args.stylization = True
     training_style(args)

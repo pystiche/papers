@@ -8,7 +8,7 @@ from pystiche.enc import MultiLayerEncoder, vgg19_multi_layer_encoder
 from pystiche.image.transforms.processing import CaffePostprocessing, CaffePreprocessing
 
 
-def ulyanov_et_al_2016_multi_layer_encoder() -> MultiLayerEncoder:
+def ulyanov_et_al_2016_multi_layer_encoder() -> VGGMultiLayerEncoder:
     return vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
@@ -24,7 +24,7 @@ def ulyanov_et_al_2016_postprocessor() -> CaffePostprocessing:
 
 def ulyanov_et_al_2016_optimizer(
     transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
-) -> Optimizer:
+) -> optim.Adam:
     if impl_params:
         lr = 1e-3 if instance_norm else 1e-1
     else:
