@@ -90,9 +90,9 @@ class UlyanovEtAl2016GramOperator(GramOperator):
         score = super().calculate_score(input_repr, target_repr, ctx)
         if not self.double_batch_size_mean:
             return score
-        else:
-            batch_size = input_repr.size()[0]
-            return score / batch_size
+
+        batch_size = input_repr.size()[0]
+        return score / batch_size
 
 
 def ulyanov_et_al_2016_style_loss(
