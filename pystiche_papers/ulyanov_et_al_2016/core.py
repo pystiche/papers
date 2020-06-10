@@ -57,7 +57,7 @@ def ulyanov_et_al_2016_training(
     ] = None,
 ) -> nn.Module:
     if isinstance(style, str):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = get_device()
         images = ulyanov_et_al_2016_images()
         style_image = images[style].read(device=device)
     else:
