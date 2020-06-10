@@ -173,5 +173,5 @@ def ulyanov_et_al_2016_perceptual_loss(
         content_loss = None  # type: ignore[assignment]
 
     return PerceptualLoss(
-        content_loss, style_loss  # type: ignore[arg-type]
+        content_loss, style_loss
     )
