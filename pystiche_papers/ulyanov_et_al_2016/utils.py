@@ -1,10 +1,10 @@
-from typing import Any, List, Optional
+from typing import Any, List
 
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.optimizer import Optimizer
 
-from pystiche.enc import MultiLayerEncoder, vgg19_multi_layer_encoder
+from pystiche.enc import VGGMultiLayerEncoder, vgg19_multi_layer_encoder
 from pystiche.image.transforms.processing import CaffePostprocessing, CaffePreprocessing
 
 
@@ -53,7 +53,7 @@ class DelayedExponentialLR(ExponentialLR):
 
 def ulyanov_et_al_2016_lr_scheduler(
     optimizer: Optimizer, impl_params: bool = True,
-) -> Optional[ExponentialLR]:
+) -> ExponentialLR:
     if impl_params:
         lr_scheduler = ExponentialLR(optimizer, 0.8)
     else:
