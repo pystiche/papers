@@ -31,7 +31,7 @@ def training_texture(args):
         path.join(args.dataset_dir, "texture"),
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
-    )  # FIXME: right dataset -> random from Imagenet (current examples from caltech256)
+    )
     image_loader = ulyanov_et_al_2016_image_loader(
         dataset,
         impl_params=args.impl_params,
@@ -119,7 +119,7 @@ def training_style(args):
         path.join(args.dataset_dir, "style"),
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
-    )  # FIXME: right dataset -> random from Imagenet (current examples from caltech256)
+    )
     image_loader = ulyanov_et_al_2016_image_loader(
         dataset,
         impl_params=args.impl_params,
