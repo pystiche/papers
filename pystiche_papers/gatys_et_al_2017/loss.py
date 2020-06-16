@@ -1,4 +1,3 @@
-import warnings
 from typing import Any, Callable, Dict, Optional, Sequence, Union, cast
 
 import torch
@@ -6,7 +5,6 @@ import torch
 import pystiche
 from pystiche.enc import Encoder, MultiLayerEncoder
 from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
-from pystiche.misc import build_deprecation_message
 from pystiche.ops import (
     EncodingOperator,
     FeatureReconstructionOperator,

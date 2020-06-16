@@ -14,6 +14,7 @@ from pystiche.image.transforms.functional import (
     transform_channels_affinely,
     yuv_to_rgb,
 )
+from pystiche.misc import get_device
 from pystiche.optim import OptimLogger
 from pystiche_papers.gatys_et_al_2017 import (
     gatys_et_al_2017_guided_nst,
@@ -259,8 +260,6 @@ def parse_input():
         image_results_dir = path.join(here, "images", "results")
     image_results_dir = process_dir(image_results_dir)
 
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
     device = get_device()
     logger = OptimLogger()
 
