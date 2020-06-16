@@ -47,7 +47,7 @@ def ulyanov_et_al_2016_content_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
-    layer: str = "relu_4_2",
+    layer: str = "relu4_2",
     score_weight: Optional[float] = None,
 ) -> UlyanovEtAl2016FeatureReconstructionOperator:
     if score_weight is None:
@@ -72,6 +72,7 @@ class UlyanovEtAl2016GramOperator(GramOperator):
         super().__init__(encoder, **gram_op_kwargs)
         self.normalize_by_num_channels = impl_params
         self.loss_reduction = "mean"
+        self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
         gram_matrix = super().enc_to_repr(enc)
@@ -119,9 +120,9 @@ def ulyanov_et_al_2016_style_loss(
 
     if layers is None:
         if impl_params and instance_norm:
-            layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1")
+            layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1")
         else:
-            layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1", "relu_5_1")
+            layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
     def get_encoding_op(
         encoder: Encoder, layer_weight: float

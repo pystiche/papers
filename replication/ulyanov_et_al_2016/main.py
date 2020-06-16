@@ -225,4 +225,5 @@ def parse_input():
 
 if __name__ == "__main__":
     args = parse_input()
+    training_texture(args)
     training_style(args)
