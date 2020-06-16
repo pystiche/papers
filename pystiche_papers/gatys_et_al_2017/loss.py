@@ -22,9 +22,7 @@ __all__ = [
     "GatysEtAl2017StyleLoss",
     "gatys_et_al_2017_style_loss",
     "gatys_et_al_2017_guided_style_loss",
-    "GatysEtAl2017PerceptualLoss",
     "gatys_et_al_2017_perceptual_loss",
-    "GatysEtAl2017GuidedPerceptualLoss",
     "gatys_et_al_2017_guided_perceptual_loss",
 ]
 
@@ -133,21 +131,6 @@ def gatys_et_al_2017_guided_style_loss(
     )
 
 
-class GatysEtAl2017PerceptualLoss(PerceptualLoss):
-    def __init__(
-        self,
-        content_loss: FeatureReconstructionOperator,
-        style_loss: GatysEtAl2017StyleLoss,
-    ):
-        msg = build_deprecation_message(
-            "The class GatysEtAl2017PerceptualLoss",
-            "0.4.0",
-            info="It can be replaced by pystiche.loss.PerceptualLoss.",
-        )
-        warnings.warn(msg)
-        super().__init__(content_loss, style_loss)  # type: ignore[arg-type]
-
-
 def gatys_et_al_2017_perceptual_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
@@ -171,22 +154,7 @@ def gatys_et_al_2017_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss, style_loss)  # type: ignore[arg-type]
-
-
-class GatysEtAl2017GuidedPerceptualLoss(GuidedPerceptualLoss):
-    def __init__(
-        self,
-        content_loss: FeatureReconstructionOperator,
-        style_loss: GatysEtAl2017StyleLoss,
-    ):
-        msg = build_deprecation_message(
-            "The class GatysEtAl2017GuidedPerceptualLoss",
-            "0.4.0",
-            info="It can be replaced by pystiche.loss.PerceptualLoss.",
-        )
-        warnings.warn(msg)
-        super().__init__(content_loss, style_loss)  # type: ignore[arg-type]
+    return PerceptualLoss(content_loss, style_loss)
 
 
 def gatys_et_al_2017_guided_perceptual_loss(
@@ -214,4 +182,4 @@ def gatys_et_al_2017_guided_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return GuidedPerceptualLoss(content_loss, style_loss)  # type: ignore[arg-type]
+    return GuidedPerceptualLoss(content_loss, style_loss)
