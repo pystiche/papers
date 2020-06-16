@@ -221,4 +221,4 @@ def johnson_alahi_li_2016_perceptual_loss(
         instance_norm=instance_norm, style=style, **total_variation_kwargs
     )
 
-    return PerceptualLoss(content_loss, style_loss, regularization=regularization)  # type: ignore[arg-type]
+    return PerceptualLoss(content_loss, style_loss, regularization=regularization)
