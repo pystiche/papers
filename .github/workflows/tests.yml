@@ -1,0 +1,62 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    paths:
+      - "pystiche_papers/**"
+      - "tests/**"
+      - "setup.py"
+      - "requirements-test.txt"
+      - "pytest.ini"
+      - ".coveragerc"
+      - "codecov.yml"
+      - ".github/workflows/tests.yml"
+
+jobs:
+  run:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: [3.6, 3.7, 3.8]
+      fail-fast: true
+
+    runs-on: ${{ matrix.os }}
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Upgrade and install additional system packages
+        run: pip install --upgrade pip setuptools
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install pystiche
+        run: |
+          pip install pytorch_wheel_installer
+          pwi
+          pip install git+https://github.com/pmeier/pystiche
+
+      - name: Install pystiche_papers
+        run: pip install .
+
+      - name: Install test requirements
+        run: pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: coverage run --rcfile=.coveragerc -m pytest -c pytest.ini --skip-large-download
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1.0.7
+        with:
+          env_vars: OS,PYTHON
