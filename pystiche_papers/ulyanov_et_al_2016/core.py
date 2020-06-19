@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 import pystiche
 from pystiche.loss import PerceptualLoss
-from pystiche.misc.misc import get_device
+from pystiche.misc import get_device
 from pystiche.optim import OptimLogger, default_transformer_epoch_optim_loop
 
 from ..utils import batch_up_image
