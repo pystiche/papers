@@ -85,9 +85,7 @@ setup(
     author_email=about["__author_email__"],
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    packages=find_packages(
-        where=PROJECT_ROOT, exclude=("docs", "tests", ".ci", ".github")
-    ),
+    packages=find_packages(where=PROJECT_ROOT, exclude=("docs", "tests", ".github")),
     package_data=package_data,
     python_requires=">=3.6",
     classifiers=classifiers,
