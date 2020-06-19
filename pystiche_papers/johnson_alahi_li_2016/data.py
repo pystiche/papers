@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader, Dataset, Sampler
 from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
-    FiniteCycleBatchSampler,
     ImageFolderDataset,
 )
 from pystiche.image import extract_image_size, extract_num_channels
@@ -21,6 +20,8 @@ from pystiche.image.transforms.functional import (
     grayscale_to_fakegrayscale,
     top_left_crop,
 )
+
+from ..data.utils import FiniteCycleBatchSampler
 
 __all__ = [
     "johnson_alahi_li_2016_content_transform",
