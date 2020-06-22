@@ -1,10 +1,19 @@
 from os import path
+from urllib.request import Request, urlopen
 
 from torchvision.datasets.utils import calculate_md5
 
 from .utils import get_tmp_dir
 
-__all__ = ["assert_image_downloads_correctly"]
+__all__ = ["assert_image_is_downloadable", "assert_image_downloads_correctly"]
+
+
+def assert_image_is_downloadable(image):
+    request = Request(
+        image.url, headers={"User-Agent": "pystiche_papers"}, method="HEAD"
+    )
+    response = urlopen(request)
+    assert response.code == 200, f"Server returned status code {response.code}."
 
 
 def assert_image_downloads_correctly(image):
