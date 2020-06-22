@@ -1,4 +1,0 @@
-pytest
-pytest_subtests
-setuptools
-coverage
