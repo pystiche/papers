@@ -1,3 +1,4 @@
+import configparser
 from os import path
 
 try:
@@ -8,6 +9,32 @@ except ImportError:
     raise RuntimeError(msg)
 
 
+def main(
+    project_root=None, language=None, file="requirements-rtd.txt",
+):
+    if project_root is None:
+        project_root = path.abspath(path.join(path.dirname(__file__), ".."))
+
+    deps = extract_docs_deps(project_root)
+
+    if language is None:
+        language = extract_language_from_rtd_config(project_root)
+
+    deps.extend(find_pytorch_wheel_links(language))
+
+    with open(file, "w") as fh:
+        fh.write("\n".join(deps) + "\n")
+
+
+def extract_docs_deps(root, file="tox.ini", testenv="testenv:docs"):
+    config = configparser.ConfigParser()
+    config.read(path.join(root, file))
+    deps = config[testenv]["deps"].strip().split("\n")
+    # TODO: remove this when pystiche_papers has pystiche as a requirement
+    deps.remove("git+https://github.com/pmeier/pystiche")
+    return deps
+
+
 def extract_language_from_rtd_config(root, file=".readthedocs.yml"):
     with open(path.join(root, file)) as fh:
         data = yaml.load(fh, Loader=yaml.FullLoader)
@@ -16,22 +43,10 @@ def extract_language_from_rtd_config(root, file=".readthedocs.yml"):
     return f"py{python_version.replace('.', '')}"
 
 
-def main(
-    root=None,
-    distributions=("torch", "torchvision"),
-    backend="cpu",
-    language=None,
-    platform="linux",
-    file="requirements-rtd.txt",
+def find_pytorch_wheel_links(
+    language, distributions=("torch", "torchvision"), backend="cpu", platform="linux",
 ):
-    if root is None:
-        root = path.dirname(__file__)
-    if language is None:
-        language = extract_language_from_rtd_config(path.join(root, ".."))
-
-    links = find_links(distributions, backend, language, platform)
-    with open(path.join(root, file), "w") as fh:
-        fh.write("\n".join(links) + "\n")
+    return find_links(distributions, backend, language, platform)
 
 
 if __name__ == "__main__":

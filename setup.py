@@ -64,7 +64,7 @@ with open(path.join(PACKAGE_ROOT, version_file), "w") as fh:
 package_data = {PACKAGE_NAME: [version_file]}
 
 install_requires = (
-    "pystiche >= 0.4",
+    # TODO: add a released version of pystiche
     "torch",
     "torchvision",
 )

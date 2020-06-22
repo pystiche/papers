@@ -10,10 +10,10 @@ on:
       - "pystiche_papers/**"
       - "tests/**"
       - "setup.py"
-      - "requirements-test.txt"
       - "pytest.ini"
-      - ".coveragerc"
+      - "tox.ini"
       - "codecov.yml"
+      - "requirements-dev.txt"
       - ".github/workflows/tests.yml"
 
 jobs:
@@ -41,20 +41,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install pystiche
-        run: |
-          pip install pytorch_wheel_installer
-          pwi
-          pip install git+https://github.com/pmeier/pystiche
-
-      - name: Install pystiche_papers
-        run: pip install .
-
-      - name: Install test requirements
-        run: pip install -r requirements-test.txt
+      - name: Install dev requirements
+        run: pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: coverage run --rcfile=.coveragerc -m pytest -c pytest.ini --skip-large-download
+        run: tox -e py -- --skip-large-download
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1.0.7

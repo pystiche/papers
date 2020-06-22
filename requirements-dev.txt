@@ -1,0 +1,2 @@
+tox >= 3.2
+pytorch_wheel_installer >= 0.2

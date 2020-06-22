@@ -9,7 +9,9 @@ on:
     paths:
       - "pystiche_papers/**"
       - "docs/**"
-      - "requirements-doc.txt"
+      - "setup.py"
+      - "tox.ini"
+      - "requirements-dev.txt"
       - ".github/workflows/docs.yml"
 
 jobs:
@@ -23,41 +25,27 @@ jobs:
           sudo apt install -y latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
 
       - name: Set up python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: "3.6"
 
       - name: Upgrade and install additional system packages
-        run: pip install --upgrade pip setuptools
+        run: pip install --upgrade pip setuptools wheel
 
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install pystiche
-        run: |
-          pip install pytorch_wheel_installer
-          pwi
-          pip install git+https://github.com/pmeier/pystiche
+      - name: Install dev requirements
+        run: pip install -r requirements-dev.txt
 
-      - name: Install pystiche_papers
-        run: pip install .
-
-      - name: Install doc requirements
-        run: pip install -r requirements-doc.txt
-
-      - name: Build html
-        working-directory: docs
-        run: make html
+      - name: Build documentation
+        run: tox -e docs
 
       - name: Upload html build
         uses: actions/upload-artifact@v2
         with:
           name: html
           path: docs/build/html
-
-      - name: Build latex
-        working-directory: docs
-        run: make latexpdf
 
       - name: Upload latex build
         uses: actions/upload-artifact@v2
