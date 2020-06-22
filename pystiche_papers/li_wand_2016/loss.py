@@ -31,9 +31,12 @@ __all__ = [
 
 class LiWand2016FeatureReconstructionOperator(FeatureReconstructionOperator):
     def __init__(
-        self, encoder: Encoder, impl_params: bool = True, **mse_encoding_op_kwargs: Any,
+        self,
+        encoder: Encoder,
+        impl_params: bool = True,
+        **feature_reconstruction_op_kwargs: Any,
     ):
-        super().__init__(encoder, **mse_encoding_op_kwargs)
+        super().__init__(encoder, **feature_reconstruction_op_kwargs)
 
         self.loss_reduction = "mean" if impl_params else "sum"
 

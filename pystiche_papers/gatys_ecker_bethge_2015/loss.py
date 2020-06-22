@@ -16,7 +16,7 @@ from pystiche.ops import (
 from .utils import gatys_ecker_bethge_2015_multi_layer_encoder
 
 __all__ = [
-    "GatysEckerBethge2015MSEEncodingOperator",
+    "GatysEckerBethge2015FeatureReconstructionOperator",
     "gatys_ecker_bethge_2015_content_loss",
     "GatysEckerBethge2015StyleLoss",
     "gatys_ecker_bethge_2015_style_loss",
@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-class GatysEckerBethge2015MSEEncodingOperator(FeatureReconstructionOperator):
+class GatysEckerBethge2015FeatureReconstructionOperator(FeatureReconstructionOperator):
     def __init__(
         self, encoder: Encoder, impl_params: bool = True, score_weight: float = 1e0
     ):
@@ -48,12 +48,12 @@ def gatys_ecker_bethge_2015_content_loss(
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: float = 1e0,
-) -> GatysEckerBethge2015MSEEncodingOperator:
+) -> GatysEckerBethge2015FeatureReconstructionOperator:
     if multi_layer_encoder is None:
         multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    return GatysEckerBethge2015MSEEncodingOperator(
+    return GatysEckerBethge2015FeatureReconstructionOperator(
         encoder, impl_params=impl_params, score_weight=score_weight
     )
 
