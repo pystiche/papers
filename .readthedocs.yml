@@ -11,4 +11,3 @@ python:
     - requirements: docs/requirements-rtd.txt
     - method: pip
       path: .
-    - requirements: requirements-doc.txt
