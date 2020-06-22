@@ -1,6 +1,10 @@
 import unittest
 
-from pystiche_papers.data import utils
+import pytest
+
+from pystiche_papers.data import NPRgeneral, utils
+
+from .asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 class TestUtils(unittest.TestCase):
@@ -40,3 +44,17 @@ class TestUtils(unittest.TestCase):
         num_batches = 2
         batch_sampler = utils.FiniteCycleBatchSampler(data_source, num_batches)
         self.assertEqual(len(batch_sampler), num_batches)
+
+
+def test_NPRgeneral_smoke(subtests):
+    for name, image in NPRgeneral():
+        with subtests.test(name=name):
+            assert_image_is_downloadable(image)
+
+
+@pytest.mark.large_download
+@pytest.mark.slow
+def test_NPRgeneral_images(subtests):
+    for name, image in NPRgeneral():
+        with subtests.test(name=name):
+            assert_image_downloads_correctly(image)
