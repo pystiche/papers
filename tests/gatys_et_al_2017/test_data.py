@@ -43,5 +43,6 @@ def test_gatys_et_al_2017_multi_layer_encoder():
 def test_gatys_et_al_2017_optimizer(input_image):
     optimizer = utils.gatys_et_al_2017_optimizer(input_image)
     assert isinstance(optimizer, optim.LBFGS)
-    assert optimizer.lr == 1.0
-    assert optimizer.max_iter == 1
+    for param_group in optimizer.param_groups:
+        assert param_group["lr"] == 1.0
+        assert param_group["max_iter"] == 1
