@@ -22,6 +22,5 @@ def test_gatys_et_al_2017_images(subtests):
 
 
 def test_gatys_et_al_2017_preprocessor():
-    preprocessor = utils.gatys_et_al_2017_preprocessor()
-
-    assert isinstance(preprocessor, CaffePreprocessing)
+    assert isinstance(utils.gatys_et_al_2017_preprocessor(), CaffePreprocessing)
+    
