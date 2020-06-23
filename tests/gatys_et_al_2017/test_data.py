@@ -32,6 +32,8 @@ def test_gatys_et_al_2017_postprocessor():
     assert isinstance(utils.gatys_et_al_2017_postprocessor(), CaffePostprocessing)
 
 
+@pytest.mark.large_download
+@pytest.mark.slow
 def test_gatys_et_al_2017_multi_layer_encoder():
     assert isinstance(
         utils.gatys_et_al_2017_multi_layer_encoder(), VGGMultiLayerEncoder
