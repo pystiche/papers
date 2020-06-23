@@ -2,12 +2,14 @@ import contextlib
 import os
 import shutil
 import tempfile
+from importlib import util
+from os import path
 
 import pytest
 
 import torch
 
-__all__ = ["get_tmp_dir", "skip_if_cuda_not_available"]
+__all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module"]
 
 
 # Copied from
@@ -45,3 +47,15 @@ def get_tmp_dir(**mkdtemp_kwargs):
 skip_if_cuda_not_available = pytest.mark.skipif(
     not torch.cuda.is_available(), reason="CUDA is not available."
 )
+
+
+def load_module(location):
+    name, ext = path.splitext(path.basename(location))
+    is_package = ext != ".py"
+    if is_package:
+        location = path.join(location, "__init__.py")
+
+    spec = util.spec_from_file_location(name, location=location)
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
