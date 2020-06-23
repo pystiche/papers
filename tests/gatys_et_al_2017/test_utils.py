@@ -23,9 +23,19 @@ def test_gatys_et_al_2017_multi_layer_encoder():
     )
 
 
-def test_gatys_et_al_2017_optimizer(input_image):
-    optimizer = utils.gatys_et_al_2017_optimizer(input_image)
+def test_gatys_et_al_2017_optimizer(subtests, input_image):
+    params = input_image
+    optimizer = utils.gatys_et_al_2017_optimizer(params)
+
     assert isinstance(optimizer, optim.LBFGS)
-    for param_group in optimizer.param_groups:
-        assert param_group["lr"] == 1.0
+    assert len(optimizer.param_groups) == 1
+
+    param_group = optimizer.param_groups[0]
+
+    with subtests.test(msg="optimization params"):
+        assert len(param_group["params"]) == 1
+        assert param_group["params"][0] is params
+
+    with subtests.test(msg="optimizer properties"):
+        assert pytest.approx(param_group["lr"]) == 1.0
         assert param_group["max_iter"] == 1
