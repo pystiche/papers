@@ -2,7 +2,7 @@ import pytest
 
 from pystiche_papers import johnson_alahi_li_2016 as paper
 
-from .asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 def test_johnson_alahi_li_2016_smoke(subtests):
