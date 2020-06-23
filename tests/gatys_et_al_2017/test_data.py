@@ -4,7 +4,7 @@ from pystiche.image.transforms import CaffePreprocessing
 from pystiche_papers import gatys_et_al_2017 as paper
 from pystiche_papers.gatys_et_al_2017 import utils
 
-from .asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 def test_gatys_et_al_2017_images_smoke(subtests):
