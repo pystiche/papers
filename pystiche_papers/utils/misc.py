@@ -141,22 +141,42 @@ def paper_replication(
         yield
 
 
-def make_reproducible(seed: int = 0) -> None:
-    random.seed(seed)
-    try:
-        import numpy as np
+def make_reproducible(
+    seed: Optional[Any] = 0, seed_standard_library: bool = True
+) -> int:
+    def maybe_seed_standard_library(seed: int) -> None:
+        if seed_standard_library:
+            random.seed(seed)
 
-        np.random.seed(seed)
-    except ImportError:
-        pass
-    torch.manual_seed(seed)
-    if torch.backends.cudnn.is_available():
-        # Both attributes are dynamically assigned to the module. See
-        # https://github.com/pytorch/pytorch/blob/a1eaaea288cf51abcd69eb9b0993b1aa9c0ce41f/torch/backends/cudnn/__init__.py#L115-L129
-        # The type errors are ignored, since this is still the recommended practice.
-        # https://pytorch.org/docs/stable/notes/randomness.html#cudnn
-        torch.backends.cudnn.deterministic = True  # type: ignore
-        torch.backends.cudnn.benchmark = False  # type: ignore
+    def try_seed_numpy(seed: int) -> None:
+        try:
+            import numpy as np
+
+            np.random.seed(seed)
+        except ImportError:
+            pass
+
+    def seed_torch(seed: int) -> None:
+        torch.manual_seed(seed)
+
+    def maybe_set_cudnn() -> None:
+        if torch.backends.cudnn.is_available():
+            # Both attributes are dynamically assigned to the module. See
+            # https://github.com/pytorch/pytorch/blob/a1eaaea288cf51abcd69eb9b0993b1aa9c0ce41f/torch/backends/cudnn/__init__.py#L115-L129
+            # The type errors are ignored, since this is still the recommended practice.
+            # https://pytorch.org/docs/stable/notes/randomness.html#cudnn
+            torch.backends.cudnn.deterministic = True  # type: ignore[attr-defined]
+            torch.backends.cudnn.benchmark = False  # type: ignore[attr-defined]
+
+    # the numpy random generator only accepts uint32 values
+    seed = hash(seed) % (2 ** 32 - 1)
+
+    maybe_seed_standard_library(seed)
+    try_seed_numpy(seed)
+    seed_torch(seed)
+    maybe_set_cudnn()
+
+    return seed
 
 
 @contextlib.contextmanager
