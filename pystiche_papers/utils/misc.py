@@ -100,12 +100,12 @@ def batch_up_image(
     loader: Optional[DataLoader] = None,
 ) -> torch.Tensor:
     def extract_batch_size_from_loader(loader: DataLoader) -> int:
-        batch_size = loader.batch_size
+        batch_size = cast(Optional[int], loader.batch_size)
         if batch_size is not None:
             return batch_size
 
-        try:  # type: ignore[unreachable]
-            return loader.batch_sampler.batch_size
+        try:
+            return cast(int, loader.batch_sampler.batch_size)  # type: ignore[attr-defined]
         except AttributeError:
             raise RuntimeError
 
