@@ -200,9 +200,9 @@ def save_state_dict(
     input: Union[Dict[str, torch.Tensor], nn.Module],
     name: str,
     root: Optional[str] = None,
-    ext: str = ".pth",
     to_cpu: bool = True,
     hash_len: int = 8,
+    ext: str = ".pth",
 ) -> str:
     if isinstance(input, nn.Module):
         state_dict = input.state_dict()
@@ -211,7 +211,7 @@ def save_state_dict(
 
     if to_cpu:
         state_dict = OrderedDict(
-            [(key, tensor.detach().cpu()) for key, tensor in state_dict.items()]
+            [(key, tensor.cpu()) for key, tensor in state_dict.items()]
         )
 
     if root is None:
