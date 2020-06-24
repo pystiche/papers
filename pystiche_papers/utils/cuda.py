@@ -25,7 +25,6 @@ def use_cuda_out_of_memory_error() -> Iterator[None]:
 
     try:
         yield
-        return
     except RuntimeError as error:
         if is_cuda_out_of_memory_error(error):
             error = CudaOutOfMemoryError(error)
