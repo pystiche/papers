@@ -23,7 +23,9 @@ def test_same_size_padding():
 
 
 def test_same_size_output_padding():
-    pass
+    assert utils.same_size_output_padding(stride=1) == 0
+    assert utils.same_size_output_padding(stride=2) == 1
+    assert utils.same_size_output_padding(stride=(1, 2)) == (0, 1)
 
 
 def test_is_valid_padding():
