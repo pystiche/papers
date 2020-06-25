@@ -1,5 +1,6 @@
 from torch.nn.functional import mse_loss
 
+import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size
 from pystiche_papers.ulyanov_et_al_2016 import loss
 
@@ -27,4 +28,5 @@ def test_ulyanov_et_al_2016_content_loss(
 
         score = mse_loss(input_enc, target_enc)
         desired = score / extra_batch_size_mean
-        assert (actual - desired).abs().max().item() < 1e-6
+
+        assert actual == ptu.approx(desired)
