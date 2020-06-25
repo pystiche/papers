@@ -1,6 +1,8 @@
-from typing import Any, Callable, Dict, Optional, Sequence, Union, cast
+import warnings
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
 
 import torch
+from torch import nn
 from torch.nn.functional import mse_loss
 
 import pystiche
@@ -65,17 +67,9 @@ class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
         layers: Sequence[str],
         get_encoding_op: Callable[[Encoder, float], EncodingOperator],
         impl_params: bool = True,
-        layer_weights: Optional[Union[str, Sequence[float]]] = None,
+        layer_weights: Union[str, Sequence[float]] = "mean",
         score_weight: float = 1e0,
     ) -> None:
-        if layer_weights is None:
-            if impl_params:
-                layer_weights = self.get_default_layer_weights(
-                    multi_layer_encoder, layers
-                )
-            else:
-                layer_weights = "mean"
-
         super().__init__(
             multi_layer_encoder,
             layers,
@@ -86,19 +80,30 @@ class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
 
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 4.0
 
-    @staticmethod
-    def get_default_layer_weights(
-        multi_layer_encoder: MultiLayerEncoder, layers: Sequence[str]
-    ) -> Sequence[float]:
-        nums_channels = []
-        for layer in layers:
-            module = multi_layer_encoder._modules[layer.replace("relu", "conv")]
-            nums_channels.append(cast(int, module.out_channels))
-        return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
-
     def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:
         score = super().process_input_image(input_image)
         return score * self.score_correction_factor
+
+
+def get_layer_weights(
+    layers: Sequence[str], multi_layer_encoder: Optional[MultiLayerEncoder] = None
+) -> List[float]:
+    if multi_layer_encoder is None:
+        multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
+
+    nums_channels = []
+    for layer in layers:
+        if layer not in multi_layer_encoder:
+            raise RuntimeError
+
+        layer = layer.replace("relu", "conv")
+        if not layer.startswith("conv"):
+            raise RuntimeError
+
+        module = cast(nn.Conv2d, multi_layer_encoder._modules[layer])
+        nums_channels.append(module.out_channels)
+
+    return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
 
 
 def gatys_ecker_bethge_2015_style_loss(
@@ -114,6 +119,15 @@ def gatys_ecker_bethge_2015_style_loss(
 
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+
+    if layer_weights is None:
+        try:
+            layer_weights = get_layer_weights(
+                layers, multi_layer_encoder=multi_layer_encoder
+            )
+        except RuntimeError:
+            layer_weights = "mean"
+            warnings.warn("ADDME", RuntimeWarning)
 
     def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
