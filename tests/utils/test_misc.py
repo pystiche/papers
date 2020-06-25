@@ -87,9 +87,12 @@ def test_make_reproducible_uint32_seed():
     assert utils.make_reproducible(seed) == seed
 
 
-@pytest.mark.skip(reason="No fixed asset is available to test this.")
 def test_get_sha256_hash():
-    raise RuntimeError
+    here = path.abspath(path.dirname(__file__))
+    file = path.join(here, "..", "_assets", "images", "small_0.png")
+    actual = utils.get_sha256_hash(file)
+    desired = "a2c1cc785a1b94eaa853ca13cc9314cc08f99ca2a746a3fa3a713a65dc2cfe05"
+    assert actual == desired
 
 
 @pytest.fixture
