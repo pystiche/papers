@@ -1,3 +1,4 @@
+import logging
 import re
 from os import path
 
@@ -9,9 +10,45 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
 import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size, make_single_image
+from pystiche.optim import OptimLogger
 from pystiche_papers import utils
 
 from .._utils import skip_if_cuda_not_available
+
+
+def test_same_size_padding():
+    pass
+
+
+def test_same_size_output_padding():
+    pass
+
+
+def test_is_valid_padding():
+    pass
+
+
+def test_paper_replication(subtests, caplog):
+    optim_logger = OptimLogger()
+    starting_offset = optim_logger._environ_level_offset
+    with caplog.at_level(logging.INFO, optim_logger.logger.name):
+        meta = {
+            "title": "test_paper_replication",
+            "url": "https://github.com/pmeier/pystiche_papers",
+            "author": "pystiche_replication",
+            "year": "2020",
+        }
+        with utils.paper_replication(optim_logger, **meta):
+            with subtests.test("offset"):
+                assert optim_logger._environ_level_offset == starting_offset + 1
+
+            with subtests.test("logging level"):
+                for record in caplog.records:
+                    assert record.levelno == logging.INFO
+
+            with subtests.test("text"):
+                for value in meta.values():
+                    assert value in caplog.text
 
 
 def test_batch_up_image(image):
