@@ -13,40 +13,40 @@ from pystiche_papers import utils
 from .._utils import skip_if_cuda_not_available
 
 
-def test_batch_up_image(input_image):
+def test_batch_up_image(image):
     batch_size = 3
 
-    batched_up_image = utils.batch_up_image(input_image, batch_size)
+    batched_up_image = utils.batch_up_image(image, batch_size)
     assert extract_batch_size(batched_up_image) == batch_size
 
 
-def test_batch_up_image_with_single_image(input_image):
+def test_batch_up_image_with_single_image(image):
     batch_size = 3
 
-    batched_up_image = utils.batch_up_image(make_single_image(input_image), batch_size)
+    batched_up_image = utils.batch_up_image(make_single_image(image), batch_size)
     assert extract_batch_size(batched_up_image) == batch_size
 
 
-def test_batch_up_image_with_batched_image(multi_input_image):
+def test_batch_up_image_with_batched_image(batch_image):
     with pytest.raises(RuntimeError):
-        utils.batch_up_image(multi_input_image)
+        utils.batch_up_image(batch_image)
 
 
-def test_batch_up_image_missing_arg(input_image):
+def test_batch_up_image_missing_arg(image):
     with pytest.raises(RuntimeError):
-        utils.batch_up_image(input_image)
+        utils.batch_up_image(image)
 
 
-def test_batch_up_image_loader(input_image):
+def test_batch_up_image_loader(image):
     batch_size = 3
     dataset = ()
     loader = DataLoader(dataset, batch_size=batch_size)
 
-    batched_up_image = utils.batch_up_image(input_image, loader=loader)
+    batched_up_image = utils.batch_up_image(image, loader=loader)
     assert extract_batch_size(batched_up_image) == batch_size
 
 
-def test_batch_up_image_loader_with_batch_sampler(input_image):
+def test_batch_up_image_loader_with_batch_sampler(image):
     batch_size = 3
     dataset = ()
     batch_sampler = BatchSampler(
@@ -54,7 +54,7 @@ def test_batch_up_image_loader_with_batch_sampler(input_image):
     )
     loader = DataLoader(dataset, batch_sampler=batch_sampler)
 
-    batched_up_image = utils.batch_up_image(input_image, loader=loader)
+    batched_up_image = utils.batch_up_image(image, loader=loader)
     assert extract_batch_size(batched_up_image) == batch_size
 
 
