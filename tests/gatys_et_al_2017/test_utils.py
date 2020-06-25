@@ -33,9 +33,6 @@ def test_gatys_et_al_2017_multi_layer_encoder(subtests, mocker):
             if isinstance(module, nn.ReLU)
         ]
         assert all(module.inplace for module in relu_modules)
-    assert isinstance(
-        utils.gatys_et_al_2017_multi_layer_encoder(), VGGMultiLayerEncoder
-    )
 
 
 def test_gatys_et_al_2017_optimizer(subtests, input_image):
