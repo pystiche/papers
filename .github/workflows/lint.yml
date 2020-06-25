@@ -35,7 +35,7 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Create environment
-        run: tox -e docs --notest
+        run: tox -e lint --notest
 
       - name: Run lint
         run: tox -e lint
