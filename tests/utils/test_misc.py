@@ -17,7 +17,9 @@ from .._utils import skip_if_cuda_not_available
 
 
 def test_same_size_padding():
-    pass
+    assert utils.same_size_padding(kernel_size=1) == 0
+    assert utils.same_size_padding(kernel_size=3) == 1
+    assert utils.same_size_padding(kernel_size=(1, 3)) == (0, 1)
 
 
 def test_same_size_output_padding():
