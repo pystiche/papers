@@ -76,7 +76,7 @@ def test_batch_up_image_with_single_image(image):
 
 def test_batch_up_image_with_batched_image(batch_image):
     with pytest.raises(RuntimeError):
-        utils.batch_up_image(batch_image)
+        utils.batch_up_image(batch_image, 2)
 
 
 def test_batch_up_image_missing_arg(image):
@@ -103,6 +103,26 @@ def test_batch_up_image_loader_with_batch_sampler(image):
 
     batched_up_image = utils.batch_up_image(image, loader=loader)
     assert extract_batch_size(batched_up_image) == batch_size
+
+
+def test_batch_up_image_loader_with_batch_sampler_no_batch_size(subtests, image):
+    class NoBatchSizeBatchSampler(BatchSampler):
+        def __init__(self):
+            pass
+
+    class WrongTypeBatchSizeBatchSampler(BatchSampler):
+        def __init__(self):
+            self.batch_size = None
+
+    with subtests.test("no batch_size"):
+        loader = DataLoader((), batch_sampler=NoBatchSizeBatchSampler())
+        with pytest.raises(RuntimeError):
+            utils.batch_up_image(image, loader=loader)
+
+    with subtests.test("wrong type batch_size"):
+        loader = DataLoader((), batch_sampler=WrongTypeBatchSizeBatchSampler())
+        with pytest.raises(RuntimeError):
+            utils.batch_up_image(image, loader=loader)
 
 
 def test_make_reproducible(subtests):
