@@ -38,6 +38,9 @@ jobs:
       - name: Install dev requirements
         run: pip install -r requirements-dev.txt
 
+      - name: Create environment
+        run: tox -e docs --notest
+
       - name: Build documentation
         run: tox -e docs
 
