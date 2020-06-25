@@ -1,5 +1,6 @@
 from torch.nn.functional import mse_loss
 
+import pytorch_testing_utils as ptu
 from pystiche_papers.li_wand_2016 import loss
 
 
@@ -11,7 +12,7 @@ def test_li_wand_2016_content_loss(
     target_enc = encoder(target_image)
     input_enc = encoder(input_image)
 
-    configs = ((True, "mean", 20.0), (False, "sum", 1.0))
+    configs = ((True, "mean", 2e1), (False, "sum", 1e0))
     for impl_params, loss_reduction, score_weight in configs:
         with subtests.test(impl_params=impl_params):
             op = loss.li_wand_2016_content_loss(
@@ -24,4 +25,5 @@ def test_li_wand_2016_content_loss(
 
             score = mse_loss(input_enc, target_enc, reduction=loss_reduction)
             desired = score * score_weight
-            assert (actual - desired).abs().max().item() < 1e-6
+
+            assert actual == ptu.approx(desired)

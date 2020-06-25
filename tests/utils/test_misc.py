@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
+import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche_papers import utils
 
@@ -103,32 +104,13 @@ def conv2d_module():
 
 def test_save_state_dict(subtests, tmpdir, conv2d_module):
     state_dict = conv2d_module.state_dict()
-
     file = utils.save_state_dict(state_dict, "state_dict", root=tmpdir)
-    actual_state_dict = torch.load(file)
-
-    assert actual_state_dict.keys() == state_dict.keys()
-    for param_name, param in actual_state_dict.items():
-        with subtests.test(param_name=param_name):
-            # FIXME: approx
-            assert torch.all(
-                actual_state_dict[param_name] == state_dict[param_name]
-            ).item()
+    ptu.assert_allclose(torch.load(file), state_dict)
 
 
 def test_save_state_dict_module(subtests, tmpdir, conv2d_module):
-    state_dict = conv2d_module.state_dict()
-
     file = utils.save_state_dict(conv2d_module, "conv2d", root=tmpdir)
-    actual_state_dict = torch.load(file)
-
-    assert actual_state_dict.keys() == state_dict.keys()
-    for param_name, param in actual_state_dict.items():
-        with subtests.test(param_name=param_name):
-            # FIXME: approx
-            assert torch.all(
-                actual_state_dict[param_name] == state_dict[param_name]
-            ).item()
+    ptu.assert_allclose(torch.load(file), conv2d_module.state_dict())
 
 
 @pytest.fixture

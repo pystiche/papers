@@ -1,5 +1,6 @@
 from torch.nn.functional import mse_loss
 
+import pytorch_testing_utils as ptu
 from pystiche_papers.gatys_ecker_bethge_2015 import loss
 
 
@@ -25,4 +26,4 @@ def test_gatys_ecker_bethge_2015_content_loss(
             score = mse_loss(input_enc, target_enc, reduction=loss_reduction)
             desired = score * score_correction_factor
 
-            assert (actual - desired).abs().max().item() < 1e-6
+            assert actual == ptu.approx(desired)

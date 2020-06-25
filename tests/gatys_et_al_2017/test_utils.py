@@ -2,6 +2,7 @@ import pytest
 
 from torch import optim
 
+import pytorch_testing_utils as ptu
 from pystiche.enc import VGGMultiLayerEncoder
 from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
 from pystiche_papers.gatys_et_al_2017 import utils
@@ -37,5 +38,5 @@ def test_gatys_et_al_2017_optimizer(subtests, input_image):
         assert param_group["params"][0] is params
 
     with subtests.test(msg="optimizer properties"):
-        assert pytest.approx(param_group["lr"]) == 1.0
+        assert param_group["lr"] == ptu.approx(1.0)
         assert param_group["max_iter"] == 1
