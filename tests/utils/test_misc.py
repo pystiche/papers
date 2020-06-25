@@ -1,3 +1,4 @@
+import logging
 import re
 from os import path
 
@@ -9,9 +10,54 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
 import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size, make_single_image
+from pystiche.optim import OptimLogger
 from pystiche_papers import utils
 
 from .._utils import skip_if_cuda_not_available
+
+
+def test_same_size_padding():
+    assert utils.same_size_padding(kernel_size=1) == 0
+    assert utils.same_size_padding(kernel_size=3) == 1
+    assert utils.same_size_padding(kernel_size=(1, 3)) == (0, 1)
+
+
+def test_same_size_output_padding():
+    assert utils.same_size_output_padding(stride=1) == 0
+    assert utils.same_size_output_padding(stride=2) == 1
+    assert utils.same_size_output_padding(stride=(1, 2)) == (0, 1)
+
+
+def test_is_valid_padding():
+    assert utils.is_valid_padding(1)
+    assert not utils.is_valid_padding(0)
+    assert not utils.is_valid_padding(-1)
+
+    assert utils.is_valid_padding((1, 2))
+    assert not utils.is_valid_padding((1, 0, -1))
+
+
+def test_paper_replication(subtests, caplog):
+    optim_logger = OptimLogger()
+    starting_offset = optim_logger._environ_level_offset
+    with caplog.at_level(logging.INFO, optim_logger.logger.name):
+        meta = {
+            "title": "test_paper_replication",
+            "url": "https://github.com/pmeier/pystiche_papers",
+            "author": "pystiche_replication",
+            "year": "2020",
+        }
+        with utils.paper_replication(optim_logger, **meta):
+            with subtests.test("offset"):
+                assert optim_logger._environ_level_offset == starting_offset + 1
+
+            with subtests.test("logging level"):
+                for record in caplog.records:
+                    assert record.levelno == logging.INFO
+
+            with subtests.test("text"):
+                for value in meta.values():
+                    assert value in caplog.text
 
 
 def test_batch_up_image(image):
@@ -30,7 +76,7 @@ def test_batch_up_image_with_single_image(image):
 
 def test_batch_up_image_with_batched_image(batch_image):
     with pytest.raises(RuntimeError):
-        utils.batch_up_image(batch_image)
+        utils.batch_up_image(batch_image, 2)
 
 
 def test_batch_up_image_missing_arg(image):
@@ -57,6 +103,26 @@ def test_batch_up_image_loader_with_batch_sampler(image):
 
     batched_up_image = utils.batch_up_image(image, loader=loader)
     assert extract_batch_size(batched_up_image) == batch_size
+
+
+def test_batch_up_image_loader_with_batch_sampler_no_batch_size(subtests, image):
+    class NoBatchSizeBatchSampler(BatchSampler):
+        def __init__(self):
+            pass
+
+    class WrongTypeBatchSizeBatchSampler(BatchSampler):
+        def __init__(self):
+            self.batch_size = None
+
+    with subtests.test("no batch_size"):
+        loader = DataLoader((), batch_sampler=NoBatchSizeBatchSampler())
+        with pytest.raises(RuntimeError):
+            utils.batch_up_image(image, loader=loader)
+
+    with subtests.test("wrong type batch_size"):
+        loader = DataLoader((), batch_sampler=WrongTypeBatchSizeBatchSampler())
+        with pytest.raises(RuntimeError):
+            utils.batch_up_image(image, loader=loader)
 
 
 def test_make_reproducible(subtests):

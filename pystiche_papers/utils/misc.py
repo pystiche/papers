@@ -105,8 +105,10 @@ def batch_up_image(
             return batch_size
 
         try:
-            return cast(int, loader.batch_sampler.batch_size)  # type: ignore[attr-defined]
-        except AttributeError:
+            batch_size = loader.batch_sampler.batch_size  # type: ignore[attr-defined]
+            assert isinstance(batch_size, int)
+            return batch_size
+        except (AttributeError, AssertionError):
             raise RuntimeError
 
     if desired_batch_size is None and loader is None:
