@@ -103,6 +103,20 @@ def test_get_layer_weights():
     assert actual == pytest.approx(desired)
 
 
+def test_get_layer_weights_wrong_layers(subtests):
+    with subtests.test("layer not in multi_layer_encoder"):
+        not_included_layers = ("not_included",)
+
+        with pytest.raises(RuntimeError):
+            loss.get_layer_weights(not_included_layers)
+
+    with subtests.test("no conv or relu layer"):
+        no_conv_or_relu_layers = ("pool1",)
+
+        with pytest.raises(RuntimeError):
+            loss.get_layer_weights(no_conv_or_relu_layers)
+
+
 def test_gatys_ecker_bethge_2015_style_loss(subtests):
     style_loss = loss.gatys_ecker_bethge_2015_style_loss()
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
