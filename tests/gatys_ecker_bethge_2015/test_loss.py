@@ -137,6 +137,19 @@ def test_gatys_ecker_bethge_2015_style_loss(subtests):
         assert style_loss.score_weight == pytest.approx(1e3)
 
 
+def test_gatys_ecker_bethge_2015_style_loss_wrong_layers(mocker):
+    mock = mocker.patch(
+        "pystiche_papers.gatys_ecker_bethge_2015.loss.GatysEckerBethge2015StyleLoss"
+    )
+
+    layers = ("not_included", "not_conv_or_relu")
+
+    with pytest.warns(RuntimeWarning):
+        loss.gatys_ecker_bethge_2015_style_loss(layers=layers)
+
+    assert mock.call_args[1]["layer_weights"] == "mean"
+
+
 def test_gatys_ecker_bethge_2015_perceptual_loss(subtests):
     perceptual_loss = loss.gatys_ecker_bethge_2015_perceptual_loss()
     assert isinstance(perceptual_loss, PerceptualLoss)
