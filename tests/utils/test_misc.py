@@ -25,7 +25,12 @@ def test_same_size_output_padding():
 
 
 def test_is_valid_padding():
-    pass
+    assert utils.is_valid_padding(1)
+    assert not utils.is_valid_padding(0)
+    assert not utils.is_valid_padding(-1)
+
+    assert utils.is_valid_padding((1, 2))
+    assert not utils.is_valid_padding((1, 0, -1))
 
 
 def test_paper_replication(subtests, caplog):
