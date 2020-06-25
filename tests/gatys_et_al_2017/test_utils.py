@@ -1,6 +1,6 @@
 import pytest
 
-from torch import optim
+from torch import nn, optim
 
 import pytorch_testing_utils as ptu
 from pystiche.enc import VGGMultiLayerEncoder
@@ -16,9 +16,23 @@ def test_gatys_et_al_2017_postprocessor():
     assert isinstance(utils.gatys_et_al_2017_postprocessor(), CaffePostprocessing)
 
 
-@pytest.mark.large_download
 @pytest.mark.slow
-def test_gatys_et_al_2017_multi_layer_encoder():
+def test_gatys_et_al_2017_multi_layer_encoder(subtests, mocker):
+    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
+
+    multi_layer_encoder = utils.gatys_et_al_2017_multi_layer_encoder()
+    assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
+
+    with subtests.test("internal preprocessing"):
+        assert "preprocessing" not in multi_layer_encoder
+
+    with subtests.test("inplace"):
+        relu_modules = [
+            module
+            for module in multi_layer_encoder.modules()
+            if isinstance(module, nn.ReLU)
+        ]
+        assert all(module.inplace for module in relu_modules)
     assert isinstance(
         utils.gatys_et_al_2017_multi_layer_encoder(), VGGMultiLayerEncoder
     )

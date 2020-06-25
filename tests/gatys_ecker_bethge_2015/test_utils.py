@@ -19,9 +19,10 @@ def test_gatys_ecker_bethge_2015_postprocessor():
     )
 
 
-@pytest.mark.large_download
 @pytest.mark.slow
-def test_gatys_ecker_bethge_2015_multi_layer_encoder(subtests):
+def test_gatys_ecker_bethge_2015_multi_layer_encoder(subtests, mocker):
+    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
+
     multi_layer_encoder = utils.gatys_ecker_bethge_2015_multi_layer_encoder()
     assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
 
@@ -37,9 +38,10 @@ def test_gatys_ecker_bethge_2015_multi_layer_encoder(subtests):
         assert all(module.inplace for module in relu_modules)
 
 
-@pytest.mark.large_download
 @pytest.mark.slow
-def test_gatys_ecker_bethge_2015_multi_layer_encoder_avg_ppol():
+def test_gatys_ecker_bethge_2015_multi_layer_encoder_avg_ppol(mocker):
+    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
+
     multi_layer_encoder = utils.gatys_ecker_bethge_2015_multi_layer_encoder(
         impl_params=False
     )
