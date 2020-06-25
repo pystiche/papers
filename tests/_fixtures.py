@@ -22,6 +22,8 @@ __all__ = [
     "target_image",
     "input_image",
     "multi_layer_encoder_with_layer",
+    "vgg_load_weights_mock",
+    "load_weights_mocks",
 ]
 
 
@@ -90,3 +92,15 @@ def multi_layer_encoder_with_layer():
     layer = "conv"
     multi_layer_encoder = MultiLayerEncoder(((layer, nn.Conv2d(3, 3, 1)),))
     return multi_layer_encoder, layer
+
+
+@pytest.fixture(scope="session")
+def vgg_load_weights_mock(session_mocker):
+    return session_mocker.patch(
+        "pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights"
+    )
+
+
+@pytest.fixture(scope="session")
+def load_weights_mocks(vgg_load_weights_mock):
+    return (vgg_load_weights_mock,)

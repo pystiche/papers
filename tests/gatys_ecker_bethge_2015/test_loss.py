@@ -12,7 +12,7 @@ from pystiche_papers.gatys_ecker_bethge_2015.utils import (
 
 
 @pytest.fixture(scope="module", autouse=True)
-def multi_layer_encoder_mock(module_mocker):
+def multi_layer_encoder_mock(module_mocker, load_weights_mocks):
     multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
 
     def new(impl_params=None):
