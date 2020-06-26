@@ -7,7 +7,9 @@ import pystiche_papers.gatys_ecker_bethge_2015 as paper
 from pystiche.loss import PerceptualLoss
 
 
-def test_gatys_ecker_bethge_2015_nst(subtests, mocker, content_image, style_image):
+def test_gatys_ecker_bethge_2015_nst_smoke(
+    subtests, mocker, content_image, style_image
+):
     mock = mocker.patch(
         "pystiche_papers.gatys_ecker_bethge_2015.core.default_image_optim_loop"
     )
@@ -36,7 +38,7 @@ def assert_is_rand_uniform(tensor, min=0.0, max=1.0):
 
 
 @pytest.mark.flaky
-def test_gatys_ecker_bethge_2015_nst_not_impl_params(
+def test_gatys_ecker_bethge_2015_nst_smoke_not_impl_params(
     subtests, mocker, content_image, style_image
 ):
     mock = mocker.patch(
