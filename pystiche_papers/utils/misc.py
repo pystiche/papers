@@ -10,6 +10,8 @@ from typing import Any, Callable, Dict, Iterator, Optional
 from typing import Sequence as SequenceType
 from typing import Tuple, TypeVar, Union, cast, overload
 
+import numpy as np
+
 import torch
 from torch import nn
 from torch.hub import _get_torch_home
@@ -150,13 +152,8 @@ def make_reproducible(
         if seed_standard_library:
             random.seed(seed)
 
-    def try_seed_numpy(seed: int) -> None:
-        try:
-            import numpy as np
-
-            np.random.seed(seed)
-        except ImportError:
-            pass
+    def seed_numpy(seed: int) -> None:
+        np.random.seed(seed)
 
     def seed_torch(seed: int) -> None:
         torch.manual_seed(seed)
@@ -174,7 +171,7 @@ def make_reproducible(
     seed = hash(seed) % (2 ** 32 - 1)
 
     maybe_seed_standard_library(seed)
-    try_seed_numpy(seed)
+    seed_numpy(seed)
     seed_torch(seed)
     maybe_set_cudnn()
 
