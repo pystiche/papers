@@ -125,33 +125,62 @@ def test_batch_up_image_loader_with_batch_sampler_no_batch_size(subtests, image)
             utils.batch_up_image(image, loader=loader)
 
 
-def test_make_reproducible(subtests):
+def test_make_reproducible():
+    def get_random_tensors():
+        return torch.rand(10), torch.randn(10), torch.randint(10, (10,))
+
+    utils.make_reproducible()
+    tensors1 = get_random_tensors()
+
+    utils.make_reproducible()
+    tensors2 = get_random_tensors()
+    tensors3 = get_random_tensors()
+
+    ptu.assert_allclose(tensors1, tensors2)
+
+    with pytest.raises(AssertionError):
+        ptu.assert_allclose(tensors2, tensors3)
+
+
+def test_make_reproducible_seeds(subtests, mocker):
+    mocks = [
+        (name, mocker.patch(f"pystiche_papers.utils.misc.{rel_import}"))
+        for name, rel_import in (
+            ("standard library", "random.seed"),
+            ("numpy", "np.random.seed"),
+            ("torch", "torch.manual_seed"),
+        )
+    ]
+
     seed = 123
     utils.make_reproducible(seed)
 
-    try:
-        import numpy as np
+    for name, mock in mocks:
+        assert mock.call_args[0][0] == seed
 
-        with subtests.test(msg="numpy random seed"):
-            numpy_seed = np.random.get_state()[1][0]
-            assert numpy_seed == seed
-    except ImportError:
-        pass
 
-    with subtests.test(msg="torch random seed"):
-        torch_seed = torch.initial_seed()
-        assert torch_seed == seed
+def test_make_reproducible_cudnn(mocker):
+    cudnn_mock = mocker.patch("pystiche_papers.utils.misc.torch.backends.cudnn")
+    cudnn_mock.is_available = lambda: True
 
-    cudnn = torch.backends.cudnn
-    if cudnn.is_available():
-        with subtests.test(msg="cudnn state"):
-            assert cudnn.deterministic
-            assert not cudnn.benchmark
+    utils.make_reproducible()
+
+    assert cudnn_mock.deterministic
+    assert not cudnn_mock.benchmark
 
 
 def test_make_reproducible_uint32_seed():
-    seed = 123456789
-    assert utils.make_reproducible(seed) == seed
+    uint32_max = 2 ** 32 - 1
+
+    assert utils.make_reproducible(uint32_max) == uint32_max
+    assert utils.make_reproducible(uint32_max + 1) == 0
+
+
+def test_make_reproducible_no_standard_library(mocker):
+    mock = mocker.patch("pystiche_papers.utils.misc.random.seed")
+    utils.make_reproducible(seed_standard_library=False)
+
+    assert not mock.called
 
 
 def test_get_sha256_hash():
