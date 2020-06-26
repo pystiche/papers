@@ -1,4 +1,6 @@
-import pytest
+from typing import Callable
+
+import numpy as np
 
 import pytorch_testing_utils as ptu
 import torch
@@ -24,20 +26,36 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
         assert isinstance(criterion, PerceptualLoss)
 
 
-def assert_is_rand_uniform(tensor, min=0.0, max=1.0):
-    # FIXME: calculate abs with respect to confidence intervals
-    actual_mean = torch.mean(tensor)
-    desired_mean = ptu.approx((min + max) / 2, rel=0, abs=5e-2)
-    assert (
-        actual_mean == desired_mean
-    ), f"mean mismatch: {actual_mean} != {desired_mean}"
+# TODO: find a better place for this
+def two_sample_kolmogorov_smirnov_test(
+    samples: torch.Tensor,
+    cdf_fn: Callable[[torch.Tensor], torch.Tensor],
+    significance_level: float = 5e-2,
+) -> bool:
+    numel = samples.numel()
+    ecdf = torch.arange(1, numel + 1, dtype=samples.dtype) / numel
+    cdf = cdf_fn(torch.sort(samples.flatten())[0])
+    statistic = torch.max(torch.abs(ecdf - cdf)).item()
+    # See
+    # https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test#Two-sample_Kolmogorov%E2%80%93Smirnov_test
+    # for the special case n == m
+    threshold = np.sqrt(-np.log(significance_level / 2) / numel)
+    return statistic > threshold
 
-    actual_var = torch.var(tensor)
-    desired_var = ptu.approx((max - min) / 12, rel=0, abs=5e-2)
-    assert actual_var == desired_var, f"var mismatch: {actual_var} != {desired_var}"
+
+# TODO: find a better place for this
+def assert_is_rand_uniform(samples, min=0.0, max=1.0, significance_level=5e-2):
+    assert torch.all(samples >= min)
+    assert torch.all(samples <= max)
+
+    def cdf_fn(x):
+        return x
+
+    assert not two_sample_kolmogorov_smirnov_test(
+        samples, cdf_fn, significance_level=significance_level
+    )
 
 
-@pytest.mark.flaky
 def test_gatys_ecker_bethge_2015_nst_smoke_not_impl_params(
     subtests, mocker, content_image, style_image
 ):
