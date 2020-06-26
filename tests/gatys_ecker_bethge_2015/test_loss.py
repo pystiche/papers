@@ -6,23 +6,6 @@ from torch.nn.functional import mse_loss
 from pystiche import gram_matrix, ops
 from pystiche.loss import PerceptualLoss
 from pystiche_papers.gatys_ecker_bethge_2015 import loss
-from pystiche_papers.gatys_ecker_bethge_2015.utils import (
-    gatys_ecker_bethge_2015_multi_layer_encoder,
-)
-
-
-@pytest.fixture(scope="module", autouse=True)
-def multi_layer_encoder_mock(module_mocker, load_weights_mocks):
-    multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
-
-    def new(impl_params=None):
-        multi_layer_encoder.empty_storage()
-        return multi_layer_encoder
-
-    return module_mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015.loss.gatys_ecker_bethge_2015_multi_layer_encoder",
-        new,
-    )
 
 
 def test_GatysEckerBethge2015FeatureReconstructionOperator(
