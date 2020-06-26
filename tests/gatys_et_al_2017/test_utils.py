@@ -1,8 +1,8 @@
 import pytest
 
+import pytorch_testing_utils as ptu
 from torch import nn, optim
 
-import pytorch_testing_utils as ptu
 from pystiche.enc import VGGMultiLayerEncoder
 from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
 from pystiche_papers.gatys_et_al_2017 import utils

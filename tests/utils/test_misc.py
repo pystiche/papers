@@ -4,11 +4,11 @@ from os import path
 
 import pytest
 
+import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
-import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche.optim import OptimLogger
 from pystiche_papers import utils

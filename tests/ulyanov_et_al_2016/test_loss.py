@@ -1,6 +1,6 @@
+import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-import pytorch_testing_utils as ptu
 from pystiche.image import extract_batch_size
 from pystiche_papers.ulyanov_et_al_2016 import loss
 

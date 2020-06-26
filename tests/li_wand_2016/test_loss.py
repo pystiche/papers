@@ -1,6 +1,6 @@
+import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-import pytorch_testing_utils as ptu
 from pystiche_papers.li_wand_2016 import loss
 
 
