@@ -168,7 +168,7 @@ def make_reproducible(
             torch.backends.cudnn.benchmark = False  # type: ignore[attr-defined]
 
     # the numpy random generator only accepts uint32 values
-    seed = hash(seed) % (2 ** 32 - 1)
+    seed = hash(seed) % 2 ** 32
 
     maybe_seed_standard_library(seed)
     seed_numpy(seed)
