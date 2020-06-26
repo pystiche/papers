@@ -6,7 +6,7 @@ import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
-from pystiche.loss import PerceptualLoss
+from pystiche_papers.gatys_ecker_bethge_2015 import utils
 
 
 def test_gatys_ecker_bethge_2015_nst_smoke(
@@ -17,13 +17,37 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
     )
 
     paper.gatys_ecker_bethge_2015_nst(content_image, style_image)
-    input_image, criterion = mock.call_args[0]
+
+    args, kwargs = mock.call_args
+    input_image, criterion = args
+    get_optimizer = kwargs["get_optimizer"]
+    preprocessor = kwargs["preprocessor"]
+    postprocessor = kwargs["postprocessor"]
 
     with subtests.test("input_image"):
         ptu.assert_allclose(input_image, content_image)
 
     with subtests.test("criterion"):
-        assert isinstance(criterion, PerceptualLoss)
+        assert type(criterion) is type(  # noqa: E721
+            paper.gatys_ecker_bethge_2015_perceptual_loss()
+        )
+
+    with subtests.test("optimizer"):
+        assert hasattr(get_optimizer, "__call__")
+        optimizer = get_optimizer(input_image)
+        assert type(optimizer) is type(  # noqa: E721
+            utils.gatys_ecker_bethge_2015_optimizer(input_image)
+        )
+
+    with subtests.test("preprocessor"):
+        assert type(preprocessor) is type(  # noqa: E721
+            utils.gatys_ecker_bethge_2015_preprocessor()
+        )
+
+    with subtests.test("postprocessor"):
+        assert type(postprocessor) is type(  # noqa: E721
+            utils.gatys_ecker_bethge_2015_postprocessor()
+        )
 
 
 # TODO: find a better place for this
