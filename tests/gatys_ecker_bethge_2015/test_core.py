@@ -1,9 +1,9 @@
 import pytest
 
+import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
-import pytorch_testing_utils as ptu
 from pystiche.loss import PerceptualLoss
 
 
