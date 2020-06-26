@@ -1,9 +1,9 @@
 import pytest
 
+import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
-import pytorch_testing_utils as ptu
 from pystiche_papers import utils
 
 

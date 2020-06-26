@@ -1,8 +1,8 @@
 import pytest
 
+import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-import pytorch_testing_utils as ptu
 from pystiche import gram_matrix, ops
 from pystiche.loss import PerceptualLoss
 from pystiche_papers.gatys_ecker_bethge_2015 import loss
