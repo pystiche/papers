@@ -9,10 +9,11 @@ on:
     paths:
       - "pystiche_papers/**"
       - "docs/**"
-      - "setup.py"
-      - "tox.ini"
-      - "requirements-dev.txt"
       - ".github/workflows/docs.yml"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - "setup.cfg"
+      - "tox.ini"
 
 jobs:
   build_docs:

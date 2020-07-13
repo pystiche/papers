@@ -8,12 +8,13 @@ on:
   pull_request:
     paths:
       - "**.py"
-      - "pyproject.toml"
       - ".flake8"
-      - "mypy.ini"
-      - "tox.ini"
-      - "requirements-dev.txt"
       - ".github/workflows/lint.yml"
+      - "mypy.ini"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - "setup.cfg"
+      - "tox.ini"
 
 jobs:
   check:
