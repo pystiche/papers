@@ -26,6 +26,7 @@ skip = [
   ".pytest_cache",
   ".tox",
   "__pycache__",
+  "build",
   "docs/build",
 ]
 line_length = 88
@@ -55,6 +56,11 @@ exclude = '''
   | \.pytest_cache
   | \.tox
   | __pycache__
+  | build
   | docs/build
 )/
 '''
+
+[tool.check-wheel-contents]
+# See https://github.com/jwodder/check-wheel-contents/issues/2
+ignore = "W002"
