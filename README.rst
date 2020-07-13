@@ -1,5 +1,5 @@
 pystiche_papers
-========================
+===============
 
 Reference implementation and replication of prominent NST papers
 
