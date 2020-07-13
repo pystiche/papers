@@ -60,3 +60,7 @@ exclude = '''
   | docs/build
 )/
 '''
+
+[tool.check-wheel-contents]
+# See https://github.com/jwodder/check-wheel-contents/issues/2
+ignore = "W002"
