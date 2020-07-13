@@ -9,9 +9,8 @@
 import os
 from datetime import datetime
 from distutils.util import strtobool
+from importlib_metadata import metadata
 from os import path
-
-import pystiche_papers
 
 # -- Run config ------------------------------------------------------------------------
 
@@ -50,10 +49,13 @@ PROJECT_ROOT = path.abspath(path.join(path.abspath(path.dirname(__file__)), ".."
 
 # -- Project information ---------------------------------------------------------------
 
-project = pystiche_papers.__name__
-author = pystiche_papers.__author__
+meta = metadata("pystiche_papers")
+
+project = meta["name"]
+author = meta["author"]
 copyright = f"{datetime.now().year}, {author}"
-version = release = pystiche_papers.__version__
+release = meta["version"]
+version = ".".join(release.split(".")[:2])
 
 
 # -- General configuration -------------------------------------------------------------
