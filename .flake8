@@ -13,6 +13,7 @@ exclude =
     .tox,
     __pycache__,
     *.pyc,
+    build,
     docs/build,
 ignore = E203, E501, W503
 max-line-length = 88
