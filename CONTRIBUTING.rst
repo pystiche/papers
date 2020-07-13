@@ -8,17 +8,20 @@ without further discussion. If you planning to contribute new features, please o
 `issue <https://github.com/pmeier/pystiche_papers/issues>`_
 and discuss the feature with us first.
 
-Every PR is subjected to multiple checks that it has to pass before it can be merged.
-The checks are performed by `tox <https://tox.readthedocs.io/en/latest/>`_ . You can
-install it alongside all other development requirements with
+To start working on ``pystiche_papers`` clone from the latest version and install the
+development requirements:
 
 .. code-block:: sh
 
+  PYSTICHE_PAPERS_ROOT = pystiche_papers
+  git clone https://github.com/pmeier/pystiche_papers $PYSTICHE_PAPERS_ROOT
   cd $PYSTICHE_PAPERS_ROOT
   pip install -r requirements-dev.txt
+  pre-commit install
 
-Below you can find details and instructions how to run the checks locally.
-
+Every PR is subjected to multiple checks that it has to pass before it can be merged.
+The checks are performed by `tox <https://tox.readthedocs.io/en/latest/>`_ . Below
+you can find details and instructions how to run the checks locally.
 
 Code format and linting
 -----------------------
@@ -28,8 +31,9 @@ imports, `black <https://black.readthedocs.io/en/stable/>`_ to format the code, 
 `flake8 <https://flake8.pycqa.org/en/latest/>`_ to enforce
 `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ compliance.
 
-Furthermore, ``pystiche_papers`` is `PEP561 <https://www.python.org/dev/peps/pep-0561/>`_
-compliant and checks the type annotations with `mypy <http://mypy-lang.org/>`_ .
+Furthermore, ``pystiche_papers`` is
+`PEP561 <https://www.python.org/dev/peps/pep-0561/>`_ compliant and checks the type
+annotations with `mypy <http://mypy-lang.org/>`_ .
 
 To format your code run
 
@@ -38,33 +42,24 @@ To format your code run
   cd $PYSTICHE_PAPERS_ROOT
   tox -e format
 
-To run the lint check locally run
+.. note::
+
+  Amongst others, ``isort`` and ``black`` are run by
+  `pre-commit <https://pre-commit.com/>`_ before every commit.
+
+To run the full lint check locally run
 
 .. code-block:: sh
 
   cd $PYSTICHE_PAPERS_ROOT
   tox -e lint
 
-.. note::
-
-  The checks with ``isort``, ``black``, and ``flake8`` can be executed as a pre-commit
-  hook. You can install them with:
-
-  .. code-block:: sh
-
-    pip install pre-commit
-    cd $PYSTICHE_PAPERS_ROOT
-    pre-commit install
-
-  ``mypy`` is excluded from this, since the pre-commit runs in a separate virtual
-  environment in which ``pystiche_papers`` would have to be installed in for every commit.
-
 
 Tests
 -----
 
-``pystiche`` uses `pytest <https://docs.pytest.org/en/stable/>`_ to run the test suite.
-You can run it locally with
+``pystiche_papers`` uses `pytest <https://docs.pytest.org/en/stable/>`_ to run the test 
+suite. You can run it locally with
 
 .. code-block:: sh
 

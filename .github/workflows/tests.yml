@@ -4,21 +4,23 @@ on:
   push:
     branches:
       - master
+      - releases/*
 
   pull_request:
     paths:
       - "pystiche_papers/**"
       - "tests/**"
-      - "setup.py"
-      - "pytest.ini"
-      - "tox.ini"
-      - ".coveragerc"
       - "codecov.yml"
-      - "requirements-dev.txt"
+      - ".coveragerc"
       - ".github/workflows/tests.yml"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "requirements-dev.txt"
+      - "setup.cfg"
+      - "tox.ini"
 
 jobs:
-  run:
+  unit:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
