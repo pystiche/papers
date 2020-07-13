@@ -16,7 +16,7 @@ on:
       - "tox.ini"
 
 jobs:
-  build_docs:
+  sphinx:
     runs-on: ubuntu-latest
 
     steps:
