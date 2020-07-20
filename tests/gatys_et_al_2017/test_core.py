@@ -1,7 +1,6 @@
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche.image.transforms.functional._resize import resize
 from pystiche_papers.gatys_et_al_2017 import utils
 
 
@@ -19,11 +18,10 @@ def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image
     postprocessor = kwargs["postprocessor"]
 
     with subtests.test("input_image"):
-        ptu.assert_allclose(input_image, resize(content_image, 800))
+        ptu.assert_allclose(input_image, pyramid[-1].resize_image(content_image))
 
     with subtests.test("criterion"):
         assert isinstance(criterion, type(paper.gatys_et_al_2017_perceptual_loss()))
-        )
 
     with subtests.test("pyramid"):
         assert type(pyramid) is type(  # noqa: E721
