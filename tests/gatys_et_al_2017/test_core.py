@@ -22,8 +22,7 @@ def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image
         ptu.assert_allclose(input_image, resize(content_image, 800))
 
     with subtests.test("criterion"):
-        assert type(criterion) is type(  # noqa: E721
-            paper.gatys_et_al_2017_perceptual_loss()
+        assert isinstance(criterion, type(paper.gatys_et_al_2017_perceptual_loss()))
         )
 
     with subtests.test("pyramid"):
