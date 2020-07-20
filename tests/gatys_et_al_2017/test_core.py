@@ -1,9 +1,8 @@
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche_papers.gatys_et_al_2017 import utils
-
 from pystiche.image.transforms.functional._resize import resize
+from pystiche_papers.gatys_et_al_2017 import utils
 
 
 def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image):
