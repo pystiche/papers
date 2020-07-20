@@ -7,6 +7,7 @@ import torch
 
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
 from pystiche_papers.gatys_ecker_bethge_2015 import utils
+from tests._utils import is_callable
 
 
 def test_gatys_ecker_bethge_2015_nst_smoke(
@@ -31,7 +32,7 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
         assert isinstance(criterion, type(paper.gatys_ecker_bethge_2015_perceptual_loss()))
 
     with subtests.test("optimizer"):
-        assert hasattr(get_optimizer, "__call__")
+        assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
         assert isinstance(optimizer, type(utils.gatys_ecker_bethge_2015_optimizer(input_image)))
 
