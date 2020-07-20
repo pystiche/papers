@@ -2,6 +2,7 @@ import pytorch_testing_utils as ptu
 
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche_papers.gatys_et_al_2017 import utils
+from tests._utils import is_callable
 
 
 def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image):
@@ -29,7 +30,7 @@ def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image
         )
 
     with subtests.test("optimizer"):
-        assert hasattr(get_optimizer, "__call__")
+        assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
         assert type(optimizer) is type(  # noqa: E721
             utils.gatys_et_al_2017_optimizer(input_image)

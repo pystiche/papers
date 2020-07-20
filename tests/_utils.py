@@ -9,7 +9,7 @@ import pytest
 
 import torch
 
-__all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module"]
+__all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module", "is_callable"]
 
 
 # Copied from
@@ -59,3 +59,7 @@ def load_module(location):
     module = util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def is_callable(obj):
+    return hasattr(obj, "__call__")
