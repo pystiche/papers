@@ -79,6 +79,7 @@ def test_gatys_et_al_2017_style_loss(subtests):
     with subtests.test("score_weight"):
         assert style_loss.score_weight == pytest.approx(1e3)
 
+
 def test_gatys_et_al_2017_perceptual_loss(subtests):
     perceptual_loss = loss.gatys_et_al_2017_perceptual_loss()
     assert isinstance(perceptual_loss, PerceptualLoss)
