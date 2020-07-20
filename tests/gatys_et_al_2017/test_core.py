@@ -25,23 +25,17 @@ def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image
         assert isinstance(criterion, type(paper.gatys_et_al_2017_perceptual_loss()))
 
     with subtests.test("pyramid"):
-        assert type(pyramid) is type(  # noqa: E721
-            paper.gatys_et_al_2017_image_pyramid()
-        )
+        assert isinstance(pyramid, type(paper.gatys_et_al_2017_image_pyramid()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
-        assert type(optimizer) is type(  # noqa: E721
-            utils.gatys_et_al_2017_optimizer(input_image)
+        assert isinstance(
+            optimizer, type(utils.gatys_et_al_2017_optimizer(input_image))
         )
 
     with subtests.test("preprocessor"):
-        assert type(preprocessor) is type(  # noqa: E721
-            utils.gatys_et_al_2017_preprocessor()
-        )
+        assert isinstance(preprocessor, type(utils.gatys_et_al_2017_preprocessor()))
 
     with subtests.test("postprocessor"):
-        assert type(postprocessor) is type(  # noqa: E721
-            utils.gatys_et_al_2017_postprocessor()
-        )
+        assert isinstance(postprocessor, type(utils.gatys_et_al_2017_postprocessor()))
