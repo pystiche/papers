@@ -4,6 +4,7 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 from pystiche import gram_matrix, ops
+from pystiche.loss import PerceptualLoss
 from pystiche.ops import FeatureReconstructionOperator
 from pystiche_papers.gatys_et_al_2017 import loss
 
@@ -77,3 +78,15 @@ def test_gatys_et_al_2017_style_loss(subtests):
 
     with subtests.test("score_weight"):
         assert style_loss.score_weight == pytest.approx(1e3)
+
+def test_gatys_et_al_2017_perceptual_loss(subtests):
+    perceptual_loss = loss.gatys_et_al_2017_perceptual_loss()
+    assert isinstance(perceptual_loss, PerceptualLoss)
+
+    with subtests.test("content_loss"):
+        assert isinstance(
+            perceptual_loss.content_loss, loss.FeatureReconstructionOperator,
+        )
+
+    with subtests.test("style_loss"):
+        assert isinstance(perceptual_loss.style_loss, loss.GatysEtAl2017StyleLoss)
