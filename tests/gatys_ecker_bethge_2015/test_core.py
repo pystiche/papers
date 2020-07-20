@@ -28,26 +28,18 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
         ptu.assert_allclose(input_image, content_image)
 
     with subtests.test("criterion"):
-        assert type(criterion) is type(  # noqa: E721
-            paper.gatys_ecker_bethge_2015_perceptual_loss()
-        )
+        assert isinstance(criterion, type(paper.gatys_ecker_bethge_2015_perceptual_loss()))
 
     with subtests.test("optimizer"):
         assert hasattr(get_optimizer, "__call__")
         optimizer = get_optimizer(input_image)
-        assert type(optimizer) is type(  # noqa: E721
-            utils.gatys_ecker_bethge_2015_optimizer(input_image)
-        )
+        assert isinstance(optimizer, type(utils.gatys_ecker_bethge_2015_optimizer(input_image)))
 
     with subtests.test("preprocessor"):
-        assert type(preprocessor) is type(  # noqa: E721
-            utils.gatys_ecker_bethge_2015_preprocessor()
-        )
+        assert isinstance(preprocessor, type(utils.gatys_ecker_bethge_2015_preprocessor()))
 
     with subtests.test("postprocessor"):
-        assert type(postprocessor) is type(  # noqa: E721
-            utils.gatys_ecker_bethge_2015_postprocessor()
-        )
+        assert isinstance(postprocessor, type(utils.gatys_ecker_bethge_2015_postprocessor()))
 
 
 # TODO: find a better place for this
