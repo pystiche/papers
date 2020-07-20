@@ -29,18 +29,26 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
         ptu.assert_allclose(input_image, content_image)
 
     with subtests.test("criterion"):
-        assert isinstance(criterion, type(paper.gatys_ecker_bethge_2015_perceptual_loss()))
+        assert isinstance(
+            criterion, type(paper.gatys_ecker_bethge_2015_perceptual_loss())
+        )
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
-        assert isinstance(optimizer, type(utils.gatys_ecker_bethge_2015_optimizer(input_image)))
+        assert isinstance(
+            optimizer, type(utils.gatys_ecker_bethge_2015_optimizer(input_image))
+        )
 
     with subtests.test("preprocessor"):
-        assert isinstance(preprocessor, type(utils.gatys_ecker_bethge_2015_preprocessor()))
+        assert isinstance(
+            preprocessor, type(utils.gatys_ecker_bethge_2015_preprocessor())
+        )
 
     with subtests.test("postprocessor"):
-        assert isinstance(postprocessor, type(utils.gatys_ecker_bethge_2015_postprocessor()))
+        assert isinstance(
+            postprocessor, type(utils.gatys_ecker_bethge_2015_postprocessor())
+        )
 
 
 # TODO: find a better place for this
