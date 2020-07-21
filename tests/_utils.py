@@ -71,11 +71,12 @@ def create_guides(img):
     height, width = image.extract_image_size(img)
     top_height = height // 2  # built in floor
     bottom_height = height - top_height
-    mask = torch.stack(
+    top_mask = torch.cat(
         (
             torch.ones([1, 1, top_height, width], dtype=torch.bool),
             torch.zeros([1, 1, bottom_height, width], dtype=torch.bool),
         ),
         2,
     )
-    return {"top": mask.float(), "bottom": (~mask).float()}
+    bottom_mask = ~top_mask
+    return {"top": top_mask.float(), "bottom": bottom_mask.float()}
