@@ -121,7 +121,7 @@ def test_johnson_alahi_li_2016_regularization(subtests):
     assert isinstance(regularization, loss.JohnsonAlahiLi2016TotalVariationOperator)
 
     with subtests.test("score_weight"):
-        assert regularization.score_weight == pytest.approx(1e-6)
+        assert regularization.score_weight == pytest.approx(1e-6, rel=1e-3)
 
 
 def test_johnson_alahi_li_2016_perceptual_loss(subtests):
