@@ -120,7 +120,8 @@ def guides(target_image):
                     [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
                 ),
                 torch.ones(
-                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]])
+                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
+                ),
             ),
             2,
         ),
