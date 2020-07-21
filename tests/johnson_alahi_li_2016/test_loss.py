@@ -11,20 +11,6 @@ from pystiche.ops.functional import total_variation_loss
 from pystiche_papers.johnson_alahi_li_2016 import loss
 
 
-@pytest.fixture
-def styles():
-    return (
-        "composition_vii",
-        "feathers",
-        "la_muse",
-        "mosaic",
-        "starry_night",
-        "the_scream",
-        "udnie",
-        "the_wave",
-    )
-
-
 def test_get_content_score_weight_smoke(subtests, styles):
     for instance_norm, style in itertools.product((True, False), styles):
         with subtests.test(instance_norm=instance_norm, style=style):

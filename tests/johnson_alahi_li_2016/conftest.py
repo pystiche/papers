@@ -6,6 +6,20 @@ from pystiche_papers.johnson_alahi_li_2016.utils import (
 
 
 @pytest.fixture(scope="package")
+def styles():
+    return (
+        "composition_vii",
+        "feathers",
+        "la_muse",
+        "mosaic",
+        "starry_night",
+        "the_scream",
+        "udnie",
+        "the_wave",
+    )
+
+
+@pytest.fixture(scope="package")
 def vgg_load_weights_mock(package_mocker):
     return package_mocker.patch(
         "pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights"
