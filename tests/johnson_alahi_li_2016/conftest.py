@@ -1,7 +1,7 @@
 import pytest
 
-from pystiche_papers.gatys_ecker_bethge_2015.utils import (
-    gatys_ecker_bethge_2015_multi_layer_encoder,
+from pystiche_papers.johnson_alahi_li_2016.utils import (
+    johnson_alahi_li_2016_multi_layer_encoder,
 )
 
 
@@ -14,7 +14,7 @@ def vgg_load_weights_mock(package_mocker):
 
 @pytest.fixture(scope="package", autouse=True)
 def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
-    multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
+    multi_layer_encoder = johnson_alahi_li_2016_multi_layer_encoder()
 
     def new(impl_params=None):
         multi_layer_encoder.empty_storage()
