@@ -62,7 +62,7 @@ def test_JohnsonAlahiLi2016GramOperator(
             score = mse_loss(input_repr, target_repr,)
             desired = score / extra_num_channels_normalization ** 2
 
-            assert actual == ptu.approx(desired)
+            assert actual == ptu.approx(desired, rel=1e-3)
 
 
 def test_get_style_score_weight_smoke(subtests, styles):
