@@ -80,9 +80,9 @@ def test_gatys_et_al_2017_style_loss(subtests):
         assert style_loss.score_weight == pytest.approx(1e3)
 
 
-def gatys_et_al_2017_guided_style_loss(subtests, guides):
+def gatys_et_al_2017_guided_style_loss(subtests, content_guides):
 
-    style_loss = loss.gatys_et_al_2017_guided_style_loss(guides.keys())
+    style_loss = loss.gatys_et_al_2017_guided_style_loss(content_guides.keys())
     assert isinstance(style_loss, ops.MultiRegionOperator)
 
     with subtests.test("encoding_ops"):
@@ -95,7 +95,7 @@ def gatys_et_al_2017_guided_style_loss(subtests, guides):
     )
 
     with subtests.test("regions"):
-        assert regions == guides.keys()
+        assert regions == content_guides.keys()
 
     with subtests.test("region_weights"):
         desired = tuple(1.0) * len(regions)
@@ -115,9 +115,11 @@ def test_gatys_et_al_2017_perceptual_loss(subtests):
         assert isinstance(perceptual_loss.style_loss, loss.GatysEtAl2017StyleLoss)
 
 
-def test_gatys_et_al_2017_guided_perceptual_loss(subtests, guides):
+def test_gatys_et_al_2017_guided_perceptual_loss(subtests, content_guides):
 
-    perceptual_loss = loss.gatys_et_al_2017_guided_perceptual_loss(guides.keys())
+    perceptual_loss = loss.gatys_et_al_2017_guided_perceptual_loss(
+        content_guides.keys()
+    )
     assert isinstance(perceptual_loss, GuidedPerceptualLoss)
 
     with subtests.test("content_loss"):

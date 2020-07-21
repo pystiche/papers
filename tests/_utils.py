@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 from importlib import util
+from math import ceil
 from os import path
 
 import pytest
@@ -63,3 +64,18 @@ def load_module(location):
 
 def is_callable(obj):
     return hasattr(obj, "__call__")
+
+
+def create_guides(image):
+    mask = torch.stack(
+        (
+            torch.ones(
+                [1, 1, ceil(image.size()[2] / 2), image.size()[3]], dtype=torch.bool
+            ),
+            torch.zeros(
+                [1, 1, ceil(image.size()[2] / 2), image.size()[3]], dtype=torch.bool
+            ),
+        ),
+        2,
+    )
+    return {"top": mask, "botttom": ~mask}

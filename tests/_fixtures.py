@@ -1,5 +1,3 @@
-from math import ceil, floor
-
 import pytest
 
 import torch
@@ -9,6 +7,7 @@ from pystiche.enc import MultiLayerEncoder
 from pystiche.image import make_single_image
 
 from ._assets import read_image
+from ._utils import create_guides
 
 __all__ = [
     "image_small_0",
@@ -25,7 +24,8 @@ __all__ = [
     "input_image",
     "content_image",
     "style_image",
-    "guides",
+    "content_guides",
+    "style_guides",
     "multi_layer_encoder_with_layer",
 ]
 
@@ -96,36 +96,18 @@ def content_image(target_image):
 
 
 @pytest.fixture
+def content_guides(content_image):
+    return create_guides(content_image)
+
+
+@pytest.fixture
 def style_image(image_small_2):
     return image_small_2
 
 
 @pytest.fixture
-def guides(target_image):
-    return {
-        "top": torch.stack(
-            (
-                torch.ones(
-                    [1, 1, ceil(target_image.size()[2] / 2), target_image.size()[3]]
-                ),
-                torch.zeros(
-                    [1, 1, ceil(target_image.size()[2] / 2), target_image.size()[3]]
-                ),
-            ),
-            2,
-        ),
-        "bottom": torch.stack(
-            (
-                torch.zeros(
-                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
-                ),
-                torch.ones(
-                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
-                ),
-            ),
-            2,
-        ),
-    }
+def style_guides(style_image):
+    return create_guides(style_image)
 
 
 @pytest.fixture(scope="session")
