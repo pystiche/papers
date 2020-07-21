@@ -1,3 +1,5 @@
+git+https://github.com/pmeier/pystiche
+importlib-metadata
 sphinx >= 2
 sphinx_rtd_theme
 https://download.pytorch.org/whl/cpu/torch-1.5.1%2Bcpu-cp36-cp36m-linux_x86_64.whl

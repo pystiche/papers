@@ -3,51 +3,50 @@ from os import path
 
 try:
     import yaml
-    from pytorch_wheel_installer.core import find_links
-except ImportError:
-    msg = "Please install pyyaml and pytorch_wheel_selector prior to running this."
+    import light_the_torch as ltt
+
+    assert ltt.__version__ >= "0.2"
+except (ImportError, AssertionError):
+    msg = "Please install pyyaml and light-the-torch>=0.2 prior to running this."
     raise RuntimeError(msg)
 
 
 def main(
-    project_root=None, language=None, file="requirements-rtd.txt",
+    root=".", file=path.join("docs", "requirements-rtd.txt"),
 ):
-    if project_root is None:
-        project_root = path.abspath(path.join(path.dirname(__file__), ".."))
+    python_version = extract_python_version_from_rtd_config(root)
 
-    deps = extract_docs_deps(project_root)
-
-    if language is None:
-        language = extract_language_from_rtd_config(project_root)
-
-    deps.extend(find_pytorch_wheel_links(language))
+    deps = extract_docs_deps_from_tox_config(root)
+    deps.extend(find_pytorch_wheel_links(root, python_version))
 
     with open(file, "w") as fh:
         fh.write("\n".join(deps) + "\n")
 
 
-def extract_docs_deps(root, file="tox.ini", testenv="testenv:docs"):
-    config = configparser.ConfigParser()
-    config.read(path.join(root, file))
-    deps = config[testenv]["deps"].strip().split("\n")
-    # TODO: remove this when pystiche_papers has pystiche as a requirement
-    deps.remove("git+https://github.com/pmeier/pystiche")
-    return deps
-
-
-def extract_language_from_rtd_config(root, file=".readthedocs.yml"):
+def extract_python_version_from_rtd_config(root, file=".readthedocs.yml"):
     with open(path.join(root, file)) as fh:
         data = yaml.load(fh, Loader=yaml.FullLoader)
 
-    python_version = str(data["python"]["version"])
-    return f"py{python_version.replace('.', '')}"
+    return str(data["python"]["version"])
+
+
+def extract_docs_deps_from_tox_config(root, file="tox.ini", testenv="testenv:docs"):
+    config = configparser.ConfigParser()
+    config.read(path.join(root, file))
+    return config[testenv]["deps"].strip().split("\n")
 
 
 def find_pytorch_wheel_links(
-    language, distributions=("torch", "torchvision"), backend="cpu", platform="linux",
+    root, python_version, computation_backend="cpu", platform="linux_x86_64",
 ):
-    return find_links(distributions, backend, language, platform)
+    return ltt.find_links(
+        [root],
+        computation_backend=computation_backend,
+        python_version=python_version,
+        platform=platform,
+    )
 
 
 if __name__ == "__main__":
-    main()
+    project_root = path.abspath(path.join(path.dirname(__file__), ".."))
+    main(project_root)
