@@ -4,7 +4,7 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 from pystiche import gram_matrix, ops
-from pystiche.loss import PerceptualLoss, GuidedPerceptualLoss
+from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
 from pystiche.ops import FeatureReconstructionOperator
 from pystiche_papers.gatys_et_al_2017 import loss
 
@@ -80,6 +80,28 @@ def test_gatys_et_al_2017_style_loss(subtests):
         assert style_loss.score_weight == pytest.approx(1e3)
 
 
+def gatys_et_al_2017_guided_style_loss(subtests, guides):
+
+    style_loss = loss.gatys_et_al_2017_guided_style_loss(guides.keys())
+    assert isinstance(style_loss, ops.MultiRegionOperator)
+
+    with subtests.test("encoding_ops"):
+        assert all(
+            isinstance(op, loss.GatysEtAl2017StyleLoss) for op in style_loss.operators()
+        )
+
+    regions, region_weights = zip(
+        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+    )
+
+    with subtests.test("regions"):
+        assert regions == guides.keys()
+
+    with subtests.test("region_weights"):
+        desired = tuple(1.0) * len(regions)
+        assert region_weights == pytest.approx(desired)
+
+
 def test_gatys_et_al_2017_perceptual_loss(subtests):
     perceptual_loss = loss.gatys_et_al_2017_perceptual_loss()
     assert isinstance(perceptual_loss, PerceptualLoss)
@@ -93,8 +115,9 @@ def test_gatys_et_al_2017_perceptual_loss(subtests):
         assert isinstance(perceptual_loss.style_loss, loss.GatysEtAl2017StyleLoss)
 
 
-def test_gatys_et_al_2017_guided_perceptual_loss(subtests):
-    perceptual_loss = loss.gatys_et_al_2017_guided_perceptual_loss()
+def test_gatys_et_al_2017_guided_perceptual_loss(subtests, guides):
+
+    perceptual_loss = loss.gatys_et_al_2017_guided_perceptual_loss(guides.keys())
     assert isinstance(perceptual_loss, GuidedPerceptualLoss)
 
     with subtests.test("content_loss"):

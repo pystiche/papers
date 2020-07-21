@@ -1,8 +1,10 @@
+from math import ceil, floor
+
 import pytest
 
 import torch
 from torch import nn
-from math import ceil, floor
+
 from pystiche.enc import MultiLayerEncoder
 from pystiche.image import make_single_image
 
@@ -23,6 +25,7 @@ __all__ = [
     "input_image",
     "content_image",
     "style_image",
+    "guides",
     "multi_layer_encoder_with_layer",
 ]
 
@@ -101,12 +104,25 @@ def style_image(image_small_2):
 def guides(target_image):
     return {
         "top": torch.stack(
-            (torch.ones([1, 1, ceil(target_image.size()[2]/2), target_image.size()[3]]),
-             torch.zeros([1, 1, ceil(target_image.size()[2]/2), target_image.size()[3]])), 2
+            (
+                torch.ones(
+                    [1, 1, ceil(target_image.size()[2] / 2), target_image.size()[3]]
+                ),
+                torch.zeros(
+                    [1, 1, ceil(target_image.size()[2] / 2), target_image.size()[3]]
+                ),
+            ),
+            2,
         ),
         "botttom": torch.stack(
-            (torch.zeros([1, 1, floor(target_image.size()[2]/2), target_image.size()[3]])),
-            torch.ones([1, 1, floor(target_image.size()[2]/2), target_image.size()[3]]), 2
+            (
+                torch.zeros(
+                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
+                ),
+                torch.ones(
+                    [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]])
+            ),
+            2,
         ),
     }
 
