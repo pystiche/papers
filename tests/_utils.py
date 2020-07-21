@@ -78,4 +78,4 @@ def create_guides(image):
         ),
         2,
     )
-    return {"top": mask, "botttom": ~mask}
+    return {"top": mask, "bottom": ~mask}
