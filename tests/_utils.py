@@ -78,4 +78,4 @@ def create_guides(image):
         ),
         2,
     )
-    return {"top": mask, "bottom": ~mask}
+    return {"top": mask.float(), "bottom": ~mask.float()}
