@@ -114,7 +114,7 @@ def guides(target_image):
             ),
             2,
         ),
-        "botttom": torch.stack(
+        "bottom": torch.stack(
             (
                 torch.zeros(
                     [1, 1, floor(target_image.size()[2] / 2), target_image.size()[3]]
