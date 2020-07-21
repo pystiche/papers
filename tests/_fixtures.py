@@ -21,7 +21,9 @@ __all__ = [
     "single_image",
     "batch_image",
     "target_image",
+    "target_guides",
     "input_image",
+    "input_guides",
     "content_image",
     "style_image",
     "content_guides",
@@ -86,8 +88,18 @@ def target_image(image_small_0):
 
 
 @pytest.fixture
+def target_guides(target_image):
+    return create_guides(target_image)
+
+
+@pytest.fixture
 def input_image(image_small_1):
     return image_small_1
+
+
+@pytest.fixture
+def input_guides(input_image):
+    return create_guides(input_image)
 
 
 @pytest.fixture
