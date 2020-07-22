@@ -18,8 +18,6 @@ def test_li_wand_2016_postprocessor():
 
 @pytest.mark.slow
 def test_li_wand_2016_multi_layer_encoder(subtests, mocker):
-    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
-
     multi_layer_encoder = utils.li_wand_2016_multi_layer_encoder()
     assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
 
