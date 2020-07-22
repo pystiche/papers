@@ -97,7 +97,7 @@ def johnson_alahi_li_2016_training(
     def criterion_update_fn(input_image: torch.Tensor, criterion: nn.Module) -> None:
         cast(PerceptualLoss, criterion).set_content_image(input_image)
 
-    default_transformer_optim_loop(
+    return default_transformer_optim_loop(
         content_image_loader,
         transformer,
         criterion,
@@ -107,8 +107,6 @@ def johnson_alahi_li_2016_training(
         logger=logger,
         log_fn=log_fn,
     )
-
-    return transformer
 
 
 def johnson_alahi_li_2016_stylization(
