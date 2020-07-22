@@ -57,46 +57,43 @@ def test_LiWand2016MRFOperator(
     target_enc = encoder(target_image)
     input_enc = encoder(input_image)
 
-    configs = ((True, 3, 1, 1.0 / 2.0, "sum"), (False, 3, 1, 1.0, "sum"))
-    for (
-        impl_params,
-        patch_size,
-        stride,
-        score_correction_factor,
-        loss_reduction,
-    ) in configs:
+    configs = ((True, 1.0 / 2.0), (False, 1.0))
+    for (impl_params, score_correction_factor,) in configs:
         with subtests.test(impl_params=impl_params):
+
             op = loss.LiWand2016MRFOperator(encoder, 3, impl_params=impl_params,)
             op.set_target_image(target_image)
             actual = op(input_image)
 
-           extract_patches = loss.extract_normalized_patches2d if impl_params else extract_patches2d
-           target_repr = extract_patches(target_enc, patch_size, stride)
-           input_repr = extract_patches(input_enc, patch_size, stride)
+            extract_patches = (
+                loss.extract_normalized_patches2d if impl_params else extract_patches2d
+            )
+            target_repr = extract_patches(target_enc, 3, 1)
+            input_repr = extract_patches(input_enc, 3, 1)
 
-            score = mrf_loss(input_repr, target_repr, reduction=loss_reduction)
+            score = mrf_loss(input_repr, target_repr, reduction="sum")
             desired = score * score_correction_factor
 
             assert actual == ptu.approx(desired)
 
 
-def test_li_wand_2016_style_loss(subtests):
+def test_li_wand_2016_style_loss(subtests, mocker):
     style_loss = loss.li_wand_2016_style_loss()
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
     with subtests.test("encoding_ops"):
         assert all(isinstance(op, ops.MRFOperator) for op in style_loss.operators())
-
-    configs = ((True, 1e-4, 2, 1, 5e-2, 1, 7.5), (False, 1e0, 1, 3, 5e-2, 2, 7.5))
+    configs = ((True, 1e-4, 2, 1, 1), (False, 1e0, 1, 3, 2))
     for (
         impl_params,
         score_weight,
         stride,
         num_scale_steps,
-        scale_step_width,
         num_rotate_steps,
-        rotate_step_width,
     ) in configs:
+        mock = mocker.patch(
+            "pystiche.ops.comparison.MRFOperator.scale_and_rotate_transforms"
+        )
         style_loss = loss.li_wand_2016_style_loss(impl_params=impl_params)
         layers, layer_weights, op_stride, op_target_transforms = zip(
             *[
@@ -117,35 +114,33 @@ def test_li_wand_2016_style_loss(subtests):
         with subtests.test("layer_weights"):
             assert layer_weights == (1.0,) * len(layers)
 
-        scaling_factors = np.arange(
-            -num_scale_steps, num_scale_steps + 1, dtype=np.float
-        )
-        scaling_factors = 1.0 + (scaling_factors * scale_step_width)
+        _, kwargs = mock.call_args
+        pyramid_num_scale_steps = kwargs["num_scale_steps"]
+        pyramid_scale_step_width = kwargs["scale_step_width"]
+        pyramid_num_rotate_steps = kwargs["num_rotate_steps"]
+        pyramid_rotate_step_width = kwargs["rotate_step_width"]
 
-        rotation_angles = np.arange(
-            -num_rotate_steps, num_rotate_steps + 1, dtype=np.float
-        )
-        rotation_angles *= rotate_step_width
+        with subtests.test("num_scale_steps"):
+            assert pyramid_num_scale_steps == num_scale_steps
 
-        for i, values in enumerate(itertools.product(scaling_factors, rotation_angles)):
-            scaling_factor, rotation_angle = values
-            with subtests.test("scaling_factor"):
-                assert op_target_transforms[0][i].scaling_factor == scaling_factor
+        with subtests.test("num_scale_steps"):
+            assert pyramid_scale_step_width == 5e-2
 
-            with subtests.test("rotation_angles"):
-                assert op_target_transforms[0][i].rotation_angle == rotation_angle
+        with subtests.test("num_rotate_steps"):
+            assert pyramid_num_rotate_steps == num_rotate_steps
+
+        with subtests.test("rotate_step_width"):
+            assert pyramid_rotate_step_width == 7.5
 
 
 def test_LiWand2016TotalVariationOperator(subtests, input_image):
-    configs = ((True, "sum", 1.0 / 2.0), (False, "sum", 1.0))
-    for impl_params, loss_reduction, score_correction_factor in configs:
+    configs = ((True, 1.0 / 2.0), (False, 1.0))
+    for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
             op = loss.LiWand2016TotalVariationOperator(impl_params=impl_params,)
             actual = op(input_image)
 
-            score = total_variation_loss(
-                input_image, exponent=2.0, reduction=loss_reduction
-            )
+            score = total_variation_loss(input_image, exponent=2.0, reduction="sum")
 
             desired = score * score_correction_factor
 
