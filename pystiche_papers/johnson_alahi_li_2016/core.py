@@ -134,11 +134,11 @@ def johnson_alahi_li_2016_stylization(
         transformer = transformer.eval()
     transformer = transformer.to(device)
 
-    if impl_params and preprocessor is None:
+    if preprocessor is None:
         preprocessor = johnson_alahi_li_2016_preprocessor()
         preprocessor = preprocessor.to(device)
 
-    if impl_params and postprocessor is None:
+    if postprocessor is None:
         postprocessor = johnson_alahi_li_2016_postprocessor()
         postprocessor = postprocessor.to(device)
 
