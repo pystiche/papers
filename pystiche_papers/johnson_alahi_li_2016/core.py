@@ -18,7 +18,7 @@ from .data import (
     johnson_alahi_li_2016_style_transform,
 )
 from .loss import johnson_alahi_li_2016_perceptual_loss
-from .modules import JohnsonAlahiLi2016Transformer, johnson_alahi_li_2016_transformer
+from .modules import johnson_alahi_li_2016_transformer
 from .utils import (
     johnson_alahi_li_2016_optimizer,
     johnson_alahi_li_2016_postprocessor,
@@ -41,7 +41,7 @@ def johnson_alahi_li_2016_training(
     style_image: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: Optional[bool] = None,
-    transformer: Optional[JohnsonAlahiLi2016Transformer] = None,
+    transformer: Optional[nn.Module] = None,
     criterion: Optional[PerceptualLoss] = None,
     optimizer: Optional[Optimizer] = None,
     quiet: bool = False,
@@ -49,7 +49,7 @@ def johnson_alahi_li_2016_training(
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
-) -> JohnsonAlahiLi2016Transformer:
+) -> nn.Module:
     style: Optional[str]
     if isinstance(style_image, torch.Tensor):
         device = style_image.device
