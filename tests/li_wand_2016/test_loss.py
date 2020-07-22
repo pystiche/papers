@@ -4,6 +4,7 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 from pystiche import extract_patches2d, ops
+from pystiche.loss import PerceptualLoss
 from pystiche.misc import to_2d_arg
 from pystiche.ops.functional import mrf_loss, total_variation_loss
 from pystiche_papers.li_wand_2016 import loss
@@ -138,3 +139,21 @@ def test_li_wand_2016_regularization(subtests):
 
     with subtests.test("exponent"):
         assert regularization_loss.exponent == pytest.approx(2.0)
+
+
+def test_li_wand_2016_perceptual_loss(subtests):
+    perceptual_loss = loss.li_wand_2016_perceptual_loss()
+    assert isinstance(perceptual_loss, PerceptualLoss)
+
+    with subtests.test("content_loss"):
+        assert isinstance(
+            perceptual_loss.content_loss, loss.LiWand2016FeatureReconstructionOperator,
+        )
+
+    with subtests.test("style_loss"):
+        assert isinstance(perceptual_loss.style_loss, loss.MultiLayerEncodingOperator)
+
+    with subtests.test("regularization"):
+        assert isinstance(
+            perceptual_loss.regularization, loss.LiWand2016TotalVariationOperator
+        )
