@@ -51,7 +51,9 @@ def test_gatys_et_al_2017_guided_nst_smoke(
         region: (style_image, guide) for region, guide in style_guides.items()
     }
 
-    paper.gatys_et_al_2017_guided_nst(content_image, content_guides, styles)
+    paper.gatys_et_al_2017_guided_nst(
+        content_image, content_guides, style_images_and_guides
+    )
 
     args, kwargs = mock.call_args
     input_image, criterion, pyramid = args
