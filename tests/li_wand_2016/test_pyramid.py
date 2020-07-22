@@ -1,6 +1,5 @@
 import numpy as np
 
-from pystiche.pyramid import OctaveImagePyramid
 from pystiche_papers.li_wand_2016 import pyramid
 
 
