@@ -1,3 +1,6 @@
+import itertools
+
+import numpy as np
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -91,12 +94,20 @@ def test_li_wand_2016_style_loss(subtests):
     with subtests.test("encoding_ops"):
         assert all(isinstance(op, ops.MRFOperator) for op in style_loss.operators())
 
-    configs = ((True, 1e-4, 2), (False, 1e0, 1))
-    for (impl_params, score_weight, stride,) in configs:
+    configs = ((True, 1e-4, 2, 1, 5e-2, 1, 7.5), (False, 1e0, 1, 3, 5e-2, 2, 7.5))
+    for (
+        impl_params,
+        score_weight,
+        stride,
+        num_scale_steps,
+        scale_step_width,
+        num_rotate_steps,
+        rotate_step_width,
+    ) in configs:
         style_loss = loss.li_wand_2016_style_loss(impl_params=impl_params)
-        layers, layer_weights, op_stride = zip(
+        layers, layer_weights, op_stride, op_target_transforms = zip(
             *[
-                (op.encoder.layer, op.score_weight, op.stride)
+                (op.encoder.layer, op.score_weight, op.stride, op.target_transforms)
                 for op in style_loss.operators()
             ]
         )
@@ -112,6 +123,24 @@ def test_li_wand_2016_style_loss(subtests):
 
         with subtests.test("layer_weights"):
             assert layer_weights == (1.0,) * len(layers)
+
+        scaling_factors = np.arange(
+            -num_scale_steps, num_scale_steps + 1, dtype=np.float
+        )
+        scaling_factors = 1.0 + (scaling_factors * scale_step_width)
+
+        rotation_angles = np.arange(
+            -num_rotate_steps, num_rotate_steps + 1, dtype=np.float
+        )
+        rotation_angles *= rotate_step_width
+
+        for i, values in enumerate(itertools.product(scaling_factors, rotation_angles)):
+            scaling_factor, rotation_angle = values
+            with subtests.test("scaling_factor"):
+                assert op_target_transforms[0][i].scaling_factor == scaling_factor
+
+            with subtests.test("rotation_angles"):
+                assert op_target_transforms[0][i].rotation_angle == rotation_angle
 
 
 def test_LiWand2016TotalVariationOperator(subtests, input_image):
