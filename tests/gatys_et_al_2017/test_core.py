@@ -47,9 +47,9 @@ def test_gatys_et_al_2017_guided_nst_smoke(
     mock = mocker.patch(
         "pystiche_papers.gatys_et_al_2017.core.default_image_pyramid_optim_loop"
     )
-    styles = {}
-    for key in style_guides.keys():
-        styles[key] = (style_image, style_guides[key])
+    style_images_and_guides = {
+        region: (style_image, guide) for region, guide in style_guides.items()
+    }
 
     paper.gatys_et_al_2017_guided_nst(content_image, content_guides, styles)
 
