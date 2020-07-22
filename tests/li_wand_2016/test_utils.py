@@ -13,9 +13,7 @@ def test_li_wand_2016_preprocessor():
 
 
 def test_li_wand_2016_postprocessor():
-    assert isinstance(
-        utils.li_wand_2016_postprocessor(), CaffePostprocessing
-    )
+    assert isinstance(utils.li_wand_2016_postprocessor(), CaffePostprocessing)
 
 
 @pytest.mark.slow
