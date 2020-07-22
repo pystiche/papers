@@ -67,18 +67,9 @@ def preprocessor_mocks(make_nn_module_mock, patcher):
 
 
 @pytest.fixture
-def transformer_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock()
-    patch = patcher("transformer", return_value=mock)
-    return patch, mock
-
-
-@pytest.fixture
-def perceptual_loss_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock()
-    attach_method_mock(mock, "set_content_image", return_value=None)
-    attach_method_mock(mock, "set_style_image", return_value=None)
-    patch = patcher("perceptual_loss", return_value=mock)
+def postprocessor_mocks(make_nn_module_mock, patcher):
+    mock = make_nn_module_mock(identity=True)
+    patch = patcher("postprocessor", return_value=mock)
     return patch, mock
 
 
@@ -93,6 +84,22 @@ def optimizer_mocks(mocker, patcher):
 def style_transforms_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(identity=True)
     patch = patcher("style_transform", return_value=mock)
+    return patch, mock
+
+
+@pytest.fixture
+def transformer_mocks(make_nn_module_mock, patcher):
+    mock = make_nn_module_mock(identity=True)
+    patch = patcher("transformer", return_value=mock)
+    return patch, mock
+
+
+@pytest.fixture
+def perceptual_loss_mocks(make_nn_module_mock, patcher):
+    mock = make_nn_module_mock()
+    attach_method_mock(mock, "set_content_image", return_value=None)
+    attach_method_mock(mock, "set_style_image", return_value=None)
+    patch = patcher("perceptual_loss", return_value=mock)
     return patch, mock
 
 
@@ -427,3 +434,123 @@ def test_johnson_alahi_li_2016_training_optimizer(
     paper.johnson_alahi_li_2016_training(image_loader, style_image)
 
     optimizer_patch.assert_called_once_with(transformer_mock)
+
+
+def test_johnson_alahi_li_2016_stylization_smoke(transformer_mocks, input_image):
+    output_image = paper.johnson_alahi_li_2016_stylization(input_image, "style")
+    ptu.assert_allclose(output_image, input_image, rtol=1e-6)
+
+
+def test_johnson_alahi_li_stylization_instance_norm_default(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    transformer_patch, transformer_mock = transformer_mocks
+    for impl_params in (True, False):
+        reset_mocks(transformer_patch)
+        paper.johnson_alahi_li_2016_stylization(
+            input_image, "style", impl_params=impl_params
+        )
+
+        with subtests.test(transformer_patch.name, impl_params=impl_params):
+            transformer_patch.assert_called_once()
+
+            _, kwargs = transformer_patch.call_args
+            assert kwargs["instance_norm"] is impl_params
+
+
+def test_johnson_alahi_li_stylization_instance_norm(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    transformer_patch, transformer_mock = transformer_mocks
+    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
+        reset_mocks(transformer_patch)
+        paper.johnson_alahi_li_2016_stylization(
+            input_image, "style", impl_params=impl_params, instance_norm=instance_norm
+        )
+
+        with subtests.test(
+            transformer_patch.name, impl_params=impl_params, instance_norm=instance_norm
+        ):
+            transformer_patch.assert_called_once()
+
+            _, kwargs = transformer_patch.call_args
+            assert kwargs["instance_norm"] is instance_norm
+
+
+def test_johnson_alahi_li_2016_stylization_transformer(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    _, transformer_mock = transformer_mocks
+
+    paper.johnson_alahi_li_2016_stylization(input_image, transformer_mock)
+
+    with subtests.test("to"):
+        transformer_mock.to.assert_called_once_with(input_image.device)
+
+    with subtests.test("call"):
+        transformer_mock.assert_called_once()
+
+        args, _ = transformer_mock.call_args
+        ptu.assert_allclose(args[0], input_image)
+
+
+def test_johnson_alahi_li_stylization_transformer_str(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    patch, mock = transformer_mocks
+
+    style = "style"
+    weights = "weights"
+    paper.johnson_alahi_li_2016_stylization(input_image, style, weights=weights)
+
+    patch.assert_called_once()
+    _, kwargs = patch.call_args
+
+    with subtests.test("style"):
+        assert kwargs["style"] == style
+
+    with subtests.test("weights"):
+        assert kwargs["weights"] == weights
+
+    with subtests.test("eval"):
+        mock.eval.assert_called_once_with()
+
+
+def test_johnson_alahi_li_stylization_pre_post_processor(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    _, transformer_mock = transformer_mocks
+    mocks = (preprocessor_mocks, postprocessor_mocks)
+
+    paper.johnson_alahi_li_2016_stylization(input_image, transformer_mock)
+
+    for patch, mock in mocks:
+        with subtests.test(patch.name):
+            patch.assert_called_once()
+
+        with subtests.test(mock.to.name):
+            mock.to.assert_called_once_with(input_image.device)
+
+        with subtests.test(mock.name):
+            mock.assert_called_once()
+
+            args, _ = mock.call_args
+            ptu.assert_allclose(args[0], input_image)
+
+
+def test_johnson_alahi_li_stylization_pre_post_processor_not_impl_params(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
+):
+    _, transformer_mock = transformer_mocks
+    mocks = (preprocessor_mocks, postprocessor_mocks)
+
+    paper.johnson_alahi_li_2016_stylization(
+        input_image, transformer_mock, impl_params=False
+    )
+
+    for patch, mock in mocks:
+        with subtests.test(patch.name):
+            patch.assert_not_called()
+
+        with subtests.test(mock.name):
+            mock.assert_not_called()
