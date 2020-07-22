@@ -1,6 +1,3 @@
-import itertools
-
-import numpy as np
 import pytest
 
 import pytorch_testing_utils as ptu
