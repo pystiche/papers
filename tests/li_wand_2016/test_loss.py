@@ -70,16 +70,9 @@ def test_LiWand2016MRFOperator(
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            if impl_params:
-                target_repr = loss.extract_normalized_patches2d(
-                    target_enc, patch_size, stride
-                )
-                input_repr = loss.extract_normalized_patches2d(
-                    input_enc, patch_size, stride
-                )
-            else:
-                target_repr = extract_patches2d(target_enc, patch_size, stride)
-                input_repr = extract_patches2d(input_enc, patch_size, stride)
+           extract_patches = loss.extract_normalized_patches2d if impl_params else extract_patches2d
+           target_repr = extract_patches(target_enc, patch_size, stride)
+           input_repr = extract_patches(input_enc, patch_size, stride)
 
             score = mrf_loss(input_repr, target_repr, reduction=loss_reduction)
             desired = score * score_correction_factor
