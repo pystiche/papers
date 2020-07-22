@@ -9,6 +9,8 @@ import pytest
 
 import torch
 
+from pystiche import image
+
 __all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module", "is_callable"]
 
 
@@ -63,3 +65,18 @@ def load_module(location):
 
 def is_callable(obj):
     return hasattr(obj, "__call__")
+
+
+def create_guides(img):
+    height, width = image.extract_image_size(img)
+    top_height = height // 2  # built in floor
+    bottom_height = height - top_height
+    top_mask = torch.cat(
+        (
+            torch.ones([1, 1, top_height, width], dtype=torch.bool),
+            torch.zeros([1, 1, bottom_height, width], dtype=torch.bool),
+        ),
+        2,
+    )
+    bottom_mask = ~top_mask
+    return {"top": top_mask.float(), "bottom": bottom_mask.float()}

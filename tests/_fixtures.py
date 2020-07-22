@@ -7,6 +7,7 @@ from pystiche.enc import MultiLayerEncoder
 from pystiche.image import make_single_image
 
 from ._assets import read_image
+from ._utils import create_guides
 
 __all__ = [
     "image_small_0",
@@ -20,9 +21,13 @@ __all__ = [
     "single_image",
     "batch_image",
     "target_image",
+    "target_guides",
     "input_image",
+    "input_guides",
     "content_image",
     "style_image",
+    "content_guides",
+    "style_guides",
     "multi_layer_encoder_with_layer",
 ]
 
@@ -83,8 +88,18 @@ def target_image(image_small_0):
 
 
 @pytest.fixture
+def target_guides(target_image):
+    return create_guides(target_image)
+
+
+@pytest.fixture
 def input_image(image_small_1):
     return image_small_1
+
+
+@pytest.fixture
+def input_guides(input_image):
+    return create_guides(input_image)
 
 
 @pytest.fixture
@@ -93,8 +108,18 @@ def content_image(target_image):
 
 
 @pytest.fixture
+def content_guides(content_image):
+    return create_guides(content_image)
+
+
+@pytest.fixture
 def style_image(image_small_2):
     return image_small_2
+
+
+@pytest.fixture
+def style_guides(style_image):
+    return create_guides(style_image)
 
 
 @pytest.fixture(scope="session")
