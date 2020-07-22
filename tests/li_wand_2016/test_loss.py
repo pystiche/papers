@@ -3,6 +3,9 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
+from pystiche import extract_patches2d, ops
+from pystiche.misc import to_2d_arg
+from pystiche.ops.functional import mrf_loss
 from pystiche_papers.li_wand_2016 import loss
 
 
@@ -30,9 +33,7 @@ def test_LiWand2016FeatureReconstructionOperator(
 
 def test_li_wand_2016_content_loss(subtests):
     content_loss = loss.li_wand_2016_content_loss()
-    assert isinstance(
-        content_loss, loss.LiWand2016FeatureReconstructionOperator
-    )
+    assert isinstance(content_loss, loss.LiWand2016FeatureReconstructionOperator)
 
     with subtests.test("layer"):
         assert content_loss.encoder.layer == "relu4_2"
@@ -42,3 +43,71 @@ def test_li_wand_2016_content_loss(subtests):
         with subtests.test("score_weight"):
             content_loss = loss.li_wand_2016_content_loss(impl_params=impl_params)
             assert content_loss.score_weight == pytest.approx(weight)
+
+
+def test_LiWand2016MRFOperator(
+    subtests, multi_layer_encoder_with_layer, target_image, input_image
+):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
+    target_enc = encoder(target_image)
+    input_enc = encoder(input_image)
+
+    configs = ((True, 3, 1, 1.0 / 2.0, "sum"), (False, 3, 1, 1.0, "sum"))
+    for (
+        impl_params,
+        patch_size,
+        stride,
+        score_correction_factor,
+        loss_reduction,
+    ) in configs:
+        with subtests.test(impl_params=impl_params):
+            op = loss.LiWand2016MRFOperator(encoder, 3, impl_params=impl_params,)
+            op.set_target_image(target_image)
+            actual = op(input_image)
+
+            if impl_params:
+                target_repr = loss.extract_normalized_patches2d(
+                    target_enc, patch_size, stride
+                )
+                input_repr = loss.extract_normalized_patches2d(
+                    input_enc, patch_size, stride
+                )
+            else:
+                target_repr = extract_patches2d(target_enc, patch_size, stride)
+                input_repr = extract_patches2d(input_enc, patch_size, stride)
+
+            score = mrf_loss(input_repr, target_repr, reduction=loss_reduction)
+            desired = score * score_correction_factor
+
+            assert actual == ptu.approx(desired)
+
+
+def test_li_wand_2016_style_loss(subtests):
+    style_loss = loss.li_wand_2016_style_loss()
+    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+
+    with subtests.test("encoding_ops"):
+        assert all(isinstance(op, ops.MRFOperator) for op in style_loss.operators())
+
+    configs = ((True, 1e-4, 2), (False, 1e0, 1))
+    for (impl_params, score_weight, stride,) in configs:
+        style_loss = loss.li_wand_2016_style_loss(impl_params=impl_params)
+        layers, layer_weights, op_stride = zip(
+            *[
+                (op.encoder.layer, op.score_weight, op.stride)
+                for op in style_loss.operators()
+            ]
+        )
+
+        with subtests.test("layers"):
+            assert set(layers) == {"relu3_1", "relu4_1"}
+
+        with subtests.test("stride"):
+            assert op_stride == (to_2d_arg(stride),) * len(layers)
+
+        with subtests.test("score_weight"):
+            assert style_loss.score_weight == pytest.approx(score_weight)
+
+        with subtests.test("layer_weights"):
+            assert layer_weights == (1.0,) * len(layers)
