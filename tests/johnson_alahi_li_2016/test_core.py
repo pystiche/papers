@@ -7,6 +7,7 @@ import pytorch_testing_utils as ptu
 from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche_papers.johnson_alahi_li_2016.utils import johnson_alahi_li_2016_optimizer
 
 from .._utils import is_callable
 
@@ -110,15 +111,8 @@ def reset_mocks(*mocks):
         mock.reset_mock()
 
 
-def test_johnson_alahi_li_2016_training_content_image_loader(
-    image_loader,
-    style_image,
-    preprocessor_mocks,
-    transformer_mocks,
-    perceptual_loss_mocks,
-    optimizer_mocks,
-    style_transforms_mocks,
-    default_transformer_optim_loop_patch,
+def test_johnson_alahi_li_2016_training_smoke(
+    subtests, default_transformer_optim_loop_patch, image_loader, style_image
 ):
     patch = default_transformer_optim_loop_patch
 
@@ -126,8 +120,24 @@ def test_johnson_alahi_li_2016_training_content_image_loader(
 
     patch.assert_called_once()
 
-    args, _ = patch.call_args
-    assert args[0] is image_loader
+    args, kwargs = patch.call_args
+
+    with subtests.test("content_image_loader"):
+        assert args[0] is image_loader
+
+    with subtests.test("transformer"):
+        assert isinstance(args[1], type(paper.johnson_alahi_li_2016_transformer()))
+
+    with subtests.test("criterion"):
+        assert isinstance(args[2], type(paper.johnson_alahi_li_2016_perceptual_loss()))
+
+    with subtests.test("criterion_update_fn"):
+        assert is_callable(args[3])
+
+    with subtests.test("optimizer"):
+        assert isinstance(
+            kwargs["optimizer"], type(johnson_alahi_li_2016_optimizer(args[1]))
+        )
 
 
 def test_johnson_alahi_li_2016_training_style_image(
@@ -411,13 +421,9 @@ def test_johnson_alahi_li_2016_training_optimizer(
     image_loader,
     style_image,
 ):
-    optimizer_patch, optimizer_mock = optimizer_mocks
-    optim_loop_patch = default_transformer_optim_loop_patch
+    optimizer_patch, _ = optimizer_mocks
+    _, transformer_mock = transformer_mocks
 
     paper.johnson_alahi_li_2016_training(image_loader, style_image)
 
-    optimizer_patch.assert_called_once_with(transformer_mocks[1])
-    optim_loop_patch.assert_called_once()
-
-    _, kwargs = optim_loop_patch.call_args
-    assert kwargs["optimizer"] is optimizer_mock
+    optimizer_patch.assert_called_once_with(transformer_mock)
