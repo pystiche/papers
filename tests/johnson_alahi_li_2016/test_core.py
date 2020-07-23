@@ -494,7 +494,7 @@ def test_johnson_alahi_li_2016_stylization_transformer(
         ptu.assert_allclose(args[0], input_image)
 
 
-def test_johnson_alahi_li_stylization_transformer_str(
+def test_johnson_alahi_li_2016_stylization_transformer_str(
     subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
 ):
     patch, mock = transformer_mocks
@@ -516,7 +516,7 @@ def test_johnson_alahi_li_stylization_transformer_str(
         mock.eval.assert_called_once_with()
 
 
-def test_johnson_alahi_li_stylization_pre_post_processor(
+def test_johnson_alahi_li_2016_stylization_pre_post_processor(
     subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
 ):
     _, transformer_mock = transformer_mocks
@@ -538,7 +538,7 @@ def test_johnson_alahi_li_stylization_pre_post_processor(
             ptu.assert_allclose(args[0], input_image)
 
 
-def test_johnson_alahi_li_stylization_pre_post_processor_not_impl_params(
+def test_johnson_alahi_li_2016_stylization_pre_post_processor_not_impl_params(
     subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, input_image
 ):
     _, transformer_mock = transformer_mocks
