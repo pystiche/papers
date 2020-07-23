@@ -1,11 +1,11 @@
 import itertools
-from typing import Optional, Union
 
 import pytest
 
 from torch import nn
 
 from pystiche_papers.johnson_alahi_li_2016 import modules
+from pystiche_papers.utils import ResidualBlock
 
 
 def test_get_conv(subtests, mocker):
@@ -111,3 +111,93 @@ def test_johnson_alahi_li_2016_conv_block(subtests, mocker):
             if relu:
                 assert isinstance(type(args[2]), type(nn.ReLU))
                 assert args[2].inplace
+
+
+def test_johnson_alahi_li_2016_residual_block(subtests, mocker):
+    channels = 3
+    mock = mocker.patch("pystiche_papers.utils.ResidualBlock")
+    modules.johnson_alahi_li_2016_residual_block(channels)
+
+    for call in mock.call_args_list:
+        args, _ = call
+
+        with subtests.test("residual"):
+            assert isinstance(type(args[0]), type(nn.Sequential))
+            for i in range(0, 2):
+                assert isinstance(
+                    type(args[0][i]), type(modules.johnson_alahi_li_2016_conv_block)
+                )
+
+        with subtests.test("shortcut"):
+            assert isinstance(type(args[1]), type(nn.Module))
+
+
+def test_johnson_alahi_li_2016_transformer_encoder(subtests, mocker):
+    channel_configs = [
+        [(3, 16), (16, 32), (32, 64), (64, 64), (64, 64), (64, 64), (64, 64), (64, 64)],
+        [
+            (3, 32),
+            (32, 64),
+            (64, 128),
+            (128, 128),
+            (128, 128),
+            (128, 128),
+            (128, 128),
+            (128, 128),
+        ],
+    ]
+
+    for instance_norm, channel_config in zip((True, False), channel_configs):
+        with subtests.test(instance_norm=instance_norm):
+            mock = mocker.patch("pystiche.SequentialModule")
+            modules.johnson_alahi_li_2016_transformer_encoder(
+                instance_norm=instance_norm
+            )
+
+            for call in mock.call_args_list:
+                args, _ = call
+                in_out_channels = []
+                assert isinstance(type(args[0]), type(nn.ReflectionPad2d))
+                for i in range(1, 4):
+                    assert isinstance(type(args[i]), type(nn.Sequential))
+                    in_out_channels.append(
+                        (args[i][0].in_channels, args[i][-3].out_channels)
+                    )
+
+                for i in range(4, 9):
+                    assert isinstance(type(args[i]), type(ResidualBlock))
+                    in_out_channels.append(
+                        (
+                            args[i].residual[0][0].in_channels,
+                            args[i].residual[-1][-2].out_channels,
+                        )
+                    )
+
+            assert in_out_channels == channel_config
+
+
+def test_johnson_alahi_li_2016_transformer_decoder(subtests, mocker):
+    channel_configs = [[(64, 32), (32, 16), (16, 3)], [(128, 64), (64, 32), (32, 3)]]
+
+    for instance_norm, channel_config in zip((True, False), channel_configs):
+        with subtests.test(instance_norm=instance_norm):
+            mock = mocker.patch("pystiche.SequentialModule")
+            modules.johnson_alahi_li_2016_transformer_decoder(
+                instance_norm=instance_norm
+            )
+
+            for call in mock.call_args_list:
+                args, _ = call
+                in_out_channels = []
+                for i in range(2):
+                    assert isinstance(type(args[i]), type(nn.Sequential))
+                    in_out_channels.append(
+                        (args[i][0].in_channels, args[i][-3].out_channels)
+                    )
+
+                assert isinstance(type(args[2]), type(nn.Conv2d))
+                in_out_channels.append((args[2].in_channels, args[2].out_channels))
+
+                assert in_out_channels == channel_config
+
+                assert isinstance(type(args[3]), type(nn.Module))
