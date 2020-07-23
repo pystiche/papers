@@ -1,6 +1,9 @@
 import itertools
+from typing import Optional, Union
 
 import pytest
+
+from torch import nn
 
 from pystiche_papers.johnson_alahi_li_2016 import modules
 
@@ -87,3 +90,24 @@ def test_get_norm(subtests, mocker):
 
                 with subtests.test("track_running_stats"):
                     assert norm_track_running_stats
+
+
+def test_johnson_alahi_li_2016_conv_block(subtests, mocker):
+    in_channels = out_channels = 3
+    kernel_size = 3
+    stride = 1
+    for relu in (True, False):
+        with subtests.test(relu=relu):
+            mock = mocker.patch("torch.nn.Sequential")
+            modules.johnson_alahi_li_2016_conv_block(
+                in_channels, out_channels, kernel_size, stride=stride, relu=relu
+            )
+
+            args, _ = mock.call_args
+
+            assert len(args) == 3 if relu else 2
+            assert isinstance(type(args[0]), type(nn.Conv2d))
+            assert isinstance(type(args[1]), type(nn.InstanceNorm2d))
+            if relu:
+                assert isinstance(type(args[2]), type(nn.ReLU))
+                assert args[2].inplace
