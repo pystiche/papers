@@ -4,8 +4,52 @@ import pytest
 
 from torch import nn
 
+import pystiche
 from pystiche_papers.johnson_alahi_li_2016 import modules
 from pystiche_papers.utils import ResidualBlock
+
+
+def is_url(url):  # TODO: implement this
+    return True
+
+
+def test_select_url(subtests):
+
+    configs = (
+        ("candy", True, True),
+        ("composition_vii", True, False),
+        ("feathers", True, True),
+        ("la_muse", True, False),
+        ("la_muse", True, True),
+        ("mosaic", True, True),
+        ("starry_night", True, False),
+        ("the_scream", True, True),
+        ("the_wave", True, False),
+        ("udnie", True, True),
+    )
+    for style, impl_params, instance_norm in configs:
+        with subtests.test(style):
+            url = modules.select_url(
+                style,
+                weights="author",
+                impl_params=impl_params,
+                instance_norm=instance_norm,
+            )
+            assert is_url(url)
+
+
+def test_select_url_no_valid_style():
+    impl_params = (True, False)
+    instance_norm = (True, False)
+    configs = itertools.product(impl_params, instance_norm)
+    for impl_params, instance_norm in configs:
+        with pytest.raises(RuntimeError):
+            modules.select_url(
+                "no_valid_style",
+                weights="pystiche",
+                impl_params=impl_params,
+                instance_norm=instance_norm,
+            )
 
 
 def test_get_conv(subtests, mocker):
@@ -201,3 +245,20 @@ def test_johnson_alahi_li_2016_transformer_decoder(subtests, mocker):
                 assert in_out_channels == channel_config
 
                 assert isinstance(type(args[3]), type(nn.Module))
+
+
+def test_JohnsonAlahiLi2016Transformer(image_medium):
+    transformer = modules.JohnsonAlahiLi2016Transformer()
+
+    assert isinstance(type(transformer.encoder), type(pystiche.SequentialModule))
+    assert isinstance(type(transformer.decoder), type(pystiche.SequentialModule))
+
+    output_image = transformer(image_medium)
+    assert image_medium.size() == output_image.size()
+
+
+def test_johnson_alahi_li_2016_transformer():
+
+    transformer = modules.johnson_alahi_li_2016_transformer()
+
+    assert isinstance(type(transformer), type(modules.JohnsonAlahiLi2016Transformer))
