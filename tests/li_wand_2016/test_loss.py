@@ -121,13 +121,13 @@ def test_li_wand_2016_style_loss(subtests, mocker):
             assert pyramid_num_scale_steps == num_scale_steps
 
         with subtests.test("num_scale_steps"):
-            assert pyramid_scale_step_width == 5e-2
+            assert pyramid_scale_step_width == pytest.approx(5e-2)
 
         with subtests.test("num_rotate_steps"):
             assert pyramid_num_rotate_steps == num_rotate_steps
 
         with subtests.test("rotate_step_width"):
-            assert pyramid_rotate_step_width == 7.5
+            assert pyramid_rotate_step_width == pytest.approx(7.5)
 
 
 def test_LiWand2016TotalVariationOperator(subtests, input_image):
@@ -137,7 +137,7 @@ def test_LiWand2016TotalVariationOperator(subtests, input_image):
             op = loss.LiWand2016TotalVariationOperator(impl_params=impl_params,)
             actual = op(input_image)
 
-            score = total_variation_loss(input_image, exponent=2.0, reduction="sum")
+            score = total_variation_loss(input_image, exponent=op.exponent, reduction="sum")
 
             desired = score * score_correction_factor
 
