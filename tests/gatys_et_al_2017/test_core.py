@@ -71,13 +71,13 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 
 
 @pytest.fixture
-def perceptual_loss_mocks(make_nn_module_mock, patcher):
+def guided_perceptual_loss_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock()
     attach_method_mock(mock, "set_content_image", return_value=None)
     attach_method_mock(mock, "set_content_guide", return_value=None)
     attach_method_mock(mock, "set_style_image", return_value=None)
     attach_method_mock(mock, "set_style_guide", return_value=None)
-    patch = patcher("perceptual_loss", return_value=mock)
+    patch = patcher("guided_perceptual_loss", return_value=mock)
     return patch, mock
 
 
@@ -176,3 +176,27 @@ def test_gatys_et_al_2017_guided_nst_regions_mismatch(
         paper.gatys_et_al_2017_guided_nst(
             content_image, content_guides, style_images_and_guides
         )
+
+
+def test_gatys_et_al_2017_guided_nst_device(
+    subtests,
+    content_image,
+    content_guides,
+    style_images_and_guides,
+    preprocessor_mocks,
+    postprocessor_mocks,
+    guided_perceptual_loss_mocks,
+):
+    paper.gatys_et_al_2017_guided_nst(
+        content_image, content_guides, style_images_and_guides
+    )
+
+    for mocks in (
+        preprocessor_mocks,
+        postprocessor_mocks,
+        guided_perceptual_loss_mocks,
+    ):
+        _, mock = mocks
+        mock = mock.to
+        with subtests.test(mock.name):
+            mock.assert_called_once_with(content_image.device)
