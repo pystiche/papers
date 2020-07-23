@@ -3,6 +3,7 @@ import itertools
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch
 from torch import nn
 
 import pystiche
@@ -248,7 +249,29 @@ def test_johnson_alahi_li_2016_transformer_decoder(subtests, mocker):
 
                 assert in_out_channels == channel_config
 
+
+def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
+    subtests, mocker, input_image
+):
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            mock = mocker.patch("pystiche.SequentialModule")
+            modules.johnson_alahi_li_2016_transformer_decoder(impl_params=impl_params)
+
+            for call in mock.call_args_list:
+                args, _ = call
+
                 assert isinstance(type(args[3]), type(nn.Module))
+
+                with subtests.test("delimiter"):
+                    actual = args[3](input_image)
+                    desired = (
+                        150.0 * torch.tanh(input_image)
+                        if impl_params
+                        else torch.sigmoid(2.0 * input_image)
+                    )
+
+                    ptu.assert_allclose(actual, desired)
 
 
 def test_JohnsonAlahiLi2016Transformer(image_medium):
