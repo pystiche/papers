@@ -2,6 +2,7 @@ import itertools
 
 import pytest
 
+import pytorch_testing_utils as ptu
 from torch import nn
 
 import pystiche
@@ -157,7 +158,7 @@ def test_johnson_alahi_li_2016_conv_block(subtests, mocker):
                 assert args[2].inplace
 
 
-def test_johnson_alahi_li_2016_residual_block(subtests, mocker):
+def test_johnson_alahi_li_2016_residual_block(subtests, mocker, input_image):
     channels = 3
     mock = mocker.patch("pystiche_papers.utils.ResidualBlock")
     modules.johnson_alahi_li_2016_residual_block(channels)
@@ -174,6 +175,9 @@ def test_johnson_alahi_li_2016_residual_block(subtests, mocker):
 
         with subtests.test("shortcut"):
             assert isinstance(type(args[1]), type(nn.Module))
+            assert ptu.assert_allclose(
+                input_image[:, :, 2:-2, 2:-2], args[1].shortcut(input_image)
+            )
 
 
 def test_johnson_alahi_li_2016_transformer_encoder(subtests, mocker):
