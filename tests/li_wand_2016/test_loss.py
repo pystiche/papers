@@ -54,6 +54,8 @@ def test_LiWand2016MRFOperator(
     target_enc = encoder(target_image)
     input_enc = encoder(input_image)
 
+    patch_size = 3
+    stride = 1
     configs = ((True, 1.0 / 2.0), (False, 1.0))
     for (impl_params, score_correction_factor,) in configs:
         with subtests.test(impl_params=impl_params):
@@ -65,8 +67,8 @@ def test_LiWand2016MRFOperator(
             extract_patches = (
                 loss.extract_normalized_patches2d if impl_params else extract_patches2d
             )
-            target_repr = extract_patches(target_enc, 3, 1)
-            input_repr = extract_patches(input_enc, 3, 1)
+            target_repr = extract_patches(target_enc, patch_size, stride)
+            input_repr = extract_patches(input_enc, patch_size, stride)
 
             score = mrf_loss(input_repr, target_repr, reduction="sum")
             desired = score * score_correction_factor
@@ -74,23 +76,15 @@ def test_LiWand2016MRFOperator(
             assert actual == ptu.approx(desired)
 
 
-def test_li_wand_2016_style_loss(subtests, mocker):
+def test_li_wand_2016_style_loss(subtests):
     style_loss = loss.li_wand_2016_style_loss()
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
     with subtests.test("encoding_ops"):
         assert all(isinstance(op, ops.MRFOperator) for op in style_loss.operators())
-    configs = ((True, 1e-4, 2, 1, 1), (False, 1e0, 1, 3, 2))
-    for (
-        impl_params,
-        score_weight,
-        stride,
-        num_scale_steps,
-        num_rotate_steps,
-    ) in configs:
-        mock = mocker.patch(
-            "pystiche.ops.comparison.MRFOperator.scale_and_rotate_transforms"
-        )
+
+    configs = ((True, 1e-4, 2), (False, 1e0, 1))
+    for impl_params, score_weight, stride in configs:
         style_loss = loss.li_wand_2016_style_loss(impl_params=impl_params)
         layers, layer_weights, op_stride, op_target_transforms = zip(
             *[
@@ -110,6 +104,15 @@ def test_li_wand_2016_style_loss(subtests, mocker):
 
         with subtests.test("layer_weights"):
             assert layer_weights == (1.0,) * len(layers)
+
+
+def test_li_wand_2016_style_loss_pyramid(subtests, mocker):
+    configs = ((True, 1, 1), (False, 3, 2))
+    for impl_params, num_scale_steps, num_rotate_steps in configs:
+        mock = mocker.patch(
+            "pystiche.ops.comparison.MRFOperator.scale_and_rotate_transforms"
+        )
+        loss.li_wand_2016_style_loss(impl_params=impl_params)
 
         _, kwargs = mock.call_args
         pyramid_num_scale_steps = kwargs["num_scale_steps"]
@@ -137,7 +140,9 @@ def test_LiWand2016TotalVariationOperator(subtests, input_image):
             op = loss.LiWand2016TotalVariationOperator(impl_params=impl_params,)
             actual = op(input_image)
 
-            score = total_variation_loss(input_image, exponent=op.exponent, reduction="sum")
+            score = total_variation_loss(
+                input_image, exponent=op.exponent, reduction="sum"
+            )
 
             desired = score * score_correction_factor
 
