@@ -112,6 +112,7 @@ def default_image_pyramid_optim_loop_patch(patcher):
     return patcher("default_image_pyramid_optim_loop", prefix=False)
 
 
+@pytest.mark.slow
 def test_gatys_et_al_2017_nst_smoke(
     subtests, default_image_pyramid_optim_loop_patch, content_image, style_image
 ):
@@ -148,6 +149,7 @@ def test_gatys_et_al_2017_nst_smoke(
         assert isinstance(postprocessor, type(utils.gatys_et_al_2017_postprocessor()))
 
 
+@pytest.mark.slow
 def test_gatys_et_al_2017_guided_nst_smoke(
     subtests,
     default_image_pyramid_optim_loop_patch,
@@ -206,12 +208,12 @@ def test_gatys_et_al_2017_guided_nst_regions_mismatch(
 
 def test_gatys_et_al_2017_guided_nst_device(
     subtests,
-    content_image,
-    content_guides,
-    style_images_and_guides,
     preprocessor_mocks,
     postprocessor_mocks,
     guided_perceptual_loss_mocks,
+    content_image,
+    content_guides,
+    style_images_and_guides,
 ):
     paper.gatys_et_al_2017_guided_nst(
         content_image, content_guides, style_images_and_guides
