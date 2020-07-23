@@ -5,6 +5,7 @@ import pytest
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.gatys_et_al_2017 as paper
+from pystiche.image.transforms.functional import rescale
 from pystiche_papers.gatys_et_al_2017 import utils
 from tests._utils import is_callable
 
@@ -68,6 +69,31 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(identity=True)
     patch = patcher("postprocessor", return_value=mock)
     return patch, mock
+
+
+@pytest.fixture
+def image_pyramid_mocks(mocker, patcher):
+    def resize(image_or_guide):
+        return rescale(image_or_guide, 2.0)
+
+    top_level_mock = mocker.Mock()
+    attach_method_mock(
+        top_level_mock, "resize_image", side_effect=lambda image: resize(image)
+    )
+    attach_method_mock(
+        top_level_mock, "resize_guide", side_effect=lambda guide: resize(guide)
+    )
+    pyramid_mock = mocker.Mock()
+
+    def getitem_side_effect(idx):
+        if idx != -1:
+            return unittest.mock.DEFAULT
+
+        return top_level_mock
+
+    attach_method_mock(pyramid_mock, "__getitem__", side_effect=getitem_side_effect)
+    pyramid_patch = patcher("image_pyramid", return_value=pyramid_mock)
+    return pyramid_patch, pyramid_mock, top_level_mock
 
 
 @pytest.fixture
@@ -200,3 +226,53 @@ def test_gatys_et_al_2017_guided_nst_device(
         mock = mock.to
         with subtests.test(mock.name):
             mock.assert_called_once_with(content_image.device)
+
+
+def test_gatys_et_al_2017_guided_nst_criterion_images_and_guides(
+    subtests,
+    preprocessor_mocks,
+    postprocessor_mocks,
+    image_pyramid_mocks,
+    default_image_pyramid_optim_loop_patch,
+    content_image,
+    content_guides,
+    style_images_and_guides,
+):
+    _, _, top_level_mock = image_pyramid_mocks
+    patch = default_image_pyramid_optim_loop_patch
+
+    paper.gatys_et_al_2017_guided_nst(
+        content_image, content_guides, style_images_and_guides
+    )
+
+    patch.assert_called_once()
+
+    args, _ = patch.call_args
+    criterion = args[1]
+
+    with subtests.test("content_image"):
+        ptu.assert_allclose(
+            criterion.content_loss.target_image,
+            top_level_mock.resize_image(content_image),
+        )
+
+    with subtests.test("content_guides"):
+        for region, op in criterion.style_loss.named_operators():
+            content_guide = content_guides[region]
+            ptu.assert_allclose(
+                op.get_input_guide(), top_level_mock.resize_guide(content_guide)
+            )
+
+    with subtests.test("style_images"):
+        for region, op in criterion.style_loss.named_operators():
+            style_image, _ = style_images_and_guides[region]
+            ptu.assert_allclose(
+                op.get_target_image(), top_level_mock.resize_image(style_image)
+            )
+
+    with subtests.test("style_guides"):
+        for region, op in criterion.style_loss.named_operators():
+            _, style_guide = style_images_and_guides[region]
+            ptu.assert_allclose(
+                op.get_target_guide(), top_level_mock.resize_guide(style_guide)
+            )
