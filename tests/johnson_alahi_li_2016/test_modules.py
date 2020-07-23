@@ -1,5 +1,7 @@
 import itertools
 
+import pytest
+
 from pystiche_papers.johnson_alahi_li_2016 import modules
 
 
@@ -51,3 +53,37 @@ def test_get_conv(subtests, mocker):
 
                     with subtests.test("output_padding"):
                         assert conv_output_padding == (1, 1)
+
+
+def test_get_norm(subtests, mocker):
+    out_channels = 3
+    for instance_norm in (True, False):
+        with subtests.test(instance_norm=instance_norm):
+            mock = mocker.patch(
+                "torch.nn.BatchNorm2d" if instance_norm else "torch.nn.InstanceNorm2d"
+            )
+
+            modules.get_norm(out_channels, instance_norm=instance_norm)
+
+            for call in mock.call_args_list:
+                args, kwargs = call
+                norm_out_channels = args
+                norm_eps = kwargs["eps"]
+                norm_momentum = kwargs["momentum"]
+                norm_affine = kwargs["affine"]
+                norm_track_running_stats = kwargs["track_running_stats"]
+
+                with subtests.test("out_channels"):
+                    assert norm_out_channels == out_channels
+
+                with subtests.test("eps"):
+                    assert norm_eps == pytest.approx(1e-5)
+
+                with subtests.test("momentum"):
+                    assert norm_momentum == pytest.approx(1e-1)
+
+                with subtests.test("affine"):
+                    assert norm_affine
+
+                with subtests.test("track_running_stats"):
+                    assert norm_track_running_stats
