@@ -59,14 +59,14 @@ def patcher(mocker):
 
 @pytest.fixture
 def preprocessor_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(identity=True)
+    mock = make_nn_module_mock(side_effect=lambda image: image - 0.5)
     patch = patcher("preprocessor", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
 def postprocessor_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(identity=True)
+    mock = make_nn_module_mock(side_effect=lambda image: image + 0.5)
     patch = patcher("postprocessor", return_value=mock)
     return patch, mock
 
@@ -240,7 +240,8 @@ def test_gatys_et_al_2017_guided_nst_criterion_images_and_guides(
     content_guides,
     style_images_and_guides,
 ):
-    _, _, top_level_mock = image_pyramid_mocks
+    _, _, top_level = image_pyramid_mocks
+    _, preprocessor = preprocessor_mocks
     patch = default_image_pyramid_optim_loop_patch
 
     paper.gatys_et_al_2017_guided_nst(
@@ -255,26 +256,26 @@ def test_gatys_et_al_2017_guided_nst_criterion_images_and_guides(
     with subtests.test("content_image"):
         ptu.assert_allclose(
             criterion.content_loss.target_image,
-            top_level_mock.resize_image(content_image),
+            preprocessor(top_level.resize_image(content_image)),
         )
 
     with subtests.test("content_guides"):
         for region, op in criterion.style_loss.named_operators():
             content_guide = content_guides[region]
             ptu.assert_allclose(
-                op.get_input_guide(), top_level_mock.resize_guide(content_guide)
+                op.get_input_guide(), top_level.resize_guide(content_guide)
             )
 
     with subtests.test("style_images"):
         for region, op in criterion.style_loss.named_operators():
             style_image, _ = style_images_and_guides[region]
             ptu.assert_allclose(
-                op.get_target_image(), top_level_mock.resize_image(style_image)
+                op.get_target_image(), preprocessor(top_level.resize_image(style_image))
             )
 
     with subtests.test("style_guides"):
         for region, op in criterion.style_loss.named_operators():
             _, style_guide = style_images_and_guides[region]
             ptu.assert_allclose(
-                op.get_target_guide(), top_level_mock.resize_guide(style_guide)
+                op.get_target_guide(), top_level.resize_guide(style_guide)
             )
