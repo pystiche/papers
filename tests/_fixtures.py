@@ -25,9 +25,10 @@ __all__ = [
     "input_image",
     "input_guides",
     "content_image",
-    "style_image",
     "content_guides",
+    "style_image",
     "style_guides",
+    "style_images_and_guides",
     "multi_layer_encoder_with_layer",
 ]
 
@@ -120,6 +121,11 @@ def style_image(image_small_2):
 @pytest.fixture
 def style_guides(style_image):
     return create_guides(style_image)
+
+
+@pytest.fixture
+def style_images_and_guides(style_image, style_guides):
+    return {region: (style_image, guide) for region, guide in style_guides.items()}
 
 
 @pytest.fixture(scope="session")

@@ -44,14 +44,11 @@ def test_gatys_et_al_2017_nst_smoke(subtests, mocker, content_image, style_image
 
 
 def test_gatys_et_al_2017_guided_nst_smoke(
-    subtests, mocker, content_image, style_image, content_guides, style_guides
+    subtests, mocker, content_image, content_guides, style_images_and_guides
 ):
     mock = mocker.patch(
         "pystiche_papers.gatys_et_al_2017.core.default_image_pyramid_optim_loop"
     )
-    style_images_and_guides = {
-        region: (style_image, guide) for region, guide in style_guides.items()
-    }
 
     paper.gatys_et_al_2017_guided_nst(
         content_image, content_guides, style_images_and_guides
@@ -89,13 +86,10 @@ def test_gatys_et_al_2017_guided_nst_smoke(
         assert isinstance(postprocessor, type(utils.gatys_et_al_2017_postprocessor()))
 
 
-def test_test_gatys_et_al_2017_guided_nst_regions_mismatch(
-    content_image, content_guides, style_image, style_guides
+def test_gatys_et_al_2017_guided_nst_regions_mismatch(
+    content_image, content_guides, style_images_and_guides
 ):
-    style_images_and_guides = {
-        region: (style_image, guide)
-        for region, guide in tuple(style_guides.items())[:-1]
-    }
+    style_images_and_guides.pop(tuple(content_guides.keys())[0])
 
     with pytest.raises(RuntimeError):
         paper.gatys_et_al_2017_guided_nst(
