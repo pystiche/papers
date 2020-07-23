@@ -9,8 +9,6 @@ def test_li_wand_2016_image_pyramid(subtests, mocker):
     for (impl_params, num_steps, num_levels,) in configs:
         with subtests.test(impl_params=impl_params):
 
-            if num_levels is None:
-                num_levels = int(np.floor(np.log2(6))) + 1
             mock = mocker.patch("pystiche.pyramid.pyramid.OctaveImagePyramid")
             pyramid.li_wand_2016_image_pyramid(impl_params=impl_params)
 
@@ -28,7 +26,10 @@ def test_li_wand_2016_image_pyramid(subtests, mocker):
                     assert pyramid_num_steps == num_steps
 
                 with subtests.test("num_levels"):
-                    assert pyramid_num_levels == num_levels
+                    if isinstance(num_levels, int):
+                        assert pyramid_num_levels == num_levels
+                    else:
+                        assert isinstance(pyramid_num_levels, int)
 
                 with subtests.test("min_edge_size"):
                     assert pyramid_min_edge_size == 64
