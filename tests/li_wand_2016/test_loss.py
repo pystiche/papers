@@ -61,7 +61,7 @@ def test_LiWand2016MRFOperator(
         with subtests.test(impl_params=impl_params):
 
             op = loss.LiWand2016MRFOperator(
-                encoder, patch_size, impl_params=impl_params,
+                encoder, patch_size, impl_params=impl_params, stride=stride
             )
             op.set_target_image(target_image)
             actual = op(input_image)
