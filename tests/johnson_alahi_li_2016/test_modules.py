@@ -70,10 +70,7 @@ def test_get_conv(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
-    padding = (None, 1, (1, 1))
-    upsample = (True, False)
-    configs = itertools.product(padding, upsample)
-    for padding, upsample in configs:
+    for padding, upsample in itertools.product((None, 1, (1, 1)), (True, False)):
         conv_module = modules.get_conv(
             in_channels,
             out_channels,
@@ -83,11 +80,9 @@ def test_get_conv(subtests):
             upsample=upsample,
         )
 
-        with subtests.test("module"):
-            assert isinstance(
-                type(conv_module),
-                type(nn.ConvTranspose2d) if upsample else type(nn.Conv2d),
-            )
+        assert isinstance(
+            type(conv_module), type(nn.ConvTranspose2d) if upsample else type(nn.Conv2d),
+        )
 
         with subtests.test("in_channels"):
             assert conv_module.in_channels == in_channels
