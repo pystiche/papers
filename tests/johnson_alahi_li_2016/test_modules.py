@@ -11,14 +11,12 @@ from pystiche.misc import to_2d_arg
 from pystiche_papers.johnson_alahi_li_2016 import modules
 from pystiche_papers.utils import ResidualBlock
 
-
-def is_url(url):  # TODO: implement this
-    return True
+from .._utils import should_be_available
 
 
 def test_select_url(subtests):
 
-    configs = (
+    available_configs = (
         ("candy", True, True),
         ("composition_vii", True, False),
         ("feathers", True, True),
@@ -30,29 +28,42 @@ def test_select_url(subtests):
         ("the_wave", True, False),
         ("udnie", True, True),
     )
-    for style, impl_params, instance_norm in configs:
+    styles = (
+        "candy",
+        "composition_vii",
+        "feathers",
+        "la_muse",
+        "mosaic",
+        "starry_night",
+        "the_scream",
+        "the_wave",
+        "udnie",
+    )
+    instance_norm_configs = (True, False)
+    impl_params_configs = (True, False)
+
+    for style, impl_params, instance_norm in itertools.product(
+        styles, instance_norm_configs, impl_params_configs
+    ):
         with subtests.test(style):
-            url = modules.select_url(
-                style,
-                weights="author",
-                impl_params=impl_params,
-                instance_norm=instance_norm,
-            )
-            assert is_url(url)
-
-
-def test_select_url_no_valid_style():
-    impl_params = (True, False)
-    instance_norm = (True, False)
-    configs = itertools.product(impl_params, instance_norm)
-    for impl_params, instance_norm in configs:
-        with pytest.raises(RuntimeError):
-            modules.select_url(
-                "no_valid_style",
-                weights="pystiche",
-                impl_params=impl_params,
-                instance_norm=instance_norm,
-            )
+            case = (style, impl_params, instance_norm)
+            if should_be_available(case, available_configs):
+                url = modules.select_url(
+                    style,
+                    weights="author",
+                    impl_params=impl_params,
+                    instance_norm=instance_norm,
+                )
+                assert True
+                # assert_is_downloadable(url) # TODO: use this here
+            else:
+                with pytest.raises(RuntimeError):
+                    modules.select_url(
+                        style,
+                        weights="author",
+                        impl_params=impl_params,
+                        instance_norm=instance_norm,
+                    )
 
 
 def test_get_conv(subtests):

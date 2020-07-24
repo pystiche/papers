@@ -11,7 +11,13 @@ import torch
 
 from pystiche import image
 
-__all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module", "is_callable"]
+__all__ = [
+    "get_tmp_dir",
+    "skip_if_cuda_not_available",
+    "load_module",
+    "is_callable",
+    "should_be_available",
+]
 
 
 # Copied from
@@ -80,3 +86,9 @@ def create_guides(img):
     )
     bottom_mask = ~top_mask
     return {"top": top_mask.float(), "bottom": bottom_mask.float()}
+
+
+def should_be_available(input_case, available_cases):
+    if input_case in available_cases:
+        return True
+    return False
