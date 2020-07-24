@@ -70,6 +70,7 @@ def test_johnson_alahi_li_2016_style_transform(subtests):
                 assert style_transform.edge == "long"
 
 
+@pytest.mark.slow
 def test_johnson_alahi_li_2016_images_smoke(subtests):
     for name, image in paper.johnson_alahi_li_2016_images():
         with subtests.test(name=name):

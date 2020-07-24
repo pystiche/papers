@@ -10,6 +10,7 @@ def test_NPRgeneralLicense_smoke():
     assert isinstance(repr(image.license), str)
 
 
+@pytest.mark.slow
 def test_NPRgeneral_smoke(subtests):
     for name, image in data.NPRgeneral():
         with subtests.test(name=name):
