@@ -9,11 +9,11 @@ __all__ = ["assert_image_is_downloadable", "assert_image_downloads_correctly"]
 
 
 def assert_image_is_downloadable(image):
-    assert_is_downloadable(image.url, {"User-Agent": "pystiche_papers"}, "HEAD")
+    assert_is_downloadable(image.url)
 
 
-def assert_is_downloadable(url, headers={}, method=None):
-    request = Request(url, headers=headers, method=method)
+def assert_is_downloadable(url):
+    request = Request(url, headers={"User-Agent": "pystiche_papers"}, method="HEAD")
     response = urlopen(request)
     assert response.code == 200, f"Server returned status code {response.code}."
 

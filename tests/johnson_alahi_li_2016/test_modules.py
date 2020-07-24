@@ -48,14 +48,15 @@ def test_select_url(subtests):
         with subtests.test(style):
             case = (style, impl_params, instance_norm)
             if should_be_available(case, available_configs):
-                url = modules.select_url(
+                modules.select_url(
                     style,
                     weights="author",
                     impl_params=impl_params,
                     instance_norm=instance_norm,
                 )
-                assert True
-                # assert_is_downloadable(url) # TODO: use this here
+                # TODO: currently no correct urls deposited
+                # with subtests.test("downloadable"):
+                #     assert_is_downloadable(url)
             else:
                 with pytest.raises(RuntimeError):
                     modules.select_url(
