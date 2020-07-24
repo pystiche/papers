@@ -81,7 +81,8 @@ def test_get_conv(subtests):
         )
 
         assert isinstance(
-            type(conv_module), type(nn.ConvTranspose2d) if upsample else type(nn.Conv2d),
+            type(conv_module),
+            type(nn.ConvTranspose2d) if upsample else type(nn.Conv2d),
         )
 
         with subtests.test("in_channels"):
@@ -110,11 +111,10 @@ def test_get_norm(subtests):
         with subtests.test(instance_norm=instance_norm):
             norm_module = modules.get_norm(out_channels, instance_norm=instance_norm)
 
-            with subtests.test("module"):
-                assert isinstance(
-                    type(norm_module),
-                    type(nn.InstanceNorm2d) if instance_norm else type(nn.BatchNorm2d),
-                )
+            assert isinstance(
+                type(norm_module),
+                type(nn.InstanceNorm2d) if instance_norm else type(nn.BatchNorm2d),
+            )
 
             with subtests.test("out_channels"):
                 assert norm_module.num_features == out_channels
@@ -142,8 +142,7 @@ def test_johnson_alahi_li_2016_conv_block(subtests):
                 in_channels, out_channels, kernel_size, stride=stride, relu=relu
             )
 
-            with subtests.test("block"):
-                assert isinstance(type(conv_block), type(nn.Sequential))
+            assert isinstance(type(conv_block), type(nn.Sequential))
 
             assert len(conv_block) == 3 if relu else 2
             assert isinstance(type(conv_block[0]), type(nn.Conv2d))
@@ -157,8 +156,7 @@ def test_johnson_alahi_li_2016_residual_block(subtests, input_image):
     channels = 3
     residual_block = modules.johnson_alahi_li_2016_residual_block(channels)
 
-    with subtests.test("block"):
-        assert isinstance(type(residual_block), type(ResidualBlock))
+    assert isinstance(type(residual_block), type(ResidualBlock))
 
     with subtests.test("residual"):
         assert isinstance(type(residual_block.residual), type(nn.Sequential))
@@ -193,8 +191,7 @@ def test_johnson_alahi_li_2016_transformer_encoder(subtests):
             instance_norm=instance_norm
         )
 
-        with subtests.test("encoder"):
-            assert isinstance(type(encoder), type(pystiche.SequentialModule))
+        assert isinstance(type(encoder), type(pystiche.SequentialModule))
 
         in_out_channels = []
         for i, module in enumerate(encoder.children()):
@@ -231,8 +228,7 @@ def test_johnson_alahi_li_2016_transformer_decoder(subtests):
                 instance_norm=instance_norm
             )
 
-            with subtests.test("decoder"):
-                assert isinstance(type(decoder), type(pystiche.SequentialModule))
+            assert isinstance(type(decoder), type(pystiche.SequentialModule))
 
             in_out_channels = []
             for i, module in enumerate(decoder.children()):
