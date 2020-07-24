@@ -60,11 +60,6 @@ def johnson_alahi_li_2016_training(
         images = johnson_alahi_li_2016_images()
         style_image = images[style_image].read(device=device)
 
-    if impl_params:
-        preprocessor = johnson_alahi_li_2016_preprocessor()
-        preprocessor = preprocessor.to(device)
-        style_image = preprocessor(style_image)
-
     if instance_norm is None:
         instance_norm = impl_params
 
@@ -91,6 +86,11 @@ def johnson_alahi_li_2016_training(
     style_transform = style_transform.to(device)
     style_image = style_transform(style_image)
     style_image = batch_up_image(style_image, loader=content_image_loader)
+
+    if impl_params:
+        preprocessor = johnson_alahi_li_2016_preprocessor()
+        preprocessor = preprocessor.to(device)
+        style_image = preprocessor(style_image)
 
     criterion.set_style_image(style_image)
 
