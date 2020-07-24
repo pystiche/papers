@@ -169,6 +169,7 @@ def training(default_transformer_optim_loop_patch, image_loader, style_image):
     return training_
 
 
+@pytest.mark.slow
 def test_johnson_alahi_li_2016_training_smoke(subtests, training, image_loader):
     args, kwargs, output = training(image_loader)
     content_image_loader, transformer, criterion, criterion_update_fn = args
