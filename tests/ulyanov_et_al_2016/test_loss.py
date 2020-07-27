@@ -5,8 +5,9 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-from pystiche import ops, gram_matrix
+from pystiche import gram_matrix, ops
 from pystiche.image import extract_batch_size
+from pystiche.loss import PerceptualLoss
 from pystiche_papers.ulyanov_et_al_2016 import loss
 
 
@@ -68,8 +69,16 @@ def test_UlyanovEtAl2016GramOperator(
     configs = ((True, True, 1.0), (False, False, input_repr.size()[0]))
     for impl_params, normalize_by_num_channels, extra_batch_normalization in configs:
         with subtests.test(impl_params=impl_params):
-            intern_target_repr = target_repr/target_repr.size()[-1] if normalize_by_num_channels else target_repr
-            intern_inüut_repr = input_repr/input_repr.size()[-1] if normalize_by_num_channels else input_repr
+            intern_target_repr = (
+                target_repr / target_repr.size()[-1]
+                if normalize_by_num_channels
+                else target_repr
+            )
+            intern_inüut_repr = (
+                input_repr / input_repr.size()[-1]
+                if normalize_by_num_channels
+                else input_repr
+            )
             op = loss.UlyanovEtAl2016GramOperator(encoder, impl_params=impl_params,)
             op.set_target_image(target_image)
             actual = op(input_image)
@@ -101,10 +110,12 @@ def test_ulyanov_et_al_2016_style_loss(subtests):
             *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
         )
         with subtests.test("layers"):
-            desired_layers = {"relu1_1", "relu2_1", "relu3_1", "relu4_1"} if impl_params and instance_norm else {"relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"}
-            assert (
-                set(layers) == desired_layers
+            desired_layers = (
+                {"relu1_1", "relu2_1", "relu3_1", "relu4_1"}
+                if impl_params and instance_norm
+                else {"relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"}
             )
+            assert set(layers) == desired_layers
 
         with subtests.test("layer_weights"):
             desired_layer_weights = (1e0,) * len(desired_layers)
@@ -119,3 +130,26 @@ def test_ulyanov_et_al_2016_style_loss(subtests):
             else:
                 score_weight = 1e0
             assert style_loss.score_weight == pytest.approx(score_weight)
+
+
+def test_ulyanov_et_al_2016_perceptual_loss(subtests):
+    for stylization in (True, False):
+        perceptual_loss = loss.ulyanov_et_al_2016_perceptual_loss(
+            stylization=stylization
+        )
+        assert isinstance(perceptual_loss, PerceptualLoss)
+
+        with subtests.test("content_loss"):
+            assert (
+                isinstance(
+                    perceptual_loss.content_loss,
+                    loss.UlyanovEtAl2016FeatureReconstructionOperator,
+                )
+                if stylization
+                else perceptual_loss.content_loss is None
+            )
+
+        with subtests.test("style_loss"):
+            assert isinstance(
+                perceptual_loss.style_loss, loss.MultiLayerEncodingOperator
+            )
