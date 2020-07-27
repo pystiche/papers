@@ -33,6 +33,12 @@ __all__ = [
 ]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def cuda_init():
+    if torch.cuda.is_available():
+        torch.empty(1, device="cuda")
+
+
 @pytest.fixture
 def image_small_0():
     return read_image("small_0")
