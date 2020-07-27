@@ -1,8 +1,13 @@
+import itertools
 from typing import Dict, cast
 
+import pytest
 
+import pytorch_testing_utils as ptu
+import torch
 from torch import nn
 
+from pystiche.image.utils import  extract_num_channels
 from pystiche_papers.ulyanov_et_al_2016 import modules
 
 
@@ -32,3 +37,66 @@ def test_SequentialWithOutChannels(subtests):
 
         with subtests.test("out_channels"):
             assert module.out_channels == sequential_modules[-1].out_channels
+
+
+def test_join_channelwise(subtests, input_image, style_image):
+    join_image = modules.join_channelwise(input_image, style_image)
+    assert isinstance(join_image, torch.Tensor)
+    input_num_channels = extract_num_channels(input_image)
+    with subtests.test("num_channels"):
+        assert extract_num_channels(
+            join_image
+        ) == input_num_channels + extract_num_channels(style_image)
+    with subtests.test("input_image"):
+        ptu.assert_allclose(join_image[:, :input_num_channels, :, :], input_image)
+    with subtests.test("style_image"):
+        ptu.assert_allclose(join_image[:, input_num_channels:, :, :], style_image)
+
+
+def test_get_norm_module(subtests):
+    in_channels = 3
+    for instance_norm in (True, False):
+        with subtests.test(instance_norm=instance_norm):
+            norm_module = modules.get_norm_module(
+                in_channels, instance_norm=instance_norm
+            )
+
+            assert isinstance(
+                type(norm_module),
+                type(nn.InstanceNorm2d) if instance_norm else type(nn.BatchNorm2d),
+            )
+
+            with subtests.test("out_channels"):
+                assert norm_module.num_features == in_channels
+
+            with subtests.test("eps"):
+                assert norm_module.eps == pytest.approx(1e-5)
+
+            with subtests.test("momentum"):
+                assert norm_module.momentum == pytest.approx(1e-1)
+
+            with subtests.test("affine"):
+                assert norm_module.affine
+
+            with subtests.test("track_running_stats"):
+                assert norm_module.track_running_stats
+
+
+def test_get_activation_module(subtests):
+    for instance_norm, impl_params in itertools.product((True, False), (True, False)):
+        with subtests.test(instance_norm=instance_norm):
+            norm_module = modules.get_activation_module(
+                impl_params=impl_params, instance_norm=instance_norm
+            )
+
+            assert isinstance(
+                type(norm_module),
+                type(nn.ReLU) if impl_params and instance_norm else type(nn.LeakyReLU),
+            )
+
+            with subtests.test("inplace"):
+                assert norm_module.inplace
+
+            if not impl_params and instance_norm:
+                with subtests.test("slope"):
+                    assert norm_module.negative_slope == pytest.approx(0.01)
