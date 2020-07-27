@@ -10,9 +10,7 @@ from pystiche_papers.ulyanov_et_al_2016 import utils
 
 
 @pytest.mark.slow
-def test_ulyanov_et_al_2016_multi_layer_encoder(subtests, mocker):
-    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
-
+def test_ulyanov_et_al_2016_multi_layer_encoder(subtests):
     multi_layer_encoder = utils.ulyanov_et_al_2016_multi_layer_encoder()
     assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
 
