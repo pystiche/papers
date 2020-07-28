@@ -16,7 +16,6 @@ __all__ = [
     "skip_if_cuda_not_available",
     "load_module",
     "is_callable",
-    "should_be_available",
 ]
 
 

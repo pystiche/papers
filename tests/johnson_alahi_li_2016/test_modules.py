@@ -11,7 +11,7 @@ from pystiche.misc import to_2d_arg
 from pystiche_papers.johnson_alahi_li_2016 import modules
 from pystiche_papers.utils import ResidualBlock
 
-from .._asserts import assert_is_downloadable, assert_downloads_correctly
+from .._asserts import assert_downloads_correctly, assert_is_downloadable
 
 
 @pytest.fixture(scope="module")
