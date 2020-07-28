@@ -1,5 +1,4 @@
 import itertools
-from typing import Dict, cast
 
 import pytest
 
@@ -30,10 +29,7 @@ def test_SequentialWithOutChannels(subtests):
             else:
                 desired_out_channel_name = out_channel_name
 
-            assert (
-                tuple(cast(Dict[str, nn.Module], module._modules).keys())[-1]
-                == desired_out_channel_name
-            )
+            assert tuple(module._modules.keys())[-1] == desired_out_channel_name
 
         with subtests.test("out_channels"):
             assert module.out_channels == sequential_modules[-1].out_channels
@@ -57,11 +53,11 @@ def test_UlyanovEtAl2016StylizationDownsample(subtests):
     module = modules.UlyanovEtAl2016StylizationDownsample()
     assert isinstance(module, nn.AvgPool2d)
     with subtests.test("kernel_size"):
-        assert module.kernel_size == pytest.approx(2)
+        assert module.kernel_size == 2
     with subtests.test("stride"):
-        assert module.stride == pytest.approx(2)
+        assert module.stride == 2
     with subtests.test("padding"):
-        assert module.padding == pytest.approx(0)
+        assert module.padding == 0
 
 
 def test_UlyanovEtAl2016TextureDownsample(mocker, input_image):
@@ -118,9 +114,6 @@ def test_get_norm_module(subtests):
 
             with subtests.test("affine"):
                 assert norm_module.affine
-
-            with subtests.test("track_running_stats"):
-                assert norm_module.track_running_stats
 
 
 def test_get_activation_module(subtests):
