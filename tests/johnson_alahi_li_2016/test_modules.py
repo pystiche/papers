@@ -11,60 +11,81 @@ from pystiche.misc import to_2d_arg
 from pystiche_papers.johnson_alahi_li_2016 import modules
 from pystiche_papers.utils import ResidualBlock
 
-from .._utils import should_be_available
+from .._asserts import assert_is_downloadable, assert_downloads_correctly
 
 
-def test_select_url(subtests):
-
-    available_configs = (
-        ("candy", True, True),
-        ("composition_vii", True, False),
-        ("feathers", True, True),
-        ("la_muse", True, False),
-        ("la_muse", True, True),
-        ("mosaic", True, True),
-        ("starry_night", True, False),
-        ("the_scream", True, True),
-        ("the_wave", True, False),
-        ("udnie", True, True),
+@pytest.fixture(scope="module")
+def model_urls_configs(styles):
+    return (
+        {
+            "framework": framework,
+            "style": style,
+            "impl_params": impl_params,
+            "instance_norm": instance_norm,
+        }
+        for framework, style, impl_params, instance_norm in itertools.product(
+            ("pystiche", "luatorch"), styles, (True, False), (True, False)
+        )
     )
-    styles = (
-        "candy",
-        "composition_vii",
-        "feathers",
-        "la_muse",
-        "mosaic",
-        "starry_night",
-        "the_scream",
-        "the_wave",
-        "udnie",
-    )
-    instance_norm_configs = (True, False)
-    impl_params_configs = (True, False)
 
-    for style, impl_params, instance_norm in itertools.product(
-        styles, instance_norm_configs, impl_params_configs
+
+def model_url_should_be_available(framework, style, impl_params, instance_norm):
+    # TODO: remove when pystiche weights are uploaded
+    if framework == "pystiche":
+        return False
+
+    if framework == "luatorch" and not impl_params:
+        return False
+
+    if (
+        framework == "luatorch"
+        and style in ("composition_vii", "starry_night", "the_wave")
+        and instance_norm
     ):
-        with subtests.test(style):
-            case = (style, impl_params, instance_norm)
-            if should_be_available(case, available_configs):
-                modules.select_url(
-                    style,
-                    weights="author",
-                    impl_params=impl_params,
-                    instance_norm=instance_norm,
-                )
-                # TODO: currently no correct urls deposited
-                # with subtests.test("downloadable"):
-                #     assert_is_downloadable(url)
+        return False
+
+    if (
+        framework == "luatorch"
+        and style in ("candy", "feathers", "mosaic", "the_scream", "udnie",)
+        and not instance_norm
+    ):
+        return False
+
+    return True
+
+
+@pytest.fixture(scope="module")
+def model_urls(model_urls_configs):
+    return tuple(
+        modules.select_url(**config)
+        for config in model_urls_configs
+        if model_url_should_be_available(**config)
+    )
+
+
+def test_select_url(subtests, model_urls_configs):
+    for config in model_urls_configs:
+        with subtests.test(**config):
+            if model_url_should_be_available(**config):
+                assert isinstance(modules.select_url(**config), str)
             else:
                 with pytest.raises(RuntimeError):
-                    modules.select_url(
-                        style,
-                        weights="author",
-                        impl_params=impl_params,
-                        instance_norm=instance_norm,
-                    )
+                    modules.select_url(**config)
+
+
+@pytest.mark.slow
+def test_weights_downloadable(subtests, model_urls):
+    for url in model_urls:
+        with subtests.test(url):
+            assert_is_downloadable(url)
+
+
+@pytest.mark.large_download
+@pytest.mark.slow
+def test_weights_download_correctly(subtests, model_urls):
+    for url in model_urls:
+        with subtests.test(url):
+            assert_downloads_correctly(url)
 
 
 def test_get_conv(subtests):
