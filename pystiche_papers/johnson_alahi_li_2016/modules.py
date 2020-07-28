@@ -290,7 +290,7 @@ class JohnsonAlahiLi2016Transformer(nn.Module):
 
 def johnson_alahi_li_2016_transformer(
     style: Optional[str] = None,
-    weights: str = "pystiche",
+    framework: str = "pystiche",
     impl_params: bool = True,
     instance_norm: bool = True,
 ) -> JohnsonAlahiLi2016Transformer:
@@ -305,8 +305,8 @@ def johnson_alahi_li_2016_transformer(
         return transformer
 
     url = select_url(
-        cast(str, style),
-        weights=weights,
+        framework=framework,
+        style=cast(str, style),
         impl_params=impl_params,
         instance_norm=instance_norm,
     )

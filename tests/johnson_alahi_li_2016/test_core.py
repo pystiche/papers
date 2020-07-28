@@ -510,8 +510,8 @@ def test_johnson_alahi_li_2016_stylization_transformer_str(
     patch, mock = transformer_mocks
 
     style = "style"
-    weights = "weights"
-    stylization(transformer_=style, weights=weights)
+    framework = "pystiche"
+    stylization(transformer_=style, framework=framework)
 
     patch.assert_called_once()
     _, kwargs = patch.call_args
@@ -519,8 +519,8 @@ def test_johnson_alahi_li_2016_stylization_transformer_str(
     with subtests.test("style"):
         assert kwargs["style"] == style
 
-    with subtests.test("weights"):
-        assert kwargs["weights"] == weights
+    with subtests.test("framework"):
+        assert kwargs["framework"] == framework
 
     with subtests.test("eval"):
         mock.eval.assert_called_once_with()

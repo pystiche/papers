@@ -114,7 +114,7 @@ def johnson_alahi_li_2016_stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: Optional[bool] = None,
-    weights: str = "pystiche",
+    framework: str = "pystiche",
     preprocessor: Optional[nn.Module] = None,
     postprocessor: Optional[nn.Module] = None,
 ) -> torch.Tensor:
@@ -127,7 +127,7 @@ def johnson_alahi_li_2016_stylization(
         style = transformer
         transformer = johnson_alahi_li_2016_transformer(
             style=style,
-            weights=weights,
+            framework=framework,
             impl_params=impl_params,
             instance_norm=instance_norm,
         )
