@@ -5,8 +5,10 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
+from torch.hub import load_state_dict_from_url
 
 import pystiche
+import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche.misc import to_2d_arg
 from pystiche_papers.johnson_alahi_li_2016 import modules
 from pystiche_papers.utils import ResidualBlock
@@ -308,6 +310,34 @@ def test_johnson_alahi_li_2016_transformer():
     transformer = modules.johnson_alahi_li_2016_transformer()
 
     assert isinstance(type(transformer), type(modules.JohnsonAlahiLi2016Transformer))
+
+
+@pytest.mark.skipif(
+    torch.__version__ < "1.6",
+    reason=(
+        "downloads with torch.hub from servers that require a custom User-Agent in the "
+        "request header is only supported for torch>=1.6"
+    ),
+)
+@pytest.mark.large_download
+@pytest.mark.slow
+def test_johnson_alahi_li_2016_transformer_load_state_dict_from_url(
+    subtests, mocker, model_url_configs
+):
+    for config in model_url_configs:
+        if not model_url_should_be_available(**config):
+            continue
+
+        with subtests.test(**config):
+            url = modules.select_url(**config)
+            state_dict = load_state_dict_from_url(url)
+
+            with mocker.patch(
+                "pystiche_papers.johnson_alahi_li_2016.modules.load_state_dict_from_url",
+                return_value=state_dict,
+            ):
+                transformer = paper.johnson_alahi_li_2016_transformer(**config)
+                ptu.assert_allclose(transformer.state_dict(), state_dict)
 
 
 def test_johnson_alahi_li_2016_transformer_wrong_impl_params_instance_norm():
