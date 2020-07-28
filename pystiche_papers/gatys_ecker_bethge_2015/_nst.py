@@ -7,22 +7,17 @@ from pystiche.loss import PerceptualLoss
 from pystiche.misc import get_input_image
 from pystiche.optim import OptimLogger, default_image_optim_loop
 
-from .data import gatys_ecker_bethge_2015_images
-from .loss import gatys_ecker_bethge_2015_perceptual_loss
-from .utils import (
-    gatys_ecker_bethge_2015_optimizer,
-    gatys_ecker_bethge_2015_postprocessor,
-    gatys_ecker_bethge_2015_preprocessor,
-)
+from ._loss import perceptual_loss
+from ._utils import optimizer
+from ._utils import postprocessor as _postprocessor
+from ._utils import preprocessor as _preprocessor
 
 __all__ = [
-    "gatys_ecker_bethge_2015_images",
-    "gatys_ecker_bethge_2015_perceptual_loss",
-    "gatys_ecker_bethge_2015_nst",
+    "nst",
 ]
 
 
-def gatys_ecker_bethge_2015_nst(
+def nst(
     content_image: torch.Tensor,
     style_image: torch.Tensor,
     num_steps: int = 500,
@@ -35,7 +30,7 @@ def gatys_ecker_bethge_2015_nst(
     ] = None,
 ) -> torch.Tensor:
     if criterion is None:
-        criterion = gatys_ecker_bethge_2015_perceptual_loss(impl_params=impl_params)
+        criterion = perceptual_loss(impl_params=impl_params)
 
     device = content_image.device
     criterion = criterion.to(device)
@@ -45,8 +40,8 @@ def gatys_ecker_bethge_2015_nst(
         starting_point=starting_point, content_image=content_image
     )
 
-    preprocessor = gatys_ecker_bethge_2015_preprocessor().to(device)
-    postprocessor = gatys_ecker_bethge_2015_postprocessor().to(device)
+    preprocessor = _preprocessor().to(device)
+    postprocessor = _postprocessor().to(device)
 
     criterion.set_content_image(preprocessor(content_image))
     criterion.set_style_image(preprocessor(style_image))
@@ -54,7 +49,7 @@ def gatys_ecker_bethge_2015_nst(
     return default_image_optim_loop(
         input_image,
         criterion,
-        get_optimizer=gatys_ecker_bethge_2015_optimizer,
+        get_optimizer=optimizer,
         num_steps=num_steps,
         preprocessor=preprocessor,
         postprocessor=postprocessor,

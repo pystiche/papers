@@ -8,8 +8,8 @@ from pystiche.misc import get_device
 from pystiche.optim import OptimLogger
 from pystiche_papers.gatys_ecker_bethge_2015 import (
     gatys_ecker_bethge_2015_images,
-    gatys_ecker_bethge_2015_nst,
     gatys_ecker_bethge_2015_perceptual_loss,
+    nst,
 )
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
@@ -49,7 +49,7 @@ def figure_2(args):
                 impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
             )
 
-            output_image = gatys_ecker_bethge_2015_nst(
+            output_image = nst(
                 content_image,
                 style_image.image,
                 NUM_STEPS,
@@ -92,7 +92,7 @@ def figure_3(args):
                 impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
             )
 
-            output_image = gatys_ecker_bethge_2015_nst(
+            output_image = nst(
                 content_image,
                 style_image,
                 NUM_STEPS,

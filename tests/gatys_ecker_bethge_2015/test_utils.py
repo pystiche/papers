@@ -3,27 +3,25 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
+import pystiche_papers.gatys_ecker_bethge_2015 as paper
 from pystiche import meta
 from pystiche.enc import VGGMultiLayerEncoder
 from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
-from pystiche_papers.gatys_ecker_bethge_2015 import utils
 
 
-def test_gatys_ecker_bethge_2015_preprocessor():
-    assert isinstance(utils.gatys_ecker_bethge_2015_preprocessor(), CaffePreprocessing)
+def test_preprocessor():
+    assert isinstance(paper.preprocessor(), CaffePreprocessing)
 
 
-def test_gatys_ecker_bethge_2015_postprocessor():
-    assert isinstance(
-        utils.gatys_ecker_bethge_2015_postprocessor(), CaffePostprocessing
-    )
+def test_postprocessor():
+    assert isinstance(paper.postprocessor(), CaffePostprocessing)
 
 
 @pytest.mark.slow
-def test_gatys_ecker_bethge_2015_multi_layer_encoder(subtests, mocker):
+def test_multi_layer_encoder(subtests, mocker):
     mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
 
-    multi_layer_encoder = utils.gatys_ecker_bethge_2015_multi_layer_encoder()
+    multi_layer_encoder = paper.multi_layer_encoder()
     assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
 
     with subtests.test("internal preprocessing"):
@@ -39,12 +37,10 @@ def test_gatys_ecker_bethge_2015_multi_layer_encoder(subtests, mocker):
 
 
 @pytest.mark.slow
-def test_gatys_ecker_bethge_2015_multi_layer_encoder_avg_ppol(mocker):
+def test_multi_layer_encoder_avg_pool(mocker):
     mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
 
-    multi_layer_encoder = utils.gatys_ecker_bethge_2015_multi_layer_encoder(
-        impl_params=False
-    )
+    multi_layer_encoder = paper.multi_layer_encoder(impl_params=False)
     pool_modules = [
         module
         for module in multi_layer_encoder.modules()
@@ -53,9 +49,9 @@ def test_gatys_ecker_bethge_2015_multi_layer_encoder_avg_ppol(mocker):
     assert all(isinstance(module, nn.AvgPool2d) for module in pool_modules)
 
 
-def test_gatys_ecker_bethge_2015_optimizer(subtests, input_image):
+def test_optimizer(subtests, input_image):
     params = input_image
-    optimizer = utils.gatys_ecker_bethge_2015_optimizer(params)
+    optimizer = paper.optimizer(params)
 
     assert isinstance(optimizer, optim.LBFGS)
     assert len(optimizer.param_groups) == 1

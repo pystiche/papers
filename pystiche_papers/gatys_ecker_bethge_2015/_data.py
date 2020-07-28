@@ -5,11 +5,11 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
 )
 
-__all__ = ["gatys_ecker_bethge_2015_images"]
+__all__ = ["images"]
 
 
-def gatys_ecker_bethge_2015_images() -> DownloadableImageCollection:
-    images = {
+def images() -> DownloadableImageCollection:
+    images_ = {
         "neckarfront": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/0/00/Tuebingen_Neckarfront.jpg",
             title="Tübingen Neckarfront",
@@ -60,4 +60,4 @@ def gatys_ecker_bethge_2015_images() -> DownloadableImageCollection:
             md5="bfcbc420684bf27d2d8581fa8cc9522f",
         ),
     }
-    return DownloadableImageCollection(images)
+    return DownloadableImageCollection(images_)

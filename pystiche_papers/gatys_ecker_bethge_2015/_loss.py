@@ -8,25 +8,22 @@ from torch.nn.functional import mse_loss
 import pystiche
 from pystiche.enc import Encoder, MultiLayerEncoder
 from pystiche.loss import PerceptualLoss
-from pystiche.ops import (
-    EncodingOperator,
-    FeatureReconstructionOperator,
-    GramOperator,
-    MultiLayerEncodingOperator,
-)
+from pystiche.ops import EncodingOperator
+from pystiche.ops import FeatureReconstructionOperator as _FeatureReconstructionOperator
+from pystiche.ops import GramOperator, MultiLayerEncodingOperator
 
-from .utils import gatys_ecker_bethge_2015_multi_layer_encoder
+from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
-    "GatysEckerBethge2015FeatureReconstructionOperator",
-    "gatys_ecker_bethge_2015_content_loss",
-    "GatysEckerBethge2015StyleLoss",
-    "gatys_ecker_bethge_2015_style_loss",
-    "gatys_ecker_bethge_2015_perceptual_loss",
+    "FeatureReconstructionOperator",
+    "content_loss",
+    "StyleLoss",
+    "style_loss",
+    "perceptual_loss",
 ]
 
 
-class GatysEckerBethge2015FeatureReconstructionOperator(FeatureReconstructionOperator):
+class FeatureReconstructionOperator(_FeatureReconstructionOperator):
     def __init__(
         self, encoder: Encoder, impl_params: bool = True, score_weight: float = 1e0
     ):
@@ -45,22 +42,22 @@ class GatysEckerBethge2015FeatureReconstructionOperator(FeatureReconstructionOpe
         return score * self.score_correction_factor
 
 
-def gatys_ecker_bethge_2015_content_loss(
+def content_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: float = 1e0,
-) -> GatysEckerBethge2015FeatureReconstructionOperator:
+) -> FeatureReconstructionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    return GatysEckerBethge2015FeatureReconstructionOperator(
+    return FeatureReconstructionOperator(
         encoder, impl_params=impl_params, score_weight=score_weight
     )
 
 
-class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
+class StyleLoss(MultiLayerEncodingOperator):
     def __init__(
         self,
         multi_layer_encoder: MultiLayerEncoder,
@@ -89,7 +86,7 @@ def get_layer_weights(
     layers: Sequence[str], multi_layer_encoder: Optional[MultiLayerEncoder] = None
 ) -> List[float]:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
     nums_channels = []
     for layer in layers:
@@ -106,16 +103,16 @@ def get_layer_weights(
     return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
 
 
-def gatys_ecker_bethge_2015_style_loss(
+def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
     **gram_loss_kwargs: Any,
-) -> GatysEckerBethge2015StyleLoss:
+) -> StyleLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
@@ -132,7 +129,7 @@ def gatys_ecker_bethge_2015_style_loss(
     def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
 
-    return GatysEckerBethge2015StyleLoss(
+    return StyleLoss(
         multi_layer_encoder,
         layers,
         get_encoding_op,
@@ -142,20 +139,18 @@ def gatys_ecker_bethge_2015_style_loss(
     )
 
 
-def gatys_ecker_bethge_2015_perceptual_loss(
+def perceptual_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> PerceptualLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_ecker_bethge_2015_multi_layer_encoder(
-            impl_params=impl_params
-        )
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if content_loss_kwargs is None:
         content_loss_kwargs = {}
-    content_loss = gatys_ecker_bethge_2015_content_loss(
+    content_loss_ = content_loss(
         impl_params=impl_params,
         multi_layer_encoder=multi_layer_encoder,
         **content_loss_kwargs,
@@ -163,10 +158,10 @@ def gatys_ecker_bethge_2015_perceptual_loss(
 
     if style_loss_kwargs is None:
         style_loss_kwargs = {}
-    style_loss = gatys_ecker_bethge_2015_style_loss(
+    style_loss_ = style_loss(
         impl_params=impl_params,
         multi_layer_encoder=multi_layer_encoder,
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss, style_loss)
+    return PerceptualLoss(content_loss_, style_loss_)
