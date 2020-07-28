@@ -33,14 +33,13 @@ def test_SequentialWithOutChannels(subtests):
 def test_join_channelwise(subtests, image_small_0, image_small_1):
     join_image = modules.join_channelwise(image_small_0, image_small_1)
     assert isinstance(join_image, torch.Tensor)
+
     input_num_channels = extract_num_channels(image_small_0)
     assert extract_num_channels(
         join_image
     ) == input_num_channels + extract_num_channels(image_small_1)
-    with subtests.test("input_image"):
-        ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
-    with subtests.test("style_image"):
-        ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
+    ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
+    ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
 def test_UlyanovEtAl2016StylizationDownsample(subtests):
