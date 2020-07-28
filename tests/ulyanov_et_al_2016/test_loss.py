@@ -3,6 +3,7 @@ import itertools
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch
 from torch.nn.functional import mse_loss
 
 from pystiche import gram_matrix, ops
@@ -14,6 +15,7 @@ from pystiche_papers.ulyanov_et_al_2016 import loss
 def test_UlyanovEtAl2016FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
+    input_image = torch.cat((input_image, input_image), 0)
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
@@ -30,7 +32,6 @@ def test_UlyanovEtAl2016FeatureReconstructionOperator(
             score = mse_loss(input_enc, target_enc)
 
             desired = score / extract_batch_size(input_enc) if impl_params else score
-
             assert actual == ptu.approx(desired)
 
 
@@ -133,23 +134,14 @@ def test_ulyanov_et_al_2016_style_loss(subtests):
 
 
 def test_ulyanov_et_al_2016_perceptual_loss(subtests):
-    for stylization in (True, False):
-        perceptual_loss = loss.ulyanov_et_al_2016_perceptual_loss(
-            stylization=stylization
+    perceptual_loss = loss.ulyanov_et_al_2016_perceptual_loss()
+    assert isinstance(perceptual_loss, PerceptualLoss)
+
+    with subtests.test("content_loss"):
+        assert isinstance(
+            perceptual_loss.content_loss,
+            loss.UlyanovEtAl2016FeatureReconstructionOperator,
         )
-        assert isinstance(perceptual_loss, PerceptualLoss)
 
-        with subtests.test("content_loss"):
-            assert (
-                isinstance(
-                    perceptual_loss.content_loss,
-                    loss.UlyanovEtAl2016FeatureReconstructionOperator,
-                )
-                if stylization
-                else perceptual_loss.content_loss is None
-            )
-
-        with subtests.test("style_loss"):
-            assert isinstance(
-                perceptual_loss.style_loss, loss.MultiLayerEncodingOperator
-            )
+    with subtests.test("style_loss"):
+        assert isinstance(perceptual_loss.style_loss, loss.MultiLayerEncodingOperator)
