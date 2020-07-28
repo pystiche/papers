@@ -17,7 +17,7 @@ from .._asserts import assert_downloads_correctly, assert_is_downloadable
 
 
 @pytest.fixture(scope="module")
-def model_urls_configs(styles):
+def model_url_configs(styles):
     return (
         {
             "framework": framework,
@@ -57,16 +57,16 @@ def model_url_should_be_available(framework, style, impl_params, instance_norm):
 
 
 @pytest.fixture(scope="module")
-def model_urls(model_urls_configs):
+def model_urls(model_url_configs):
     return tuple(
         modules.select_url(**config)
-        for config in model_urls_configs
+        for config in model_url_configs
         if model_url_should_be_available(**config)
     )
 
 
-def test_select_url(subtests, model_urls_configs):
-    for config in model_urls_configs:
+def test_select_url(subtests, model_url_configs):
+    for config in model_url_configs:
         with subtests.test(**config):
             if model_url_should_be_available(**config):
                 assert isinstance(modules.select_url(**config), str)
