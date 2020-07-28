@@ -124,8 +124,8 @@ def test_get_norm_module(subtests):
 
 
 def test_get_activation_module(subtests):
-    for instance_norm, impl_params in itertools.product((True, False), (True, False)):
-        with subtests.test(instance_norm=instance_norm):
+    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
+        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
             norm_module = modules.get_activation_module(
                 impl_params=impl_params, instance_norm=instance_norm
             )
@@ -138,6 +138,6 @@ def test_get_activation_module(subtests):
             with subtests.test("inplace"):
                 assert norm_module.inplace
 
-            if not impl_params and instance_norm:
+            if isinstance(norm_module, nn.LeakyReLU):
                 with subtests.test("slope"):
                     assert norm_module.negative_slope == pytest.approx(0.01)
