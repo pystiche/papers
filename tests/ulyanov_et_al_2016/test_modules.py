@@ -35,18 +35,17 @@ def test_SequentialWithOutChannels(subtests):
             assert module.out_channels == sequential_modules[-1].out_channels
 
 
-def test_join_channelwise(subtests, input_image, style_image):
-    join_image = modules.join_channelwise(input_image, style_image)
+def test_join_channelwise(subtests, image_small_0, image_small_1):
+    join_image = modules.join_channelwise(image_small_0, image_small_1)
     assert isinstance(join_image, torch.Tensor)
-    input_num_channels = extract_num_channels(input_image)
-    with subtests.test("num_channels"):
-        assert extract_num_channels(
-            join_image
-        ) == input_num_channels + extract_num_channels(style_image)
+    input_num_channels = extract_num_channels(image_small_0)
+    assert extract_num_channels(
+        join_image
+    ) == input_num_channels + extract_num_channels(image_small_1)
     with subtests.test("input_image"):
-        ptu.assert_allclose(join_image[:, :input_num_channels, :, :], input_image)
+        ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
     with subtests.test("style_image"):
-        ptu.assert_allclose(join_image[:, input_num_channels:, :, :], style_image)
+        ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
 def test_UlyanovEtAl2016StylizationDownsample(subtests):
@@ -69,16 +68,9 @@ def test_UlyanovEtAl2016TextureDownsample(mocker, input_image):
     mock.assert_called_once()
 
 
-def test_ulyanov_et_al_2016_downsample(subtests):
-    for stylization in (True, False):
-        with subtests.test(stylization=stylization):
-            module = modules.ulyanov_et_al_2016_downsample(stylization=stylization)
-            assert isinstance(
-                module,
-                modules.UlyanovEtAl2016StylizationDownsample
-                if stylization
-                else modules.UlyanovEtAl2016TextureDownsample,
-            )
+def test_ulyanov_et_al_2016_downsample():
+    module = modules.ulyanov_et_al_2016_downsample()
+    assert isinstance(module, modules.UlyanovEtAl2016StylizationDownsample)
 
 
 def test_ulyanov_et_al_2016_upsample(subtests):
