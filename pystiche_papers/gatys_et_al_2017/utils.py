@@ -26,5 +26,5 @@ def gatys_et_al_2017_multi_layer_encoder() -> MultiLayerEncoder:
     )
 
 
-def gatys_et_al_2017_optimizer(input_image: torch.Tensor) -> optim.LBFGS:  # type: ignore[name-defined]
-    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)  # type: ignore[attr-defined]
+def gatys_et_al_2017_optimizer(input_image: torch.Tensor) -> optim.LBFGS:
+    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)

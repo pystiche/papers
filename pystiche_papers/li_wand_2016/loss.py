@@ -92,7 +92,7 @@ class NormalizeUnfoldGrad(torch.autograd.Function):
         return grad_input, None, None, None
 
 
-normalize_unfold_grad = NormalizeUnfoldGrad.apply  # type: ignore[attr-defined]
+normalize_unfold_grad = NormalizeUnfoldGrad.apply
 
 
 def extract_normalized_patches2d(
