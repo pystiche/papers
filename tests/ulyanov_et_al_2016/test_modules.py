@@ -12,29 +12,22 @@ from pystiche_papers.ulyanov_et_al_2016 import modules
 
 
 def test_SequentialWithOutChannels(subtests):
-    configs = (
-        (None, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
-        (0, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
-        (
-            "first_conv",
-            (
-                OrderedDict(
-                    [
-                        ("first_conv", nn.Conv2d(3, 3, 1)),
-                        ("last_conv", nn.Conv2d(3, 5, 1)),
-                    ]
-                ),
-            ),
-        ),
+    sequential_modules = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
+    sequential_module_dict = OrderedDict(
+        ((str(idx), module) for idx, module in enumerate(sequential_modules))
     )
-    for out_channel_name, sequential_modules in configs:
+    for out_channel_name, out_channels, args in (
+        (None, 5, sequential_modules),
+        (0, 3, sequential_modules),
+        (1, 5, sequential_modules),
+        ("0", 3, (sequential_module_dict,)),
+        ("1", 5, (sequential_module_dict,)),
+    ):
         with subtests.test(out_channel_name=out_channel_name):
-            module = modules.SequentialWithOutChannels(
-                *sequential_modules, out_channel_name=out_channel_name
+            sequential = modules.SequentialWithOutChannels(
+                *args, out_channel_name=out_channel_name
             )
-
-            output_idx = -1 if out_channel_name is None else out_channel_name
-            assert module.out_channels == sequential_modules[output_idx].out_channels
+            assert sequential.out_channels == out_channels
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
