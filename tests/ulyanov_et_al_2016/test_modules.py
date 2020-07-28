@@ -1,4 +1,5 @@
 import itertools
+from collections import OrderedDict
 
 import pytest
 
@@ -11,42 +12,34 @@ from pystiche_papers.ulyanov_et_al_2016 import modules
 
 
 def test_SequentialWithOutChannels(subtests):
-    sequential_modules = [nn.Conv2d(3, 3, 1), nn.Conv2d(3, 3, 1)]
-    for out_channel_name in (
-        None,
-        1,
-        "1",
-    ):  # TODO: Rename out_channel_name is not implemented
-        module = modules.SequentialWithOutChannels(
-            *sequential_modules, out_channel_name=out_channel_name
-        )
-
-        with subtests.test("out_channel_name"):
-            if out_channel_name is None:
-                desired_out_channel_name = "1"
-            elif isinstance(out_channel_name, int):
-                desired_out_channel_name = str(out_channel_name)
-            else:
-                desired_out_channel_name = out_channel_name
-
-            assert tuple(module._modules.keys())[-1] == desired_out_channel_name
-
-        with subtests.test("out_channels"):
-            assert module.out_channels == sequential_modules[-1].out_channels
+    sequential_modules = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
+    sequential_module_dict = OrderedDict(
+        ((str(idx), module) for idx, module in enumerate(sequential_modules))
+    )
+    for out_channel_name, out_channels, args in (
+        (None, 5, sequential_modules),
+        (0, 3, sequential_modules),
+        (1, 5, sequential_modules),
+        ("0", 3, (sequential_module_dict,)),
+        ("1", 5, (sequential_module_dict,)),
+    ):
+        with subtests.test(out_channel_name=out_channel_name):
+            sequential = modules.SequentialWithOutChannels(
+                *args, out_channel_name=out_channel_name
+            )
+            assert sequential.out_channels == out_channels
 
 
-def test_join_channelwise(subtests, input_image, style_image):
-    join_image = modules.join_channelwise(input_image, style_image)
+def test_join_channelwise(subtests, image_small_0, image_small_1):
+    join_image = modules.join_channelwise(image_small_0, image_small_1)
     assert isinstance(join_image, torch.Tensor)
-    input_num_channels = extract_num_channels(input_image)
-    with subtests.test("num_channels"):
-        assert extract_num_channels(
-            join_image
-        ) == input_num_channels + extract_num_channels(style_image)
-    with subtests.test("input_image"):
-        ptu.assert_allclose(join_image[:, :input_num_channels, :, :], input_image)
-    with subtests.test("style_image"):
-        ptu.assert_allclose(join_image[:, input_num_channels:, :, :], style_image)
+
+    input_num_channels = extract_num_channels(image_small_0)
+    assert extract_num_channels(
+        join_image
+    ) == input_num_channels + extract_num_channels(image_small_1)
+    ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
+    ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
 def test_UlyanovEtAl2016StylizationDownsample(subtests):
@@ -69,16 +62,9 @@ def test_UlyanovEtAl2016TextureDownsample(mocker, input_image):
     mock.assert_called_once()
 
 
-def test_ulyanov_et_al_2016_downsample(subtests):
-    for stylization in (True, False):
-        with subtests.test(stylization=stylization):
-            module = modules.ulyanov_et_al_2016_downsample(stylization=stylization)
-            assert isinstance(
-                module,
-                modules.UlyanovEtAl2016StylizationDownsample
-                if stylization
-                else modules.UlyanovEtAl2016TextureDownsample,
-            )
+def test_ulyanov_et_al_2016_downsample():
+    module = modules.ulyanov_et_al_2016_downsample()
+    assert isinstance(module, modules.UlyanovEtAl2016StylizationDownsample)
 
 
 def test_ulyanov_et_al_2016_upsample(subtests):
