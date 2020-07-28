@@ -17,9 +17,14 @@ def test_SequentialWithOutChannels(subtests):
         (0, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
         (
             "first_conv",
-            (OrderedDict(
-                [("first_conv", nn.Conv2d(3, 3, 1)), ("last_conv", nn.Conv2d(3, 5, 1))]
-            ),),
+            (
+                OrderedDict(
+                    [
+                        ("first_conv", nn.Conv2d(3, 3, 1)),
+                        ("last_conv", nn.Conv2d(3, 5, 1)),
+                    ]
+                ),
+            ),
         ),
     )
     for out_channel_name, sequential_modules in configs:
