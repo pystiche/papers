@@ -37,6 +37,8 @@ def _load_model_urls() -> Dict[Tuple[str, str, bool, bool], str]:
         }
 
 
+# The LuaTorch weights were created by Justin Johnson, Alexandre Alahi, and Fei-Fei Li.
+# See https://download.pystiche.org/models/LICENSE for details.
 MODEL_URLS = _load_model_urls()
 
 
