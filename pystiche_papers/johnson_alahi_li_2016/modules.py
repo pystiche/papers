@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-def _load_model_urls():
+def _load_model_urls() -> Dict[Tuple[str, str, bool, bool], str]:
     def str_to_bool(string: str) -> bool:
         return string.lower() == "true"
 
