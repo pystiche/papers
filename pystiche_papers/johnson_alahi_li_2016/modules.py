@@ -1,4 +1,6 @@
+import csv
 from math import sqrt
+from os import path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
@@ -18,61 +20,38 @@ __all__ = [
     "johnson_alahi_li_2016_transformer",
 ]
 
-MODEL_URLS = {
-    (
-        "author",
-        "candy__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__candy__impl_params__instance_norm-48e84161.pth",
-    (
-        "author",
-        "composition_vii__impl_params",
-    ): "johnson_alahi_li_2016_transformer__composition_vii__impl_params-2cff0b7b.pth",
-    (
-        "author",
-        "feathers__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__feathers__impl_params__instance_norm-21932db0.pth",
-    (
-        "author",
-        "la_muse__impl_params",
-    ): "johnson_alahi_li_2016_transformer__la_muse__impl_params-3ef8efb0.pth",
-    (
-        "author",
-        "la_muse__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__la_muse__impl_params__instance_norm-f553d8b7.pth",
-    (
-        "author",
-        "mosaic__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__mosaic__impl_params__instance_norm-c614f29e.pth",
-    (
-        "author",
-        "starry_night__impl_params",
-    ): "johnson_alahi_li_2016_transformer__starry_night__impl_params-b6422c84.pth",
-    (
-        "author",
-        "the_scream__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__the_scream__impl_params__instance_norm-ee572f90.pth",
-    (
-        "author",
-        "the_wave__impl_params",
-    ): "johnson_alahi_li_2016_transformer__the_wave__impl_params-63ad42b2.pth",
-    (
-        "author",
-        "udnie__impl_params__instance_norm",
-    ): "johnson_alahi_li_2016_transformer__udnie__impl_params__instance_norm-aa5e1467.pth",
-}
+
+def _load_model_urls():
+    def str_to_bool(string: str) -> bool:
+        return string.lower() == "true"
+
+    with open(path.join(path.dirname(__file__), "model_urls.csv"), "r") as fh:
+        return {
+            (
+                row["framework"],
+                row["style"],
+                str_to_bool(row["impl_params"]),
+                str_to_bool(row["instance_norm"]),
+            ): row["url"]
+            for row in csv.DictReader(fh)
+        }
 
 
-def select_url(style: str, weights: str, impl_params: bool, instance_norm: bool) -> str:
-    opt = style
-    if impl_params:
-        opt += "__impl_params"
-    if instance_norm:
-        opt += "__instance_norm"
-    for (valid_weights, valid_opt), url in MODEL_URLS.items():
-        if weights == valid_weights and valid_opt.startswith(opt):
-            return url
-    else:
-        raise RuntimeError
+MODEL_URLS = _load_model_urls()
+
+
+def select_url(
+    framework: str, style: str, impl_params: bool, instance_norm: bool
+) -> str:
+    try:
+        return MODEL_URLS[(framework, style, impl_params, instance_norm)]
+    except KeyError:
+        msg = (
+            f"No pre-trained weights available for the parameter configuration\n\n"
+            f"framework: {framework}\nstyle: {style}\nimpl_params: {impl_params}\n"
+            f"instance_norm: {instance_norm}"
+        )
+        raise RuntimeError(msg)
 
 
 def get_conv(

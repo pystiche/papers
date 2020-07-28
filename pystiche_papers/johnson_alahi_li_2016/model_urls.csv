@@ -1,0 +1,11 @@
+framework,style,impl_params,instance_norm,url
+luatorch,candy,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__candy__impl_params__instance_norm-9e7232f6.pth
+luatorch,composition_vii,True,False,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__composition_vii__impl_params-f2ea4551.pth
+luatorch,feathers,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__feathers__impl_params__instance_norm-adc40e13.pth
+luatorch,la_muse,True,False,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__la_muse__impl_params-9314f997.pth
+luatorch,la_muse,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__la_muse__impl_params__instance_norm-8707503f.pth
+luatorch,mosaic,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__mosaic__impl_params__instance_norm-473bf61c.pth
+luatorch,starry_night,True,False,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__starry_night__impl_params-e451b759.pth
+luatorch,the_scream,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__the_scream__impl_params__instance_norm-fcc9e645.pth
+luatorch,the_wave,True,False,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__the_wave__impl_params-d81a9d37.pth
+luatorch,udnie,True,True,https://download.pystiche.org/models/johnson_alahi_li_2016_transformer__udnie__impl_params__instance_norm-dd85f0fb.pth
