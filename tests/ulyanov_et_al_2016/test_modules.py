@@ -1,4 +1,5 @@
 import itertools
+from collections import OrderedDict
 
 import pytest
 
@@ -11,28 +12,29 @@ from pystiche_papers.ulyanov_et_al_2016 import modules
 
 
 def test_SequentialWithOutChannels(subtests):
-    sequential_modules = [nn.Conv2d(3, 3, 1), nn.Conv2d(3, 3, 1)]
-    for out_channel_name in (
-        None,
-        1,
-        "1",
-    ):  # TODO: Rename out_channel_name is not implemented
-        module = modules.SequentialWithOutChannels(
-            *sequential_modules, out_channel_name=out_channel_name
-        )
+    configs = (
+        (None, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
+        (0, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
+        (
+            "first_conv",
+            OrderedDict(
+                [("first_conv", nn.Conv2d(3, 3, 1)), ("last_conv", nn.Conv2d(3, 5, 1))]
+            ),
+        ),
+    )
+    for out_channel_name, sequential_modules in configs:
+        with subtests.test(out_channel_name=out_channel_name):
+            input_modules = (
+                (sequential_modules,)
+                if isinstance(out_channel_name, str)
+                else sequential_modules
+            )
+            module = modules.SequentialWithOutChannels(
+                *input_modules, out_channel_name=out_channel_name
+            )
 
-        with subtests.test("out_channel_name"):
-            if out_channel_name is None:
-                desired_out_channel_name = "1"
-            elif isinstance(out_channel_name, int):
-                desired_out_channel_name = str(out_channel_name)
-            else:
-                desired_out_channel_name = out_channel_name
-
-            assert tuple(module._modules.keys())[-1] == desired_out_channel_name
-
-        with subtests.test("out_channels"):
-            assert module.out_channels == sequential_modules[-1].out_channels
+            output_indice = -1 if out_channel_name is None else out_channel_name
+            assert module.out_channels == sequential_modules[output_indice].out_channels
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
