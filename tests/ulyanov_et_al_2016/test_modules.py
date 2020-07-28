@@ -17,24 +17,19 @@ def test_SequentialWithOutChannels(subtests):
         (0, (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))),
         (
             "first_conv",
-            OrderedDict(
+            (OrderedDict(
                 [("first_conv", nn.Conv2d(3, 3, 1)), ("last_conv", nn.Conv2d(3, 5, 1))]
-            ),
+            ),),
         ),
     )
     for out_channel_name, sequential_modules in configs:
         with subtests.test(out_channel_name=out_channel_name):
-            input_modules = (
-                (sequential_modules,)
-                if isinstance(out_channel_name, str)
-                else sequential_modules
-            )
             module = modules.SequentialWithOutChannels(
-                *input_modules, out_channel_name=out_channel_name
+                *sequential_modules, out_channel_name=out_channel_name
             )
 
-            output_indice = -1 if out_channel_name is None else out_channel_name
-            assert module.out_channels == sequential_modules[output_indice].out_channels
+            output_idx = -1 if out_channel_name is None else out_channel_name
+            assert module.out_channels == sequential_modules[output_idx].out_channels
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
