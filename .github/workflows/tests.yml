@@ -78,7 +78,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Upgrade and install additional system packages
-        run: pip install --user --upgrade pip setuptools
+        run: pip install --upgrade "pip<20.2" setuptools
 
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -86,7 +86,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install dev requirements
-        run: pip install --user -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Create environment
         run: tox -e py --notest
