@@ -15,7 +15,8 @@ from pystiche_papers.ulyanov_et_al_2016 import loss
 def test_UlyanovEtAl2016FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
-    input_image = torch.cat((input_image, input_image), 0)
+    from pystiche_papers.utils import batch_up_image
+    input_image = batch_up_image(input_image, 2)
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
