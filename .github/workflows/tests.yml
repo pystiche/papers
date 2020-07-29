@@ -20,16 +20,55 @@ on:
       - "tox.ini"
 
 jobs:
-  unit:
+  linux-macos:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         python: [3.6, 3.7, 3.8]
       fail-fast: true
 
     runs-on: ${{ matrix.os }}
     env:
       OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Upgrade and install additional system packages
+        run: pip install --upgrade pip setuptools
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dev requirements
+        run: pip install -r requirements-dev.txt
+        
+      - name: Create environment
+        run: tox -e py --notest
+
+      - name: Run tests
+        run: tox -e py -- --skip-large-download
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1.0.7
+        with:
+          env_vars: OS,PYTHON
+
+  windows:
+    strategy:
+      matrix:
+        python: [3.6, 3.7, 3.8]
+      fail-fast: true
+
+    runs-on: windows-latest
+    env:
+      OS: windows-latest
       PYTHON: ${{ matrix.python }}
 
     steps:
@@ -48,7 +87,7 @@ jobs:
 
       - name: Install dev requirements
         run: pip install --user -r requirements-dev.txt
-        
+
       - name: Create environment
         run: tox -e py --notest
 
