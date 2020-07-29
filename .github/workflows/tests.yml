@@ -39,7 +39,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Upgrade and install additional system packages
-        run: pip install --upgrade pip setuptools
+        run: pip install --upgrade "pip<20.2" setuptools
 
       - name: Checkout repository
         uses: actions/checkout@v2
