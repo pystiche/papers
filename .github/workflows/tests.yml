@@ -38,8 +38,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Upgrade pip
+        run: python -m pip --upgrade pip
+
       - name: Upgrade and install additional system packages
-        run: pip install --upgrade "pip<20.2" setuptools
+        run: pip install --upgrade setuptools virtualenv wheel
 
       - name: Checkout repository
         uses: actions/checkout@v2

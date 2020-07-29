@@ -14,8 +14,11 @@ jobs:
         with:
           python-version: 3.6
 
+      - name: Upgrade pip
+        run: python -m pip --upgrade pip
+
       - name: Upgrade and install additional system packages
-        run: pip install --upgrade pip setuptools virtualenv wheel
+        run: pip install --upgrade setuptools virtualenv wheel
 
       - name: Checkout repository
         uses: actions/checkout@v2
