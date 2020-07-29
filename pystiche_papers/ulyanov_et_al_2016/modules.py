@@ -386,16 +386,16 @@ def ulyanov_et_al_2016_level(
     if in_channels is None:
         in_channels = 3 if stylization else 0
     noise = not impl_params or not stylization
-    shallow_brach = conv_sequence(in_channels, out_channels=8, noise=noise)
+    shallow_branch = conv_sequence(in_channels, out_channels=8, noise=noise)
 
     if prev_level_block is None:
-        return shallow_brach
+        return shallow_branch
 
     deep_branch = UlyanovEtAl2016HourGlassBlock(
         prev_level_block, stylization=stylization,
     )
     branch_block = UlyanovEtAl2016BranchBlock(
-        deep_branch, shallow_brach, instance_norm=instance_norm
+        deep_branch, shallow_branch, instance_norm=instance_norm
     )
 
     output_conv_seq = conv_sequence(
