@@ -3,20 +3,20 @@ import itertools
 import pytest
 
 import pytorch_testing_utils as ptu
-import torch
 from torch.nn.functional import mse_loss
 
 from pystiche import gram_matrix, ops
 from pystiche.image import extract_batch_size
 from pystiche.loss import PerceptualLoss
 from pystiche_papers.ulyanov_et_al_2016 import loss
+from pystiche_papers.utils import batch_up_image
 
 
 def test_UlyanovEtAl2016FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
-    from pystiche_papers.utils import batch_up_image
     input_image = batch_up_image(input_image, 2)
+    target_image = batch_up_image(target_image, 3)
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
