@@ -7,8 +7,8 @@ import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
-from pystiche.misc import to_2d_arg
 from pystiche.image.utils import extract_num_channels
+from pystiche.misc import to_2d_arg
 from pystiche_papers.ulyanov_et_al_2016 import modules
 
 
@@ -319,3 +319,35 @@ def test_ulyanov_et_al_2016_level(subtests):
 
     with subtests.test("output_conv_seq"):
         assert isinstance(module[1], modules.SequentialWithOutChannels)
+
+
+def test_UlyanovEtAl2016Transformer(subtests, input_image):
+    levels = 5
+
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            transformer = modules.UlyanovEtAl2016Transformer(
+                levels, impl_params=impl_params
+            )
+
+            with subtests.test("pyramid"):
+                assert isinstance(transformer[0], modules.SequentialWithOutChannels)
+
+            with subtests.test("output_conv"):
+                assert isinstance(
+                    transformer[1],
+                    nn.Conv2d if impl_params else modules.UlyanovEtAl2016ConvBlock,
+                )
+                output_conv = transformer[1] if impl_params else transformer[1][0]
+                assert output_conv.out_channels == 3
+                assert output_conv.kernel_size == to_2d_arg(1)
+                assert output_conv.stride == to_2d_arg(1)
+
+            with subtests.test("forward"):
+                output_image = transformer(input_image)
+                assert input_image.size() == output_image.size()
+
+
+def test_ulyanov_et_al_2016_transformer():
+    transformer = modules.ulyanov_et_al_2016_transformer()
+    assert isinstance(transformer, modules.UlyanovEtAl2016Transformer)
