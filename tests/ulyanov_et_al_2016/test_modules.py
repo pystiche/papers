@@ -42,6 +42,38 @@ def test_join_channelwise(subtests, image_small_0, image_small_1):
     ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
+def test_UlyanovEtAl2016NoiseModule(subtests):
+    in_channels = 3
+    num_noise_channel = 4
+    noise_module = modules.UlyanovEtAl2016NoiseModule(
+        in_channels, num_noise_channels=num_noise_channel
+    )
+
+    assert isinstance(noise_module, nn.Module)
+
+    with subtests.test("in_channels"):
+        assert noise_module.in_channels == in_channels
+
+    with subtests.test("out_channels"):
+        assert noise_module.out_channels == in_channels + num_noise_channel
+
+
+def test_UlyanovEtAl2016StylizationNoise(input_image):
+    in_channels = extract_num_channels(input_image)
+    num_noise_channel = 3
+    module = modules.UlyanovEtAl2016StylizationNoise(in_channels)
+    output_image = module(input_image)
+    assert isinstance(output_image, torch.Tensor)
+    assert extract_num_channels(output_image) == in_channels + num_noise_channel
+
+
+def test_ulyanov_et_al_2016_noise():
+    in_channels = 3
+    module = modules.ulyanov_et_al_2016_noise()
+    assert isinstance(module, modules.UlyanovEtAl2016NoiseModule)
+    assert module.in_channels == in_channels
+
+
 def test_UlyanovEtAl2016StylizationDownsample(subtests):
     module = modules.UlyanovEtAl2016StylizationDownsample()
     assert isinstance(module, nn.AvgPool2d)
