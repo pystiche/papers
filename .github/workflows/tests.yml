@@ -23,7 +23,7 @@ jobs:
   unit:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         python: [3.6, 3.7, 3.8]
       fail-fast: true
 
