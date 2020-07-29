@@ -38,5 +38,5 @@ def gatys_ecker_bethge_2015_multi_layer_encoder(
     return multi_layer_encoder
 
 
-def gatys_ecker_bethge_2015_optimizer(input_image: torch.Tensor) -> optim.LBFGS:  # type: ignore[name-defined]
-    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)  # type: ignore[attr-defined]
+def gatys_ecker_bethge_2015_optimizer(input_image: torch.Tensor) -> optim.LBFGS:
+    return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)
