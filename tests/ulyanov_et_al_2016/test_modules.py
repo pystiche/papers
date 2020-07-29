@@ -7,6 +7,7 @@ import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
+from pystiche.misc import to_2d_arg
 from pystiche.image.utils import extract_num_channels
 from pystiche_papers.ulyanov_et_al_2016 import modules
 
@@ -108,6 +109,20 @@ def test_ulyanov_et_al_2016_upsample(subtests):
         assert module.mode == "nearest"
 
 
+def test_UlyanovEtAl2016HourGlassBlock(subtests):
+    intermediate = nn.Conv2d(3, 3, 1)
+    sequential = modules.UlyanovEtAl2016HourGlassBlock(intermediate)
+
+    assert isinstance(sequential, modules.SequentialWithOutChannels)
+
+    with subtests.test("modules"):
+        assert len(sequential) == 3
+        sequential_modules = tuple(module for module in sequential.children())
+        assert isinstance(sequential_modules[0], nn.Module)
+        assert isinstance(sequential_modules[1], type(intermediate))
+        assert isinstance(sequential_modules[2], nn.Upsample)
+
+
 def test_get_norm_module(subtests):
     in_channels = 3
     for instance_norm in (True, False):
@@ -152,3 +167,55 @@ def test_get_activation_module(subtests):
             if isinstance(norm_module, nn.LeakyReLU):
                 with subtests.test("slope"):
                     assert norm_module.negative_slope == pytest.approx(0.01)
+
+
+def test_UlyanovEtAl2016ConvBlock(subtests):
+    in_channels = out_channels = 3
+    kernel_size = 3
+    stride = 1
+    padding = (1, 1, 1, 1)
+    conv_block = modules.UlyanovEtAl2016ConvBlock(
+        in_channels, out_channels, kernel_size, stride=stride
+    )
+
+    assert isinstance(type(conv_block), type(modules.SequentialWithOutChannels))
+
+    with subtests.test("modules"):
+        assert len(conv_block) == 4
+        assert isinstance(type(conv_block[0]), type(nn.ReflectionPad2d))
+        with subtests.test("conv_module"):
+            assert isinstance(type(conv_block[1]), type(nn.Conv2d))
+            assert conv_block[1].stride == to_2d_arg(stride)
+            assert conv_block[1].padding == to_2d_arg(0)
+        assert isinstance(type(conv_block[2]), type(nn.InstanceNorm2d))
+        assert isinstance(type(conv_block[3]), type(nn.ReLU))
+
+    with subtests.test("padding"):
+        assert conv_block[0].padding == padding
+
+
+def test_UlyanovEtAl2016ConvSequence(subtests):
+    in_channels = 3
+    out_channels = 6
+    kernel_size = 3
+    conv_sequence = modules.UlyanovEtAl2016ConvSequence(in_channels, out_channels)
+
+    assert isinstance(type(conv_sequence), type(modules.SequentialWithOutChannels))
+
+    with subtests.test("modules"):
+        assert len(conv_sequence) == 3
+        for i in range(len(conv_sequence)):
+            assert isinstance(
+                type(conv_sequence[i]), type(modules.UlyanovEtAl2016ConvBlock)
+            )
+            assert (
+                conv_sequence[i][1].in_channels == in_channels
+                if i == 0
+                else out_channels
+            )
+            assert conv_sequence[i].out_channels == out_channels
+            assert (
+                conv_sequence[i][1].kernel_size == to_2d_arg(kernel_size)
+                if i < len(conv_sequence) - 1
+                else to_2d_arg(1)
+            )
