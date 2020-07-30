@@ -166,11 +166,11 @@ def test_johnson_alahi_li_2016_conv_block(subtests):
                 in_channels, out_channels, kernel_size, stride=stride, relu=relu
             )
 
-            assert isinstance(type(conv_block), type(nn.Sequential))
+            assert isinstance(conv_block, nn.Sequential)
 
             assert len(conv_block) == 3 if relu else 2
             assert isinstance(type(conv_block[0]), type(nn.Conv2d))
-            assert isinstance(type(conv_block[1]), type(nn.InstanceNorm2d))
+            assert isinstance(conv_block[1], (nn.BatchNorm2d, nn.InstanceNorm2d))
             if relu:
                 assert isinstance(type(conv_block[2]), type(nn.ReLU))
                 assert conv_block[2].inplace
@@ -296,7 +296,7 @@ def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
                 ptu.assert_allclose(actual, desired)
 
 
-def test_JohnsonAlahiLi2016Transformer(image_medium):
+def test_JohnsonAlahiLi2016Transformer_smoke(image_medium):
     transformer = modules.JohnsonAlahiLi2016Transformer()
 
     assert isinstance(type(transformer.encoder), type(pystiche.SequentialModule))
