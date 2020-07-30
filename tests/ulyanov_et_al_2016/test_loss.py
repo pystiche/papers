@@ -15,8 +15,9 @@ from pystiche_papers.utils import batch_up_image
 def test_UlyanovEtAl2016FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
-    input_image = batch_up_image(input_image, 2)
-    target_image = batch_up_image(target_image, 3)
+    batch_size = 4
+    input_image = batch_up_image(input_image, batch_size)
+    target_image = batch_up_image(target_image, batch_size)
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
