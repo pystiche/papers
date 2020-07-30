@@ -160,17 +160,24 @@ def test_johnson_alahi_li_2016_conv_block(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
-    for relu in (True, False):
+    for relu, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(relu=relu):
             conv_block = modules.johnson_alahi_li_2016_conv_block(
-                in_channels, out_channels, kernel_size, stride=stride, relu=relu
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride=stride,
+                relu=relu,
+                instance_norm=instance_norm,
             )
 
             assert isinstance(conv_block, nn.Sequential)
 
             assert len(conv_block) == 3 if relu else 2
             assert isinstance(type(conv_block[0]), type(nn.Conv2d))
-            assert isinstance(conv_block[1], (nn.BatchNorm2d, nn.InstanceNorm2d))
+            assert isinstance(
+                conv_block[1], nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
+            )
             if relu:
                 assert isinstance(type(conv_block[2]), type(nn.ReLU))
                 assert conv_block[2].inplace
@@ -184,8 +191,7 @@ def test_johnson_alahi_li_2016_residual_block(subtests, input_image):
 
     with subtests.test("residual"):
         assert isinstance(type(residual_block.residual), type(nn.Sequential))
-        for i in range(0, 2):
-            assert isinstance(type(residual_block.residual[i]), type(nn.Sequential))
+        assert len(residual_block.residual) == 2
 
     with subtests.test("shortcut"):
         assert isinstance(type(residual_block.shortcut), type(nn.Module))
