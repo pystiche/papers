@@ -206,7 +206,7 @@ def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
         assert is_callable(criterion_update_fn)
 
     with subtests.test("lr_scheduler"):
-        assert isinstance(lr_scheduler, type(ExponentialLR))
+        assert isinstance(lr_scheduler, ExponentialLR)
         assert isinstance(lr_scheduler.optimizer, type(ulyanov_et_al_2016_optimizer()))
 
     with subtests.test("output"):
