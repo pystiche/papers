@@ -207,7 +207,9 @@ def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
 
     with subtests.test("lr_scheduler"):
         assert isinstance(lr_scheduler, ExponentialLR)
-        assert isinstance(lr_scheduler.optimizer, type(ulyanov_et_al_2016_optimizer()))
+        assert isinstance(
+            lr_scheduler.optimizer, type(ulyanov_et_al_2016_optimizer(transformer))
+        )
 
     with subtests.test("output"):
         assert output is transformer
