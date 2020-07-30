@@ -5,16 +5,12 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche.image.transforms.functional import rescale
-from pystiche_papers.ulyanov_et_al_2016.data import ulyanov_et_al_2016_content_transform
-from pystiche_papers.ulyanov_et_al_2016.utils import (
-    ulyanov_et_al_2016_lr_scheduler,
-    ulyanov_et_al_2016_optimizer,
-    ulyanov_et_al_2016_preprocessor,
-)
+from pystiche_papers.ulyanov_et_al_2016.utils import ulyanov_et_al_2016_optimizer
 from pystiche_papers.utils import batch_up_image
 
 from .._utils import is_callable
@@ -210,7 +206,7 @@ def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
         assert is_callable(criterion_update_fn)
 
     with subtests.test("lr_scheduler"):
-        assert isinstance(lr_scheduler, type(ulyanov_et_al_2016_lr_scheduler()))
+        assert isinstance(lr_scheduler, type(ExponentialLR))
         assert isinstance(lr_scheduler.optimizer, type(ulyanov_et_al_2016_optimizer()))
 
     with subtests.test("output"):
@@ -351,7 +347,6 @@ def test_ulyanov_et_al_2016_training_criterion_update_fn(
     assert not criterion.content_loss.has_target_image
 
     criterion_update_fn(content_image, criterion)
-    preprocessor = ulyanov_et_al_2016_preprocessor()
     assert criterion.content_loss.has_target_image
     ptu.assert_allclose(criterion.content_loss.target_image, content_image - 0.5)
 
