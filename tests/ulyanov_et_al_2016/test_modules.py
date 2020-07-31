@@ -111,14 +111,16 @@ def test_ulyanov_et_al_2016_upsample(subtests):
 
 def test_UlyanovEtAl2016HourGlassBlock(subtests):
     intermediate = nn.Conv2d(3, 3, 1)
-    sequential = modules.UlyanovEtAl2016HourGlassBlock(intermediate)
+    hour_glass = modules.UlyanovEtAl2016HourGlassBlock(intermediate)
 
-    assert isinstance(sequential, modules.UlaynovEtAl2016HourGlassBlock)
+    assert isinstance(hour_glass, modules.UlyanovEtAl2016HourGlassBlock)
 
-    with subtests.test("modules"):
-        assert isinstance(sequential.down, modules.UlyanovEtAl2016StylizationDownsample)
-        assert isinstance(sequential_modules[1], type(intermediate))
-        assert isinstance(sequential_modules[2], nn.Upsample)
+    with subtests.test("Downsample"):
+        assert isinstance(hour_glass.down, modules.UlyanovEtAl2016StylizationDownsample)
+    with subtests.test("intermediate"):
+        assert isinstance(hour_glass.intermediate, type(intermediate))
+    with subtests.test("Upsample"):
+        assert isinstance(hour_glass.up, nn.Upsample)
 
 
 def test_get_norm_module(subtests):
@@ -222,23 +224,29 @@ def test_UlyanovEtAl2016ConvSequence(subtests):
 def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
     in_channels = extract_num_channels(input_image)
     channel_dim = 1
+    momentum = 1e-1
     configs = (
-        ((in_channels, in_channels), ("block1", "block_2")),
-        ((in_channels, in_channels), None),
+        ((in_channels, in_channels), True, ("block1", "block_2")),
+        ((in_channels, in_channels), True, None),
+        ((in_channels, in_channels), False, ("block1", "block_2")),
+        ((in_channels, in_channels), False, None),
     )
-    for branch_in_channels, names in configs:
+    for branch_in_channels, instance_norm, names in configs:
         block = modules.UlyanovEtAl2016JoinBlock(
-            branch_in_channels, names=names, channel_dim=channel_dim
+            branch_in_channels,
+            names=names,
+            instance_norm=instance_norm,
+            channel_dim=channel_dim,
         )
 
-        with subtests.test("names"):
-            assert (
-                tuple(block._modules.keys()) == names
-                if names is not None
-                else ("0", "1")
-            )
-        with subtests.test("modules"):
+        with subtests.test("norm_modules"):
             assert len(block.norm_modules) == len(branch_in_channels)
+            assert any(
+                isinstance(
+                    norm_module, nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
+                )
+                for norm_module in block.norm_modules
+            )
 
         with subtests.test("out_channels"):
             assert block.out_channels == sum(branch_in_channels)
@@ -248,8 +256,23 @@ def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
 
         with subtests.test("forward"):
             inputs = (input_image,) * 2
-            output_image = block(*inputs)
-            assert isinstance(output_image, torch.Tensor)
+            actual = block(*inputs)
+            assert isinstance(actual, torch.Tensor)
+            desired_inputs = tuple(
+                nn.functional.instance_norm(image, momentum=momentum)
+                if instance_norm
+                else nn.functional.batch_norm(
+                    image,
+                    torch.zeros(extract_num_channels(image)),
+                    torch.ones(extract_num_channels(image)),
+                    training=True,
+                    momentum=momentum,
+                )
+                for image in inputs
+            )
+
+            desired = torch.cat(desired_inputs, 1)
+            ptu.assert_allclose(actual, desired)
 
 
 def test_UlyanovEtAl2016JoinBlock_num_channels_names_mismatch():
@@ -261,6 +284,7 @@ def test_UlyanovEtAl2016JoinBlock_num_channels_names_mismatch():
 def test_UlyanovEtAl2016BranchBlock(subtests, input_image):
     deep_branch = nn.Conv2d(3, 3, 1)
     shallow_branch = nn.Conv2d(3, 3, 1)
+    momentum = 1e-1
     block = modules.UlyanovEtAl2016BranchBlock(deep_branch, shallow_branch)
 
     with subtests.test("deep"):
@@ -278,8 +302,16 @@ def test_UlyanovEtAl2016BranchBlock(subtests, input_image):
         )
 
     with subtests.test("forward"):
-        output_image = block(input_image)
-        assert isinstance(output_image, torch.Tensor)
+        actual = block(input_image)
+        assert isinstance(actual, torch.Tensor)
+
+        inputs = (deep_branch(input_image), shallow_branch(input_image))
+        desired_inputs = tuple(
+            nn.functional.instance_norm(image, momentum=momentum) for image in inputs
+        )
+
+        desired = torch.cat(desired_inputs, 1)
+        ptu.assert_allclose(actual, desired)
 
 
 def test_ulyanov_et_al_2016_level_conv_sequence(subtests):
