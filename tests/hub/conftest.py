@@ -5,7 +5,7 @@ from torch import hub
 
 @pytest.fixture(scope="package")
 def github():
-    return "pmeier/pystiche_papers:hub"
+    return "pmeier/pystiche_papers"
 
 
 @pytest.fixture(scope="package", autouse=True)
