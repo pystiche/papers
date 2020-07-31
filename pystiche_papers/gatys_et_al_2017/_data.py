@@ -7,11 +7,11 @@ from pystiche.data import (
     PublicDomainLicense,
 )
 
-__all__ = ["gatys_et_al_2017_images"]
+__all__ = ["images"]
 
 
-def gatys_et_al_2017_images() -> DownloadableImageCollection:
-    images = {
+def images() -> DownloadableImageCollection:
+    images_ = {
         "house": DownloadableImage(
             "https://associateddesigns.com/sites/default/files/plan_images/main/craftsman_house_plan_tillamook_30-519-picart.jpg",
             title="House Concept Tillamook",
@@ -105,4 +105,4 @@ def gatys_et_al_2017_images() -> DownloadableImageCollection:
             md5="406681ec165fa55c26cb6f988907fe11",
         ),
     }
-    return DownloadableImageCollection(images)
+    return DownloadableImageCollection(images_)

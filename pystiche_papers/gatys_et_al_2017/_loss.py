@@ -13,31 +13,31 @@ from pystiche.ops import (
     MultiRegionOperator,
 )
 
-from .utils import gatys_et_al_2017_multi_layer_encoder
+from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
-    "gatys_et_al_2017_content_loss",
-    "GatysEtAl2017StyleLoss",
-    "gatys_et_al_2017_style_loss",
-    "gatys_et_al_2017_guided_style_loss",
-    "gatys_et_al_2017_perceptual_loss",
-    "gatys_et_al_2017_guided_perceptual_loss",
+    "content_loss",
+    "StyleLoss",
+    "style_loss",
+    "guided_style_loss",
+    "perceptual_loss",
+    "guided_perceptual_loss",
 ]
 
 
-def gatys_et_al_2017_content_loss(
+def content_loss(
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: float = 1e0,
 ) -> FeatureReconstructionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     return FeatureReconstructionOperator(encoder, score_weight=score_weight)
 
 
-class GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
+class StyleLoss(MultiLayerEncodingOperator):
     def __init__(
         self,
         multi_layer_encoder: MultiLayerEncoder,
@@ -74,16 +74,16 @@ class GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
         return super().process_input_image(input_image) * self.score_correction_factor
 
 
-def gatys_et_al_2017_style_loss(
+def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
-) -> GatysEtAl2017StyleLoss:
+) -> StyleLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
@@ -91,7 +91,7 @@ def gatys_et_al_2017_style_loss(
     def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
-    return GatysEtAl2017StyleLoss(
+    return StyleLoss(
         multi_layer_encoder,
         layers,
         get_encoding_op,
@@ -101,7 +101,7 @@ def gatys_et_al_2017_style_loss(
     )
 
 
-def gatys_et_al_2017_guided_style_loss(
+def guided_style_loss(
     regions: Sequence[str],
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
@@ -112,10 +112,10 @@ def gatys_et_al_2017_guided_style_loss(
     **gram_op_kwargs: Any,
 ) -> MultiRegionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
-    def get_region_op(region: str, region_weight: float) -> GatysEtAl2017StyleLoss:
-        return gatys_et_al_2017_style_loss(
+    def get_region_op(region: str, region_weight: float) -> StyleLoss:
+        return style_loss(
             impl_params=impl_params,
             multi_layer_encoder=multi_layer_encoder,
             layers=layers,
@@ -129,33 +129,33 @@ def gatys_et_al_2017_guided_style_loss(
     )
 
 
-def gatys_et_al_2017_perceptual_loss(
+def perceptual_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> PerceptualLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if content_loss_kwargs is None:
         content_loss_kwargs = {}
-    content_loss = gatys_et_al_2017_content_loss(
+    content_loss_ = content_loss(
         multi_layer_encoder=multi_layer_encoder, **content_loss_kwargs
     )
 
     if style_loss_kwargs is None:
         style_loss_kwargs = {}
-    style_loss = gatys_et_al_2017_style_loss(
+    style_loss_ = style_loss(
         impl_params=impl_params,
         multi_layer_encoder=multi_layer_encoder,
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss, style_loss)
+    return PerceptualLoss(content_loss_, style_loss_)
 
 
-def gatys_et_al_2017_guided_perceptual_loss(
+def guided_perceptual_loss(
     regions: Sequence[str],
     impl_params: bool = True,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
@@ -163,21 +163,21 @@ def gatys_et_al_2017_guided_perceptual_loss(
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> GuidedPerceptualLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if content_loss_kwargs is None:
         content_loss_kwargs = {}
-    content_loss = gatys_et_al_2017_content_loss(
+    content_loss_ = content_loss(
         multi_layer_encoder=multi_layer_encoder, **content_loss_kwargs
     )
 
     if style_loss_kwargs is None:
         style_loss_kwargs = {}
-    style_loss = gatys_et_al_2017_guided_style_loss(
+    style_loss_ = guided_style_loss(
         regions,
         impl_params=impl_params,
         multi_layer_encoder=multi_layer_encoder,
         **style_loss_kwargs,
     )
 
-    return GuidedPerceptualLoss(content_loss, style_loss)
+    return GuidedPerceptualLoss(content_loss_, style_loss_)

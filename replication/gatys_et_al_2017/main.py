@@ -5,6 +5,7 @@ from os import path
 
 import torch
 
+import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche.image import read_guides, write_image
 from pystiche.image.transforms.functional import (
     grayscale_to_fakegrayscale,
@@ -16,11 +17,6 @@ from pystiche.image.transforms.functional import (
 )
 from pystiche.misc import get_device
 from pystiche.optim import OptimLogger
-from pystiche_papers.gatys_et_al_2017 import (
-    gatys_et_al_2017_guided_nst,
-    gatys_et_al_2017_images,
-    gatys_et_al_2017_nst,
-)
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
 
@@ -40,7 +36,7 @@ def figure_2(args):
     @abort_if_cuda_memory_exausts
     def figure_2_d(content_image, style_image):
         with replicate_figure(args.logger, "2 (d)", args.impl_params):
-            output_image = gatys_et_al_2017_nst(
+            output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
@@ -70,7 +66,7 @@ def figure_2(args):
         }
         with replicate_figure(args.logger, f"2 ({label})", args.impl_params):
 
-            output_image = gatys_et_al_2017_guided_nst(
+            output_image = paper.guided_nst(
                 content_image,
                 content_guides,
                 style_images_and_guides,
@@ -83,7 +79,7 @@ def figure_2(args):
             log_saving_info(args.logger, output_file)
             write_image(output_image, output_file)
 
-    images = gatys_et_al_2017_images()
+    images = paper.images()
     images.download(args.image_source_dir)
 
     content_image = images["house"].read(device=args.device)
@@ -166,7 +162,7 @@ def figure_3(args):
     @abort_if_cuda_memory_exausts
     def figure_3_c(content_image, style_image):
         with replicate_figure(args.logger, "3 (c)", args.impl_params):
-            output_image = gatys_et_al_2017_nst(
+            output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
@@ -187,7 +183,7 @@ def figure_3(args):
         style_luminance = grayscale_to_fakegrayscale(rgb_to_grayscale(style_image))
 
         with replicate_figure(args.logger, "3 (d)", args.impl_params):
-            output_luminance = gatys_et_al_2017_nst(
+            output_luminance = paper.nst(
                 content_luminance,
                 style_luminance,
                 impl_params=args.impl_params,
@@ -210,7 +206,7 @@ def figure_3(args):
         style_image = match_channelwise_statistics(style_image, content_image, method)
 
         with replicate_figure(args.logger, "3 (e)", args.impl_params):
-            output_image = gatys_et_al_2017_nst(
+            output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
@@ -222,7 +218,7 @@ def figure_3(args):
             log_saving_info(args.logger, output_file)
             write_image(output_image, output_file)
 
-    images = gatys_et_al_2017_images()
+    images = paper.images()
     images.download(args.image_source_dir)
     content_image = images["schultenhof"].read(device=args.device)
     style_image = images["starry_night"].read(device=args.device)

@@ -2,10 +2,10 @@ from typing import Any, Sequence, Union
 
 from pystiche.pyramid import ImagePyramid
 
-__all__ = ["gatys_et_al_2017_image_pyramid"]
+__all__ = ["image_pyramid"]
 
 
-def gatys_et_al_2017_image_pyramid(
+def image_pyramid(
     edge_sizes: Sequence[int] = (500, 800),
     num_steps: Union[int, Sequence[int]] = (500, 200),
     **image_pyramid_kwargs: Any,

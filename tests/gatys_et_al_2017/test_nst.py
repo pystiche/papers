@@ -6,19 +6,11 @@ import pytorch_testing_utils as ptu
 
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche.image.transforms.functional import rescale
-from pystiche_papers.gatys_et_al_2017 import utils
 from tests._utils import is_callable
 
 
-def make_patch_target(name, prefix=True):
-    return ".".join(
-        (
-            "pystiche_papers",
-            "gatys_et_al_2017",
-            "core",
-            ("gatys_et_al_2017_" if prefix else "") + name,
-        )
-    )
+def make_patch_target(name):
+    return ".".join(("pystiche_papers", "gatys_et_al_2017", "_nst", name))
 
 
 def attach_method_mock(mock, method, **attrs):
@@ -51,8 +43,8 @@ def make_nn_module_mock(mocker):
 
 @pytest.fixture
 def patcher(mocker):
-    def patcher_(name, prefix=True, **kwargs):
-        return mocker.patch(make_patch_target(name, prefix=prefix), **kwargs)
+    def patcher_(name, **kwargs):
+        return mocker.patch(make_patch_target(name), **kwargs)
 
     return patcher_
 
@@ -60,14 +52,14 @@ def patcher(mocker):
 @pytest.fixture
 def preprocessor_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: image - 0.5)
-    patch = patcher("preprocessor", return_value=mock)
+    patch = patcher("_preprocessor", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
 def postprocessor_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: image + 0.5)
-    patch = patcher("postprocessor", return_value=mock)
+    patch = patcher("_postprocessor", return_value=mock)
     return patch, mock
 
 
@@ -109,16 +101,16 @@ def guided_perceptual_loss_mocks(make_nn_module_mock, patcher):
 
 @pytest.fixture(autouse=True)
 def default_image_pyramid_optim_loop_patch(patcher):
-    return patcher("default_image_pyramid_optim_loop", prefix=False)
+    return patcher("default_image_pyramid_optim_loop")
 
 
 @pytest.mark.slow
-def test_gatys_et_al_2017_nst_smoke(
+def test_nst_smoke(
     subtests, default_image_pyramid_optim_loop_patch, content_image, style_image
 ):
     patch = default_image_pyramid_optim_loop_patch
 
-    paper.gatys_et_al_2017_nst(content_image, style_image)
+    paper.nst(content_image, style_image)
 
     args, kwargs = patch.call_args
     input_image, criterion, pyramid = args
@@ -130,27 +122,25 @@ def test_gatys_et_al_2017_nst_smoke(
         ptu.assert_allclose(input_image, pyramid[-1].resize_image(content_image))
 
     with subtests.test("criterion"):
-        assert isinstance(criterion, type(paper.gatys_et_al_2017_perceptual_loss()))
+        assert isinstance(criterion, type(paper.perceptual_loss()))
 
     with subtests.test("pyramid"):
-        assert isinstance(pyramid, type(paper.gatys_et_al_2017_image_pyramid()))
+        assert isinstance(pyramid, type(paper.image_pyramid()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
-        assert isinstance(
-            optimizer, type(utils.gatys_et_al_2017_optimizer(input_image))
-        )
+        assert isinstance(optimizer, type(paper.optimizer(input_image)))
 
     with subtests.test("preprocessor"):
-        assert isinstance(preprocessor, type(utils.gatys_et_al_2017_preprocessor()))
+        assert isinstance(preprocessor, type(paper.preprocessor()))
 
     with subtests.test("postprocessor"):
-        assert isinstance(postprocessor, type(utils.gatys_et_al_2017_postprocessor()))
+        assert isinstance(postprocessor, type(paper.postprocessor()))
 
 
 @pytest.mark.slow
-def test_gatys_et_al_2017_guided_nst_smoke(
+def test_guided_nst_smoke(
     subtests,
     default_image_pyramid_optim_loop_patch,
     content_image,
@@ -159,9 +149,7 @@ def test_gatys_et_al_2017_guided_nst_smoke(
 ):
     patch = default_image_pyramid_optim_loop_patch
 
-    paper.gatys_et_al_2017_guided_nst(
-        content_image, content_guides, style_images_and_guides
-    )
+    paper.guided_nst(content_image, content_guides, style_images_and_guides)
 
     args, kwargs = patch.call_args
     input_image, criterion, pyramid = args
@@ -174,39 +162,34 @@ def test_gatys_et_al_2017_guided_nst_smoke(
 
     with subtests.test("criterion"):
         assert isinstance(
-            criterion,
-            type(paper.gatys_et_al_2017_guided_perceptual_loss(content_guides.keys())),
+            criterion, type(paper.guided_perceptual_loss(content_guides.keys())),
         )
 
     with subtests.test("pyramid"):
-        assert isinstance(pyramid, type(paper.gatys_et_al_2017_image_pyramid()))
+        assert isinstance(pyramid, type(paper.image_pyramid()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
-        assert isinstance(
-            optimizer, type(utils.gatys_et_al_2017_optimizer(input_image))
-        )
+        assert isinstance(optimizer, type(paper.optimizer(input_image)))
 
     with subtests.test("preprocessor"):
-        assert isinstance(preprocessor, type(utils.gatys_et_al_2017_preprocessor()))
+        assert isinstance(preprocessor, type(paper.preprocessor()))
 
     with subtests.test("postprocessor"):
-        assert isinstance(postprocessor, type(utils.gatys_et_al_2017_postprocessor()))
+        assert isinstance(postprocessor, type(paper.postprocessor()))
 
 
-def test_gatys_et_al_2017_guided_nst_regions_mismatch(
+def test_guided_nst_regions_mismatch(
     content_image, content_guides, style_images_and_guides
 ):
     style_images_and_guides.pop(tuple(content_guides.keys())[0])
 
     with pytest.raises(RuntimeError):
-        paper.gatys_et_al_2017_guided_nst(
-            content_image, content_guides, style_images_and_guides
-        )
+        paper.guided_nst(content_image, content_guides, style_images_and_guides)
 
 
-def test_gatys_et_al_2017_guided_nst_device(
+def test_guided_nst_device(
     subtests,
     preprocessor_mocks,
     postprocessor_mocks,
@@ -215,9 +198,7 @@ def test_gatys_et_al_2017_guided_nst_device(
     content_guides,
     style_images_and_guides,
 ):
-    paper.gatys_et_al_2017_guided_nst(
-        content_image, content_guides, style_images_and_guides
-    )
+    paper.guided_nst(content_image, content_guides, style_images_and_guides)
 
     for mocks in (
         preprocessor_mocks,
@@ -230,7 +211,7 @@ def test_gatys_et_al_2017_guided_nst_device(
             mock.assert_called_once_with(content_image.device)
 
 
-def test_gatys_et_al_2017_guided_nst_criterion_images_and_guides(
+def test_guided_nst_criterion_images_and_guides(
     subtests,
     preprocessor_mocks,
     postprocessor_mocks,
@@ -244,9 +225,7 @@ def test_gatys_et_al_2017_guided_nst_criterion_images_and_guides(
     _, preprocessor = preprocessor_mocks
     patch = default_image_pyramid_optim_loop_patch
 
-    paper.gatys_et_al_2017_guided_nst(
-        content_image, content_guides, style_images_and_guides
-    )
+    paper.guided_nst(content_image, content_guides, style_images_and_guides)
 
     patch.assert_called_once()
 

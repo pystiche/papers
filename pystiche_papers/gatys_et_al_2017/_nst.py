@@ -8,29 +8,16 @@ from pystiche.misc import get_input_image
 from pystiche.optim import OptimLogger, default_image_pyramid_optim_loop
 from pystiche.pyramid import ImagePyramid
 
-from .data import gatys_et_al_2017_images
-from .loss import (
-    gatys_et_al_2017_guided_perceptual_loss,
-    gatys_et_al_2017_perceptual_loss,
-)
-from .pyramid import gatys_et_al_2017_image_pyramid
-from .utils import (
-    gatys_et_al_2017_optimizer,
-    gatys_et_al_2017_postprocessor,
-    gatys_et_al_2017_preprocessor,
-)
+from ._loss import guided_perceptual_loss, perceptual_loss
+from ._pyramid import image_pyramid
+from ._utils import optimizer
+from ._utils import postprocessor as _postprocessor
+from ._utils import preprocessor as _preprocessor
 
-__all__ = [
-    "gatys_et_al_2017_images",
-    "gatys_et_al_2017_perceptual_loss",
-    "gatys_et_al_2017_guided_perceptual_loss",
-    "gatys_et_al_2017_image_pyramid",
-    "gatys_et_al_2017_nst",
-    "gatys_et_al_2017_guided_nst",
-]
+__all__ = ["nst", "guided_nst"]
 
 
-def gatys_et_al_2017_nst(
+def nst(
     content_image: torch.Tensor,
     style_image: torch.Tensor,
     impl_params: bool = True,
@@ -43,10 +30,10 @@ def gatys_et_al_2017_nst(
     ] = None,
 ) -> torch.Tensor:
     if criterion is None:
-        criterion = gatys_et_al_2017_perceptual_loss(impl_params=impl_params)
+        criterion = perceptual_loss(impl_params=impl_params)
 
     if pyramid is None:
-        pyramid = gatys_et_al_2017_image_pyramid(resize_targets=(criterion,))
+        pyramid = image_pyramid(resize_targets=(criterion,))
 
     device = content_image.device
     criterion = criterion.to(device)
@@ -56,8 +43,8 @@ def gatys_et_al_2017_nst(
     style_image = initial_resize(style_image)
     input_image = get_input_image(starting_point="content", content_image=content_image)
 
-    preprocessor = gatys_et_al_2017_preprocessor().to(device)
-    postprocessor = gatys_et_al_2017_postprocessor().to(device)
+    preprocessor = _preprocessor().to(device)
+    postprocessor = _postprocessor().to(device)
 
     criterion.set_content_image(preprocessor(content_image))
     criterion.set_style_image(preprocessor(style_image))
@@ -66,7 +53,7 @@ def gatys_et_al_2017_nst(
         input_image,
         criterion,
         pyramid,
-        get_optimizer=gatys_et_al_2017_optimizer,
+        get_optimizer=optimizer,
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
@@ -75,7 +62,7 @@ def gatys_et_al_2017_nst(
     )
 
 
-def gatys_et_al_2017_guided_nst(
+def guided_nst(
     content_image: torch.Tensor,
     content_guides: Dict[str, torch.Tensor],
     style_images_and_guides: Dict[str, Tuple[torch.Tensor, torch.Tensor]],
@@ -95,12 +82,10 @@ def gatys_et_al_2017_guided_nst(
     regions = sorted(regions)
 
     if criterion is None:
-        criterion = gatys_et_al_2017_guided_perceptual_loss(
-            regions, impl_params=impl_params
-        )
+        criterion = guided_perceptual_loss(regions, impl_params=impl_params)
 
     if pyramid is None:
-        pyramid = gatys_et_al_2017_image_pyramid(resize_targets=(criterion,))
+        pyramid = image_pyramid(resize_targets=(criterion,))
 
     device = content_image.device
     criterion = criterion.to(device)
@@ -118,8 +103,8 @@ def gatys_et_al_2017_guided_nst(
     }
     input_image = get_input_image(starting_point="content", content_image=content_image)
 
-    preprocessor = gatys_et_al_2017_preprocessor().to(device)
-    postprocessor = gatys_et_al_2017_postprocessor().to(device)
+    preprocessor = _preprocessor().to(device)
+    postprocessor = _postprocessor().to(device)
 
     criterion.set_content_image(preprocessor(content_image))
 
@@ -134,7 +119,7 @@ def gatys_et_al_2017_guided_nst(
         input_image,
         criterion,
         pyramid,
-        get_optimizer=gatys_et_al_2017_optimizer,
+        get_optimizer=optimizer,
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
