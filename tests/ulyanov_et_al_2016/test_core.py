@@ -293,7 +293,7 @@ def test_ulyanov_et_al_2016_training_num_epochs(
             args, _, _ = training(impl_params=impl_params, instance_norm=instance_norm)
             _, _, _, _, num_epochs = args
 
-            assert num_epochs == 10 if not impl_params or not instance_norm else 25
+            assert num_epochs == 10 if not (impl_params or instance_norm) else 25
 
 
 def test_ulyanov_et_al_2016_training_criterion_content_image(
