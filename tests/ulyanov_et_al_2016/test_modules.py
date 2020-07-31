@@ -225,14 +225,10 @@ def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
         extract_num_channels(input_image2),
     )
     channel_dim = 1
-    momentum = 1e-1
-    configs = (
-        (True, ("block1", "block_2")),
-        (True, None),
-        (False, ("block1", "block_2")),
-        (False, None),
-    )
-    for instance_norm, names in configs:
+
+    for instance_norm, names in itertools.product(
+        (True, False), (("block1", "block2"), None)
+    ):
         block = modules.UlyanovEtAl2016JoinBlock(
             branch_in_channels,
             names=names,
@@ -258,6 +254,7 @@ def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
         with subtests.test("forward"):
             inputs = (input_image1, input_image2)
             actual = block(*inputs)
+            momentum = block.norm_modules[0].momentum
             assert isinstance(actual, torch.Tensor)
             desired_inputs = tuple(
                 nn.functional.instance_norm(image, momentum=momentum)
