@@ -132,7 +132,12 @@ def test_ulyanov_et_al_2016_dataset(subtests, mocker):
 
 def test_ulyanov_et_al_2016_batch_sampler(subtests):
     data_source = ()
-    configs = ((True, True, 2000, 1), (True, False, 300, 4), (False, True, 200, 16), (False, False, 200, 16))
+    configs = (
+        (True, True, 2000, 1),
+        (True, False, 300, 4),
+        (False, True, 200, 16),
+        (False, False, 200, 16),
+    )
     for impl_params, instance_norm, num_batches, batch_size in configs:
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
             batch_sampler = data.ulyanov_et_al_2016_batch_sampler(
