@@ -60,17 +60,10 @@ def ulyanov_et_al_2016_content_transform(
 
 
 def ulyanov_et_al_2016_style_transform(
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    edge_size: Optional[int] = None,
-) -> ComposedTransform:
-    if edge_size is None:
-        edge_size = 256
-
+    impl_params: bool = True, instance_norm: bool = True, edge_size: int = 256,
+) -> Resize:
     interpolation_mode = "bicubic" if impl_params and instance_norm else "bilinear"
-
-    transforms = [Resize(edge_size, edge="long", interpolation_mode=interpolation_mode)]
-    return ComposedTransform(*transforms)
+    return Resize(edge_size, edge="long", interpolation_mode=interpolation_mode)
 
 
 def ulyanov_et_al_2016_images() -> DownloadableImageCollection:

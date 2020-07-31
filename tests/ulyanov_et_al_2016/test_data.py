@@ -84,17 +84,17 @@ def test_ulyanov_et_al_2016_style_transform(subtests):
                 impl_params=impl_params, instance_norm=instance_norm
             )
 
-            assert isinstance(style_transform, transforms.ComposedTransform)
+            assert isinstance(style_transform, transforms.Resize)
 
             with subtests.test("edge_size"):
-                assert tuple(style_transform.children())[0].size == 256
+                assert style_transform.size == 256
 
             with subtests.test("edge"):
-                assert tuple(style_transform.children())[0].edge == "long"
+                assert style_transform.edge == "long"
 
             with subtests.test("interpolation_mode"):
                 assert (
-                    tuple(style_transform.children())[0].interpolation_mode == "bicubic"
+                    style_transform.interpolation_mode == "bicubic"
                     if impl_params and instance_norm
                     else "bilinear"
                 )
