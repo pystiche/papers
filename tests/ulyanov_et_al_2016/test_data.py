@@ -84,7 +84,7 @@ def test_ulyanov_et_al_2016_style_transform(subtests):
                 impl_params=impl_params, instance_norm=instance_norm
             )
 
-            assert isinstance(style_transform, transforms.ComposedTransform)
+            assert isinstance(style_transform, transforms.Resize)
 
             with subtests.test("edge_size"):
                 assert tuple(style_transform.children())[0].size == 256
