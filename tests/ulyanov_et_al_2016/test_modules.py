@@ -115,11 +115,11 @@ def test_UlyanovEtAl2016HourGlassBlock(subtests):
 
     assert isinstance(hour_glass, modules.UlyanovEtAl2016HourGlassBlock)
 
-    with subtests.test("Downsample"):
+    with subtests.test("down"):
         assert isinstance(hour_glass.down, modules.UlyanovEtAl2016StylizationDownsample)
     with subtests.test("intermediate"):
         assert isinstance(hour_glass.intermediate, type(intermediate))
-    with subtests.test("Upsample"):
+    with subtests.test("up"):
         assert isinstance(hour_glass.up, nn.Upsample)
 
 
@@ -182,7 +182,7 @@ def test_UlyanovEtAl2016ConvBlock(subtests):
 
     with subtests.test("modules"):
         assert len(conv_block) == 4
-        assert isinstance(type(conv_block[0]), type(nn.ReflectionPad2d))
+        assert isinstance(conv_block[0], nn.ReflectionPad2d)
         with subtests.test("conv_module"):
             assert isinstance(type(conv_block[1]), type(nn.Conv2d))
             assert conv_block[1].stride == to_2d_arg(stride)
@@ -255,7 +255,7 @@ def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
             assert block.channel_dim == channel_dim
 
         with subtests.test("forward"):
-            inputs = (input_image,) * 2
+            inputs = (input_image1, input_image2)
             actual = block(*inputs)
             assert isinstance(actual, torch.Tensor)
             desired_inputs = tuple(
