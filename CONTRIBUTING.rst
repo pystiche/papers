@@ -35,24 +35,31 @@ Furthermore, ``pystiche_papers`` is
 `PEP561 <https://www.python.org/dev/peps/pep-0561/>`_ compliant and checks the type
 annotations with `mypy <http://mypy-lang.org/>`_ .
 
-To format your code run
+To format and check the code style, run
 
 .. code-block:: sh
 
   cd $PYSTICHE_PAPERS_ROOT
-  tox -e format
+  tox -e lint-style
 
 .. note::
 
-  Amongst others, ``isort`` and ``black`` are run by
+  Amongst others, ``isort``, ``black``, and ``flake8`` are run by
   `pre-commit <https://pre-commit.com/>`_ before every commit.
 
-To run the full lint check locally run
+To check the static typing, run
 
 .. code-block:: sh
 
   cd $PYSTICHE_PAPERS_ROOT
-  tox -e lint
+  tox -e lint-typing
+
+To run the full lint check locally, run
+
+.. code-block:: sh
+
+  cd $PYSTICHE_PAPERS_ROOT
+  tox -f lint
 
 
 Tests
@@ -79,7 +86,7 @@ suite. You can run it locally with
   is given.
 
   These options are passed through ``tox`` if given after a ``--`` flag. For example,
-  the CI invocation command is equivalent to:
+  the CI invokes the test suite with
 
   .. code-block:: sh
 
@@ -90,9 +97,23 @@ suite. You can run it locally with
 Documentation
 -------------
 
-To build the html and latex documentation locally, run
+To build the html documentation locally, run
 
 .. code-block:: sh
 
   cd $PYSTICHE_PAPERS_ROOT
-  tox -e docs
+  tox -e docs-html
+
+To build the latex (PDF) documentation locally, run
+
+.. code-block:: sh
+
+  cd $PYSTICHE_PAPERS_ROOT
+  tox -e docs-latex
+
+To build both, run
+
+.. code-block:: sh
+
+  cd $PYSTICHE_PAPERS_ROOT
+  tox -f docs
