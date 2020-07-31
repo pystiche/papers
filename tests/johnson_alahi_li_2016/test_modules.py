@@ -105,8 +105,8 @@ def test_get_conv(subtests):
         )
 
         assert isinstance(
-            type(conv_module),
-            type(nn.ConvTranspose2d) if upsample else type(nn.Conv2d),
+            conv_module,
+           nn.ConvTranspose2d if upsample else nn.Conv2d,
         )
 
         with subtests.test("in_channels"):
