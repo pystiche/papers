@@ -113,12 +113,10 @@ def test_UlyanovEtAl2016HourGlassBlock(subtests):
     intermediate = nn.Conv2d(3, 3, 1)
     sequential = modules.UlyanovEtAl2016HourGlassBlock(intermediate)
 
-    assert isinstance(sequential, modules.SequentialWithOutChannels)
+    assert isinstance(sequential, modules.UlaynovEtAl2016HourGlassBlock)
 
     with subtests.test("modules"):
-        assert len(sequential) == 3
-        sequential_modules = tuple(module for module in sequential.children())
-        assert isinstance(sequential_modules[0], nn.Module)
+        assert isinstance(sequential.down, modules.UlyanovEtAl2016StylizationDownsample)
         assert isinstance(sequential_modules[1], type(intermediate))
         assert isinstance(sequential_modules[2], nn.Upsample)
 
@@ -254,7 +252,7 @@ def test_UlyanovEtAl2016JoinBlock(subtests, input_image):
             assert isinstance(output_image, torch.Tensor)
 
 
-def test_UlyanovEtAl2016JoinBlock_wrong_input():
+def test_UlyanovEtAl2016JoinBlock_num_channels_names_mismatch():
     in_channels = 3
     with pytest.raises(RuntimeError):
         modules.UlyanovEtAl2016JoinBlock((in_channels, in_channels), names=("block1",))
@@ -343,7 +341,7 @@ def test_UlyanovEtAl2016Transformer(subtests, input_image):
                 assert output_conv.kernel_size == to_2d_arg(1)
                 assert output_conv.stride == to_2d_arg(1)
 
-            with subtests.test("forward"):
+            with subtests.test("forward size"):
                 output_image = transformer(input_image)
                 assert input_image.size() == output_image.size()
 
