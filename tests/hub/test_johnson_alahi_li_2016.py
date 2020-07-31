@@ -1,11 +1,15 @@
 import csv
 from os import path
 
+import pytest
+
 from torch import hub
 
 import pystiche_papers
 
 
+@pytest.mark.large_download
+@pytest.mark.slow
 def test_hub_johnson_alahi_li_2016_transformer(subtests, github):
     def str_to_bool(string: str) -> bool:
         return string.lower() == "true"

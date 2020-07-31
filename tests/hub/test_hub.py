@@ -19,8 +19,6 @@ def test_hub_help_smoke(subtests, github, entry_points):
             assert isinstance(hub.help(github, model), str)
 
 
-@pytest.mark.large_download
-@pytest.mark.slow
 def test_hub_load_smoke(subtests, github, entry_points):
     for model in entry_points:
         with subtests.test(model):
