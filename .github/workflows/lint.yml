@@ -17,6 +17,9 @@ on:
       - "setup.cfg"
       - "tox.ini"
 
+  schedule:
+    - cron: "0 4 * * *"
+
 jobs:
   stlye:
     runs-on: ubuntu-latest

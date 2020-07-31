@@ -15,6 +15,9 @@ on:
       - "requirements-dev.txt"
       - "setup.cfg"
       - "tox.ini"
+        
+  schedule:
+    - cron: "0 4 * * *"
 
 jobs:
   html:
