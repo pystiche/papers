@@ -14,6 +14,7 @@ exclude =
     .tox,
     __pycache__,
     *.pyc,
+    hubconf.py,
     build,
     docs/build,
 ignore = E203, E501, W503
