@@ -104,10 +104,7 @@ def test_get_conv(subtests):
             upsample=upsample,
         )
 
-        assert isinstance(
-            conv_module,
-           nn.ConvTranspose2d if upsample else nn.Conv2d,
-        )
+        assert isinstance(conv_module, nn.ConvTranspose2d if upsample else nn.Conv2d)
 
         with subtests.test("in_channels"):
             assert conv_module.in_channels == in_channels
@@ -136,8 +133,7 @@ def test_get_norm(subtests):
             norm_module = modules.get_norm(out_channels, instance_norm=instance_norm)
 
             assert isinstance(
-                type(norm_module),
-                type(nn.InstanceNorm2d) if instance_norm else type(nn.BatchNorm2d),
+                norm_module, nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
             )
 
             with subtests.test("out_channels"):
@@ -174,12 +170,12 @@ def test_johnson_alahi_li_2016_conv_block(subtests):
             assert isinstance(conv_block, nn.Sequential)
 
             assert len(conv_block) == 3 if relu else 2
-            assert isinstance(type(conv_block[0]), type(nn.Conv2d))
+            assert isinstance(conv_block[0], nn.Conv2d)
             assert isinstance(
                 conv_block[1], nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
             )
             if relu:
-                assert isinstance(type(conv_block[2]), type(nn.ReLU))
+                assert isinstance(conv_block[2], nn.ReLU)
                 assert conv_block[2].inplace
 
 
@@ -187,14 +183,14 @@ def test_johnson_alahi_li_2016_residual_block(subtests, input_image):
     channels = 3
     residual_block = modules.johnson_alahi_li_2016_residual_block(channels)
 
-    assert isinstance(type(residual_block), type(ResidualBlock))
+    assert isinstance(residual_block, ResidualBlock)
 
     with subtests.test("residual"):
-        assert isinstance(type(residual_block.residual), type(nn.Sequential))
+        assert isinstance(residual_block.residual, nn.Sequential)
         assert len(residual_block.residual) == 2
 
     with subtests.test("shortcut"):
-        assert isinstance(type(residual_block.shortcut), type(nn.Module))
+        assert isinstance(residual_block.shortcut, nn.Module)
         ptu.assert_allclose(
             input_image[:, :, 2:-2, 2:-2], residual_block.shortcut(input_image)
         )
@@ -221,23 +217,23 @@ def test_johnson_alahi_li_2016_transformer_encoder(subtests):
             instance_norm=instance_norm
         )
 
-        assert isinstance(type(encoder), type(pystiche.SequentialModule))
+        assert isinstance(encoder, pystiche.SequentialModule)
 
         in_out_channels = []
         for i, module in enumerate(encoder.children()):
             if i == 0:
                 with subtests.test("padding_module"):
-                    assert isinstance(type(module), type(nn.ReflectionPad2d))
+                    assert isinstance(module, nn.ReflectionPad2d)
 
             if i in range(1, 4):
                 with subtests.test("conv_layer"):
-                    assert isinstance(type(module), type(nn.Sequential))
+                    assert isinstance(module, nn.Sequential)
                     in_out_channels.append(
                         (module[0].in_channels, module[0].out_channels)
                     )
             if i in range(4, 9):
                 with subtests.test("residualblocks"):
-                    assert isinstance(type(module), type(ResidualBlock))
+                    assert isinstance(module, ResidualBlock)
                     in_out_channels.append(
                         (
                             module.residual[0][0].in_channels,
@@ -258,19 +254,19 @@ def test_johnson_alahi_li_2016_transformer_decoder(subtests):
                 instance_norm=instance_norm
             )
 
-            assert isinstance(type(decoder), type(pystiche.SequentialModule))
+            assert isinstance(decoder, pystiche.SequentialModule)
 
             in_out_channels = []
             for i, module in enumerate(decoder.children()):
                 if i in range(2):
                     with subtests.test("conv_layer"):
-                        assert isinstance(type(module), type(nn.Sequential))
+                        assert isinstance(module, nn.Sequential)
                         in_out_channels.append(
                             (module[0].in_channels, module[0].out_channels)
                         )
                 if i == 2:
                     with subtests.test("output_conv"):
-                        assert isinstance(type(module), type(nn.Conv2d))
+                        assert isinstance(module, nn.Conv2d)
                         in_out_channels.append(
                             (module.in_channels, module.out_channels)
                         )
@@ -289,7 +285,7 @@ def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
             )
 
             module = [x for x in decoder.children()][-1]
-            assert isinstance(type(module), type(nn.Module))
+            assert isinstance(module, nn.Module)
 
             with subtests.test("delimiter"):
                 actual = module(input_image)
@@ -305,8 +301,8 @@ def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
 def test_JohnsonAlahiLi2016Transformer_smoke(image_medium):
     transformer = modules.JohnsonAlahiLi2016Transformer()
 
-    assert isinstance(type(transformer.encoder), type(pystiche.SequentialModule))
-    assert isinstance(type(transformer.decoder), type(pystiche.SequentialModule))
+    assert isinstance(transformer.encoder, pystiche.SequentialModule)
+    assert isinstance(transformer.decoder, pystiche.SequentialModule)
 
     output_image = transformer(image_medium)
     assert image_medium.size() == output_image.size()
@@ -315,7 +311,7 @@ def test_JohnsonAlahiLi2016Transformer_smoke(image_medium):
 def test_johnson_alahi_li_2016_transformer():
     transformer = modules.johnson_alahi_li_2016_transformer()
 
-    assert isinstance(type(transformer), type(modules.JohnsonAlahiLi2016Transformer))
+    assert isinstance(transformer, modules.JohnsonAlahiLi2016Transformer)
 
 
 @pytest.mark.skipif(
