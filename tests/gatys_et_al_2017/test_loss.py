@@ -3,15 +3,14 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
+import pystiche
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche import gram_matrix, ops
-from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
-from pystiche.ops import FeatureReconstructionOperator
+from pystiche import loss, ops
 
 
 def test_content_loss(subtests):
     content_loss = paper.content_loss()
-    assert isinstance(content_loss, FeatureReconstructionOperator)
+    assert isinstance(content_loss, ops.FeatureReconstructionOperator)
 
     with subtests.test("layer"):
         assert content_loss.encoder.layer == "relu4_2"
@@ -24,8 +23,8 @@ def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input
 
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
-    target_repr = gram_matrix(encoder(target_image), normalize=True)
-    input_repr = gram_matrix(encoder(input_image), normalize=True)
+    target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+    input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
 
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
@@ -99,7 +98,7 @@ def test_guided_style_loss(subtests, content_guides):
 
 def test_perceptual_loss(subtests):
     perceptual_loss = paper.perceptual_loss()
-    assert isinstance(perceptual_loss, PerceptualLoss)
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
@@ -113,7 +112,7 @@ def test_perceptual_loss(subtests):
 def test_guided_perceptual_loss(subtests, content_guides):
 
     perceptual_loss = paper.guided_perceptual_loss(content_guides.keys())
-    assert isinstance(perceptual_loss, GuidedPerceptualLoss)
+    assert isinstance(perceptual_loss, loss.GuidedPerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(

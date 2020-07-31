@@ -1,6 +1,6 @@
 import pytest
 
-from pystiche_papers import li_wand_2016 as paper
+import pystiche_papers.li_wand_2016 as paper
 
 from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 

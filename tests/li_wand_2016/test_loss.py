@@ -4,11 +4,9 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 import pystiche
+import pystiche.ops.functional as F
 import pystiche_papers.li_wand_2016 as paper
-from pystiche import ops
-from pystiche.loss import PerceptualLoss
-from pystiche.misc import to_2d_arg
-from pystiche.ops.functional import mrf_loss, total_variation_loss
+from pystiche import loss, misc, ops
 
 
 def test_FeatureReconstructionOperator(
@@ -73,7 +71,7 @@ def test_MRFOperator(
             target_repr = extract_patches2d(target_enc, patch_size, stride)
             input_repr = extract_patches2d(input_enc, patch_size, stride)
 
-            score = mrf_loss(input_repr, target_repr, reduction="sum")
+            score = F.mrf_loss(input_repr, target_repr, reduction="sum")
             desired = score * score_correction_factor
 
             assert actual == ptu.approx(desired)
@@ -100,7 +98,7 @@ def test_style_loss(subtests):
             assert set(layers) == {"relu3_1", "relu4_1"}
 
         with subtests.test("stride"):
-            assert op_stride == (to_2d_arg(stride),) * len(layers)
+            assert op_stride == (misc.to_2d_arg(stride),) * len(layers)
 
         with subtests.test("score_weight"):
             assert style_loss.score_weight == pytest.approx(score_weight)
@@ -143,7 +141,7 @@ def test_TotalVariationOperator(subtests, input_image):
             op = paper.TotalVariationOperator(impl_params=impl_params,)
             actual = op(input_image)
 
-            score = total_variation_loss(
+            score = F.total_variation_loss(
                 input_image, exponent=op.exponent, reduction="sum"
             )
 
@@ -165,7 +163,7 @@ def test_regularization(subtests):
 
 def test_perceptual_loss(subtests):
     perceptual_loss = paper.perceptual_loss()
-    assert isinstance(perceptual_loss, PerceptualLoss)
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(

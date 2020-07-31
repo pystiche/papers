@@ -1,22 +1,22 @@
 import torch
 from torch import optim
 
-from pystiche.enc import MultiLayerEncoder, vgg19_multi_layer_encoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
+from pystiche import enc
+from pystiche.image import transforms
 
 __all__ = ["preprocessor", "postprocessor", "multi_layer_encoder", "optimizer"]
 
 
-def preprocessor() -> CaffePreprocessing:
-    return CaffePreprocessing()
+def preprocessor() -> transforms.CaffePreprocessing:
+    return transforms.CaffePreprocessing()
 
 
-def postprocessor() -> CaffePostprocessing:
-    return CaffePostprocessing()
+def postprocessor() -> transforms.CaffePostprocessing:
+    return transforms.CaffePostprocessing()
 
 
-def multi_layer_encoder() -> MultiLayerEncoder:
-    return vgg19_multi_layer_encoder(
+def multi_layer_encoder() -> enc.MultiLayerEncoder:
+    return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
 

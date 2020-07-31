@@ -4,8 +4,8 @@ import pytest
 
 import pytorch_testing_utils as ptu
 
+import pystiche.image.transforms.functional as F
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche.image.transforms.functional import rescale
 from tests._utils import is_callable
 
 
@@ -66,7 +66,7 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 @pytest.fixture
 def image_pyramid_mocks(mocker, patcher):
     def resize(image_or_guide):
-        return rescale(image_or_guide, 2.0)
+        return F.rescale(image_or_guide, 2.0)
 
     top_level_mock = mocker.Mock()
     attach_method_mock(
@@ -75,7 +75,7 @@ def image_pyramid_mocks(mocker, patcher):
     attach_method_mock(
         top_level_mock, "resize_guide", side_effect=lambda guide: resize(guide)
     )
-    pyramid_mock = mocker.Mock()
+    image_pyramid_mock = mocker.Mock()
 
     def getitem_side_effect(idx):
         if idx != -1:
@@ -83,9 +83,11 @@ def image_pyramid_mocks(mocker, patcher):
 
         return top_level_mock
 
-    attach_method_mock(pyramid_mock, "__getitem__", side_effect=getitem_side_effect)
-    pyramid_patch = patcher("image_pyramid", return_value=pyramid_mock)
-    return pyramid_patch, pyramid_mock, top_level_mock
+    attach_method_mock(
+        image_pyramid_mock, "__getitem__", side_effect=getitem_side_effect
+    )
+    image_pyramid_patch = patcher("_image_pyramid", return_value=image_pyramid_mock)
+    return image_pyramid_patch, image_pyramid_mock, top_level_mock
 
 
 @pytest.fixture
@@ -101,7 +103,7 @@ def guided_perceptual_loss_mocks(make_nn_module_mock, patcher):
 
 @pytest.fixture(autouse=True)
 def default_image_pyramid_optim_loop_patch(patcher):
-    return patcher("default_image_pyramid_optim_loop")
+    return patcher("optim.default_image_pyramid_optim_loop")
 
 
 @pytest.mark.slow
@@ -113,19 +115,19 @@ def test_nst_smoke(
     paper.nst(content_image, style_image)
 
     args, kwargs = patch.call_args
-    input_image, criterion, pyramid = args
+    input_image, criterion, image_pyramid = args
     get_optimizer = kwargs["get_optimizer"]
     preprocessor = kwargs["preprocessor"]
     postprocessor = kwargs["postprocessor"]
 
     with subtests.test("input_image"):
-        ptu.assert_allclose(input_image, pyramid[-1].resize_image(content_image))
+        ptu.assert_allclose(input_image, image_pyramid[-1].resize_image(content_image))
 
     with subtests.test("criterion"):
         assert isinstance(criterion, type(paper.perceptual_loss()))
 
-    with subtests.test("pyramid"):
-        assert isinstance(pyramid, type(paper.image_pyramid()))
+    with subtests.test("image_pyramid"):
+        assert isinstance(image_pyramid, type(paper.image_pyramid()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
@@ -152,21 +154,21 @@ def test_guided_nst_smoke(
     paper.guided_nst(content_image, content_guides, style_images_and_guides)
 
     args, kwargs = patch.call_args
-    input_image, criterion, pyramid = args
+    input_image, criterion, image_pyramid = args
     get_optimizer = kwargs["get_optimizer"]
     preprocessor = kwargs["preprocessor"]
     postprocessor = kwargs["postprocessor"]
 
     with subtests.test("input_image"):
-        ptu.assert_allclose(input_image, pyramid[-1].resize_image(content_image))
+        ptu.assert_allclose(input_image, image_pyramid[-1].resize_image(content_image))
 
     with subtests.test("criterion"):
         assert isinstance(
             criterion, type(paper.guided_perceptual_loss(content_guides.keys())),
         )
 
-    with subtests.test("pyramid"):
-        assert isinstance(pyramid, type(paper.image_pyramid()))
+    with subtests.test("image_pyramid"):
+        assert isinstance(image_pyramid, type(paper.image_pyramid()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)

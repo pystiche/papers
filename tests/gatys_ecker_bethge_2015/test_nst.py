@@ -11,7 +11,7 @@ from tests._utils import is_callable
 
 def test_nst_smoke(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015._nst.default_image_optim_loop"
+        "pystiche_papers.gatys_ecker_bethge_2015._nst.optim.default_image_optim_loop"
     )
 
     paper.nst(content_image, style_image)
@@ -72,7 +72,7 @@ def assert_is_rand_uniform(samples, min=0.0, max=1.0, significance_level=5e-2):
 
 def test_nst_smoke_not_impl_params(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015._nst.default_image_optim_loop"
+        "pystiche_papers.gatys_ecker_bethge_2015._nst.optim.default_image_optim_loop"
     )
     paper.nst(content_image, style_image, impl_params=False)
     input_image, _ = mock.call_args[0]

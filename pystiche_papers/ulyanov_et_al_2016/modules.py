@@ -450,7 +450,7 @@ class UlyanovEtAl2016Transformer(nn.Sequential):
             OrderedDict(
                 cast(
                     Tuple[Tuple[str, nn.Module]],
-                    (("pyramid", pyramid), ("output_conv", output_conv)),
+                    (("image_pyramid", pyramid), ("output_conv", output_conv)),
                 )
             )
         )

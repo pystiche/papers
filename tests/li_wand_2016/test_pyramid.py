@@ -2,7 +2,7 @@ import pystiche_papers.li_wand_2016 as paper
 
 
 def test_image_pyramid(subtests, mocker):
-    mock = mocker.patch("pystiche.pyramid.pyramid.OctaveImagePyramid")
+    mock = mocker.patch("pystiche_papers.li_wand_2016._pyramid.pyramid")
 
     for impl_params, num_steps, num_levels in ((True, 100, 3), (False, 200, None)):
         with subtests.test(impl_params=impl_params):

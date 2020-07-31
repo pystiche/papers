@@ -5,16 +5,11 @@ from torch.nn.functional import mse_loss
 
 import pystiche
 import pystiche.ops.functional as F
-from pystiche.enc import Encoder, MultiLayerEncoder
-from pystiche.image.transforms import Transform
-from pystiche.loss import PerceptualLoss
-from pystiche.ops import FeatureReconstructionOperator as _FeatureReconstructionOperator
-from pystiche.ops import MRFOperator as _MRFOperator
-from pystiche.ops import MultiLayerEncodingOperator
-from pystiche.ops import TotalVariationOperator as _TotalVariationOperator
+from pystiche import enc, loss, ops
+from pystiche.image import transforms
 
 from ._utils import extract_normalized_patches2d
-from ._utils import multi_layer_encoder as multi_layer_encoder_
+from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
     "FeatureReconstructionOperator",
@@ -27,10 +22,10 @@ __all__ = [
 ]
 
 
-class FeatureReconstructionOperator(_FeatureReconstructionOperator):
+class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     def __init__(
         self,
-        encoder: Encoder,
+        encoder: enc.Encoder,
         impl_params: bool = True,
         **feature_reconstruction_op_kwargs: Any,
     ):
@@ -49,12 +44,12 @@ class FeatureReconstructionOperator(_FeatureReconstructionOperator):
 
 def content_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = multi_layer_encoder_()
+        multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     if score_weight is None:
@@ -65,10 +60,10 @@ def content_loss(
     )
 
 
-class MRFOperator(_MRFOperator):
+class MRFOperator(ops.MRFOperator):
     def __init__(
         self,
-        encoder: Encoder,
+        encoder: enc.Encoder,
         patch_size: Union[int, Tuple[int, int]],
         impl_params: bool = True,
         **mrf_op_kwargs: Any,
@@ -102,16 +97,16 @@ class MRFOperator(_MRFOperator):
 
 def style_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Union[str, Sequence[float]] = "sum",
     patch_size: Union[int, Tuple[int, int]] = 3,
     stride: Optional[Union[int, Tuple[int, int]]] = None,
-    target_transforms: Optional[Iterable[Transform]] = None,
+    target_transforms: Optional[Iterable[transforms.Transform]] = None,
     score_weight: Optional[float] = None,
-) -> MultiLayerEncodingOperator:
+) -> ops.MultiLayerEncodingOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = multi_layer_encoder_()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if layers is None:
         layers = ("relu3_1", "relu4_1")
@@ -131,7 +126,7 @@ def style_loss(
             rotate_step_width=rotate_step_width,
         )
 
-    def get_encoding_op(encoder: Encoder, layer_weight: float) -> MRFOperator:
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> MRFOperator:
         return MRFOperator(
             encoder,
             patch_size,
@@ -144,7 +139,7 @@ def style_loss(
     if score_weight is None:
         score_weight = 1e-4 if impl_params else 1e0
 
-    return MultiLayerEncodingOperator(
+    return ops.MultiLayerEncodingOperator(
         multi_layer_encoder,
         layers,
         get_encoding_op,
@@ -153,7 +148,7 @@ def style_loss(
     )
 
 
-class TotalVariationOperator(_TotalVariationOperator):
+class TotalVariationOperator(ops.TotalVariationOperator):
     def __init__(self, impl_params: bool = True, **total_variation_op_kwargs: Any):
         super().__init__(**total_variation_op_kwargs)
 
@@ -177,13 +172,13 @@ def regularization(
 
 def perceptual_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
     regularization_kwargs: Optional[Dict[str, Any]] = None,
-) -> PerceptualLoss:
+) -> loss.PerceptualLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = multi_layer_encoder_()
+        multi_layer_encoder = _multi_layer_encoder()
 
     if content_loss_kwargs is None:
         content_loss_kwargs = {}
@@ -205,4 +200,4 @@ def perceptual_loss(
         regularization_kwargs = {}
     regularization_ = regularization(impl_params=impl_params, **regularization_kwargs)
 
-    return PerceptualLoss(content_loss_, style_loss_, regularization_)
+    return loss.PerceptualLoss(content_loss_, style_loss_, regularization_)

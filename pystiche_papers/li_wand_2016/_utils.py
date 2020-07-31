@@ -4,9 +4,8 @@ import torch
 from torch import optim
 
 import pystiche
-from pystiche.enc import MultiLayerEncoder, vgg19_multi_layer_encoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
-from pystiche.misc import to_2d_arg
+from pystiche import enc, misc
+from pystiche.image import transforms
 
 __all__ = [
     "extract_normalized_patches2d",
@@ -50,23 +49,23 @@ def extract_normalized_patches2d(
     patch_size: Union[int, Sequence[int]],
     stride: Union[int, Sequence[int]],
 ) -> torch.Tensor:
-    patch_size = to_2d_arg(patch_size)
-    stride = to_2d_arg(stride)
+    patch_size = misc.to_2d_arg(patch_size)
+    stride = misc.to_2d_arg(stride)
     for dim, size, step in zip(range(2, input.dim()), patch_size, stride):
         input = normalize_unfold_grad(input, dim, size, step)
     return pystiche.extract_patches2d(input, patch_size, stride)
 
 
-def preprocessor() -> CaffePreprocessing:
-    return CaffePreprocessing()
+def preprocessor() -> transforms.CaffePreprocessing:
+    return transforms.CaffePreprocessing()
 
 
-def postprocessor() -> CaffePostprocessing:
-    return CaffePostprocessing()
+def postprocessor() -> transforms.CaffePostprocessing:
+    return transforms.CaffePostprocessing()
 
 
-def multi_layer_encoder() -> MultiLayerEncoder:
-    return vgg19_multi_layer_encoder(
+def multi_layer_encoder() -> enc.MultiLayerEncoder:
+    return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
 

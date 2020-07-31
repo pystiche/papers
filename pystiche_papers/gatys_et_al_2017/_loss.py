@@ -3,15 +3,7 @@ from typing import Any, Callable, Dict, Optional, Sequence, Union, cast
 import torch
 
 import pystiche
-from pystiche.enc import Encoder, MultiLayerEncoder
-from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
-from pystiche.ops import (
-    EncodingOperator,
-    FeatureReconstructionOperator,
-    GramOperator,
-    MultiLayerEncodingOperator,
-    MultiRegionOperator,
-)
+from pystiche import enc, loss, ops
 
 from ._utils import multi_layer_encoder as _multi_layer_encoder
 
@@ -26,23 +18,23 @@ __all__ = [
 
 
 def content_loss(
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: float = 1e0,
-) -> FeatureReconstructionOperator:
+) -> ops.FeatureReconstructionOperator:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    return FeatureReconstructionOperator(encoder, score_weight=score_weight)
+    return ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
 
 
-class StyleLoss(MultiLayerEncodingOperator):
+class StyleLoss(ops.MultiLayerEncodingOperator):
     def __init__(
         self,
-        multi_layer_encoder: MultiLayerEncoder,
+        multi_layer_encoder: enc.MultiLayerEncoder,
         layers: Sequence[str],
-        get_encoding_op: Callable[[Encoder, float], EncodingOperator],
+        get_encoding_op: Callable[[enc.Encoder, float], ops.EncodingOperator],
         impl_params: bool = True,
         layer_weights: Optional[Union[str, Sequence[float]]] = None,
         score_weight: float = 1e0,
@@ -62,7 +54,7 @@ class StyleLoss(MultiLayerEncodingOperator):
 
     @staticmethod
     def get_default_layer_weights(
-        multi_layer_encoder: MultiLayerEncoder, layers: Sequence[str]
+        multi_layer_encoder: enc.MultiLayerEncoder, layers: Sequence[str]
     ) -> Sequence[float]:
         nums_channels = []
         for layer in layers:
@@ -76,7 +68,7 @@ class StyleLoss(MultiLayerEncodingOperator):
 
 def style_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
@@ -88,8 +80,8 @@ def style_loss(
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
-    def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
+        return ops.GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
     return StyleLoss(
         multi_layer_encoder,
@@ -104,13 +96,13 @@ def style_loss(
 def guided_style_loss(
     regions: Sequence[str],
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     region_weights: Union[str, Sequence[float]] = "sum",
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
-) -> MultiRegionOperator:
+) -> ops.MultiRegionOperator:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -124,17 +116,17 @@ def guided_style_loss(
             **gram_op_kwargs,
         )
 
-    return MultiRegionOperator(
+    return ops.MultiRegionOperator(
         regions, get_region_op, region_weights=region_weights, score_weight=score_weight
     )
 
 
 def perceptual_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
-) -> PerceptualLoss:
+) -> loss.PerceptualLoss:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -152,16 +144,16 @@ def perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss_, style_loss_)
+    return loss.PerceptualLoss(content_loss_, style_loss_)
 
 
 def guided_perceptual_loss(
     regions: Sequence[str],
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
-) -> GuidedPerceptualLoss:
+) -> loss.GuidedPerceptualLoss:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -180,4 +172,4 @@ def guided_perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return GuidedPerceptualLoss(content_loss_, style_loss_)
+    return loss.GuidedPerceptualLoss(content_loss_, style_loss_)

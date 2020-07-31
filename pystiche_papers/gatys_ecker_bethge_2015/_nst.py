@@ -3,9 +3,7 @@ from typing import Callable, Optional, Union
 import torch
 
 import pystiche
-from pystiche.loss import PerceptualLoss
-from pystiche.misc import get_input_image
-from pystiche.optim import OptimLogger, default_image_optim_loop
+from pystiche import loss, misc, optim
 
 from ._loss import perceptual_loss
 from ._utils import optimizer
@@ -22,9 +20,9 @@ def nst(
     style_image: torch.Tensor,
     num_steps: int = 500,
     impl_params: bool = True,
-    criterion: Optional[PerceptualLoss] = None,
+    criterion: Optional[loss.PerceptualLoss] = None,
     quiet: bool = False,
-    logger: Optional[OptimLogger] = None,
+    logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
@@ -36,7 +34,7 @@ def nst(
     criterion = criterion.to(device)
 
     starting_point = "content" if impl_params else "random"
-    input_image = get_input_image(
+    input_image = misc.get_input_image(
         starting_point=starting_point, content_image=content_image
     )
 
@@ -46,7 +44,7 @@ def nst(
     criterion.set_content_image(preprocessor(content_image))
     criterion.set_style_image(preprocessor(style_image))
 
-    return default_image_optim_loop(
+    return optim.default_image_optim_loop(
         input_image,
         criterion,
         get_optimizer=optimizer,

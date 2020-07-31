@@ -4,22 +4,22 @@ import pytorch_testing_utils as ptu
 from torch import nn, optim
 
 import pystiche_papers.li_wand_2016 as paper
-from pystiche.enc import VGGMultiLayerEncoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
+from pystiche import enc
+from pystiche.image import transforms
 
 
 def test_preprocessor():
-    assert isinstance(paper.preprocessor(), CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
 
 
 def test_postprocessor():
-    assert isinstance(paper.postprocessor(), CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
 
 
 @pytest.mark.slow
 def test_multi_layer_encoder(subtests):
     multi_layer_encoder = paper.multi_layer_encoder()
-    assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
+    assert isinstance(multi_layer_encoder, enc.VGGMultiLayerEncoder)
 
     with subtests.test("internal preprocessing"):
         assert "preprocessing" not in multi_layer_encoder

@@ -3,13 +3,10 @@ from typing import Callable, Optional, Union
 import torch
 
 import pystiche
-from pystiche.loss import PerceptualLoss
-from pystiche.misc import get_input_image
-from pystiche.optim import OptimLogger, default_image_pyramid_optim_loop
-from pystiche.pyramid import ImagePyramid
+from pystiche import loss, misc, optim, pyramid
 
 from ._loss import perceptual_loss
-from ._pyramid import image_pyramid
+from ._pyramid import image_pyramid as _image_pyramid
 from ._utils import optimizer
 from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
@@ -21,10 +18,10 @@ def nst(
     content_image: torch.Tensor,
     style_image: torch.Tensor,
     impl_params: bool = True,
-    criterion: Optional[PerceptualLoss] = None,
-    pyramid: Optional[ImagePyramid] = None,
+    criterion: Optional[loss.PerceptualLoss] = None,
+    image_pyramid: Optional[pyramid.ImagePyramid] = None,
     quiet: bool = False,
-    logger: Optional[OptimLogger] = None,
+    logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
@@ -32,16 +29,18 @@ def nst(
     if criterion is None:
         criterion = perceptual_loss(impl_params=impl_params)
 
-    if pyramid is None:
-        pyramid = image_pyramid(resize_targets=(criterion,))
+    if image_pyramid is None:
+        image_pyramid = _image_pyramid(resize_targets=(criterion,))
 
     device = content_image.device
     criterion = criterion.to(device)
 
-    initial_resize = pyramid[-1].resize_image
+    initial_resize = image_pyramid[-1].resize_image
     content_image = initial_resize(content_image)
     style_image = initial_resize(style_image)
-    input_image = get_input_image(starting_point="content", content_image=content_image)
+    input_image = misc.get_input_image(
+        starting_point="content", content_image=content_image
+    )
 
     preprocessor = _preprocessor().to(device)
     postprocessor = _postprocessor().to(device)
@@ -49,10 +48,10 @@ def nst(
     criterion.set_content_image(preprocessor(content_image))
     criterion.set_style_image(preprocessor(style_image))
 
-    return default_image_pyramid_optim_loop(
+    return optim.default_image_pyramid_optim_loop(
         input_image,
         criterion,
-        pyramid,
+        image_pyramid,
         get_optimizer=optimizer,
         preprocessor=preprocessor,
         postprocessor=postprocessor,

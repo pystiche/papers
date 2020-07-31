@@ -6,11 +6,7 @@ from torch import nn
 from torch.nn.functional import mse_loss
 
 import pystiche
-from pystiche.enc import Encoder, MultiLayerEncoder
-from pystiche.loss import PerceptualLoss
-from pystiche.ops import EncodingOperator
-from pystiche.ops import FeatureReconstructionOperator as _FeatureReconstructionOperator
-from pystiche.ops import GramOperator, MultiLayerEncodingOperator
+from pystiche import enc, loss, ops
 
 from ._utils import multi_layer_encoder as _multi_layer_encoder
 
@@ -23,9 +19,9 @@ __all__ = [
 ]
 
 
-class FeatureReconstructionOperator(_FeatureReconstructionOperator):
+class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     def __init__(
-        self, encoder: Encoder, impl_params: bool = True, score_weight: float = 1e0
+        self, encoder: enc.Encoder, impl_params: bool = True, score_weight: float = 1e0
     ):
         super().__init__(encoder, score_weight=score_weight)
 
@@ -44,7 +40,7 @@ class FeatureReconstructionOperator(_FeatureReconstructionOperator):
 
 def content_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layer: str = "relu4_2",
     score_weight: float = 1e0,
 ) -> FeatureReconstructionOperator:
@@ -57,12 +53,12 @@ def content_loss(
     )
 
 
-class StyleLoss(MultiLayerEncodingOperator):
+class StyleLoss(ops.MultiLayerEncodingOperator):
     def __init__(
         self,
-        multi_layer_encoder: MultiLayerEncoder,
+        multi_layer_encoder: enc.MultiLayerEncoder,
         layers: Sequence[str],
-        get_encoding_op: Callable[[Encoder, float], EncodingOperator],
+        get_encoding_op: Callable[[enc.Encoder, float], ops.EncodingOperator],
         impl_params: bool = True,
         layer_weights: Union[str, Sequence[float]] = "mean",
         score_weight: float = 1e0,
@@ -83,7 +79,7 @@ class StyleLoss(MultiLayerEncodingOperator):
 
 
 def get_layer_weights(
-    layers: Sequence[str], multi_layer_encoder: Optional[MultiLayerEncoder] = None
+    layers: Sequence[str], multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None
 ) -> List[float]:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -105,7 +101,7 @@ def get_layer_weights(
 
 def style_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
@@ -126,8 +122,8 @@ def style_loss(
             layer_weights = "mean"
             warnings.warn("ADDME", RuntimeWarning)
 
-    def get_encoding_op(encoder: Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
+        return ops.GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
 
     return StyleLoss(
         multi_layer_encoder,
@@ -141,10 +137,10 @@ def style_loss(
 
 def perceptual_loss(
     impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
-) -> PerceptualLoss:
+) -> loss.PerceptualLoss:
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
@@ -164,4 +160,4 @@ def perceptual_loss(
         **style_loss_kwargs,
     )
 
-    return PerceptualLoss(content_loss_, style_loss_)
+    return loss.PerceptualLoss(content_loss_, style_loss_)

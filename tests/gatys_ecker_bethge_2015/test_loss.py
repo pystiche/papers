@@ -3,9 +3,9 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
+import pystiche
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
-from pystiche import gram_matrix, ops
-from pystiche.loss import PerceptualLoss
+from pystiche import loss, ops
 from pystiche_papers.gatys_ecker_bethge_2015._loss import get_layer_weights
 
 
@@ -44,8 +44,8 @@ def test_content_loss(subtests):
 def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
-    target_repr = gram_matrix(encoder(target_image), normalize=True)
-    input_repr = gram_matrix(encoder(input_image), normalize=True)
+    target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+    input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
 
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
@@ -128,7 +128,7 @@ def test_style_loss_wrong_layers(mocker):
 
 def test_perceptual_loss(subtests):
     perceptual_loss = paper.perceptual_loss()
-    assert isinstance(perceptual_loss, PerceptualLoss)
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(

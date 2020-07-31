@@ -19,5 +19,5 @@ def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
         return multi_layer_encoder
 
     return package_mocker.patch(
-        "pystiche_papers.li_wand_2016._loss.multi_layer_encoder_", new,
+        "pystiche_papers.li_wand_2016._loss._multi_layer_encoder", new,
     )
