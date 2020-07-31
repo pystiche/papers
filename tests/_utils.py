@@ -11,7 +11,12 @@ import torch
 
 from pystiche import image
 
-__all__ = ["get_tmp_dir", "skip_if_cuda_not_available", "load_module", "is_callable"]
+__all__ = [
+    "get_tempdir",
+    "skip_if_cuda_not_available",
+    "load_module",
+    "is_callable",
+]
 
 
 # Copied from
@@ -38,7 +43,7 @@ def onerror(func, path, exc_info):
 
 
 @contextlib.contextmanager
-def get_tmp_dir(**mkdtemp_kwargs):
+def get_tempdir(**mkdtemp_kwargs):
     tmp_dir = tempfile.mkdtemp(**mkdtemp_kwargs)
     try:
         yield tmp_dir
@@ -69,7 +74,7 @@ def is_callable(obj):
 
 def create_guides(img):
     height, width = image.extract_image_size(img)
-    top_height = height // 2  # built in floor
+    top_height = height // 2
     bottom_height = height - top_height
     top_mask = torch.cat(
         (
