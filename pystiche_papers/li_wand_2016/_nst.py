@@ -8,24 +8,16 @@ from pystiche.misc import get_input_image
 from pystiche.optim import OptimLogger, default_image_pyramid_optim_loop
 from pystiche.pyramid import ImagePyramid
 
-from .data import li_wand_2016_images
-from .loss import li_wand_2016_perceptual_loss
-from .pyramid import li_wand_2016_image_pyramid
-from .utils import (
-    li_wand_2016_optimizer,
-    li_wand_2016_postprocessor,
-    li_wand_2016_preprocessor,
-)
+from ._loss import perceptual_loss
+from ._pyramid import image_pyramid
+from ._utils import optimizer
+from ._utils import postprocessor as _postprocessor
+from ._utils import preprocessor as _preprocessor
 
-__all__ = [
-    "li_wand_2016_images",
-    "li_wand_2016_perceptual_loss",
-    "li_wand_2016_image_pyramid",
-    "li_wand_2016_nst",
-]
+__all__ = ["nst"]
 
 
-def li_wand_2016_nst(
+def nst(
     content_image: torch.Tensor,
     style_image: torch.Tensor,
     impl_params: bool = True,
@@ -38,10 +30,10 @@ def li_wand_2016_nst(
     ] = None,
 ) -> torch.Tensor:
     if criterion is None:
-        criterion = li_wand_2016_perceptual_loss(impl_params=impl_params)
+        criterion = perceptual_loss(impl_params=impl_params)
 
     if pyramid is None:
-        pyramid = li_wand_2016_image_pyramid(resize_targets=(criterion,))
+        pyramid = image_pyramid(resize_targets=(criterion,))
 
     device = content_image.device
     criterion = criterion.to(device)
@@ -51,8 +43,8 @@ def li_wand_2016_nst(
     style_image = initial_resize(style_image)
     input_image = get_input_image(starting_point="content", content_image=content_image)
 
-    preprocessor = li_wand_2016_preprocessor().to(device)
-    postprocessor = li_wand_2016_postprocessor().to(device)
+    preprocessor = _preprocessor().to(device)
+    postprocessor = _postprocessor().to(device)
 
     criterion.set_content_image(preprocessor(content_image))
     criterion.set_style_image(preprocessor(style_image))
@@ -61,7 +53,7 @@ def li_wand_2016_nst(
         input_image,
         criterion,
         pyramid,
-        get_optimizer=li_wand_2016_optimizer,
+        get_optimizer=optimizer,
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,

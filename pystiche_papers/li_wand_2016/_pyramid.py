@@ -2,10 +2,10 @@ from typing import Any, Optional, Sequence, Union
 
 from pystiche.pyramid import OctaveImagePyramid
 
-__all__ = ["li_wand_2016_image_pyramid"]
+__all__ = ["image_pyramid"]
 
 
-def li_wand_2016_image_pyramid(
+def image_pyramid(
     impl_params: bool = True,
     max_edge_size: int = 384,
     num_steps: Optional[Union[int, Sequence[int]]] = None,

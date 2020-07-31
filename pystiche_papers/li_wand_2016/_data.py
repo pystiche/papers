@@ -9,7 +9,7 @@ from pystiche.data import (
 )
 from pystiche.image.transforms import ComposedTransform, Crop, Resize, Transform
 
-__all__ = ["li_wand_2016_images"]
+__all__ = ["images"]
 
 
 def image_note(url: str, mirror: bool = False) -> str:
@@ -42,8 +42,8 @@ def transforms(image: str) -> ComposedTransform:
     )
 
 
-def li_wand_2016_images() -> DownloadableImageCollection:
-    images = {
+def images() -> DownloadableImageCollection:
+    images_ = {
         "emma": DownloadableImage(
             "https://live.staticflickr.com/1/2281680_656225393e_o_d.jpg",
             author="monsieuricon (mricon)",
@@ -103,4 +103,4 @@ def li_wand_2016_images() -> DownloadableImageCollection:
             md5="c39077aaa181fd40d7f2cd00c9c09619",
         ),
     }
-    return DownloadableImageCollection(images)
+    return DownloadableImageCollection(images_)
