@@ -296,6 +296,52 @@ def johnson_alahi_li_2016_transformer(
     impl_params: bool = True,
     instance_norm: bool = True,
 ) -> JohnsonAlahiLi2016Transformer:
+    r"""Pretrained transformer from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+
+    Args:
+        style: Style the transformer was trained on. Can be one of styles given by
+            :func:`pystiche_papers.johnson_alahi_li_2016.images`. If omitted, the
+            transformer is initialized with random weights according to the procedure
+            used by the original authors.
+        framework: Framework that was used to train the the transformer. Can be one of
+            ``"pystiche"`` (default) and ``"luatorch"``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+
+    For ``framework == "pystiche"`` all combinations of parameters are available.
+
+    The weights for ``framework == "luatorch"`` were ported from the reference
+    implementation (``impl_params is True``) of the original authors. See
+    https://download.pystiche.org/models/LICENSE for licensing details. The following
+    combinations of parameters are available:
+
+    +-------------------------------+----------+-----------+
+    | ``style``                     | ``instance_norm``    |
+    |                               |``True``  | ``False`` |
+    +===============================+======================|
+    | ``"candy"``                   | x        |           |
+    +-------------------------------+----------+-----------+
+    | ``"composition_vii"``         |          | x         |
+    +-------------------------------+----------+-----------+
+    | ``"feathers"``                | x        |           |
+    +-------------------------------+----------+-----------+
+    | ``"la_muse"``                 | x        | x         |
+    +-------------------------------+----------+-----------+
+    | ``"mosaic"``                  | x        |           |
+    +-------------------------------+----------+-----------+
+    | ``"starry_night"``            |          | x         |
+    +-------------------------------+----------+-----------+
+    | ``"the_scream"``              | x        |           |
+    +-------------------------------+----------+-----------+
+    | ``"the_wave"``                |          | x         |
+    +-------------------------------+----------+-----------+
+    | ``"udnie"``                   | x        |           |
+    +-------------------------------+----------+-----------+
+    """
     if instance_norm and not impl_params:
         raise RuntimeError
 
