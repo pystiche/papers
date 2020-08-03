@@ -204,9 +204,7 @@ def decoder(
 ) -> pystiche.SequentialModule:
     def get_value_range_delimiter() -> nn.Module:
         if impl_params:
-            """
-            https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L25
-            """
+            # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L25
             def value_range_delimiter(x: torch.Tensor) -> torch.Tensor:
                 return 150.0 * torch.tanh(x)
 

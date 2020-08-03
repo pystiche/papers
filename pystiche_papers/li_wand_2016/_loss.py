@@ -31,6 +31,8 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     ):
         super().__init__(encoder, **feature_reconstruction_op_kwargs)
 
+         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/transfer_CNNMRF_wrapper.lua#L85
+
         self.loss_reduction = "mean" if impl_params else "sum"
 
     def calculate_score(
@@ -53,6 +55,7 @@ def content_loss(
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     if score_weight is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L58
         score_weight = 2e1 if impl_params else 1e0
 
     return FeatureReconstructionOperator(
@@ -71,8 +74,10 @@ class MRFOperator(ops.MRFOperator):
 
         super().__init__(encoder, patch_size, **mrf_op_kwargs)
 
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L108
         self.normalize_patches_grad = impl_params
         self.loss_reduction = "sum"
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/style.lua#L34
         self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
     def enc_to_repr(self, enc: torch.Tensor, is_guided: bool) -> torch.Tensor:
@@ -112,11 +117,14 @@ def style_loss(
         layers = ("relu3_1", "relu4_1")
 
     if stride is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L53
         stride = 2 if impl_params else 1
 
     if target_transforms is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
         num_scale_steps = 1 if impl_params else 3
         scale_step_width = 5e-2
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
         num_rotate_steps = 1 if impl_params else 2
         rotate_step_width = 7.5
         target_transforms = MRFOperator.scale_and_rotate_transforms(
@@ -137,6 +145,7 @@ def style_loss(
         )
 
     if score_weight is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L49
         score_weight = 1e-4 if impl_params else 1e0
 
     return ops.MultiLayerEncodingOperator(
