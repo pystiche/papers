@@ -4,31 +4,37 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.optimizer import Optimizer
 
-from pystiche.enc import VGGMultiLayerEncoder, vgg19_multi_layer_encoder
-from pystiche.image.transforms.processing import CaffePostprocessing, CaffePreprocessing
+from pystiche import enc
+from pystiche.image import transforms
+
+__all__ = [
+    "multi_layer_encoder",
+    "preprocessor",
+    "postprocessor",
+    "optimizer",
+    "DelayedExponentialLR",
+    "lr_scheduler",
+]
 
 
-def ulyanov_et_al_2016_multi_layer_encoder() -> VGGMultiLayerEncoder:
-    return vgg19_multi_layer_encoder(
+def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
+    return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 
-def ulyanov_et_al_2016_preprocessor() -> CaffePreprocessing:
-    return CaffePreprocessing()
+def preprocessor() -> transforms.CaffePreprocessing:
+    return transforms.CaffePreprocessing()
 
 
-def ulyanov_et_al_2016_postprocessor() -> CaffePostprocessing:
-    return CaffePostprocessing()
+def postprocessor() -> transforms.CaffePostprocessing:
+    return transforms.CaffePostprocessing()
 
 
-def ulyanov_et_al_2016_optimizer(
+def optimizer(
     transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
 ) -> optim.Adam:
-    if impl_params:
-        lr = 1e-3 if instance_norm else 1e-1
-    else:
-        lr = 1e-1
+    lr = 1e-3 if impl_params and instance_norm else 1e-1
     return optim.Adam(transformer.parameters(), lr=lr)
 
 
@@ -51,11 +57,9 @@ class DelayedExponentialLR(ExponentialLR):
             return self.base_lrs
 
 
-def ulyanov_et_al_2016_lr_scheduler(
-    optimizer: Optimizer, impl_params: bool = True,
-) -> ExponentialLR:
-    if impl_params:
-        lr_scheduler = ExponentialLR(optimizer, 0.8)
-    else:
-        lr_scheduler = DelayedExponentialLR(optimizer, 0.7, 5)
-    return lr_scheduler
+def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
+    return (
+        ExponentialLR(optimizer, 0.8)
+        if impl_params
+        else DelayedExponentialLR(optimizer, 0.7, 5)
+    )

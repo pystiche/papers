@@ -8,23 +8,15 @@ import torch
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
+import pystiche.image.transforms.functional as F
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche.image.transforms.functional import rescale
-from pystiche_papers.ulyanov_et_al_2016.utils import ulyanov_et_al_2016_optimizer
-from pystiche_papers.utils import batch_up_image
+from pystiche_papers import utils
 
 from .._utils import is_callable
 
 
-def make_patch_target(name, prefix=True):
-    return ".".join(
-        (
-            "pystiche_papers",
-            "ulyanov_et_al_2016",
-            "core",
-            ("ulyanov_et_al_2016_" if prefix else "") + name,
-        )
-    )
+def make_patch_target(name):
+    return ".".join(("pystiche_papers", "ulyanov_et_al_2016", "_nst", name))
 
 
 def attach_method_mock(mock, method, **attrs):
@@ -57,8 +49,8 @@ def make_nn_module_mock(mocker):
 
 @pytest.fixture
 def patcher(mocker):
-    def patcher_(name, prefix=True, **kwargs):
-        return mocker.patch(make_patch_target(name, prefix=prefix), **kwargs)
+    def patcher_(name, **kwargs):
+        return mocker.patch(make_patch_target(name), **kwargs)
 
     return patcher_
 
@@ -66,14 +58,14 @@ def patcher(mocker):
 @pytest.fixture
 def preprocessor_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: image - 0.5)
-    patch = patcher("preprocessor", return_value=mock)
+    patch = patcher("_preprocessor", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
 def postprocessor_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: image + 0.5)
-    patch = patcher("postprocessor", return_value=mock)
+    patch = patcher("_postprocessor", return_value=mock)
     return patch, mock
 
 
@@ -87,7 +79,7 @@ def optimizer_mocks(mocker, patcher):
 @pytest.fixture
 def lr_scheduler_mocks(mocker, patcher):
     mock = mocker.Mock()
-    patch = patcher("lr_scheduler", return_value=mock)
+    patch = patcher("_lr_scheduler", return_value=mock)
     return patch, mock
 
 
@@ -111,28 +103,28 @@ def images_patch(mocker, content_image, style_image):
 
     images_mock = mocker.Mock()
     attach_method_mock(images_mock, "__getitem__", side_effect=side_effect)
-    images_patch = mocker.patch(make_patch_target("images"), return_value=images_mock)
+    images_patch = mocker.patch(make_patch_target("_images"), return_value=images_mock)
     return images_patch, images_mock
 
 
 @pytest.fixture
 def content_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: rescale(image, 2.0))
-    patch = patcher("content_transform", return_value=mock)
+    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
+    patch = patcher("_content_transform", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
 def style_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: rescale(image, 2.0))
-    patch = patcher("style_transform", return_value=mock)
+    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
+    patch = patcher("_style_transform", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
 def transformer_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(identity=True)
-    patch = patcher("transformer", return_value=mock)
+    patch = patcher("_transformer", return_value=mock)
     return patch, mock
 
 
@@ -151,7 +143,9 @@ def default_transformer_epoch_optim_loop_patch(patcher):
         return transformer
 
     return patcher(
-        "default_transformer_epoch_optim_loop", prefix=False, side_effect=side_effect
+        "optim.default_transformer_epoch_optim_loop",
+        prefix=False,
+        side_effect=side_effect,
     )
 
 
@@ -172,9 +166,7 @@ def training(default_transformer_epoch_optim_loop_patch, image_loader, style_ima
             image_loader_ = image_loader
         if style_image_ is None:
             style_image_ = style_image
-        output = paper.ulyanov_et_al_2016_training(
-            image_loader_, style_image_, **kwargs
-        )
+        output = paper.training(image_loader_, style_image_, **kwargs)
 
         default_transformer_epoch_optim_loop_patch.assert_called_once()
         args, kwargs = default_transformer_epoch_optim_loop_patch.call_args
@@ -185,7 +177,7 @@ def training(default_transformer_epoch_optim_loop_patch, image_loader, style_ima
 
 
 @pytest.mark.slow
-def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
+def test_training_smoke(subtests, training, image_loader):
     args, kwargs, output = training(image_loader)
     content_image_loader, transformer, criterion, criterion_update_fn, num_epochs = args
     lr_scheduler = kwargs["lr_scheduler"]
@@ -194,10 +186,10 @@ def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
         assert content_image_loader is image_loader
 
     with subtests.test("transformer"):
-        assert isinstance(transformer, type(paper.ulyanov_et_al_2016_transformer()))
+        assert isinstance(transformer, type(paper.transformer()))
 
     with subtests.test("criterion"):
-        assert isinstance(criterion, type(paper.ulyanov_et_al_2016_perceptual_loss()))
+        assert isinstance(criterion, type(paper.perceptual_loss()))
 
     with subtests.test("num_epochs"):
         assert isinstance(num_epochs, int)
@@ -207,15 +199,13 @@ def test_ulyanov_et_al_2016_training_smoke(subtests, training, image_loader):
 
     with subtests.test("lr_scheduler"):
         assert isinstance(lr_scheduler, ExponentialLR)
-        assert isinstance(
-            lr_scheduler.optimizer, type(ulyanov_et_al_2016_optimizer(transformer))
-        )
+        assert isinstance(lr_scheduler.optimizer, type(paper.optimizer(transformer)))
 
     with subtests.test("output"):
         assert output is transformer
 
 
-def test_ulyanov_et_al_2016_training_device(
+def test_training_device(
     subtests,
     preprocessor_mocks,
     optimizer_mocks,
@@ -240,7 +230,7 @@ def test_ulyanov_et_al_2016_training_device(
             mock.assert_called_once_with(style_image.device)
 
 
-def test_ulyanov_et_al_2016_training_transformer_train(
+def test_training_transformer_train(
     preprocessor_mocks,
     optimizer_mocks,
     lr_scheduler_mocks,
@@ -255,7 +245,7 @@ def test_ulyanov_et_al_2016_training_transformer_train(
     transformer.train.assert_called_once_with()
 
 
-def test_ulyanov_et_al_2016_training_criterion_eval(
+def test_training_criterion_eval(
     preprocessor_mocks,
     optimizer_mocks,
     lr_scheduler_mocks,
@@ -270,7 +260,7 @@ def test_ulyanov_et_al_2016_training_criterion_eval(
     criterion.eval.assert_called_once_with()
 
 
-def test_ulyanov_et_al_2016_training_num_epochs(
+def test_training_num_epochs(
     subtests,
     preprocessor_mocks,
     optimizer_mocks,
@@ -296,7 +286,7 @@ def test_ulyanov_et_al_2016_training_num_epochs(
             assert num_epochs == 10 if not (impl_params or instance_norm) else 25
 
 
-def test_ulyanov_et_al_2016_training_criterion_content_image(
+def test_training_criterion_content_image(
     preprocessor_mocks,
     optimizer_mocks,
     lr_scheduler_mocks,
@@ -310,7 +300,7 @@ def test_ulyanov_et_al_2016_training_criterion_content_image(
     assert not criterion.content_loss.has_target_image
 
 
-def test_ulyanov_et_al_2016_training_criterion_style_image(
+def test_training_criterion_style_image(
     preprocessor_mocks,
     optimizer_mocks,
     lr_scheduler_mocks,
@@ -329,12 +319,12 @@ def test_ulyanov_et_al_2016_training_criterion_style_image(
     ptu.assert_allclose(
         criterion.style_loss.get_target_image(),
         preprocessor(
-            style_transform(batch_up_image(style_image, image_loader.batch_size))
+            style_transform(utils.batch_up_image(style_image, image_loader.batch_size))
         ),
     )
 
 
-def test_ulyanov_et_al_2016_training_criterion_update_fn(
+def test_training_criterion_update_fn(
     preprocessor_mocks,
     optimizer_mocks,
     lr_scheduler_mocks,
@@ -353,7 +343,7 @@ def test_ulyanov_et_al_2016_training_criterion_update_fn(
     ptu.assert_allclose(criterion.content_loss.target_image, content_image - 0.5)
 
 
-def test_ulyanov_et_al_2016_training_lr_scheduler_optimizer(
+def test_training_lr_scheduler_optimizer(
     preprocessor_mocks, style_transforms_mocks, transformer_mocks, training,
 ):
     parameter = torch.empty(1)
@@ -381,9 +371,7 @@ def stylization(input_image, transformer_mocks):
         if input_image_ is None:
             input_image_ = input_image
 
-        output = paper.ulyanov_et_al_2016_stylization(
-            input_image_, transformer_, **kwargs
-        )
+        output = paper.stylization(input_image_, transformer_, **kwargs)
 
         if isinstance(transformer_, str):
             transformer.assert_called_once()
@@ -400,14 +388,14 @@ def stylization(input_image, transformer_mocks):
     return stylization_
 
 
-def test_ulyanov_et_al_2016_stylization_smoke(
+def test_stylization_smoke(
     stylization, postprocessor_mocks, content_transforms_mocks, input_image
 ):
     _, _, output_image = stylization(input_image)
-    ptu.assert_allclose(output_image, rescale(input_image, 2.0) + 0.5, rtol=1e-6)
+    ptu.assert_allclose(output_image, F.rescale(input_image, 2.0) + 0.5, rtol=1e-6)
 
 
-def test_ulyanov_et_al_2016_stylization_device(
+def test_stylization_device(
     subtests,
     postprocessor_mocks,
     content_transforms_mocks,
@@ -428,7 +416,7 @@ def test_ulyanov_et_al_2016_stylization_device(
             mock.assert_called_once_with(input_image.device)
 
 
-def test_ulyanov_et_al_2016_stylization_transformer_eval(
+def test_stylization_transformer_eval(
     subtests,
     preprocessor_mocks,
     postprocessor_mocks,

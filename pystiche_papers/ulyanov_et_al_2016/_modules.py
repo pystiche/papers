@@ -6,9 +6,9 @@ from typing_extensions import Protocol
 import torch
 from torch import nn
 
-import pystiche
-from pystiche.image import extract_image_size
-from pystiche.misc import zip_equal
+from pystiche import image
+from pystiche import meta as meta_
+from pystiche import misc
 
 from ..utils import is_valid_padding, same_size_padding
 
@@ -47,13 +47,13 @@ class TextureNoiseParams:
     ):
         def get_size(input: Union[Tuple[int, int], torch.Tensor]) -> Tuple[int, int]:
             if isinstance(input, torch.Tensor):
-                return extract_image_size(input)
+                return image.extract_image_size(input)
             else:
                 return input
 
         def get_meta(input: Union[Tuple[int, int], torch.Tensor]) -> Dict[str, Any]:
             if isinstance(input, torch.Tensor):
-                return pystiche.meta.tensor_meta(input, **meta)
+                return meta_.tensor_meta(input, **meta)
             else:
                 return meta
 
@@ -82,7 +82,7 @@ class TextureNoiseParams:
         )
 
 
-class UlyanovEtAl2016NoiseModule(nn.Module):
+class NoiseModule(nn.Module):
     def __init__(
         self,
         in_channels: int,
@@ -100,7 +100,7 @@ class UlyanovEtAl2016NoiseModule(nn.Module):
         self.out_channels = in_channels + num_noise_channels
 
 
-class UlyanovEtAl2016StylizationNoise(UlyanovEtAl2016NoiseModule):
+class StylizationNoise(NoiseModule):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         def get_size(input: torch.Tensor) -> torch.Size:
             size = list(input.size())
@@ -108,12 +108,12 @@ class UlyanovEtAl2016StylizationNoise(UlyanovEtAl2016NoiseModule):
             return torch.Size(size)
 
         size = get_size(input)
-        meta = pystiche.meta.tensor_meta(input)
+        meta = meta_.tensor_meta(input)
         noise = self.noise_fn(size, **meta)
         return join_channelwise(input, noise)
 
 
-class UlyanovEtAl2016TextureNoise(UlyanovEtAl2016NoiseModule):
+class TextureNoise(NoiseModule):
     def forward(
         self,
         params: Union[TextureNoiseParams, torch.Tensor, Tuple[int, int]],
@@ -126,33 +126,33 @@ class UlyanovEtAl2016TextureNoise(UlyanovEtAl2016NoiseModule):
         return self.noise_fn(params.size, **params.meta)
 
 
-def ulyanov_et_al_2016_noise(
+def noise(
     stylization: bool = True,
     in_channels: Optional[int] = None,
     num_noise_channels: int = 3,
     noise_fn: Optional[NoiseFn] = None,
-) -> UlyanovEtAl2016NoiseModule:
+) -> NoiseModule:
     if in_channels is None:
         in_channels = 3 if stylization else 0
 
     if stylization:
-        noise_class = cast(UlyanovEtAl2016NoiseModule, UlyanovEtAl2016StylizationNoise)
+        noise_class = cast(NoiseModule, StylizationNoise)
     else:
-        noise_class = cast(UlyanovEtAl2016NoiseModule, UlyanovEtAl2016TextureNoise)
+        noise_class = cast(NoiseModule, TextureNoise)
     return cast(
-        UlyanovEtAl2016NoiseModule,
+        NoiseModule,
         noise_class(
             in_channels, num_noise_channels=num_noise_channels, noise_fn=noise_fn
         ),
     )
 
 
-class UlyanovEtAl2016StylizationDownsample(nn.AvgPool2d):
+class StylizationDownsample(nn.AvgPool2d):
     def __init__(self, kernel_size: int = 2, stride: int = 2, padding: int = 0):
         super().__init__(kernel_size, stride=stride, padding=padding)
 
 
-class UlyanovEtAl2016TextureDownsample(nn.Module):
+class TextureDownsample(nn.Module):
     def forward(
         self,
         params: Union[TextureNoiseParams, torch.Tensor, Tuple[int, int]],
@@ -163,30 +163,30 @@ class UlyanovEtAl2016TextureDownsample(nn.Module):
         return params.downsample()
 
 
-def ulyanov_et_al_2016_downsample(stylization: bool = True) -> nn.Module:
+def downsample(stylization: bool = True) -> nn.Module:
     if stylization:
-        return UlyanovEtAl2016StylizationDownsample()
+        return StylizationDownsample()
     else:
-        return UlyanovEtAl2016TextureDownsample()
+        return TextureDownsample()
 
 
-def ulyanov_et_al_2016_upsample() -> nn.Upsample:
+def upsample() -> nn.Upsample:
     return nn.Upsample(scale_factor=2.0, mode="nearest")
 
 
-class UlyanovEtAl2016HourGlassBlock(SequentialWithOutChannels):
+class HourGlassBlock(SequentialWithOutChannels):
     def __init__(
         self, intermediate: nn.Module, stylization: bool = True,
     ):
         modules = (
-            ("down", ulyanov_et_al_2016_downsample(stylization=stylization),),
+            ("down", downsample(stylization=stylization),),
             ("intermediate", intermediate),
-            ("up", ulyanov_et_al_2016_upsample()),
+            ("up", upsample()),
         )
         super().__init__(OrderedDict(modules), out_channel_name="intermediate")
 
 
-def get_norm_module(
+def norm(
     in_channels: int, instance_norm: bool
 ) -> Union[nn.BatchNorm2d, nn.InstanceNorm2d]:
     norm_kwargs: Dict[str, Any] = {
@@ -195,22 +195,24 @@ def get_norm_module(
         "affine": True,
         "track_running_stats": True,
     }
-    if instance_norm:
-        return nn.InstanceNorm2d(in_channels, **norm_kwargs)
-    else:
-        return nn.BatchNorm2d(in_channels, **norm_kwargs)
+    return (
+        nn.InstanceNorm2d(in_channels, **norm_kwargs)
+        if instance_norm
+        else nn.BatchNorm2d(in_channels, **norm_kwargs)
+    )
 
 
-def get_activation_module(
+def activation(
     impl_params: bool, instance_norm: bool, inplace: bool = True
 ) -> nn.Module:
-    if impl_params and instance_norm:
-        return nn.ReLU(inplace=inplace)
-    else:
-        return nn.LeakyReLU(negative_slope=0.01, inplace=inplace)
+    return (
+        nn.ReLU(inplace=inplace)
+        if impl_params and instance_norm
+        else nn.LeakyReLU(negative_slope=0.01, inplace=inplace)
+    )
 
 
-class UlyanovEtAl2016ConvBlock(SequentialWithOutChannels):
+class ConvBlock(SequentialWithOutChannels):
     def __init__(
         self,
         in_channels: int,
@@ -238,15 +240,13 @@ class UlyanovEtAl2016ConvBlock(SequentialWithOutChannels):
                 ),
             )
         )
-        modules.append(("norm", get_norm_module(out_channels, instance_norm)))
-        modules.append(
-            ("act", get_activation_module(impl_params, instance_norm, inplace=inplace))
-        )
+        modules.append(("norm", norm(out_channels, instance_norm)))
+        modules.append(("act", activation(impl_params, instance_norm, inplace=inplace)))
 
         super().__init__(OrderedDict(modules), out_channel_name="conv")
 
 
-class UlyanovEtAl2016ConvSequence(SequentialWithOutChannels):
+class ConvSequence(SequentialWithOutChannels):
     def __init__(
         self,
         in_channels: int,
@@ -257,8 +257,8 @@ class UlyanovEtAl2016ConvSequence(SequentialWithOutChannels):
     ):
         def conv_block(
             in_channels: int, out_channels: int, kernel_size: int
-        ) -> UlyanovEtAl2016ConvBlock:
-            return UlyanovEtAl2016ConvBlock(
+        ) -> ConvBlock:
+            return ConvBlock(
                 in_channels,
                 out_channels,
                 kernel_size,
@@ -276,7 +276,7 @@ class UlyanovEtAl2016ConvSequence(SequentialWithOutChannels):
         super().__init__(OrderedDict(modules))
 
 
-class UlyanovEtAl2016JoinBlock(nn.Module):
+class JoinBlock(nn.Module):
     def __init__(
         self,
         branch_in_channels: Sequence[int],
@@ -294,8 +294,7 @@ class UlyanovEtAl2016JoinBlock(nn.Module):
                 raise RuntimeError
 
         norm_modules = [
-            get_norm_module(in_channels, instance_norm)
-            for in_channels in branch_in_channels
+            norm(in_channels, instance_norm) for in_channels in branch_in_channels
         ]
 
         for name, module in zip(names, norm_modules):
@@ -310,12 +309,12 @@ class UlyanovEtAl2016JoinBlock(nn.Module):
 
     def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
         return join_channelwise(
-            *[norm(input) for norm, input in zip_equal(self.norm_modules, inputs)],
+            *[norm(input) for norm, input in misc.zip_equal(self.norm_modules, inputs)],
             channel_dim=self.channel_dim,
         )
 
 
-class UlyanovEtAl2016BranchBlock(nn.Module):
+class BranchBlock(nn.Module):
     def __init__(
         self,
         deep_branch: nn.Module,
@@ -325,7 +324,7 @@ class UlyanovEtAl2016BranchBlock(nn.Module):
         super().__init__()
         self.deep = deep_branch
         self.shallow = shallow_branch
-        self.join = UlyanovEtAl2016JoinBlock(
+        self.join = JoinBlock(
             (
                 cast(int, deep_branch.out_channels),
                 cast(int, shallow_branch.out_channels),
@@ -344,7 +343,7 @@ class UlyanovEtAl2016BranchBlock(nn.Module):
         return cast(torch.Tensor, self.join(deep_output, shallow_output))
 
 
-def ulyanov_et_al_2016_level(
+def level(
     prev_level_block: Optional[SequentialWithOutChannels],
     impl_params: bool = True,
     instance_norm: bool = True,
@@ -355,12 +354,12 @@ def ulyanov_et_al_2016_level(
     inplace: bool = True,
 ) -> SequentialWithOutChannels:
     def conv_sequence(
-        in_channels: int, out_channels: int, noise: bool = False
+        in_channels: int, out_channels: int, use_noise: bool = False
     ) -> SequentialWithOutChannels:
         modules: List[Tuple[str, nn.Module]] = []
 
-        if noise:
-            noise_module = ulyanov_et_al_2016_noise(
+        if use_noise:
+            noise_module = noise(
                 stylization,
                 in_channels=in_channels,
                 num_noise_channels=num_noise_channels,
@@ -369,7 +368,7 @@ def ulyanov_et_al_2016_level(
             in_channels = noise_module.out_channels
             modules.append(("noise", noise_module))
 
-        conv_seq = UlyanovEtAl2016ConvSequence(
+        conv_seq = ConvSequence(
             in_channels,
             out_channels,
             impl_params=impl_params,
@@ -377,7 +376,7 @@ def ulyanov_et_al_2016_level(
             inplace=inplace,
         )
 
-        if not noise:
+        if not use_noise:
             return conv_seq
 
         modules.append(("conv_seq", conv_seq))
@@ -385,18 +384,14 @@ def ulyanov_et_al_2016_level(
 
     if in_channels is None:
         in_channels = 3 if stylization else 0
-    noise = not impl_params or not stylization
-    shallow_branch = conv_sequence(in_channels, out_channels=8, noise=noise)
+    use_noise = not impl_params or not stylization
+    shallow_branch = conv_sequence(in_channels, out_channels=8, use_noise=use_noise)
 
     if prev_level_block is None:
         return shallow_branch
 
-    deep_branch = UlyanovEtAl2016HourGlassBlock(
-        prev_level_block, stylization=stylization,
-    )
-    branch_block = UlyanovEtAl2016BranchBlock(
-        deep_branch, shallow_branch, instance_norm=instance_norm
-    )
+    deep_branch = HourGlassBlock(prev_level_block, stylization=stylization,)
+    branch_block = BranchBlock(deep_branch, shallow_branch, instance_norm=instance_norm)
 
     output_conv_seq = conv_sequence(
         branch_block.out_channels, branch_block.out_channels
@@ -407,7 +402,7 @@ def ulyanov_et_al_2016_level(
     )
 
 
-class UlyanovEtAl2016Transformer(nn.Sequential):
+class Transformer(nn.Sequential):
     def __init__(
         self,
         levels: int,
@@ -418,7 +413,7 @@ class UlyanovEtAl2016Transformer(nn.Sequential):
     ) -> None:
         pyramid = None
         for _ in range(levels):
-            pyramid = ulyanov_et_al_2016_level(
+            pyramid = level(
                 pyramid,
                 impl_params=impl_params,
                 instance_norm=instance_norm,
@@ -427,7 +422,7 @@ class UlyanovEtAl2016Transformer(nn.Sequential):
 
         if impl_params:
             output_conv = cast(
-                Union[nn.Conv2d, UlyanovEtAl2016ConvBlock],
+                Union[nn.Conv2d, ConvBlock],
                 nn.Conv2d(
                     cast(int, cast(SequentialWithOutChannels, pyramid).out_channels),
                     3,
@@ -437,8 +432,8 @@ class UlyanovEtAl2016Transformer(nn.Sequential):
             )
         else:
             output_conv = cast(
-                Union[nn.Conv2d, UlyanovEtAl2016ConvBlock],
-                UlyanovEtAl2016ConvBlock(
+                Union[nn.Conv2d, ConvBlock],
+                ConvBlock(
                     cast(int, cast(SequentialWithOutChannels, pyramid).out_channels),
                     out_channels=3,
                     kernel_size=1,
@@ -473,23 +468,22 @@ class UlyanovEtAl2016Transformer(nn.Sequential):
                     nn.init.zeros_(module.bias)
 
 
-def ulyanov_et_al_2016_transformer(
+def transformer(
     style: Optional[str] = None,
     impl_params: bool = True,
     instance_norm: bool = True,
     stylization: bool = True,
     levels: Optional[int] = None,
-) -> UlyanovEtAl2016Transformer:
+) -> Transformer:
     if levels is None:
         if not impl_params:
             levels = 6 if stylization else 5
         else:
             levels = 6
 
-    transformer = UlyanovEtAl2016Transformer(
+    return Transformer(
         levels,
         impl_params=impl_params,
         instance_norm=instance_norm,
         stylization=stylization,
     )
-    return transformer

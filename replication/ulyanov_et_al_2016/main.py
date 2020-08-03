@@ -4,18 +4,9 @@ from os import path
 
 import torch
 
-from pystiche.image import write_image
-from pystiche.misc.misc import get_device
-from pystiche.optim import OptimLogger
-from pystiche_papers.ulyanov_et_al_2016 import (
-    ulyanov_et_al_2016_dataset,
-    ulyanov_et_al_2016_image_loader,
-    ulyanov_et_al_2016_images,
-    ulyanov_et_al_2016_stylization,
-    ulyanov_et_al_2016_texture_synthesis,
-    ulyanov_et_al_2016_training,
-)
-from pystiche_papers.utils import save_state_dict
+import pystiche_papers.ulyanov_et_al_2016 as paper
+from pystiche import image, misc, optim
+from pystiche_papers import utils
 
 
 def training_texture(args):
@@ -27,12 +18,12 @@ def training_texture(args):
         "peppers",
     )
 
-    dataset = ulyanov_et_al_2016_dataset(
+    dataset = paper.dataset(
         path.join(args.dataset_dir, "texture"),
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
     )
-    image_loader = ulyanov_et_al_2016_image_loader(
+    image_loader = paper.image_loader(
         dataset,
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
@@ -40,13 +31,13 @@ def training_texture(args):
         pin_memory=str(args.device).startswith("cuda"),
     )
 
-    images = ulyanov_et_al_2016_images()
+    images = paper.images()
     images.download(args.image_source_dir)
 
     for texture in textures:
         texture_image = images[texture].read(device=args.device)
 
-        transformer = ulyanov_et_al_2016_training(
+        transformer = paper.training(
             image_loader,
             texture_image,
             impl_params=args.impl_params,
@@ -61,9 +52,9 @@ def training_texture(args):
             model_name += "__impl_params"
         if args.instance_norm:
             model_name += "__instance_norm"
-        save_state_dict(transformer, model_name, root=args.model_dir)
+        utils.save_state_dict(transformer, model_name, root=args.model_dir)
 
-        output_image = ulyanov_et_al_2016_texture_synthesis(
+        output_image = paper.texture_synthesis(
             torch.empty((1, 1, 256, 256), device="cuda"),
             transformer,
             impl_params=args.impl_params,
@@ -76,9 +67,9 @@ def training_texture(args):
         if args.instance_norm:
             output_name += "__instance_norm"
         output_file = path.join(args.image_results_dir, "texture", f"{output_name}.jpg")
-        write_image(output_image, output_file)
+        image.write_image(output_image, output_file)
 
-        output_image = ulyanov_et_al_2016_texture_synthesis(
+        output_image = paper.texture_synthesis(
             torch.empty((1, 1, 512, 512), device="cuda"),
             transformer,
             impl_params=args.impl_params,
@@ -93,7 +84,7 @@ def training_texture(args):
         if args.instance_norm:
             output_name += "__instance_norm"
         output_file = path.join(args.image_results_dir, "texture", f"{output_name}.jpg")
-        write_image(output_image, output_file)
+        image.write_image(output_image, output_file)
 
 
 def training_style(args):
@@ -115,12 +106,12 @@ def training_style(args):
         "turner",
     )
 
-    dataset = ulyanov_et_al_2016_dataset(
+    dataset = paper.dataset(
         path.join(args.dataset_dir, "style"),
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
     )
-    image_loader = ulyanov_et_al_2016_image_loader(
+    image_loader = paper.image_loader(
         dataset,
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
@@ -128,13 +119,13 @@ def training_style(args):
         pin_memory=str(args.device).startswith("cuda"),
     )
 
-    images = ulyanov_et_al_2016_images()
+    images = paper.images()
     images.download(args.image_source_dir)
 
     for style in styles:
         style_image = images[style].read(device=args.device)
 
-        transformer = ulyanov_et_al_2016_training(
+        transformer = paper.training(
             image_loader,
             style_image,
             impl_params=args.impl_params,
@@ -149,11 +140,11 @@ def training_style(args):
             model_name += "__impl_params"
         if args.instance_norm:
             model_name += "__instance_norm"
-        save_state_dict(transformer, model_name, root=args.model_dir)
+        utils.save_state_dict(transformer, model_name, root=args.model_dir)
 
         for content in contents:
             content_image = images[content].read().to(args.device)
-            output_image = ulyanov_et_al_2016_stylization(
+            output_image = paper.stylization(
                 content_image,
                 transformer,
                 impl_params=args.impl_params,
@@ -168,7 +159,7 @@ def training_style(args):
             output_file = path.join(
                 args.image_results_dir, "style", f"{output_name}.jpg"
             )
-            write_image(output_image, output_file)
+            image.write_image(output_image, output_file)
 
 
 def parse_input():
@@ -206,8 +197,8 @@ def parse_input():
         model_dir = path.join(here, "data", "models")
     model_dir = process_dir(model_dir)
 
-    device = get_device(device=device)
-    logger = OptimLogger()
+    device = misc.get_device(device=device)
+    logger = optim.OptimLogger()
 
     return Namespace(
         image_source_dir=image_source_dir,

@@ -4,6 +4,8 @@ from urllib.parse import urljoin
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 
+import pystiche.image.transforms.functional as F
+from pystiche import image
 from pystiche.data import (
     CreativeCommonsLicense,
     DownloadableImage,
@@ -11,62 +13,55 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
-from pystiche.image import extract_num_channels
-from pystiche.image.transforms import (
-    CenterCrop,
-    ComposedTransform,
-    Resize,
-    Transform,
-    ValidRandomCrop,
-)
-from pystiche.image.transforms.functional import grayscale_to_fakegrayscale
-
-from ..data.utils import FiniteCycleBatchSampler
+from pystiche.image import transforms
+from pystiche_papers.data.utils import FiniteCycleBatchSampler
 
 __all__ = [
-    "ulyanov_et_al_2016_content_transform",
-    "ulyanov_et_al_2016_style_transform",
-    "ulyanov_et_al_2016_images",
-    "ulyanov_et_al_2016_dataset",
-    "ulyanov_et_al_2016_batch_sampler",
-    "ulyanov_et_al_2016_image_loader",
+    "content_transform",
+    "style_transform",
+    "images",
+    "dataset",
+    "batch_sampler",
+    "image_loader",
 ]
 
 
-def ulyanov_et_al_2016_content_transform(
+def content_transform(
     edge_size: int = 256, impl_params: bool = True, instance_norm: bool = True,
-) -> ComposedTransform:
-    class OptionalGrayscaleToFakegrayscale(Transform):
+) -> transforms.ComposedTransform:
+    class OptionalGrayscaleToFakegrayscale(transforms.Transform):
         def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            is_grayscale = extract_num_channels(input_image) == 1
+            is_grayscale = image.extract_num_channels(input_image) == 1
             if is_grayscale:
-                return cast(torch.Tensor, grayscale_to_fakegrayscale(input_image))
+                return cast(torch.Tensor, F.grayscale_to_fakegrayscale(input_image))
             else:
                 return input_image
 
-    transforms: List[Transform] = []
+    transforms_: List[transforms.Transform] = []
     if impl_params:
         if instance_norm:
-            transforms.append(ValidRandomCrop(edge_size))
+            transforms_.append(transforms.ValidRandomCrop(edge_size))
         else:
-            transforms.append(
-                Resize((edge_size, edge_size), interpolation_mode="bilinear")
+            transforms_.append(
+                transforms.Resize((edge_size, edge_size), interpolation_mode="bilinear")
             )
     else:
-        transforms.append(CenterCrop(edge_size))
+        transforms_.append(transforms.CenterCrop(edge_size))
 
-    transforms.append(OptionalGrayscaleToFakegrayscale())
-    return ComposedTransform(*transforms)
+    transforms_.append(OptionalGrayscaleToFakegrayscale())
+    return transforms.ComposedTransform(*transforms_)
 
 
-def ulyanov_et_al_2016_style_transform(
+def style_transform(
     impl_params: bool = True, instance_norm: bool = True, edge_size: int = 256,
-) -> Resize:
+) -> transforms.Resize:
     interpolation_mode = "bicubic" if impl_params and instance_norm else "bilinear"
-    return Resize(edge_size, edge="long", interpolation_mode=interpolation_mode)
+    return transforms.Resize(
+        edge_size, edge="long", interpolation_mode=interpolation_mode
+    )
 
 
-def ulyanov_et_al_2016_images() -> DownloadableImageCollection:
+def images() -> DownloadableImageCollection:
 
     base_ulyanov = (
         "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/master/data/"
@@ -190,20 +185,20 @@ def ulyanov_et_al_2016_images() -> DownloadableImageCollection:
     )
 
 
-def ulyanov_et_al_2016_dataset(
+def dataset(
     root: str,
     impl_params: bool = True,
     instance_norm: bool = True,
-    transform: Optional[Transform] = None,
+    transform: Optional[transforms.Transform] = None,
 ) -> ImageFolderDataset:
     if transform is None:
-        transform = ulyanov_et_al_2016_content_transform(
+        transform = content_transform(
             impl_params=impl_params, instance_norm=instance_norm
         )
     return ImageFolderDataset(root, transform=transform)
 
 
-def ulyanov_et_al_2016_batch_sampler(
+def batch_sampler(
     data_source: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
@@ -235,7 +230,10 @@ def ulyanov_et_al_2016_batch_sampler(
     )
 
 
-def ulyanov_et_al_2016_image_loader(
+batch_sampler_ = batch_sampler
+
+
+def image_loader(
     dataset: Dataset,
     impl_params: bool = True,
     instance_norm: bool = True,
@@ -245,7 +243,7 @@ def ulyanov_et_al_2016_image_loader(
     pin_memory: bool = True,
 ) -> DataLoader:
     if batch_sampler is None:
-        batch_sampler = ulyanov_et_al_2016_batch_sampler(
+        batch_sampler = batch_sampler_(
             dataset,
             impl_params=impl_params,
             instance_norm=instance_norm,

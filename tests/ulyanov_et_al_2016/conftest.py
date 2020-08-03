@@ -1,8 +1,6 @@
 import pytest
 
-from pystiche_papers.ulyanov_et_al_2016.utils import (
-    ulyanov_et_al_2016_multi_layer_encoder,
-)
+import pystiche_papers.ulyanov_et_al_2016 as paper
 
 
 @pytest.fixture(scope="package")
@@ -14,7 +12,7 @@ def vgg_load_weights_mock(package_mocker):
 
 @pytest.fixture(scope="package", autouse=True)
 def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
-    multi_layer_encoder = ulyanov_et_al_2016_multi_layer_encoder()
+    multi_layer_encoder = paper.multi_layer_encoder()
 
     def trim_mock(*args, **kwargs):
         pass
@@ -26,6 +24,5 @@ def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
         return multi_layer_encoder
 
     return package_mocker.patch(
-        "pystiche_papers.ulyanov_et_al_2016.loss.ulyanov_et_al_2016_multi_layer_encoder",
-        new,
+        "pystiche_papers.ulyanov_et_al_2016._loss._multi_layer_encoder", new,
     )

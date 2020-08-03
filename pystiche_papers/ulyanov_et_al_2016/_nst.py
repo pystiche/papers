@@ -7,66 +7,49 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
 import pystiche
-from pystiche.loss import PerceptualLoss
-from pystiche.misc import get_device
-from pystiche.optim import OptimLogger, default_transformer_epoch_optim_loop
+from pystiche import loss, misc, optim
 
 from ..utils import batch_up_image
-from .data import (
-    ulyanov_et_al_2016_content_transform,
-    ulyanov_et_al_2016_dataset,
-    ulyanov_et_al_2016_image_loader,
-    ulyanov_et_al_2016_images,
-    ulyanov_et_al_2016_style_transform,
-)
-from .loss import ulyanov_et_al_2016_perceptual_loss
-from .modules import UlyanovEtAl2016Transformer, ulyanov_et_al_2016_transformer
-from .utils import (
-    ulyanov_et_al_2016_lr_scheduler,
-    ulyanov_et_al_2016_optimizer,
-    ulyanov_et_al_2016_postprocessor,
-    ulyanov_et_al_2016_preprocessor,
-)
+from ._data import content_transform as _content_transform
+from ._data import images as _images
+from ._data import style_transform as _style_transform
+from ._loss import perceptual_loss
+from ._modules import transformer as _transformer
+from ._utils import lr_scheduler as _lr_scheduler
+from ._utils import optimizer
+from ._utils import postprocessor as _postprocessor
+from ._utils import preprocessor as _preprocessor
 
-__all__ = [
-    "ulyanov_et_al_2016_transformer",
-    "ulyanov_et_al_2016_perceptual_loss",
-    "ulyanov_et_al_2016_dataset",
-    "ulyanov_et_al_2016_image_loader",
-    "ulyanov_et_al_2016_training",
-    "ulyanov_et_al_2016_images",
-    "ulyanov_et_al_2016_stylization",
-    "ulyanov_et_al_2016_texture_synthesis",
-]
+__all__ = ["training", "stylization", "texture_synthesis"]
 
 
-def ulyanov_et_al_2016_training(
+def training(
     content_image_loader: DataLoader,
     style: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: bool = True,
     stylization: bool = True,
-    transformer: Optional[UlyanovEtAl2016Transformer] = None,
-    criterion: Optional[PerceptualLoss] = None,
+    transformer: Optional[nn.Module] = None,
+    criterion: Optional[loss.PerceptualLoss] = None,
     lr_scheduler: Optional[ExponentialLR] = None,
     num_epochs: Optional[int] = None,
-    get_optimizer: Optional[Callable[[UlyanovEtAl2016Transformer], Optimizer]] = None,
+    get_optimizer: Optional[Callable[[nn.Module], Optimizer]] = None,
     quiet: bool = False,
-    logger: Optional[OptimLogger] = None,
+    logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
 ) -> nn.Module:
     if isinstance(style, str):
-        device = get_device()
-        images = ulyanov_et_al_2016_images()
+        device = misc.get_device()
+        images = _images()
         style_image = images[style].read(device=device)
     else:
         style_image = style
         device = style_image.device
 
     if transformer is None:
-        transformer = ulyanov_et_al_2016_transformer(
+        transformer = _transformer(
             impl_params=impl_params,
             instance_norm=instance_norm,
             stylization=stylization,
@@ -75,7 +58,7 @@ def ulyanov_et_al_2016_training(
     transformer = transformer.to(device)
 
     if criterion is None:
-        criterion = ulyanov_et_al_2016_perceptual_loss(
+        criterion = perceptual_loss(
             impl_params=impl_params,
             instance_norm=instance_norm,
             stylization=stylization,
@@ -85,12 +68,10 @@ def ulyanov_et_al_2016_training(
 
     if lr_scheduler is None:
         if get_optimizer is None:
-            get_optimizer = ulyanov_et_al_2016_optimizer
-        optimizer = get_optimizer(transformer)
+            get_optimizer = optimizer
+        optimizer_ = get_optimizer(transformer)
 
-        lr_scheduler = ulyanov_et_al_2016_lr_scheduler(
-            optimizer, impl_params=impl_params,
-        )
+        lr_scheduler = _lr_scheduler(optimizer_, impl_params=impl_params,)
 
     if num_epochs is None:
         if impl_params:
@@ -101,11 +82,11 @@ def ulyanov_et_al_2016_training(
         else:
             num_epochs = 10
 
-    style_transform = ulyanov_et_al_2016_style_transform(
+    style_transform = _style_transform(
         impl_params=impl_params, instance_norm=instance_norm
     )
     style_transform = style_transform.to(device)
-    preprocessor = ulyanov_et_al_2016_preprocessor()
+    preprocessor = _preprocessor()
     preprocessor = preprocessor.to(device)
     style_image = style_transform(style_image)
     style_image = preprocessor(style_image)
@@ -117,7 +98,9 @@ def ulyanov_et_al_2016_training(
         def criterion_update_fn(
             input_image: torch.Tensor, criterion: nn.Module
         ) -> None:
-            cast(PerceptualLoss, criterion).set_content_image(preprocessor(input_image))
+            cast(loss.PerceptualLoss, criterion).set_content_image(
+                preprocessor(input_image)
+            )
 
     else:
 
@@ -126,7 +109,7 @@ def ulyanov_et_al_2016_training(
         ) -> None:
             pass
 
-    return default_transformer_epoch_optim_loop(
+    return optim.default_transformer_epoch_optim_loop(
         content_image_loader,
         transformer,
         criterion,
@@ -139,7 +122,7 @@ def ulyanov_et_al_2016_training(
     )
 
 
-def ulyanov_et_al_2016_stylization(
+def stylization(
     input_image: torch.Tensor,
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
@@ -149,7 +132,7 @@ def ulyanov_et_al_2016_stylization(
     device = input_image.device
     if isinstance(transformer, str):
         style = transformer
-        transformer = ulyanov_et_al_2016_transformer(
+        transformer = _transformer(
             style=style,
             impl_params=impl_params,
             instance_norm=instance_norm,
@@ -157,15 +140,15 @@ def ulyanov_et_al_2016_stylization(
         )
         if instance_norm or not impl_params:
             transformer = transformer.eval()
-        transformer = transformer.to(device)
+    transformer = transformer.to(device)
 
     with torch.no_grad():
-        content_transform = ulyanov_et_al_2016_content_transform(
+        content_transform = _content_transform(
             impl_params=impl_params, instance_norm=instance_norm
         )
         content_transform = content_transform.to(device)
         input_image = content_transform(input_image)
-        postprocessor = ulyanov_et_al_2016_postprocessor()
+        postprocessor = _postprocessor()
         postprocessor = postprocessor.to(device)
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
@@ -173,7 +156,7 @@ def ulyanov_et_al_2016_stylization(
     return cast(torch.Tensor, output_image.detach())
 
 
-def ulyanov_et_al_2016_texture_synthesis(
+def texture_synthesis(
     input: Union[Tuple[int, int], torch.Tensor],
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
@@ -187,7 +170,7 @@ def ulyanov_et_al_2016_texture_synthesis(
 
     if isinstance(transformer, str):
         style = transformer
-        transformer = ulyanov_et_al_2016_transformer(
+        transformer = _transformer(
             style=style,
             impl_params=impl_params,
             instance_norm=instance_norm,
@@ -195,10 +178,10 @@ def ulyanov_et_al_2016_texture_synthesis(
         )
         if instance_norm or not impl_params:
             transformer = transformer.eval()
-        transformer = transformer.to(device)
+    transformer = transformer.to(device)
 
     with torch.no_grad():
-        postprocessor = ulyanov_et_al_2016_postprocessor()
+        postprocessor = _postprocessor()
         postprocessor = postprocessor.to(device)
         output_image = transformer(input)
         output_image = postprocessor(output_image)
