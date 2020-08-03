@@ -59,11 +59,7 @@ jobs:
         run: tox --notest
 
       - name: Run tests
-        env:
-          PYSTICHE_HUB_GITHUB: "$GITHUB_ACTOR/pystiche_papers:$GITHUB_HEAD_REF"
-        run: |
-          echo $PYSTICHE_HUB_GITHUB
-          tox -- --skip-large-download
+        run: tox -- tests/hub --skip-large-download
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1.0.7
