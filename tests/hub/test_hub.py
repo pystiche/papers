@@ -9,6 +9,11 @@ def entry_points():
 
 
 def test_hub_entrypoints(github, entry_points):
+    print("=" * 80)
+    print("#" * 80)
+    print(github)
+    print("#" * 80)
+    print("=" * 80)
     models = hub.list(github)
     assert set(models) == set(entry_points)
 
