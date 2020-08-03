@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from torch import hub
@@ -5,7 +7,7 @@ from torch import hub
 
 @pytest.fixture(scope="package")
 def github():
-    return "pmeier/pystiche_papers"
+    return os.getenv("PYSTICHE_HUB_GITHUB", default="pmeier/pystiche_papers:master")
 
 
 @pytest.fixture(scope="package", autouse=True)
