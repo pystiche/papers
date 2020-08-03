@@ -59,7 +59,7 @@ jobs:
         run: tox --notest
 
       - name: Run tests
-        run: tox -vvv -- tests/hub --skip-large-download -s
+        run: tox -- --skip-large-download
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1.0.7
