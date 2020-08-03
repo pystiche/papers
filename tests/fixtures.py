@@ -10,7 +10,6 @@ from .assets import read_image
 from .utils import create_guides
 
 __all__ = [
-    "cuda_init",
     "image_small_0",
     "image_small_1",
     "image_small_2",
@@ -32,12 +31,6 @@ __all__ = [
     "style_images_and_guides",
     "multi_layer_encoder_with_layer",
 ]
-
-
-@pytest.fixture(scope="session", autouse=True)
-def cuda_init():
-    if torch.cuda.is_available():
-        torch.empty(1, device="cuda")
 
 
 @pytest.fixture

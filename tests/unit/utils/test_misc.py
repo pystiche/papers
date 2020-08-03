@@ -207,15 +207,6 @@ def test_save_state_dict_module(subtests, tmpdir, conv2d_module):
     ptu.assert_allclose(torch.load(file), conv2d_module.state_dict())
 
 
-@pytest.fixture
-def cuda_device():
-    if not torch.cuda.is_available():
-        raise RuntimeError
-
-    ordinal = torch.cuda.current_device()
-    return torch.device("cuda", ordinal)
-
-
 @utils_.skip_if_cuda_not_available
 def test_save_state_dict_not_to_cpu(subtests, tmpdir, conv2d_module, cuda_device):
     module = conv2d_module.to(cuda_device)
