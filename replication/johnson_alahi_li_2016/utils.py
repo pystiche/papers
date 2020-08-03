@@ -2,8 +2,7 @@ import argparse
 import os
 from os import path
 
-from pystiche.image import read_image
-from pystiche.misc import get_device
+from pystiche import image, misc
 
 __all__ = [
     "make_description",
@@ -34,9 +33,7 @@ def make_name(prefix, style, impl_params, instance_norm):
 
 
 def make_transformer_name(style, impl_params, instance_norm):
-    return make_name(
-        "johnson_alahi_li_2016_transformer", style, impl_params, instance_norm
-    )
+    return make_name("transformer", style, impl_params, instance_norm)
 
 
 def read_local_or_builtin_image(root, name, builtin_images, **read_image_kwargs):
@@ -44,7 +41,7 @@ def read_local_or_builtin_image(root, name, builtin_images, **read_image_kwargs)
     if not path.abspath(file):
         file = path.join(root, name)
     if path.exists(file):
-        return read_image(file, **read_image_kwargs)
+        return image.read_image(file, **read_image_kwargs)
 
     return builtin_images[name].read(root, **read_image_kwargs)
 
@@ -124,7 +121,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def _process_device(self, args):
         if "device" in args:
-            args.device = get_device(args.device)
+            args.device = misc.get_device(args.device)
 
     def parse_args(self, args=None, namespace=None):
         args = super().parse_args(args=args, namespace=namespace)

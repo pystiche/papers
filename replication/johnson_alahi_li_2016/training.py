@@ -1,10 +1,5 @@
-from pystiche.optim import OptimLogger
-from pystiche_papers import johnson_alahi_li_2016 as paper
-from pystiche_papers.johnson_alahi_li_2016 import (
-    johnson_alahi_li_2016_dataset,
-    johnson_alahi_li_2016_image_loader,
-    johnson_alahi_li_2016_training,
-)
+import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche import optim
 from pystiche_papers.utils import save_state_dict
 from utils import (
     ArgumentParser,
@@ -15,10 +10,8 @@ from utils import (
 
 
 def main(args):
-    dataset = johnson_alahi_li_2016_dataset(
-        args.dataset_dir, impl_params=args.impl_params
-    )
-    content_image_loader = johnson_alahi_li_2016_image_loader(
+    dataset = paper.dataset(args.dataset_dir, impl_params=args.impl_params)
+    content_image_loader = paper.image_loader(
         dataset, pin_memory=str(args.device).startswith("cuda"),
     )
 
@@ -27,13 +20,13 @@ def main(args):
             args.images_source_dir, style, device=args.device
         )
 
-        transformer = johnson_alahi_li_2016_training(
+        transformer = paper.training(
             content_image_loader,
             style_image,
             impl_params=args.impl_params,
             instance_norm=args.instance_norm,
             quiet=args.quiet,
-            logger=OptimLogger(),
+            logger=optim.OptimLogger(),
         )
 
         model_name = make_transformer_name(style, args.impl_params, args.instance_norm)
@@ -41,9 +34,7 @@ def main(args):
 
 
 def read_style_image(root, style, **read_image_kwargs):
-    return read_local_or_builtin_image(
-        root, style, paper.johnson_alahi_li_2016_images(), **read_image_kwargs
-    )
+    return read_local_or_builtin_image(root, style, paper.images(), **read_image_kwargs)
 
 
 def parse_input():

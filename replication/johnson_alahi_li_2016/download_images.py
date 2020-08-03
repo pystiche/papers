@@ -1,11 +1,11 @@
 from torchvision.datasets.utils import download_and_extract_archive
 
-from pystiche_papers import johnson_alahi_li_2016 as paper
+import pystiche_papers.johnson_alahi_li_2016 as paper
 from utils import ArgumentParser, make_description
 
 
 def main(args):
-    paper.johnson_alahi_li_2016_images().download(args.images_source_dir)
+    paper.images().download(args.images_source_dir)
 
     if args.no_dataset:
         return

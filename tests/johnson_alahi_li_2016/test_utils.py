@@ -3,23 +3,23 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
-from pystiche.enc import VGGMultiLayerEncoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
-from pystiche_papers.johnson_alahi_li_2016 import utils
+import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche import enc
+from pystiche.image import transforms
 
 
-def test_johnson_alahi_li_2016_preprocessor():
-    assert isinstance(utils.johnson_alahi_li_2016_preprocessor(), CaffePreprocessing)
+def test_preprocessor():
+    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
 
 
-def test_johnson_alahi_li_2016_postprocessor():
-    assert isinstance(utils.johnson_alahi_li_2016_postprocessor(), CaffePostprocessing)
+def test_postprocessor():
+    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
 
 
 @pytest.mark.slow
-def test_johnson_alahi_li_2016_multi_layer_encoder(subtests):
-    multi_layer_encoder = utils.johnson_alahi_li_2016_multi_layer_encoder()
-    assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
+def test_multi_layer_encoder(subtests):
+    multi_layer_encoder = paper.multi_layer_encoder()
+    assert isinstance(multi_layer_encoder, enc.VGGMultiLayerEncoder)
 
     with subtests.test("internal preprocessing"):
         assert "preprocessing" not in multi_layer_encoder
@@ -33,10 +33,10 @@ def test_johnson_alahi_li_2016_multi_layer_encoder(subtests):
         assert all(module.inplace for module in relu_modules)
 
 
-def test_johnson_alahi_li_2016_optimizer(subtests, input_image):
+def test_optimizer(subtests, input_image):
     transformer = nn.Conv2d(3, 3, 1)
     params = tuple(transformer.parameters())
-    optimizer = utils.johnson_alahi_li_2016_optimizer(transformer)
+    optimizer = paper.optimizer(transformer)
 
     assert isinstance(optimizer, optim.Adam)
     assert len(optimizer.param_groups) == 1

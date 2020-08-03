@@ -3,22 +3,17 @@ from typing import Any, Dict, Optional, Sequence, Union
 import torch
 
 import pystiche.ops.functional as F
-from pystiche.enc import Encoder, MultiLayerEncoder
-from pystiche.loss import PerceptualLoss
-from pystiche.ops import (
-    FeatureReconstructionOperator,
-    GramOperator,
-    MultiLayerEncodingOperator,
-    TotalVariationOperator,
-)
+from pystiche import enc, loss, ops
 
-from .utils import johnson_alahi_li_2016_multi_layer_encoder
+from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
-    "johnson_alahi_li_2016_content_loss",
-    "johnson_alahi_li_2016_style_loss",
-    "johnson_alahi_li_2016_regularization",
-    "johnson_alahi_li_2016_perceptual_loss",
+    "content_loss",
+    "GramOperator",
+    "style_loss",
+    "TotalVariationOperator",
+    "regularization",
+    "perceptual_loss",
 ]
 
 
@@ -35,29 +30,27 @@ def get_content_score_weight(instance_norm: bool, style: Optional[str] = None) -
         return default_score_weight
 
 
-def johnson_alahi_li_2016_content_loss(
+def content_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     style: Optional[str] = None,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layer: str = "relu2_2",
     score_weight: Optional[float] = None,
-) -> FeatureReconstructionOperator:
+) -> ops.FeatureReconstructionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = johnson_alahi_li_2016_multi_layer_encoder(
-            impl_params=impl_params
-        )
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     if score_weight is None:
         score_weight = get_content_score_weight(instance_norm, style=style)
 
-    return FeatureReconstructionOperator(encoder, score_weight=score_weight)
+    return ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
 
 
-class JohnsonAlahiLi2016GramOperator(GramOperator):
+class GramOperator(ops.GramOperator):
     def __init__(
-        self, encoder: Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
+        self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
     ) -> None:
         super().__init__(encoder, **gram_op_kwargs)
         self.normalize_by_num_channels = impl_params
@@ -89,20 +82,18 @@ def get_style_score_weight(
             return 5.0
 
 
-def johnson_alahi_li_2016_style_loss(
+def style_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     style: Optional[str] = None,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
     **gram_op_kwargs: Any,
-) -> MultiLayerEncodingOperator:
+) -> ops.MultiLayerEncodingOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = johnson_alahi_li_2016_multi_layer_encoder(
-            impl_params=impl_params
-        )
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if layers is None:
         layers = ("relu1_2", "relu2_2", "relu3_3", "relu4_3")
@@ -110,14 +101,10 @@ def johnson_alahi_li_2016_style_loss(
     if score_weight is None:
         score_weight = get_style_score_weight(impl_params, instance_norm, style=style)
 
-    def get_encoding_op(
-        encoder: Encoder, layer_weight: float
-    ) -> JohnsonAlahiLi2016GramOperator:
-        return JohnsonAlahiLi2016GramOperator(
-            encoder, score_weight=layer_weight, **gram_op_kwargs
-        )
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
+        return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
-    return MultiLayerEncodingOperator(
+    return ops.MultiLayerEncodingOperator(
         multi_layer_encoder,
         layers,
         get_encoding_op,
@@ -126,7 +113,7 @@ def johnson_alahi_li_2016_style_loss(
     )
 
 
-class JohnsonAlahiLi2016TotalVariationOperator(TotalVariationOperator):
+class TotalVariationOperator(ops.TotalVariationOperator):
     def __init__(self, **total_variation_op_kwargs: Any) -> None:
         super().__init__(**total_variation_op_kwargs)
 
@@ -168,36 +155,34 @@ def get_regularization_score_weight(
         return default_score_weight
 
 
-def johnson_alahi_li_2016_regularization(
+def regularization(
     instance_norm: bool = True,
     style: Optional[str] = None,
     score_weight: Optional[float] = None,
     **total_variation_op_kwargs: Any,
-) -> JohnsonAlahiLi2016TotalVariationOperator:
+) -> TotalVariationOperator:
     if score_weight is None:
         score_weight = get_regularization_score_weight(instance_norm, style=style)
-    return JohnsonAlahiLi2016TotalVariationOperator(
+    return TotalVariationOperator(
         score_weight=score_weight, **total_variation_op_kwargs
     )
 
 
-def johnson_alahi_li_2016_perceptual_loss(
+def perceptual_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     style: Optional[str] = None,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
     total_variation_kwargs: Optional[Dict[str, Any]] = None,
-) -> PerceptualLoss:
+) -> loss.PerceptualLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = johnson_alahi_li_2016_multi_layer_encoder(
-            impl_params=impl_params
-        )
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if content_loss_kwargs is None:
         content_loss_kwargs = {}
-    content_loss = johnson_alahi_li_2016_content_loss(
+    content_loss_ = content_loss(
         impl_params=impl_params,
         instance_norm=instance_norm,
         style=style,
@@ -207,7 +192,7 @@ def johnson_alahi_li_2016_perceptual_loss(
 
     if style_loss_kwargs is None:
         style_loss_kwargs = {}
-    style_loss = johnson_alahi_li_2016_style_loss(
+    style_loss_ = style_loss(
         impl_params=impl_params,
         instance_norm=instance_norm,
         style=style,
@@ -217,8 +202,8 @@ def johnson_alahi_li_2016_perceptual_loss(
 
     if total_variation_kwargs is None:
         total_variation_kwargs = {}
-    regularization = johnson_alahi_li_2016_regularization(
+    regularization_ = regularization(
         instance_norm=instance_norm, style=style, **total_variation_kwargs
     )
 
-    return PerceptualLoss(content_loss, style_loss, regularization=regularization)
+    return loss.PerceptualLoss(content_loss_, style_loss_, regularization_)

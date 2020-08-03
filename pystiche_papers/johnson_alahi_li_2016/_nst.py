@@ -6,46 +6,30 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
 import pystiche
-from pystiche.loss import PerceptualLoss
-from pystiche.misc import get_device
-from pystiche.optim import OptimLogger, default_transformer_optim_loop
+from pystiche import loss, misc, optim
 
 from ..utils import batch_up_image
-from .data import (
-    johnson_alahi_li_2016_dataset,
-    johnson_alahi_li_2016_image_loader,
-    johnson_alahi_li_2016_images,
-    johnson_alahi_li_2016_style_transform,
-)
-from .loss import johnson_alahi_li_2016_perceptual_loss
-from .modules import johnson_alahi_li_2016_transformer
-from .utils import (
-    johnson_alahi_li_2016_optimizer,
-    johnson_alahi_li_2016_postprocessor,
-    johnson_alahi_li_2016_preprocessor,
-)
+from ._data import images as _images
+from ._data import style_transform as _style_transform
+from ._loss import perceptual_loss
+from ._modules import transformer as _transformer
+from ._utils import optimizer as _optimizer
+from ._utils import postprocessor as _postprocessor
+from ._utils import preprocessor as _preprocessor
 
-__all__ = [
-    "johnson_alahi_li_2016_transformer",
-    "johnson_alahi_li_2016_perceptual_loss",
-    "johnson_alahi_li_2016_dataset",
-    "johnson_alahi_li_2016_image_loader",
-    "johnson_alahi_li_2016_training",
-    "johnson_alahi_li_2016_images",
-    "johnson_alahi_li_2016_stylization",
-]
+__all__ = ["training", "stylization"]
 
 
-def johnson_alahi_li_2016_training(
+def training(
     content_image_loader: DataLoader,
     style_image: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: Optional[bool] = None,
     transformer: Optional[nn.Module] = None,
-    criterion: Optional[PerceptualLoss] = None,
+    criterion: Optional[loss.PerceptualLoss] = None,
     optimizer: Optional[Optimizer] = None,
     quiet: bool = False,
-    logger: Optional[OptimLogger] = None,
+    logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
@@ -56,31 +40,29 @@ def johnson_alahi_li_2016_training(
         style = None
     else:
         style = style_image
-        device = get_device()
-        images = johnson_alahi_li_2016_images()
+        device = misc.get_device()
+        images = _images()
         style_image = images[style_image].read(device=device)
 
     if instance_norm is None:
         instance_norm = impl_params
 
     if transformer is None:
-        transformer = johnson_alahi_li_2016_transformer(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
+        transformer = _transformer(impl_params=impl_params, instance_norm=instance_norm)
         transformer = transformer.train()
     transformer = transformer.to(device)
 
     if criterion is None:
-        criterion = johnson_alahi_li_2016_perceptual_loss(
+        criterion = perceptual_loss(
             impl_params=impl_params, instance_norm=instance_norm, style=style
         )
         criterion = criterion.eval()
     criterion = criterion.to(device)
 
     if optimizer is None:
-        optimizer = johnson_alahi_li_2016_optimizer(transformer)
+        optimizer = _optimizer(transformer)
 
-    style_transform = johnson_alahi_li_2016_style_transform(
+    style_transform = _style_transform(
         impl_params=impl_params, instance_norm=instance_norm, style=style
     )
     style_transform = style_transform.to(device)
@@ -88,16 +70,16 @@ def johnson_alahi_li_2016_training(
     style_image = batch_up_image(style_image, loader=content_image_loader)
 
     if impl_params:
-        preprocessor = johnson_alahi_li_2016_preprocessor()
+        preprocessor = _preprocessor()
         preprocessor = preprocessor.to(device)
         style_image = preprocessor(style_image)
 
     criterion.set_style_image(style_image)
 
     def criterion_update_fn(input_image: torch.Tensor, criterion: nn.Module) -> None:
-        cast(PerceptualLoss, criterion).set_content_image(input_image)
+        cast(loss.PerceptualLoss, criterion).set_content_image(input_image)
 
-    return default_transformer_optim_loop(
+    return optim.default_transformer_optim_loop(
         content_image_loader,
         transformer,
         criterion,
@@ -109,7 +91,7 @@ def johnson_alahi_li_2016_training(
     )
 
 
-def johnson_alahi_li_2016_stylization(
+def stylization(
     input_image: torch.Tensor,
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
@@ -125,7 +107,7 @@ def johnson_alahi_li_2016_stylization(
 
     if isinstance(transformer, str):
         style = transformer
-        transformer = johnson_alahi_li_2016_transformer(
+        transformer = _transformer(
             style=style,
             framework=framework,
             impl_params=impl_params,
@@ -135,10 +117,10 @@ def johnson_alahi_li_2016_stylization(
     transformer = transformer.to(device)
 
     if impl_params and preprocessor is None:
-        preprocessor = johnson_alahi_li_2016_preprocessor()
+        preprocessor = _preprocessor()
 
     if impl_params and postprocessor is None:
-        postprocessor = johnson_alahi_li_2016_postprocessor()
+        postprocessor = _postprocessor()
 
     with torch.no_grad():
         if preprocessor is not None:

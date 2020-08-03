@@ -37,7 +37,7 @@ def main(root="."):
 
             style = path.splitext(path.basename(input_file))[0]
             name_parts = [
-                "johnson_alahi_li_2016_transformer",
+                "transformer",
                 style,
                 "impl_params",
             ]

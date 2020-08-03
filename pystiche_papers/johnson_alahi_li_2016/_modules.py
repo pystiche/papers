@@ -4,20 +4,21 @@ from os import path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
-from torch import nn
-from torchvision.models.utils import load_state_dict_from_url
+from torch import hub, nn
 
 import pystiche
 
 from ..utils import ResidualBlock, same_size_output_padding, same_size_padding
 
 __all__ = [
-    "johnson_alahi_li_2016_conv_block",
-    "johnson_alahi_li_2016_residual_block",
-    "johnson_alahi_li_2016_transformer_encoder",
-    "johnson_alahi_li_2016_transformer_decoder",
-    "JohnsonAlahiLi2016Transformer",
-    "johnson_alahi_li_2016_transformer",
+    "conv",
+    "norm",
+    "conv_block",
+    "residual_block",
+    "encoder",
+    "decoder",
+    "Transformer",
+    "transformer",
 ]
 
 
@@ -56,7 +57,7 @@ def select_url(
         raise RuntimeError(msg)
 
 
-def get_conv(
+def conv(
     in_channels: int,
     out_channels: int,
     kernel_size: Union[Tuple[int, int], int],
@@ -84,7 +85,7 @@ def get_conv(
         )
 
 
-def get_norm(
+def norm(
     out_channels: int, instance_norm: bool
 ) -> Union[nn.BatchNorm2d, nn.InstanceNorm2d]:
     norm_kwargs: Dict[str, Any] = {
@@ -99,7 +100,7 @@ def get_norm(
         return nn.BatchNorm2d(out_channels, **norm_kwargs)
 
 
-def johnson_alahi_li_2016_conv_block(
+def conv_block(
     in_channels: int,
     out_channels: int,
     kernel_size: Union[Tuple[int, int], int],
@@ -111,7 +112,7 @@ def johnson_alahi_li_2016_conv_block(
     instance_norm: bool = True,
 ) -> nn.Sequential:
     modules: List[nn.Module] = [
-        get_conv(
+        conv(
             in_channels,
             out_channels,
             kernel_size,
@@ -119,20 +120,20 @@ def johnson_alahi_li_2016_conv_block(
             padding=padding,
             upsample=upsample,
         ),
-        get_norm(out_channels, instance_norm),
+        norm(out_channels, instance_norm),
     ]
     if relu:
         modules.append(nn.ReLU(inplace=inplace))
     return nn.Sequential(*modules)
 
 
-def johnson_alahi_li_2016_residual_block(
+def residual_block(
     channels: int, inplace: bool = True, instance_norm: bool = True,
 ) -> ResidualBlock:
     in_channels = out_channels = channels
     kernel_size = 3
     residual = nn.Sequential(
-        johnson_alahi_li_2016_conv_block(
+        conv_block(
             in_channels,
             out_channels,
             kernel_size,
@@ -141,7 +142,7 @@ def johnson_alahi_li_2016_residual_block(
             inplace=inplace,
             instance_norm=instance_norm,
         ),
-        johnson_alahi_li_2016_conv_block(
+        conv_block(
             in_channels,
             out_channels,
             kernel_size,
@@ -161,51 +162,43 @@ def johnson_alahi_li_2016_residual_block(
     return ResidualBlock(residual, shortcut)
 
 
-def johnson_alahi_li_2016_transformer_encoder(
-    instance_norm: bool = True,
-) -> pystiche.SequentialModule:
+def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
+    return num_channels if not instance_norm else num_channels // 2
+
+
+def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
     modules = (
         nn.ReflectionPad2d(40),
-        johnson_alahi_li_2016_conv_block(
+        conv_block(
             in_channels=3,
-            out_channels=16 if instance_norm else 32,
+            out_channels=maybe_fix_num_channels(32, instance_norm),
             kernel_size=9,
             instance_norm=instance_norm,
         ),
-        johnson_alahi_li_2016_conv_block(
-            in_channels=16 if instance_norm else 32,
-            out_channels=32 if instance_norm else 64,
+        conv_block(
+            in_channels=maybe_fix_num_channels(32, instance_norm),
+            out_channels=maybe_fix_num_channels(64, instance_norm),
             kernel_size=3,
             stride=2,
             instance_norm=instance_norm,
         ),
-        johnson_alahi_li_2016_conv_block(
-            in_channels=32 if instance_norm else 64,
-            out_channels=64 if instance_norm else 128,
+        conv_block(
+            in_channels=maybe_fix_num_channels(64, instance_norm),
+            out_channels=maybe_fix_num_channels(128, instance_norm),
             kernel_size=3,
             stride=2,
             instance_norm=instance_norm,
         ),
-        johnson_alahi_li_2016_residual_block(
-            channels=64 if instance_norm else 128, instance_norm=instance_norm,
-        ),
-        johnson_alahi_li_2016_residual_block(
-            channels=64 if instance_norm else 128, instance_norm=instance_norm,
-        ),
-        johnson_alahi_li_2016_residual_block(
-            channels=64 if instance_norm else 128, instance_norm=instance_norm,
-        ),
-        johnson_alahi_li_2016_residual_block(
-            channels=64 if instance_norm else 128, instance_norm=instance_norm,
-        ),
-        johnson_alahi_li_2016_residual_block(
-            channels=64 if instance_norm else 128, instance_norm=instance_norm,
-        ),
+        residual_block(channels=maybe_fix_num_channels(128, instance_norm)),
+        residual_block(channels=maybe_fix_num_channels(128, instance_norm)),
+        residual_block(channels=maybe_fix_num_channels(128, instance_norm)),
+        residual_block(channels=maybe_fix_num_channels(128, instance_norm)),
+        residual_block(channels=maybe_fix_num_channels(128, instance_norm)),
     )
     return pystiche.SequentialModule(*modules)
 
 
-def johnson_alahi_li_2016_transformer_decoder(
+def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
     def get_value_range_delimiter() -> nn.Module:
@@ -227,24 +220,24 @@ def johnson_alahi_li_2016_transformer_decoder(
         return ValueRangeDelimiter()
 
     modules = (
-        johnson_alahi_li_2016_conv_block(
-            in_channels=64 if instance_norm else 128,
-            out_channels=32 if instance_norm else 64,
+        conv_block(
+            in_channels=maybe_fix_num_channels(128, instance_norm),
+            out_channels=maybe_fix_num_channels(64, instance_norm),
             kernel_size=3,
             stride=2,
             upsample=True,
             instance_norm=instance_norm,
         ),
-        johnson_alahi_li_2016_conv_block(
-            in_channels=32 if instance_norm else 64,
-            out_channels=16 if instance_norm else 32,
+        conv_block(
+            in_channels=maybe_fix_num_channels(64, instance_norm),
+            out_channels=maybe_fix_num_channels(32, instance_norm),
             kernel_size=3,
             stride=2,
             upsample=True,
             instance_norm=instance_norm,
         ),
         nn.Conv2d(
-            in_channels=16 if instance_norm else 32,
+            in_channels=maybe_fix_num_channels(32, instance_norm),
             out_channels=3,
             kernel_size=9,
             padding=same_size_padding(kernel_size=9),
@@ -255,7 +248,7 @@ def johnson_alahi_li_2016_transformer_decoder(
     return pystiche.SequentialModule(*modules)
 
 
-class JohnsonAlahiLi2016Transformer(nn.Module):
+class Transformer(nn.Module):
     def __init__(
         self,
         impl_params: bool = True,
@@ -263,12 +256,8 @@ class JohnsonAlahiLi2016Transformer(nn.Module):
         init_weights: bool = True,
     ):
         super().__init__()
-        self.encoder = johnson_alahi_li_2016_transformer_encoder(
-            instance_norm=instance_norm
-        )
-        self.decoder = johnson_alahi_li_2016_transformer_decoder(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
+        self.encoder = encoder(instance_norm=instance_norm)
+        self.decoder = decoder(impl_params=impl_params, instance_norm=instance_norm)
         if init_weights:
             self.init_weights()
 
@@ -290,12 +279,12 @@ class JohnsonAlahiLi2016Transformer(nn.Module):
         return cast(torch.Tensor, self.decoder(self.encoder(x)))
 
 
-def johnson_alahi_li_2016_transformer(
+def transformer(
     style: Optional[str] = None,
     framework: str = "pystiche",
     impl_params: bool = True,
     instance_norm: bool = True,
-) -> JohnsonAlahiLi2016Transformer:
+) -> Transformer:
     r"""Pretrained transformer from "Perceptual Losses for Real-Time Style Transfer and
     Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
 
@@ -346,11 +335,11 @@ def johnson_alahi_li_2016_transformer(
         raise RuntimeError
 
     init_weights = style is None
-    transformer = JohnsonAlahiLi2016Transformer(
+    transformer_ = Transformer(
         impl_params=impl_params, instance_norm=instance_norm, init_weights=init_weights
     )
     if init_weights:
-        return transformer
+        return transformer_
 
     url = select_url(
         framework=framework,
@@ -358,6 +347,6 @@ def johnson_alahi_li_2016_transformer(
         impl_params=impl_params,
         instance_norm=instance_norm,
     )
-    state_dict = load_state_dict_from_url(url)
-    transformer.load_state_dict(state_dict)
-    return transformer
+    state_dict = hub.load_state_dict_from_url(url)
+    transformer_.load_state_dict(state_dict)
+    return transformer_
