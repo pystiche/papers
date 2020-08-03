@@ -1,0 +1,18 @@
+name: tests
+
+on:
+  pull_request:
+    paths:
+      - "gha-env-vars.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Environment variables
+        run: |
+          echo GITHUB_ACTOR $GITHUB_ACTOR
+          echo GITHUB_REPOSITORY $ GITHUB_REPOSITORY
+          echo GITHUB_REF $GITHUB_REF
+          echo branch ${GITHUB_REF##*/}
