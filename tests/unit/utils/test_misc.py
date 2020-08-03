@@ -12,8 +12,8 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche.optim import OptimLogger
 from pystiche_papers import utils
-
-from .._utils import skip_if_cuda_not_available
+from tests import assets
+from tests import utils as utils_
 
 
 def test_same_size_padding():
@@ -184,8 +184,7 @@ def test_make_reproducible_no_standard_library(mocker):
 
 
 def test_get_sha256_hash():
-    here = path.abspath(path.dirname(__file__))
-    file = path.join(here, "..", "_assets", "images", "small_0.png")
+    file = path.join(assets.root(), "images", "small_0.png")
     actual = utils.get_sha256_hash(file)
     desired = "a2c1cc785a1b94eaa853ca13cc9314cc08f99ca2a746a3fa3a713a65dc2cfe05"
     assert actual == desired
@@ -217,7 +216,7 @@ def cuda_device():
     return torch.device("cuda", ordinal)
 
 
-@skip_if_cuda_not_available
+@utils_.skip_if_cuda_not_available
 def test_save_state_dict_not_to_cpu(subtests, tmpdir, conv2d_module, cuda_device):
     module = conv2d_module.to(cuda_device)
 

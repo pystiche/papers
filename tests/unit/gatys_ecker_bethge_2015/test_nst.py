@@ -6,7 +6,7 @@ import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
-from tests._utils import is_callable
+from tests.utils import is_callable
 
 
 def test_nst_smoke(subtests, mocker, content_image, style_image):

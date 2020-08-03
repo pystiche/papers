@@ -2,8 +2,6 @@ import contextlib
 import os
 import shutil
 import tempfile
-from importlib import util
-from os import path
 
 import pytest
 
@@ -11,12 +9,7 @@ import torch
 
 from pystiche import image
 
-__all__ = [
-    "get_tempdir",
-    "skip_if_cuda_not_available",
-    "load_module",
-    "is_callable",
-]
+__all__ = ["get_tempdir", "skip_if_cuda_not_available", "is_callable", "create_guides"]
 
 
 # Copied from
@@ -54,18 +47,6 @@ def get_tempdir(**mkdtemp_kwargs):
 skip_if_cuda_not_available = pytest.mark.skipif(
     not torch.cuda.is_available(), reason="CUDA is not available."
 )
-
-
-def load_module(location):
-    name, ext = path.splitext(path.basename(location))
-    is_package = ext != ".py"
-    if is_package:
-        location = path.join(location, "__init__.py")
-
-    spec = util.spec_from_file_location(name, location=location)
-    module = util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 def is_callable(obj):

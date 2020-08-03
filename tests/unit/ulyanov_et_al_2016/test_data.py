@@ -11,8 +11,7 @@ from pystiche.data import ImageFolderDataset
 from pystiche.image import transforms
 from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
-
-from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 def test_content_transform(subtests, content_image):

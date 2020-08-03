@@ -1,6 +1,6 @@
 import pytest
 
-from ._fixtures import *
+from .fixtures import *
 
 
 class MarkConfig:

@@ -6,8 +6,8 @@ from torch import nn
 from pystiche.enc import MultiLayerEncoder
 from pystiche.image import make_single_image
 
-from ._assets import read_image
-from ._utils import create_guides
+from .assets import read_image
+from .utils import create_guides
 
 __all__ = [
     "cuda_init",

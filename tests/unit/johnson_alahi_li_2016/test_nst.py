@@ -5,18 +5,16 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
-from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche.image.transforms.functional as F
-import pystiche_papers.ulyanov_et_al_2016 as paper
+import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche_papers import utils
-
-from .._utils import is_callable
+from tests.utils import is_callable
 
 
 def make_patch_target(name):
-    return ".".join(("pystiche_papers", "ulyanov_et_al_2016", "_nst", name))
+    return ".".join(("pystiche_papers", "johnson_alahi_li_2016", "_nst", name))
 
 
 def attach_method_mock(mock, method, **attrs):
@@ -72,14 +70,7 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 @pytest.fixture
 def optimizer_mocks(mocker, patcher):
     mock = mocker.Mock()
-    patch = patcher("optimizer", return_value=mock)
-    return patch, mock
-
-
-@pytest.fixture
-def lr_scheduler_mocks(mocker, patcher):
-    mock = mocker.Mock()
-    patch = patcher("_lr_scheduler", return_value=mock)
+    patch = patcher("_optimizer", return_value=mock)
     return patch, mock
 
 
@@ -108,13 +99,6 @@ def images_patch(mocker, content_image, style_image):
 
 
 @pytest.fixture
-def content_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
-    patch = patcher("_content_transform", return_value=mock)
-    return patch, mock
-
-
-@pytest.fixture
 def style_transforms_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
     patch = patcher("_style_transform", return_value=mock)
@@ -138,14 +122,12 @@ def perceptual_loss_mocks(make_nn_module_mock, patcher):
 
 
 @pytest.fixture
-def default_transformer_epoch_optim_loop_patch(patcher):
+def default_transformer_optim_loop_patch(patcher):
     def side_effect(_, transformer, *args, **kwargs):
         return transformer
 
     return patcher(
-        "optim.default_transformer_epoch_optim_loop",
-        prefix=False,
-        side_effect=side_effect,
+        "optim.default_transformer_optim_loop", prefix=False, side_effect=side_effect
     )
 
 
@@ -160,7 +142,7 @@ def reset_mocks(*mocks):
 
 
 @pytest.fixture
-def training(default_transformer_epoch_optim_loop_patch, image_loader, style_image):
+def training(default_transformer_optim_loop_patch, image_loader, style_image):
     def training_(image_loader_=None, style_image_=None, **kwargs):
         if image_loader_ is None:
             image_loader_ = image_loader
@@ -168,8 +150,8 @@ def training(default_transformer_epoch_optim_loop_patch, image_loader, style_ima
             style_image_ = style_image
         output = paper.training(image_loader_, style_image_, **kwargs)
 
-        default_transformer_epoch_optim_loop_patch.assert_called_once()
-        args, kwargs = default_transformer_epoch_optim_loop_patch.call_args
+        default_transformer_optim_loop_patch.assert_called_once()
+        args, kwargs = default_transformer_optim_loop_patch.call_args
 
         return args, kwargs, output
 
@@ -179,8 +161,8 @@ def training(default_transformer_epoch_optim_loop_patch, image_loader, style_ima
 @pytest.mark.slow
 def test_training_smoke(subtests, training, image_loader):
     args, kwargs, output = training(image_loader)
-    content_image_loader, transformer, criterion, criterion_update_fn, num_epochs = args
-    lr_scheduler = kwargs["lr_scheduler"]
+    content_image_loader, transformer, criterion, criterion_update_fn = args
+    optimizer = kwargs["optimizer"]
 
     with subtests.test("content_image_loader"):
         assert content_image_loader is image_loader
@@ -191,25 +173,51 @@ def test_training_smoke(subtests, training, image_loader):
     with subtests.test("criterion"):
         assert isinstance(criterion, type(paper.perceptual_loss()))
 
-    with subtests.test("num_epochs"):
-        assert isinstance(num_epochs, int)
-
     with subtests.test("criterion_update_fn"):
         assert is_callable(criterion_update_fn)
 
-    with subtests.test("lr_scheduler"):
-        assert isinstance(lr_scheduler, ExponentialLR)
-        assert isinstance(lr_scheduler.optimizer, type(paper.optimizer(transformer)))
+    with subtests.test("optimizer"):
+        assert isinstance(optimizer, type(paper.optimizer(transformer)))
 
     with subtests.test("output"):
         assert output is transformer
+
+
+def test_training_instance_norm(
+    subtests,
+    preprocessor_mocks,
+    optimizer_mocks,
+    style_transforms_mocks,
+    transformer_mocks,
+    perceptual_loss_mocks,
+    default_transformer_optim_loop_patch,
+    training,
+):
+    mocks = (transformer_mocks[0], perceptual_loss_mocks[0], style_transforms_mocks[0])
+
+    for impl_params, instance_norm in itertools.product(
+        (True, False), (True, False, None)
+    ):
+        reset_mocks(*mocks, default_transformer_optim_loop_patch)
+        training(impl_params=impl_params, instance_norm=instance_norm)
+
+        for mock in mocks:
+            with subtests.test(
+                mock.name, impl_params=impl_params, instance_norm=instance_norm
+            ):
+                mock.assert_called_once()
+
+                _, kwargs = mock.call_args
+                if instance_norm is None:
+                    assert kwargs["instance_norm"] is impl_params
+                else:
+                    assert kwargs["instance_norm"] is instance_norm
 
 
 def test_training_device(
     subtests,
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     perceptual_loss_mocks,
@@ -233,7 +241,6 @@ def test_training_device(
 def test_training_transformer_train(
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     perceptual_loss_mocks,
@@ -245,10 +252,52 @@ def test_training_transformer_train(
     transformer.train.assert_called_once_with()
 
 
+def test_training_style_image_tensor(
+    subtests,
+    preprocessor_mocks,
+    optimizer_mocks,
+    style_transforms_mocks,
+    transformer_mocks,
+    perceptual_loss_mocks,
+    training,
+):
+    training()
+
+    for mocks in (perceptual_loss_mocks, style_transforms_mocks):
+        patch, _ = mocks
+        with subtests.test(patch.name):
+            patch.assert_called_once()
+
+            _, kwargs = patch.call_args
+            assert kwargs["style"] is None
+
+
+def test_training_style_image_str(
+    subtests,
+    preprocessor_mocks,
+    optimizer_mocks,
+    images_patch,
+    style_transforms_mocks,
+    transformer_mocks,
+    perceptual_loss_mocks,
+    training,
+):
+    style = "style"
+
+    training(style_image_=style)
+
+    for mocks in (perceptual_loss_mocks, style_transforms_mocks):
+        patch, _ = mocks
+        with subtests.test(patch.name):
+            patch.assert_called_once()
+
+            _, kwargs = patch.call_args
+            assert kwargs["style"] == style
+
+
 def test_training_criterion_eval(
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     perceptual_loss_mocks,
@@ -260,36 +309,9 @@ def test_training_criterion_eval(
     criterion.eval.assert_called_once_with()
 
 
-def test_training_num_epochs(
-    subtests,
-    preprocessor_mocks,
-    optimizer_mocks,
-    lr_scheduler_mocks,
-    style_transforms_mocks,
-    transformer_mocks,
-    perceptual_loss_mocks,
-    training,
-    default_transformer_epoch_optim_loop_patch,
-):
-    mocks = (
-        lr_scheduler_mocks[0],
-        transformer_mocks[0],
-        perceptual_loss_mocks[0],
-        style_transforms_mocks[0],
-    )
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            reset_mocks(*mocks, default_transformer_epoch_optim_loop_patch)
-            args, _, _ = training(impl_params=impl_params, instance_norm=instance_norm)
-            _, _, _, _, num_epochs = args
-
-            assert num_epochs == 10 if not (impl_params or instance_norm) else 25
-
-
 def test_training_criterion_content_image(
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     training,
@@ -303,7 +325,6 @@ def test_training_criterion_content_image(
 def test_training_criterion_style_image(
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     training,
@@ -324,26 +345,45 @@ def test_training_criterion_style_image(
     )
 
 
+def test_training_criterion_style_image_no_preprocessing(
+    preprocessor_mocks,
+    optimizer_mocks,
+    style_transforms_mocks,
+    transformer_mocks,
+    training,
+    image_loader,
+    style_image,
+):
+    _, style_transform = style_transforms_mocks
+
+    args, _, _ = training(image_loader, style_image, impl_params=False)
+    criterion = args[2]
+
+    ptu.assert_allclose(
+        criterion.style_loss.get_target_image(),
+        style_transform(utils.batch_up_image(style_image, image_loader.batch_size)),
+    )
+
+
 def test_training_criterion_update_fn(
     preprocessor_mocks,
     optimizer_mocks,
-    lr_scheduler_mocks,
     style_transforms_mocks,
     transformer_mocks,
     training,
     content_image,
 ):
     args, _, _ = training()
-    _, _, criterion, criterion_update_fn, _ = args
+    _, _, criterion, criterion_update_fn = args
 
     assert not criterion.content_loss.has_target_image
 
     criterion_update_fn(content_image, criterion)
     assert criterion.content_loss.has_target_image
-    ptu.assert_allclose(criterion.content_loss.target_image, content_image - 0.5)
+    ptu.assert_allclose(criterion.content_loss.target_image, content_image)
 
 
-def test_training_lr_scheduler_optimizer(
+def test_training_optimizer(
     preprocessor_mocks, style_transforms_mocks, transformer_mocks, training,
 ):
     parameter = torch.empty(1)
@@ -351,8 +391,7 @@ def test_training_lr_scheduler_optimizer(
     attach_method_mock(transformer_mock, "parameters", return_value=iter((parameter,)))
 
     _, kwargs, _ = training()
-    lr_scheduler = kwargs["lr_scheduler"]
-    optimizer = lr_scheduler.optimizer
+    optimizer = kwargs["optimizer"]
 
     assert len(optimizer.param_groups) == 1
 
@@ -388,17 +427,15 @@ def stylization(input_image, transformer_mocks):
     return stylization_
 
 
-def test_stylization_smoke(
-    stylization, postprocessor_mocks, content_transforms_mocks, input_image
-):
+def test_stylization_smoke(stylization, input_image):
     _, _, output_image = stylization(input_image)
-    ptu.assert_allclose(output_image, F.rescale(input_image, 2.0) + 0.5, rtol=1e-6)
+    ptu.assert_allclose(output_image, input_image, rtol=1e-6)
 
 
 def test_stylization_device(
     subtests,
+    preprocessor_mocks,
     postprocessor_mocks,
-    content_transforms_mocks,
     transformer_mocks,
     stylization,
     input_image,
@@ -406,8 +443,8 @@ def test_stylization_device(
     stylization(input_image)
 
     for mocks in (
+        preprocessor_mocks,
         postprocessor_mocks,
-        content_transforms_mocks,
         transformer_mocks,
     ):
         _, mock = mocks
@@ -416,21 +453,76 @@ def test_stylization_device(
             mock.assert_called_once_with(input_image.device)
 
 
-def test_stylization_transformer_eval(
+def test_stylization_instance_norm(
     subtests,
     preprocessor_mocks,
     postprocessor_mocks,
-    content_transforms_mocks,
     transformer_mocks,
     stylization,
     input_image,
 ):
+    transformer_patch, _ = transformer_mocks
+    for impl_params, instance_norm in itertools.product(
+        (True, False), (True, False, None)
+    ):
+        reset_mocks(transformer_patch)
+        stylization(input_image, impl_params=impl_params, instance_norm=instance_norm)
+
+        with subtests.test(
+            transformer_patch.name, impl_params=impl_params, instance_norm=instance_norm
+        ):
+            transformer_patch.assert_called_once()
+
+            _, kwargs = transformer_patch.call_args
+            if instance_norm is None:
+                assert kwargs["instance_norm"] is impl_params
+            else:
+                assert kwargs["instance_norm"] is instance_norm
+
+
+def test_stylization_transformer_eval(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, stylization
+):
     _, transformer = transformer_mocks
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            reset_mocks(transformer)
-            stylization(
-                input_image, impl_params=impl_params, instance_norm=instance_norm
-            )
-            if instance_norm or not impl_params:
-                transformer.eval.assert_called_once_with()
+    stylization()
+
+    transformer.eval.assert_called_once_with()
+
+
+def test_stylization_transformer_str(
+    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, stylization,
+):
+    patch, mock = transformer_mocks
+
+    style = "style"
+    framework = "pystiche"
+    stylization(transformer_=style, framework=framework)
+
+    patch.assert_called_once()
+    _, kwargs = patch.call_args
+
+    with subtests.test("style"):
+        assert kwargs["style"] == style
+
+    with subtests.test("framework"):
+        assert kwargs["framework"] == framework
+
+    with subtests.test("eval"):
+        mock.eval.assert_called_once_with()
+
+
+def test_stylization_no_pre_post_processing(
+    subtests,
+    preprocessor_mocks,
+    postprocessor_mocks,
+    transformer_mocks,
+    input_image,
+    stylization,
+):
+    mocks = (preprocessor_mocks, postprocessor_mocks)
+
+    stylization(impl_params=False)
+
+    for _, mock in mocks:
+        with subtests.test(mock.name):
+            mock.assert_not_called()

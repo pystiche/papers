@@ -3,7 +3,7 @@ from urllib.request import Request, urlopen
 
 from torchvision.datasets.utils import calculate_md5
 
-from ._utils import get_tempdir
+from .utils import get_tempdir
 
 __all__ = [
     "assert_is_downloadable",
