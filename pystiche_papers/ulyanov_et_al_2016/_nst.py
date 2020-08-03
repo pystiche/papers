@@ -69,6 +69,8 @@ def training(
         lr_scheduler = _lr_scheduler(optimizer_, impl_params=impl_params,)
 
     if num_epochs is None:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
         num_epochs = 25 if impl_params and instance_norm else 10
 
     style_transform = _style_transform(
@@ -113,6 +115,7 @@ def stylization(
             style=style, impl_params=impl_params, instance_norm=instance_norm,
         )
         if instance_norm or not impl_params:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32
             transformer = transformer.eval()
     transformer = transformer.to(device)
 

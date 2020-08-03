@@ -77,6 +77,7 @@ def norm(
 def activation(
     impl_params: bool, instance_norm: bool, inplace: bool = True
 ) -> nn.Module:
+    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/models/pyramid.lua#L5
     return (
         nn.ReLU(inplace=inplace)
         if impl_params and instance_norm
@@ -282,6 +283,12 @@ class Transformer(nn.Sequential):
             )
 
         if impl_params:
+            """
+            instance_norm:
+            https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/models/pyramid.lua#L61
+            not instance_norm:
+            https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/models/pyramid.lua#L62
+            """
             output_conv = cast(
                 Union[nn.Conv2d, ConvBlock],
                 nn.Conv2d(
@@ -336,3 +343,4 @@ def transformer(
     levels: int = 6,
 ) -> Transformer:
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
+

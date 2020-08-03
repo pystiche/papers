@@ -32,8 +32,10 @@ def content_transform(
     transforms_: List[transforms.Transform] = []
     if impl_params:
         if instance_norm:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/style.lua#L87
             transforms_.append(transforms.ValidRandomCrop(edge_size))
         else:
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
             transforms_.append(
                 transforms.Resize((edge_size, edge_size), interpolation_mode="bilinear")
             )
@@ -47,6 +49,8 @@ def content_transform(
 def style_transform(
     impl_params: bool = True, instance_norm: bool = True, edge_size: int = 256,
 ) -> transforms.Resize:
+    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
+    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
     interpolation_mode = "bicubic" if impl_params and instance_norm else "bilinear"
     return transforms.Resize(
         edge_size, edge="long", interpolation_mode=interpolation_mode
@@ -200,12 +204,16 @@ def batch_sampler(
 
     if num_batches is None:
         if impl_params:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
             num_batches = 2000 if instance_norm else 300
         else:
             num_batches = 200
 
     if batch_size is None:
         if impl_params:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L50
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L32
             batch_size = 1 if instance_norm else 4
         else:
             batch_size = 16

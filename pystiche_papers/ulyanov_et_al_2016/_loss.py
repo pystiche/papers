@@ -32,7 +32,14 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         if not self.double_batch_size_mean:
             return score
 
+
         batch_size = image.extract_batch_size(input_repr)
+        """
+        instance_norm:
+        https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
+        not instance_norm:
+        https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
+        """
         return score / batch_size
 
 
@@ -45,6 +52,12 @@ def content_loss(
 ) -> FeatureReconstructionOperator:
     if score_weight is None:
         if impl_params:
+            """
+            instance_norm:
+            https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
+            not instance_norm:
+            https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
+            """
             score_weight = 1e0 if instance_norm else 6e-1
         else:
             score_weight = 1e0
@@ -86,6 +99,12 @@ class GramOperator(ops.GramOperator):
             return score
 
         batch_size = input_repr.size()[0]
+        """
+        instance_norm:
+        https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
+        not instance_norm:
+        https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
+        """
         return score / batch_size
 
 
@@ -99,15 +118,20 @@ def style_loss(
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
     if score_weight is None:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L55
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
         score_weight = 1e3 if impl_params and not instance_norm else 1e0
+
 
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
     if layers is None:
         if impl_params and instance_norm:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
             layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1")
         else:
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L19
             layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:

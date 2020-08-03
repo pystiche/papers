@@ -34,6 +34,10 @@ def postprocessor() -> transforms.CaffePostprocessing:
 def optimizer(
     transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
 ) -> optim.Adam:
+    # instance_norm:
+    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L46
+    # not instance_norm:
+    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29
     lr = 1e-3 if impl_params and instance_norm else 1e-1
     return optim.Adam(transformer.parameters(), lr=lr)
 
@@ -58,8 +62,13 @@ class DelayedExponentialLR(ExponentialLR):
 
 
 def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
+    # instance_norm:
+    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
+    # not instance_norm:
+    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201
     return (
         ExponentialLR(optimizer, 0.8)
         if impl_params
         else DelayedExponentialLR(optimizer, 0.7, 5)
     )
+
