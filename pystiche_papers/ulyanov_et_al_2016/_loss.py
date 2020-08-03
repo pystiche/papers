@@ -32,14 +32,11 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         if not self.double_batch_size_mean:
             return score
 
-
+        # instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
+        # not instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
         batch_size = image.extract_batch_size(input_repr)
-        """
-        instance_norm:
-        https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
-        not instance_norm:
-        https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
-        """
         return score / batch_size
 
 
@@ -52,12 +49,10 @@ def content_loss(
 ) -> FeatureReconstructionOperator:
     if score_weight is None:
         if impl_params:
-            """
-            instance_norm:
-            https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
-            not instance_norm:
-            https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
-            """
+            # instance_norm:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
+            # not instance_norm:
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
             score_weight = 1e0 if instance_norm else 6e-1
         else:
             score_weight = 1e0
@@ -99,12 +94,10 @@ class GramOperator(ops.GramOperator):
             return score
 
         batch_size = input_repr.size()[0]
-        """
-        instance_norm:
-        https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
-        not instance_norm:
-        https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
-        """
+        # instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L54
+        # not instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
         return score / batch_size
 
 

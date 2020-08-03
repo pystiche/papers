@@ -118,12 +118,10 @@ def stylization(
     transformer = transformer.to(device)
 
     if impl_params and preprocessor is None:
-        """
-        content:
-        https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L104
-        style:
-        https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L111
-        """
+        # content:
+        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L104
+        # style:
+        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L111
         preprocessor = _preprocessor()
 
     if impl_params and postprocessor is None:
