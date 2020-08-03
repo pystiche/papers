@@ -1,9 +1,12 @@
+import pytest
+
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.li_wand_2016 as paper
 from tests._utils import is_callable
 
 
+@pytest.mark.slow
 def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
         "pystiche_papers.li_wand_2016._nst.optim.default_image_pyramid_optim_loop"
