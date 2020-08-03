@@ -32,7 +32,6 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         super().__init__(encoder, **feature_reconstruction_op_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/transfer_CNNMRF_wrapper.lua#L85
-
         self.loss_reduction = "mean" if impl_params else "sum"
 
     def calculate_score(
