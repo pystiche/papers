@@ -11,7 +11,7 @@ def github():
         owner_and_repo = os.getenv("GITHUB_REPOSITORY")
 
         branch_or_tag = os.getenv("GITHUB_HEAD_REF")
-        is_pr = branch_or_tag is not None
+        is_pr = bool(branch_or_tag)
         if not is_pr:
             branch_or_tag = os.getenv("GITHUB_REF").rsplit("/", 1)[1]
 
