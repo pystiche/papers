@@ -3,7 +3,7 @@ name: tests
 on:
   pull_request:
     paths:
-      - "gha-env-vars.yml"
+      - ".github/workflows/gha-env-vars.yml"
 
 jobs:
   test:
