@@ -4,9 +4,8 @@ from os import path
 
 import torch
 
+import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche.image import write_image
-from pystiche.image.transforms.functional import resize
 from utils import (
     ArgumentParser,
     make_description,
@@ -30,7 +29,7 @@ def main(args):
             device=args.device,
         )
 
-        output_image = paper.johnson_alahi_li_2016_stylization(
+        output_image = paper.stylization(
             input_image,
             transformer,
             impl_params=args.impl_params,
@@ -49,7 +48,7 @@ def main(args):
 
 def load_transformer(model_dir, style, impl_params, instance_norm):
     def load(style=None):
-        return paper.johnson_alahi_li_2016_transformer(
+        return paper.transformer(
             style, impl_params=impl_params, instance_norm=instance_norm,
         )
 
@@ -80,14 +79,14 @@ def load_local_weights(root, style, impl_params, instance_norm):
 
 def read_content_image(root, content, size=None, edge="short", **read_image_kwargs):
     image = read_local_or_builtin_image(
-        root, content, paper.johnson_alahi_li_2016_images(), **read_image_kwargs
+        root, content, paper.images(), **read_image_kwargs
     )
-    return resize(image, size, edge=edge)
+    return F.resize(image, size, edge=edge)
 
 
 def save_ouput_image(image, root, content, style, impl_params, instance_norm):
     name = make_name(content, style, impl_params, instance_norm)
-    write_image(image, path.join(root, f"{name}.jpg"))
+    image.write_image(image, path.join(root, f"{name}.jpg"))
 
 
 def parse_args():

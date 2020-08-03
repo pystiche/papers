@@ -4,15 +4,15 @@ import pytorch_testing_utils as ptu
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 
-from pystiche.enc import VGGMultiLayerEncoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
-from pystiche_papers.ulyanov_et_al_2016 import utils
+import pystiche_papers.ulyanov_et_al_2016 as paper
+from pystiche import enc
+from pystiche.image import transforms
 
 
 @pytest.mark.slow
 def test_ulyanov_et_al_2016_multi_layer_encoder(subtests):
-    multi_layer_encoder = utils.ulyanov_et_al_2016_multi_layer_encoder()
-    assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
+    multi_layer_encoder = paper.multi_layer_encoder()
+    assert isinstance(multi_layer_encoder, enc.VGGMultiLayerEncoder)
 
     with subtests.test("internal preprocessing"):
         assert "preprocessing" not in multi_layer_encoder
@@ -27,11 +27,11 @@ def test_ulyanov_et_al_2016_multi_layer_encoder(subtests):
 
 
 def test_ulyanov_et_al_2016_preprocessor():
-    assert isinstance(utils.ulyanov_et_al_2016_preprocessor(), CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
 
 
 def test_ulyanov_et_al_2016_postprocessor():
-    assert isinstance(utils.ulyanov_et_al_2016_postprocessor(), CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
 
 
 def test_ulyanov_et_al_2016_optimizer(subtests):
@@ -45,7 +45,7 @@ def test_ulyanov_et_al_2016_optimizer(subtests):
         (False, False, 1e-1),
     )
     for impl_params, instance_norm, lr in configs:
-        optimizer = utils.ulyanov_et_al_2016_optimizer(
+        optimizer = paper.optimizer(
             transformer, impl_params=impl_params, instance_norm=instance_norm
         )
 
@@ -68,8 +68,8 @@ def test_DelayedExponentialLR():
     gamma = 0.1
     delay = 2
     num_steps = 5
-    optimizer = utils.ulyanov_et_al_2016_optimizer(transformer)
-    lr_scheduler = utils.DelayedExponentialLR(optimizer, gamma, delay)
+    optimizer = paper.optimizer(transformer)
+    lr_scheduler = paper.DelayedExponentialLR(optimizer, gamma, delay)
 
     param_group = optimizer.param_groups[0]
     base_lr = param_group["lr"]
@@ -84,13 +84,10 @@ def test_DelayedExponentialLR():
 
 def test_ulyanov_et_al_2016_lr_scheduler():
     transformer = nn.Conv2d(3, 3, 1)
-    optimizer = utils.ulyanov_et_al_2016_optimizer(transformer)
+    optimizer = paper.optimizer(transformer)
     for impl_params in (True, False):
-        lr_scheduler = utils.ulyanov_et_al_2016_lr_scheduler(
-            optimizer, impl_params=impl_params
-        )
+        lr_scheduler = paper.lr_scheduler(optimizer, impl_params=impl_params)
 
         assert isinstance(
-            type(lr_scheduler),
-            type(ExponentialLR) if impl_params else type(utils.DelayedExponentialLR),
+            lr_scheduler, ExponentialLR if impl_params else paper.DelayedExponentialLR,
         )

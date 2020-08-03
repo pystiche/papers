@@ -1,14 +1,14 @@
-from pystiche_papers.li_wand_2016 import pyramid
+import pystiche_papers.li_wand_2016 as paper
 
 
-def test_li_wand_2016_image_pyramid(subtests, mocker):
+def test_image_pyramid(subtests, mocker):
+    mock = mocker.patch("pystiche_papers.li_wand_2016._pyramid.pyramid")
 
-    configs = ((True, 100, 3), (False, 200, None))
-    for (impl_params, num_steps, num_levels,) in configs:
+    for impl_params, num_steps, num_levels in ((True, 100, 3), (False, 200, None)):
         with subtests.test(impl_params=impl_params):
+            mock.reset()
 
-            mock = mocker.patch("pystiche.pyramid.pyramid.OctaveImagePyramid")
-            pyramid.li_wand_2016_image_pyramid(impl_params=impl_params)
+            paper.image_pyramid(impl_params=impl_params)
 
             for call in mock.call_args_list:
                 args, kwargs = call

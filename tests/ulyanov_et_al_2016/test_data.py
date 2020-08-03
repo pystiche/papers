@@ -3,84 +3,81 @@ import itertools
 import pytest
 
 import pytorch_testing_utils as ptu
-import torch
 from torch.utils.data import DataLoader
 
+import pystiche.image.transforms.functional as F
+import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche.data import ImageFolderDataset
 from pystiche.image import transforms
-from pystiche.image.transforms import CenterCrop, ValidRandomCrop
-from pystiche.image.transforms.functional import grayscale_to_fakegrayscale, resize
+from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
-from pystiche_papers.ulyanov_et_al_2016 import data
-from pystiche_papers.utils import make_reproducible
 
 from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
-def test_ulyanov_et_al_2016_content_transform(subtests):
-    make_reproducible()
-    image = torch.rand(1, 3, 32, 32)
+def test_content_transform(subtests, content_image):
     edge_size = 16
 
     for impl_params, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            make_reproducible()
-            content_transform = data.ulyanov_et_al_2016_content_transform(
+            content_transform = paper.content_transform(
                 edge_size=edge_size,
                 impl_params=impl_params,
                 instance_norm=instance_norm,
             )
-            actual = content_transform(image)
+            if instance_norm:
+                utils.make_reproducible()
+            actual = content_transform(content_image)
 
             if impl_params:
                 if instance_norm:
-                    make_reproducible()
-                    transform = ValidRandomCrop(edge_size)
-                    desired = transform(image)
+                    transform = transforms.ValidRandomCrop(edge_size)
+                    utils.make_reproducible()
+                    desired = transform(content_image)
                 else:
-                    desired = resize(image, edge_size)
+                    desired = F.resize(content_image, edge_size)
             else:
-                transform = CenterCrop(edge_size)
-                desired = transform(image)
+                transform = transforms.CenterCrop(edge_size)
+                desired = transform(content_image)
 
             ptu.assert_allclose(actual, desired)
 
 
-def test_ulyanov_et_al_2016_content_transform_grayscale_image(subtests):
-    make_reproducible()
-    image = torch.rand(1, 1, 32, 32)
+def test_content_transform_grayscale_image(subtests, content_image):
+    content_image = F.rgb_to_grayscale(content_image)
     edge_size = 16
 
     for impl_params, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            make_reproducible()
-            content_transform = data.ulyanov_et_al_2016_content_transform(
+            content_transform = paper.content_transform(
                 edge_size=edge_size,
                 impl_params=impl_params,
                 instance_norm=instance_norm,
             )
-            actual = content_transform(image)
+            if instance_norm:
+                utils.make_reproducible()
+            actual = content_transform(content_image)
 
             if impl_params:
                 if instance_norm:
-                    make_reproducible()
-                    transform = ValidRandomCrop(edge_size)
-                    transform_image = transform(image)
+                    transform = transforms.ValidRandomCrop(edge_size)
+                    utils.make_reproducible()
+                    transform_image = transform(content_image)
                 else:
-                    transform_image = resize(image, edge_size)
+                    transform_image = F.resize(content_image, edge_size)
             else:
-                transform = CenterCrop(edge_size)
-                transform_image = transform(image)
+                transform = transforms.CenterCrop(edge_size)
+                transform_image = transform(content_image)
 
-            desired = grayscale_to_fakegrayscale(transform_image)
+            desired = F.grayscale_to_fakegrayscale(transform_image)
 
             ptu.assert_allclose(actual, desired)
 
 
-def test_ulyanov_et_al_2016_style_transform(subtests):
+def test_style_transform(subtests):
     for impl_params, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            style_transform = data.ulyanov_et_al_2016_style_transform(
+            style_transform = paper.style_transform(
                 impl_params=impl_params, instance_norm=instance_norm
             )
 
@@ -101,36 +98,34 @@ def test_ulyanov_et_al_2016_style_transform(subtests):
 
 
 @pytest.mark.slow
-def test_ulyanov_et_al_2016_images_smoke(subtests):
-    for name, image in data.ulyanov_et_al_2016_images():
+def test_images_smoke(subtests):
+    for name, image in paper.images():
         with subtests.test(name=name):
             assert_image_is_downloadable(image)
 
 
 @pytest.mark.large_download
 @pytest.mark.slow
-def test_ulyanov_et_al_2016_images(subtests):
-    for name, image in data.ulyanov_et_al_2016_images():
+def test_images(subtests):
+    for name, image in paper.images():
         with subtests.test(name=name):
             assert_image_downloads_correctly(image)
 
 
-def test_ulyanov_et_al_2016_dataset(subtests, mocker):
+def test_dataset(subtests, mocker):
     mocker.patch(
-        "pystiche.data.datasets.ImageFolderDataset._collect_image_files",
+        "pystiche_papers.ulyanov_et_al_2016._data.ImageFolderDataset._collect_image_files",
         return_value=[],
     )
-    dataset = data.ulyanov_et_al_2016_dataset("root")
+    dataset = paper.dataset("root")
 
     assert isinstance(dataset, ImageFolderDataset)
 
-    with subtests.test("transform"):
-        assert isinstance(
-            dataset.transform, type(data.ulyanov_et_al_2016_content_transform())
-        )
+    with subtests.test("content_transform"):
+        assert isinstance(dataset.transform, type(paper.content_transform()))
 
 
-def test_ulyanov_et_al_2016_batch_sampler(subtests):
+def test_batch_sampler(subtests):
     data_source = ()
     configs = (
         (True, True, 2000, 1),
@@ -140,7 +135,7 @@ def test_ulyanov_et_al_2016_batch_sampler(subtests):
     )
     for impl_params, instance_norm, num_batches, batch_size in configs:
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            batch_sampler = data.ulyanov_et_al_2016_batch_sampler(
+            batch_sampler = paper.batch_sampler(
                 data_source, impl_params=impl_params, instance_norm=instance_norm
             )
 
@@ -153,14 +148,13 @@ def test_ulyanov_et_al_2016_batch_sampler(subtests):
                 assert batch_sampler.batch_size == batch_size
 
 
-def test_ulyanov_et_al_2016_image_loader(subtests):
+def test_image_loader(subtests):
     dataset = ()
-    image_loader = data.ulyanov_et_al_2016_image_loader(dataset)
+    image_loader = paper.image_loader(dataset)
 
     assert isinstance(image_loader, DataLoader)
 
     with subtests.test("batch_sampler"):
         assert isinstance(
-            image_loader.batch_sampler,
-            type(data.ulyanov_et_al_2016_batch_sampler(dataset)),
+            image_loader.batch_sampler, type(paper.batch_sampler(dataset)),
         )

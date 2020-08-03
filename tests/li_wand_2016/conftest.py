@@ -1,6 +1,6 @@
 import pytest
 
-from pystiche_papers.li_wand_2016.utils import li_wand_2016_multi_layer_encoder
+import pystiche_papers.li_wand_2016 as paper
 
 
 @pytest.fixture(scope="package")
@@ -12,12 +12,12 @@ def vgg_load_weights_mock(package_mocker):
 
 @pytest.fixture(scope="package", autouse=True)
 def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
-    multi_layer_encoder = li_wand_2016_multi_layer_encoder()
+    multi_layer_encoder = paper.multi_layer_encoder()
 
     def new(impl_params=None):
         multi_layer_encoder.empty_storage()
         return multi_layer_encoder
 
     return package_mocker.patch(
-        "pystiche_papers.li_wand_2016.loss.li_wand_2016_multi_layer_encoder", new,
+        "pystiche_papers.li_wand_2016._loss._multi_layer_encoder", new,
     )

@@ -5,19 +5,18 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-from pystiche import gram_matrix, ops
-from pystiche.image import extract_batch_size
-from pystiche.loss import PerceptualLoss
-from pystiche_papers.ulyanov_et_al_2016 import loss
-from pystiche_papers.utils import batch_up_image
+import pystiche
+import pystiche_papers.ulyanov_et_al_2016 as paper
+from pystiche import image, loss, ops
+from pystiche_papers import utils
 
 
-def test_UlyanovEtAl2016FeatureReconstructionOperator(
+def test_FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
     batch_size = 4
-    input_image = batch_up_image(input_image, batch_size)
-    target_image = batch_up_image(target_image, batch_size)
+    input_image = utils.batch_up_image(input_image, batch_size)
+    target_image = utils.batch_up_image(target_image, batch_size)
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
@@ -25,19 +24,19 @@ def test_UlyanovEtAl2016FeatureReconstructionOperator(
 
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
-            op = loss.UlyanovEtAl2016FeatureReconstructionOperator(
-                encoder, impl_params=impl_params,
-            )
+            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
             op.set_target_image(target_image)
             actual = op(input_image)
 
             score = mse_loss(input_enc, target_enc)
 
-            desired = score / extract_batch_size(input_enc) if impl_params else score
+            desired = (
+                score / image.extract_batch_size(input_enc) if impl_params else score
+            )
             assert actual == ptu.approx(desired)
 
 
-def test_ulyanov_et_al_2016_content_loss(subtests):
+def test_content_loss(subtests):
     configs = (
         (True, True, 1e0),
         (True, False, 6e-1),
@@ -45,14 +44,12 @@ def test_ulyanov_et_al_2016_content_loss(subtests):
         (False, False, 1e0),
     )
     for impl_params, instance_norm, score_weight in configs:
-        content_loss = loss.ulyanov_et_al_2016_content_loss(
+        content_loss = paper.content_loss(
             impl_params=impl_params,
             instance_norm=instance_norm,
             score_weight=score_weight,
         )
-        assert isinstance(
-            content_loss, loss.UlyanovEtAl2016FeatureReconstructionOperator
-        )
+        assert isinstance(content_loss, paper.FeatureReconstructionOperator)
 
         with subtests.test("layer"):
             assert content_loss.encoder.layer == "relu4_2"
@@ -61,13 +58,13 @@ def test_ulyanov_et_al_2016_content_loss(subtests):
             assert content_loss.score_weight == pytest.approx(score_weight)
 
 
-def test_UlyanovEtAl2016GramOperator(
+def test_GramOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
-    target_repr = gram_matrix(encoder(target_image), normalize=True)
-    input_repr = gram_matrix(encoder(input_image), normalize=True)
+    target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+    input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
 
     configs = ((True, True, 1.0), (False, False, input_repr.size()[0]))
     for impl_params, normalize_by_num_channels, extra_batch_normalization in configs:
@@ -77,26 +74,26 @@ def test_UlyanovEtAl2016GramOperator(
                 if normalize_by_num_channels
                 else target_repr
             )
-            intern_inüut_repr = (
+            intern_input_repr = (
                 input_repr / input_repr.size()[-1]
                 if normalize_by_num_channels
                 else input_repr
             )
-            op = loss.UlyanovEtAl2016GramOperator(encoder, impl_params=impl_params,)
+            op = paper.GramOperator(encoder, impl_params=impl_params,)
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            score = mse_loss(intern_inüut_repr, intern_target_repr,)
+            score = mse_loss(intern_input_repr, intern_target_repr,)
             desired = score / extra_batch_normalization
 
             assert actual == ptu.approx(desired, rel=1e-3)
 
 
-def test_ulyanov_et_al_2016_style_loss(subtests):
+def test_style_loss(subtests):
     for impl_params, instance_norm, stylization in itertools.product(
         (True, False), (True, False), (True, False)
     ):
-        style_loss = loss.ulyanov_et_al_2016_style_loss(
+        style_loss = paper.style_loss(
             impl_params=impl_params,
             instance_norm=instance_norm,
             stylization=stylization,
@@ -105,8 +102,7 @@ def test_ulyanov_et_al_2016_style_loss(subtests):
 
         with subtests.test("encoding_ops"):
             assert all(
-                isinstance(op, loss.UlyanovEtAl2016GramOperator)
-                for op in style_loss.operators()
+                isinstance(op, paper.GramOperator) for op in style_loss.operators()
             )
 
         layers, layer_weights = zip(
@@ -135,15 +131,14 @@ def test_ulyanov_et_al_2016_style_loss(subtests):
             assert style_loss.score_weight == pytest.approx(score_weight)
 
 
-def test_ulyanov_et_al_2016_perceptual_loss(subtests):
-    perceptual_loss = loss.ulyanov_et_al_2016_perceptual_loss()
-    assert isinstance(perceptual_loss, PerceptualLoss)
+def test_perceptual_loss(subtests):
+    perceptual_loss = paper.perceptual_loss()
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss,
-            loss.UlyanovEtAl2016FeatureReconstructionOperator,
+            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, loss.MultiLayerEncodingOperator)
+        assert isinstance(perceptual_loss.style_loss, ops.MultiLayerEncodingOperator)

@@ -10,6 +10,7 @@ from ._assets import read_image
 from ._utils import create_guides
 
 __all__ = [
+    "cuda_init",
     "image_small_0",
     "image_small_1",
     "image_small_2",

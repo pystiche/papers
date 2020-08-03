@@ -6,18 +6,15 @@ import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2015 as paper
-from pystiche_papers.gatys_ecker_bethge_2015 import utils
 from tests._utils import is_callable
 
 
-def test_gatys_ecker_bethge_2015_nst_smoke(
-    subtests, mocker, content_image, style_image
-):
+def test_nst_smoke(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015.core.default_image_optim_loop"
+        "pystiche_papers.gatys_ecker_bethge_2015._nst.optim.default_image_optim_loop"
     )
 
-    paper.gatys_ecker_bethge_2015_nst(content_image, style_image)
+    paper.nst(content_image, style_image)
 
     args, kwargs = mock.call_args
     input_image, criterion = args
@@ -29,26 +26,18 @@ def test_gatys_ecker_bethge_2015_nst_smoke(
         ptu.assert_allclose(input_image, content_image)
 
     with subtests.test("criterion"):
-        assert isinstance(
-            criterion, type(paper.gatys_ecker_bethge_2015_perceptual_loss())
-        )
+        assert isinstance(criterion, type(paper.perceptual_loss()))
 
     with subtests.test("optimizer"):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
-        assert isinstance(
-            optimizer, type(utils.gatys_ecker_bethge_2015_optimizer(input_image))
-        )
+        assert isinstance(optimizer, type(paper.optimizer(input_image)))
 
     with subtests.test("preprocessor"):
-        assert isinstance(
-            preprocessor, type(utils.gatys_ecker_bethge_2015_preprocessor())
-        )
+        assert isinstance(preprocessor, type(paper.preprocessor()))
 
     with subtests.test("postprocessor"):
-        assert isinstance(
-            postprocessor, type(utils.gatys_ecker_bethge_2015_postprocessor())
-        )
+        assert isinstance(postprocessor, type(paper.postprocessor()))
 
 
 # TODO: find a better place for this
@@ -81,13 +70,11 @@ def assert_is_rand_uniform(samples, min=0.0, max=1.0, significance_level=5e-2):
     )
 
 
-def test_gatys_ecker_bethge_2015_nst_smoke_not_impl_params(
-    subtests, mocker, content_image, style_image
-):
+def test_nst_smoke_not_impl_params(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015.core.default_image_optim_loop"
+        "pystiche_papers.gatys_ecker_bethge_2015._nst.optim.default_image_optim_loop"
     )
-    paper.gatys_ecker_bethge_2015_nst(content_image, style_image, impl_params=False)
+    paper.nst(content_image, style_image, impl_params=False)
     input_image, _ = mock.call_args[0]
 
     assert_is_rand_uniform(input_image)

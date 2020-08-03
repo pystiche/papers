@@ -3,15 +3,14 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
-from pystiche import gram_matrix, ops
-from pystiche.loss import GuidedPerceptualLoss, PerceptualLoss
-from pystiche.ops import FeatureReconstructionOperator
-from pystiche_papers.gatys_et_al_2017 import loss
+import pystiche
+import pystiche_papers.gatys_et_al_2017 as paper
+from pystiche import loss, ops
 
 
-def test_gatys_et_al_2017_content_loss(subtests):
-    content_loss = loss.gatys_et_al_2017_content_loss()
-    assert isinstance(content_loss, FeatureReconstructionOperator)
+def test_content_loss(subtests):
+    content_loss = paper.content_loss()
+    assert isinstance(content_loss, ops.FeatureReconstructionOperator)
 
     with subtests.test("layer"):
         assert content_loss.encoder.layer == "relu4_2"
@@ -20,19 +19,17 @@ def test_gatys_et_al_2017_content_loss(subtests):
         assert content_loss.score_weight == pytest.approx(1e0)
 
 
-def test_GatysEtAl2017StyleLoss(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
+def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
 
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
-    target_repr = gram_matrix(encoder(target_image), normalize=True)
-    input_repr = gram_matrix(encoder(input_image), normalize=True)
+    target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+    input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
 
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = loss.GatysEtAl2017StyleLoss(
+            op = paper.StyleLoss(
                 multi_layer_encoder,
                 (layer,),
                 lambda encoder, layer_weight: ops.GramOperator(
@@ -51,9 +48,9 @@ def test_GatysEtAl2017StyleLoss(
             assert actual == ptu.approx(desired)
 
 
-def test_gatys_et_al_2017_style_loss(subtests):
+def test_style_loss(subtests):
 
-    style_loss = loss.gatys_et_al_2017_style_loss()
+    style_loss = paper.style_loss()
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
     with subtests.test("encoding_ops"):
@@ -80,52 +77,47 @@ def test_gatys_et_al_2017_style_loss(subtests):
         assert style_loss.score_weight == pytest.approx(1e3)
 
 
-def gatys_et_al_2017_guided_style_loss(subtests, content_guides):
-
-    style_loss = loss.gatys_et_al_2017_guided_style_loss(content_guides.keys())
+def test_guided_style_loss(subtests, content_guides):
+    style_loss = paper.guided_style_loss(content_guides.keys())
     assert isinstance(style_loss, ops.MultiRegionOperator)
 
     with subtests.test("encoding_ops"):
-        assert all(
-            isinstance(op, loss.GatysEtAl2017StyleLoss) for op in style_loss.operators()
-        )
+        assert all(isinstance(op, paper.StyleLoss) for op in style_loss.operators())
 
     regions, region_weights = zip(
-        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+        *[(name, op.score_weight) for name, op in style_loss.named_operators()]
     )
 
     with subtests.test("regions"):
-        assert regions == content_guides.keys()
+        assert regions == tuple(content_guides.keys())
 
     with subtests.test("region_weights"):
-        desired = tuple(1.0) * len(regions)
+        desired = (1e0,) * len(regions)
         assert region_weights == pytest.approx(desired)
 
 
-def test_gatys_et_al_2017_perceptual_loss(subtests):
-    perceptual_loss = loss.gatys_et_al_2017_perceptual_loss()
-    assert isinstance(perceptual_loss, PerceptualLoss)
+def test_perceptual_loss(subtests):
+    perceptual_loss = paper.perceptual_loss()
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, loss.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, ops.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, loss.GatysEtAl2017StyleLoss)
+        assert isinstance(perceptual_loss.style_loss, paper.StyleLoss)
 
 
-def test_gatys_et_al_2017_guided_perceptual_loss(subtests, content_guides):
+def test_guided_perceptual_loss(subtests, content_guides):
 
-    perceptual_loss = loss.gatys_et_al_2017_guided_perceptual_loss(
-        content_guides.keys()
-    )
-    assert isinstance(perceptual_loss, GuidedPerceptualLoss)
+    perceptual_loss = paper.guided_perceptual_loss(content_guides.keys())
+    assert isinstance(perceptual_loss, loss.GuidedPerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, loss.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, ops.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, loss.MultiRegionOperator)
+        assert isinstance(perceptual_loss.style_loss, ops.MultiRegionOperator)

@@ -3,23 +3,23 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
-from pystiche.enc import VGGMultiLayerEncoder
-from pystiche.image.transforms import CaffePostprocessing, CaffePreprocessing
-from pystiche_papers.li_wand_2016 import utils
+import pystiche_papers.li_wand_2016 as paper
+from pystiche import enc
+from pystiche.image import transforms
 
 
-def test_li_wand_2016_preprocessor():
-    assert isinstance(utils.li_wand_2016_preprocessor(), CaffePreprocessing)
+def test_preprocessor():
+    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
 
 
-def test_li_wand_2016_postprocessor():
-    assert isinstance(utils.li_wand_2016_postprocessor(), CaffePostprocessing)
+def test_postprocessor():
+    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
 
 
 @pytest.mark.slow
-def test_li_wand_2016_multi_layer_encoder(subtests, mocker):
-    multi_layer_encoder = utils.li_wand_2016_multi_layer_encoder()
-    assert isinstance(multi_layer_encoder, VGGMultiLayerEncoder)
+def test_multi_layer_encoder(subtests):
+    multi_layer_encoder = paper.multi_layer_encoder()
+    assert isinstance(multi_layer_encoder, enc.VGGMultiLayerEncoder)
 
     with subtests.test("internal preprocessing"):
         assert "preprocessing" not in multi_layer_encoder
@@ -33,9 +33,9 @@ def test_li_wand_2016_multi_layer_encoder(subtests, mocker):
         assert all(module.inplace for module in relu_modules)
 
 
-def test_li_wand_2016_optimizer(subtests, input_image):
+def test_optimizer(subtests, input_image):
     params = input_image
-    optimizer = utils.li_wand_2016_optimizer(params)
+    optimizer = paper.optimizer(params)
 
     assert isinstance(optimizer, optim.LBFGS)
     assert len(optimizer.param_groups) == 1

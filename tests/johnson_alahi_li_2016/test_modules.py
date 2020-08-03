@@ -4,14 +4,13 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
-from torch import nn
-from torch.hub import load_state_dict_from_url
+from torch import hub, nn
 
 import pystiche
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche.misc import to_2d_arg
-from pystiche_papers.johnson_alahi_li_2016 import modules
-from pystiche_papers.utils import ResidualBlock
+from pystiche import misc
+from pystiche_papers import utils
+from pystiche_papers.johnson_alahi_li_2016._modules import select_url
 
 from .._asserts import assert_downloads_correctly, assert_is_downloadable
 
@@ -59,7 +58,7 @@ def model_url_should_be_available(framework, style, impl_params, instance_norm):
 @pytest.fixture(scope="module")
 def model_urls(model_url_configs):
     return tuple(
-        modules.select_url(**config)
+        select_url(**config)
         for config in model_url_configs
         if model_url_should_be_available(**config)
     )
@@ -69,10 +68,10 @@ def test_select_url(subtests, model_url_configs):
     for config in model_url_configs:
         with subtests.test(**config):
             if model_url_should_be_available(**config):
-                assert isinstance(modules.select_url(**config), str)
+                assert isinstance(select_url(**config), str)
             else:
                 with pytest.raises(RuntimeError):
-                    modules.select_url(**config)
+                    select_url(**config)
 
 
 @pytest.mark.slow
@@ -95,7 +94,7 @@ def test_get_conv(subtests):
     kernel_size = 3
     stride = 1
     for padding, upsample in itertools.product((None, 1, (1, 1)), (True, False)):
-        conv_module = modules.get_conv(
+        conv = paper.conv(
             in_channels,
             out_channels,
             kernel_size,
@@ -104,61 +103,61 @@ def test_get_conv(subtests):
             upsample=upsample,
         )
 
-        assert isinstance(conv_module, nn.ConvTranspose2d if upsample else nn.Conv2d)
+        assert isinstance(conv, nn.ConvTranspose2d if upsample else nn.Conv2d)
 
         with subtests.test("in_channels"):
-            assert conv_module.in_channels == in_channels
+            assert conv.in_channels == in_channels
 
         with subtests.test("out_channels"):
-            assert conv_module.out_channels == out_channels
+            assert conv.out_channels == out_channels
 
         with subtests.test("kernel_size"):
-            assert conv_module.kernel_size == to_2d_arg(kernel_size)
+            assert conv.kernel_size == misc.to_2d_arg(kernel_size)
 
         with subtests.test("stride"):
-            assert conv_module.stride == to_2d_arg(stride)
+            assert conv.stride == misc.to_2d_arg(stride)
 
         with subtests.test("padding"):
-            assert conv_module.padding == (1, 1)
+            assert conv.padding == (1, 1)
 
         if upsample:
             with subtests.test("output_padding"):
-                assert conv_module.output_padding == to_2d_arg(0)
+                assert conv.output_padding == misc.to_2d_arg(0)
 
 
 def test_get_norm(subtests):
     out_channels = 3
     for instance_norm in (True, False):
         with subtests.test(instance_norm=instance_norm):
-            norm_module = modules.get_norm(out_channels, instance_norm=instance_norm)
+            norm = paper.norm(out_channels, instance_norm=instance_norm)
 
             assert isinstance(
-                norm_module, nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
+                norm, nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
             )
 
             with subtests.test("out_channels"):
-                assert norm_module.num_features == out_channels
+                assert norm.num_features == out_channels
 
             with subtests.test("eps"):
-                assert norm_module.eps == pytest.approx(1e-5)
+                assert norm.eps == pytest.approx(1e-5)
 
             with subtests.test("momentum"):
-                assert norm_module.momentum == pytest.approx(1e-1)
+                assert norm.momentum == pytest.approx(1e-1)
 
             with subtests.test("affine"):
-                assert norm_module.affine
+                assert norm.affine
 
             with subtests.test("track_running_stats"):
-                assert norm_module.track_running_stats
+                assert norm.track_running_stats
 
 
-def test_johnson_alahi_li_2016_conv_block(subtests):
+def test_conv_block(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
     for relu, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(relu=relu):
-            conv_block = modules.johnson_alahi_li_2016_conv_block(
+            conv_block = paper.conv_block(
                 in_channels,
                 out_channels,
                 kernel_size,
@@ -179,11 +178,11 @@ def test_johnson_alahi_li_2016_conv_block(subtests):
                 assert conv_block[2].inplace
 
 
-def test_johnson_alahi_li_2016_residual_block(subtests, input_image):
+def test_residual_block(subtests, input_image):
     channels = 3
-    residual_block = modules.johnson_alahi_li_2016_residual_block(channels)
+    residual_block = paper.residual_block(channels)
 
-    assert isinstance(residual_block, ResidualBlock)
+    assert isinstance(residual_block, utils.ResidualBlock)
 
     with subtests.test("residual"):
         assert isinstance(residual_block.residual, nn.Sequential)
@@ -196,7 +195,7 @@ def test_johnson_alahi_li_2016_residual_block(subtests, input_image):
         )
 
 
-def test_johnson_alahi_li_2016_transformer_encoder(subtests):
+def test_transformer_encoder(subtests):
     channel_configs = [
         [(3, 16), (16, 32), (32, 64), (64, 64), (64, 64), (64, 64), (64, 64), (64, 64)],
         [
@@ -213,9 +212,7 @@ def test_johnson_alahi_li_2016_transformer_encoder(subtests):
 
     for instance_norm, channel_config in zip((True, False), channel_configs):
 
-        encoder = modules.johnson_alahi_li_2016_transformer_encoder(
-            instance_norm=instance_norm
-        )
+        encoder = paper.encoder(instance_norm=instance_norm)
 
         assert isinstance(encoder, pystiche.SequentialModule)
 
@@ -233,7 +230,7 @@ def test_johnson_alahi_li_2016_transformer_encoder(subtests):
                     )
             if i in range(4, 9):
                 with subtests.test("residualblocks"):
-                    assert isinstance(module, ResidualBlock)
+                    assert isinstance(module, utils.ResidualBlock)
                     in_out_channels.append(
                         (
                             module.residual[0][0].in_channels,
@@ -245,14 +242,12 @@ def test_johnson_alahi_li_2016_transformer_encoder(subtests):
             assert in_out_channels == channel_config
 
 
-def test_johnson_alahi_li_2016_transformer_decoder(subtests):
+def test_transformer_decoder(subtests):
     channel_configs = [[(64, 32), (32, 16), (16, 3)], [(128, 64), (64, 32), (32, 3)]]
 
     for instance_norm, channel_config in zip((True, False), channel_configs):
         with subtests.test(instance_norm=instance_norm):
-            decoder = modules.johnson_alahi_li_2016_transformer_decoder(
-                instance_norm=instance_norm
-            )
+            decoder = paper.decoder(instance_norm=instance_norm)
 
             assert isinstance(decoder, pystiche.SequentialModule)
 
@@ -275,14 +270,10 @@ def test_johnson_alahi_li_2016_transformer_decoder(subtests):
                 assert in_out_channels == channel_config
 
 
-def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
-    subtests, input_image
-):
+def test_transformer_decoder_value_range_delimiter(subtests, input_image):
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
-            decoder = modules.johnson_alahi_li_2016_transformer_decoder(
-                impl_params=impl_params
-            )
+            decoder = paper.decoder(impl_params=impl_params)
 
             module = [x for x in decoder.children()][-1]
             assert isinstance(module, nn.Module)
@@ -298,50 +289,40 @@ def test_johnson_alahi_li_2016_transformer_decoder_value_range_delimiter(
                 ptu.assert_allclose(actual, desired)
 
 
-def test_JohnsonAlahiLi2016Transformer_smoke(image_medium):
-    transformer = modules.JohnsonAlahiLi2016Transformer()
-
+def test_Transformer_smoke():
+    transformer = paper.Transformer()
     assert isinstance(transformer.encoder, pystiche.SequentialModule)
     assert isinstance(transformer.decoder, pystiche.SequentialModule)
 
-    output_image = transformer(image_medium)
-    assert image_medium.size() == output_image.size()
+
+def test_transformer_smoke(subtests, image_medium):
+    transformer = paper.transformer()
+    assert isinstance(transformer, paper.Transformer)
+
+    with subtests.test("forward size"):
+        output_image = transformer(image_medium)
+        assert image_medium.size() == output_image.size()
 
 
-def test_johnson_alahi_li_2016_transformer():
-    transformer = modules.johnson_alahi_li_2016_transformer()
-
-    assert isinstance(transformer, modules.JohnsonAlahiLi2016Transformer)
-
-
-@pytest.mark.skipif(
-    torch.__version__ < "1.6",
-    reason=(
-        "downloads with torch.hub from servers that require a custom User-Agent in the "
-        "request header is only supported for torch>=1.6"
-    ),
-)
 @pytest.mark.large_download
 @pytest.mark.slow
-def test_johnson_alahi_li_2016_transformer_load_state_dict_from_url(
-    subtests, mocker, model_url_configs
-):
+def test_transformer_load_state_dict_from_url(subtests, mocker, model_url_configs):
     for config in model_url_configs:
         if not model_url_should_be_available(**config):
             continue
 
         with subtests.test(**config):
-            url = modules.select_url(**config)
-            state_dict = load_state_dict_from_url(url)
+            url = select_url(**config)
+            state_dict = hub.load_state_dict_from_url(url)
 
             with mocker.patch(
                 "pystiche_papers.johnson_alahi_li_2016.modules.load_state_dict_from_url",
                 return_value=state_dict,
             ):
-                transformer = paper.johnson_alahi_li_2016_transformer(**config)
+                transformer = paper.transformer(**config)
                 ptu.assert_allclose(transformer.state_dict(), state_dict)
 
 
-def test_johnson_alahi_li_2016_transformer_wrong_impl_params_instance_norm():
+def test_transformer_wrong_impl_params_instance_norm():
     with pytest.raises(RuntimeError):
-        modules.johnson_alahi_li_2016_transformer(instance_norm=True, impl_params=False)
+        paper.transformer(instance_norm=True, impl_params=False)

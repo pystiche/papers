@@ -2,16 +2,16 @@ import os
 from argparse import Namespace
 from os import path
 
+import pystiche_papers.li_wand_2016 as paper
 from pystiche.image import write_image
 from pystiche.misc import get_device
 from pystiche.optim import OptimLogger
-from pystiche_papers.li_wand_2016 import li_wand_2016_images, li_wand_2016_nst
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
 
 @abort_if_cuda_memory_exausts
 def figure_6(args):
-    images = li_wand_2016_images()
+    images = paper.images()
     images.download(args.image_source_dir)
     positions = ("top", "bottom")
     image_pairs = (
@@ -28,7 +28,7 @@ def figure_6(args):
             f"Replicating the {position} half of figure 6 " f"with {params} parameters"
         )
         with args.logger.environment(header):
-            output_image = li_wand_2016_nst(
+            output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
