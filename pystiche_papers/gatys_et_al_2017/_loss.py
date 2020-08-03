@@ -49,7 +49,9 @@ class StyleLoss(ops.MultiLayerEncodingOperator):
             layer_weights=layer_weights,
             score_weight=score_weight,
         )
-
+        """
+        https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/LossLayers.lua#L80
+        """
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 4.0
 
     @staticmethod
