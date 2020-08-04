@@ -71,4 +71,3 @@ def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> Exponential
         if impl_params
         else DelayedExponentialLR(optimizer, 0.7, 5)
     )
-
