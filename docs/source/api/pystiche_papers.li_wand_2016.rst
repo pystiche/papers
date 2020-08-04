@@ -6,7 +6,6 @@
 .. autofunction:: content_loss
 .. autofunction:: images
 .. autofunction:: image_pyramid
-.. autofunction:: images
 .. autofunction:: multi_layer_encoder
 .. autofunction:: nst
 .. autofunction:: optimizer
