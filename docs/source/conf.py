@@ -23,16 +23,8 @@ def get_bool_env_var(name, default=False):
 
 
 run_by_github_actions = get_bool_env_var("GITHUB_ACTIONS")
-run_by_travis_ci = get_bool_env_var("TRAVIS")
-run_by_appveyor = get_bool_env_var("APPVEYOR")
 run_by_rtd = get_bool_env_var("READTHEDOCS")
-run_by_ci = (
-    run_by_github_actions
-    or run_by_travis_ci
-    or run_by_appveyor
-    or run_by_rtd
-    or get_bool_env_var("CI")
-)
+run_by_ci = run_by_github_actions or run_by_rtd or get_bool_env_var("CI")
 
 # -- Path setup ------------------------------------------------------------------------
 
@@ -67,6 +59,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,6 +75,9 @@ extensions = [
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.6", None),
+    "torch": ("https://pytorch.org/docs/stable/", None),
+    "torchvision": ("https://pytorch.org/docs/stable/", None),
+    "pystiche": ("https://pystiche.readthedocs.io/en/stable/", None),
 }
 
 

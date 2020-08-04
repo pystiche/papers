@@ -92,4 +92,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: latex
-          path: docs/build/latex/pystiche.pdf
+          path: docs/build/latex/pystiche-papers.pdf
