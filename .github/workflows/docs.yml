@@ -9,7 +9,7 @@ on:
   pull_request:
     paths:
       - "pystiche_papers/**"
-      - "docs/**"
+      - "docs/source/**"
       - ".github/workflows/docs.yml"
       - "pyproject.toml"
       - "requirements-dev.txt"
