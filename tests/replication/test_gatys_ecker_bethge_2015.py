@@ -7,12 +7,12 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 
-import pystiche_papers.gatys_ecker_bethge_2015 as paper
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import misc, optim
 
 from .asserts import assert_dir_exists
 
-PAPER = "gatys_ecker_bethge_2015"
+PAPER = "gatys_ecker_bethge_2016"
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ def args(tmpdir):
 
 @pytest.fixture
 def nst(mocker):
-    return mocker.patch("pystiche_papers.gatys_ecker_bethge_2015.nst")
+    return mocker.patch("pystiche_papers.gatys_ecker_bethge_2016.nst")
 
 
 def test_parse_input_smoke(subtests, main, args):
@@ -67,7 +67,7 @@ def test_parse_input_smoke(subtests, main, args):
 
 
 def make_patch_target(name):
-    return ".".join(("pystiche_papers", "gatys_ecker_bethge_2015", name))
+    return ".".join(("pystiche_papers", "gatys_ecker_bethge_2016", name))
 
 
 def attach_method_mock(mock, method, **attrs):
@@ -99,7 +99,7 @@ def multi_layer_encoder(module_mocker, vgg_load_weights_mock):
         return multi_layer_encoder
 
     return module_mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015._loss._multi_layer_encoder", new,
+        "pystiche_papers.gatys_ecker_bethge_2016._loss._multi_layer_encoder", new,
     )
 
 

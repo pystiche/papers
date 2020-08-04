@@ -3,7 +3,7 @@ import pytest
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
-import pystiche_papers.gatys_ecker_bethge_2015 as paper
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import enc, meta
 from pystiche.image import transforms
 

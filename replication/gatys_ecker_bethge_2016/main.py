@@ -3,7 +3,7 @@ import os
 from argparse import Namespace
 from os import path
 
-import pystiche_papers.gatys_ecker_bethge_2015 as paper
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import image, misc, optim
 from pystiche_papers import utils
 
