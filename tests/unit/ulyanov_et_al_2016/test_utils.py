@@ -79,6 +79,7 @@ def test_DelayedExponentialLR():
 
         param_group = optimizer.param_groups[0]
         assert param_group["lr"] == ptu.approx(base_lr)
+        optimizer.step()
         lr_scheduler.step()
 
 
