@@ -6,3 +6,4 @@ Welcome to pystiche_papers's documentation!
 
   Getting Started <getting_started>
   Contributing <contributing>
+  Package Reference <api/index>
