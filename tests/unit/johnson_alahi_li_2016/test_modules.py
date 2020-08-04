@@ -320,8 +320,3 @@ def test_transformer_load_state_dict_from_url(subtests, mocker, model_url_config
             ):
                 transformer = paper.transformer(**config)
                 ptu.assert_allclose(transformer.state_dict(), state_dict)
-
-
-def test_transformer_wrong_impl_params_instance_norm():
-    with pytest.raises(RuntimeError):
-        paper.transformer(instance_norm=True, impl_params=False)
