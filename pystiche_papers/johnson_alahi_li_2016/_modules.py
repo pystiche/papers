@@ -219,6 +219,7 @@ def decoder(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
     """
+
     def get_value_range_delimiter() -> nn.Module:
         if impl_params:
 
@@ -278,6 +279,7 @@ class Transformer(nn.Module):
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         init_weights: If ``True``, use the procedure defined in the :func:`init_weights` to initialize the weights.
     """
+
     def __init__(
         self,
         impl_params: bool = True,
