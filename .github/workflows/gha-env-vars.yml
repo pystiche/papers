@@ -1,0 +1,16 @@
+name: tests
+
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Environment variables
+        run: |
+          echo GITHUB_ACTOR $GITHUB_ACTOR
+          echo GITHUB_REPOSITORY $GITHUB_REPOSITORY
+          echo GITHUB_REF $GITHUB_REF
+          echo GITHUB_BASE_REF $GITHUB_BASE_REF
+          echo GITHUB_HEAD_REF $GITHUB_HEAD_REF
