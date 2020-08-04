@@ -4,9 +4,9 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 import pystiche
-import pystiche_papers.gatys_ecker_bethge_2015 as paper
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import loss, ops
-from pystiche_papers.gatys_ecker_bethge_2015._loss import get_layer_weights
+from pystiche_papers.gatys_ecker_bethge_2016._loss import get_layer_weights
 
 
 def test_FeatureReconstructionOperator(
@@ -116,7 +116,7 @@ def test_style_loss(subtests):
 
 
 def test_style_loss_wrong_layers(mocker):
-    mock = mocker.patch("pystiche_papers.gatys_ecker_bethge_2015._loss.StyleLoss")
+    mock = mocker.patch("pystiche_papers.gatys_ecker_bethge_2016._loss.StyleLoss")
 
     layers = ("not_included", "not_conv_or_relu")
 

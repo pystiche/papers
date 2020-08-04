@@ -1,6 +1,6 @@
 import pytest
 
-import pystiche_papers.gatys_ecker_bethge_2015 as paper
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
 
 
 @pytest.fixture(scope="package")
@@ -19,5 +19,5 @@ def multi_layer_encoder_mock(package_mocker, vgg_load_weights_mock):
         return multi_layer_encoder
 
     return package_mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2015._loss._multi_layer_encoder", new,
+        "pystiche_papers.gatys_ecker_bethge_2016._loss._multi_layer_encoder", new,
     )
