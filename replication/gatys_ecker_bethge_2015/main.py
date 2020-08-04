@@ -3,24 +3,18 @@ import os
 from argparse import Namespace
 from os import path
 
-from pystiche.image import write_image
-from pystiche.misc import get_device
-from pystiche.optim import OptimLogger
-from pystiche_papers.gatys_ecker_bethge_2015 import (
-    gatys_ecker_bethge_2015_images,
-    gatys_ecker_bethge_2015_perceptual_loss,
-    nst,
-)
-from pystiche_papers.utils import abort_if_cuda_memory_exausts
+import pystiche_papers.gatys_ecker_bethge_2015 as paper
+from pystiche import image, misc, optim
+from pystiche_papers import utils
 
 # FIXME: These values are guessed
 NUM_STEPS = 500
 SIZE = 500
 
 
-@abort_if_cuda_memory_exausts
+@utils.abort_if_cuda_memory_exausts
 def figure_2(args):
-    images = gatys_ecker_bethge_2015_images()
+    images = paper.images()
     images.download(args.image_source_dir)
 
     content_image = images["neckarfront"].read(size=SIZE, device=args.device)
@@ -45,11 +39,11 @@ def figure_2(args):
         with args.logger.environment(header):
 
             style_loss_kwargs = {"score_weight": style_image.score_weight}
-            criterion = gatys_ecker_bethge_2015_perceptual_loss(
+            criterion = paper.perceptual_loss(
                 impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
             )
 
-            output_image = nst(
+            output_image = paper.nst(
                 content_image,
                 style_image.image,
                 NUM_STEPS,
@@ -63,12 +57,12 @@ def figure_2(args):
                 args.image_results_dir, f"fig_2__{style_image.label}.jpg"
             )
             args.logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
-            write_image(output_image, output_file)
+            image.write_image(output_image, output_file)
 
 
-@abort_if_cuda_memory_exausts
+@utils.abort_if_cuda_memory_exausts
 def figure_3(args):
-    images = gatys_ecker_bethge_2015_images()
+    images = paper.images()
     images.download(args.image_source_dir)
 
     content_image = images["neckarfront"].read(size=SIZE, device=args.device)
@@ -88,11 +82,11 @@ def figure_3(args):
         with args.logger.environment(header):
 
             style_loss_kwargs = {"layers": layers, "score_weight": score_weight}
-            criterion = gatys_ecker_bethge_2015_perceptual_loss(
+            criterion = paper.perceptual_loss(
                 impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
             )
 
-            output_image = nst(
+            output_image = paper.nst(
                 content_image,
                 style_image,
                 NUM_STEPS,
@@ -106,7 +100,7 @@ def figure_3(args):
                 args.image_results_dir, f"fig_3__{row_label}__{column_label}.jpg"
             )
             args.logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
-            write_image(output_image, output_file)
+            image.write_image(output_image, output_file)
 
 
 def parse_input():
@@ -132,8 +126,8 @@ def parse_input():
         image_results_dir = path.join(here, "images", "results")
     image_results_dir = process_dir(image_results_dir)
 
-    device = get_device(device)
-    logger = OptimLogger()
+    device = misc.get_device(device)
+    logger = optim.OptimLogger()
 
     return Namespace(
         image_source_dir=image_source_dir,
