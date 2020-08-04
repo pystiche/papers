@@ -54,6 +54,24 @@ def content_loss(
     layer: str = "relu2_2",
     score_weight: Optional[float] = None,
 ) -> ops.FeatureReconstructionOperator:
+    r"""Content_loss from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+        style: Optional style for selecting the correct optimization parameters for the reproduction.
+        multi_layer_encoder: Pretrained ``MultiLayerEncoder``. If ``None``, the default ``multi_layer_encoder``
+        from the paper is used. Defaults to ``None``.
+        layer: Layer from which the encs of the ``multi_layer_encoder`` should be taken. Defaults to "relu2_2".
+        score_weight: Score weight of the operator. If ``None``, the score_weight is
+        determined by the :func:``get_content_score_weight``. Defaults to ``None``.
+    Returns: :class:``ops.FeatureReconstructionOperator``
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
     encoder = multi_layer_encoder.extract_encoder(layer)
@@ -118,6 +136,28 @@ def style_loss(
     score_weight: Optional[float] = None,
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
+    r"""Style_loss from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+        style: Optional style for selecting the correct optimization parameters for the reproduction.
+        multi_layer_encoder: Pretrained ``MultiLayerEncoder``. If ``None``, the default ``multi_layer_encoder``
+        from the paper is used. Defaults to ``None``.
+        layers: Layers from which the encs of the ``multi_layer_encoder`` should be taken. If ``None``,
+        the defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
+        layer_weights: Layer weights of the operator. Defaults to "sum".
+        score_weight: Score weight of the operator. If ``None``, the score_weight is
+        determined by the :func:``get_content_score_weight``. Defaults to ``None``.
+        **gram_op_kwargs: **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
+
+    Returns:
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
@@ -190,6 +230,20 @@ def regularization(
     score_weight: Optional[float] = None,
     **total_variation_op_kwargs: Any,
 ) -> TotalVariationOperator:
+    r"""Regularization from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+
+    Args:
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+        style: Optional style for selecting the correct optimization parameters for the reproduction.
+        score_weight: Score weight of the operator.
+        **total_variation_op_kwargs: **total_variation_op_kwargs: Optional parameters
+        for the ``ops.TotalVariationOperator``.
+
+    Returns:
+
+    """
     if score_weight is None:
         score_weight = get_regularization_score_weight(
             impl_params, instance_norm, style
@@ -208,6 +262,24 @@ def perceptual_loss(
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
     total_variation_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
+    r"""Perceptual loss comprising content and style loss as well as a regularization.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+        style: Optional style for selecting the correct optimization parameters for the reproduction.
+        of the pretrained transformers.
+        multi_layer_encoder: Pretrained ``MultiLayerEncoder``
+        content_loss_kwargs: **content_loss_kwargs: Optional parameters for the ``content_loss``.
+        style_loss_kwargs: **style_loss_kwargs: Optional parameters for the ``style_loss``.
+        total_variation_kwargs: **total_variation_kwargs: Optional parameters for the ``regularization``.
+
+    Returns:
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 

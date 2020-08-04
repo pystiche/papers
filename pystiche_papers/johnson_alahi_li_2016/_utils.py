@@ -42,10 +42,27 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 
 def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
+    r"""Multi-layer encoder based on the VGG16 architecture with the weights of caffe,
+    no internal preprocessing and allowed inplace.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+    """
     return enc.vgg16_multi_layer_encoder(
         weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True
     )
 
 
 def optimizer(transformer: nn.Module) -> optim.Adam:
+    r"""
+    Args:
+        transformer: Transformer to be optimized.
+
+    Returns:
+        :class:`torch.optim.Adam` optimizer with a learning rate of ``1e-3``. The
+        parameters of ``transformer`` are set as optimization parameters.
+
+    """
     return optim.Adam(transformer.parameters(), lr=1e-3)

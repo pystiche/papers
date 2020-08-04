@@ -168,6 +168,13 @@ def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
 
 
 def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
+    r"""Encoder part of the Transformer from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+
+    Args:
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+    """
     modules = (
         nn.ReflectionPad2d(40),
         conv_block(
@@ -202,6 +209,16 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
+    r"""Decoder part of the Transformer from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+    """
     def get_value_range_delimiter() -> nn.Module:
         if impl_params:
 
@@ -250,6 +267,17 @@ def decoder(
 
 
 class Transformer(nn.Module):
+    r"""Transformer from "Perceptual Losses for Real-Time Style Transfer and
+    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+        init_weights: If ``True``, use the procedure defined in the :func:`init_weights` to initialize the weights.
+    """
     def __init__(
         self,
         impl_params: bool = True,
@@ -263,6 +291,7 @@ class Transformer(nn.Module):
             self.init_weights()
 
     def init_weights(self) -> None:
+        r"""Initializes the weights of the transformer as described in the paper."""
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
