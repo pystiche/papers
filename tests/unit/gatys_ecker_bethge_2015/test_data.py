@@ -1,8 +1,7 @@
 import pytest
 
-import pystiche_papers.li_wand_2016 as paper
-
-from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+import pystiche_papers.gatys_ecker_bethge_2015 as paper
+from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 @pytest.mark.slow

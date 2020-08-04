@@ -5,7 +5,11 @@ from pystiche.image import read_image as _read_image
 
 HERE = path.abspath(path.dirname(__file__))
 
-__all__ = ["read_image"]
+__all__ = ["root", "read_image"]
+
+
+def root():
+    return path.dirname(__file__)
 
 
 _read_image = functools.lru_cache()(_read_image)

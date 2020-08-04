@@ -56,12 +56,41 @@ jobs:
         run: pip install -r requirements-dev.txt
         
       - name: Create environment
-        run: tox --notest
+        run: tox -e tests-unit --notest
 
       - name: Run tests
-        run: tox -- --skip-large-download
+        run: tox -e tests-unit -- tests/unit --skip-large-download
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1.0.7
         with:
           env_vars: OS,PYTHON
+
+  hub:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Upgrade and install additional system packages
+        run: pip install --upgrade setuptools virtualenv wheel
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dev requirements
+        run: pip install -r requirements-dev.txt
+
+      - name: Create environment
+        run: tox -e tests-hub --notest
+
+      - name: Run tests
+        run: tox -e tests-hub -- tests/hub --skip-large-download

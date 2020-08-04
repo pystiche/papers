@@ -1,8 +1,7 @@
 import pytest
 
 from pystiche_papers import data
-
-from .._asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 def test_NPRgeneralLicense_smoke():

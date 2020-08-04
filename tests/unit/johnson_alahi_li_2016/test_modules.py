@@ -11,8 +11,7 @@ import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import misc
 from pystiche_papers import utils
 from pystiche_papers.johnson_alahi_li_2016._modules import select_url
-
-from .._asserts import assert_downloads_correctly, assert_is_downloadable
+from tests.asserts import assert_downloads_correctly, assert_is_downloadable
 
 
 @pytest.fixture(scope="module")
