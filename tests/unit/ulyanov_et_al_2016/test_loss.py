@@ -90,13 +90,9 @@ def test_GramOperator(
 
 
 def test_style_loss(subtests):
-    for impl_params, instance_norm, stylization in itertools.product(
-        (True, False), (True, False), (True, False)
-    ):
+    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
         style_loss = paper.style_loss(
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
+            impl_params=impl_params, instance_norm=instance_norm,
         )
         assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
@@ -121,13 +117,7 @@ def test_style_loss(subtests):
             assert layer_weights == pytest.approx(desired_layer_weights)
 
         with subtests.test("score_weight"):
-            if impl_params:
-                if instance_norm:
-                    score_weight = 1e0
-                else:
-                    score_weight = 1e3 if stylization else 1e0
-            else:
-                score_weight = 1e0
+            score_weight = 1e3 if impl_params and not instance_norm else 1e0
             assert style_loss.score_weight == pytest.approx(score_weight)
 
 

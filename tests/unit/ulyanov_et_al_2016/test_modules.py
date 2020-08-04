@@ -43,38 +43,33 @@ def test_join_channelwise(subtests, image_small_0, image_small_1):
     ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
-def test_NoiseModule(subtests):
-    in_channels = 3
-    num_noise_channel = 4
-    noise_module = paper.NoiseModule(in_channels, num_noise_channels=num_noise_channel)
+def test_AddNoiseChannels(subtests, input_image):
+    in_channels = image.extract_num_channels(input_image)
+    num_noise_channels = in_channels + 1
+    module = paper.AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
 
-    assert isinstance(noise_module, nn.Module)
+    assert isinstance(module, nn.Module)
 
     with subtests.test("in_channels"):
-        assert noise_module.in_channels == in_channels
+        assert module.in_channels == in_channels
+
+    desired_out_channels = in_channels + num_noise_channels
 
     with subtests.test("out_channels"):
-        assert noise_module.out_channels == in_channels + num_noise_channel
+        assert module.out_channels == desired_out_channels
 
-
-def test_StylizationNoise(input_image):
-    in_channels = image.extract_num_channels(input_image)
-    num_noise_channel = 3
-    module = paper.StylizationNoise(in_channels)
-    output_image = module(input_image)
-    assert isinstance(output_image, torch.Tensor)
-    assert image.extract_num_channels(output_image) == in_channels + num_noise_channel
+    with subtests.test("forward"):
+        output_image = module(input_image)
+        assert image.extract_num_channels(output_image) == desired_out_channels
 
 
 def test_noise():
-    in_channels = 3
     module = paper.noise()
-    assert isinstance(module, paper.NoiseModule)
-    assert module.in_channels == in_channels
+    assert isinstance(module, paper.AddNoiseChannels)
 
 
-def test_StylizationDownsample(subtests):
-    module = paper.StylizationDownsample()
+def test_downsample(subtests):
+    module = paper.downsample()
     assert isinstance(module, nn.AvgPool2d)
     with subtests.test("kernel_size"):
         assert module.kernel_size == 2
@@ -82,20 +77,6 @@ def test_StylizationDownsample(subtests):
         assert module.stride == 2
     with subtests.test("padding"):
         assert module.padding == 0
-
-
-def test_TextureDownsample(mocker, input_image):
-    mock = mocker.patch(
-        "pystiche_papers.ulyanov_et_al_2016._modules.TextureNoiseParams.downsample"
-    )
-    module = paper.TextureDownsample()
-    module(input_image)
-    mock.assert_called_once()
-
-
-def test_downsample():
-    module = paper.downsample()
-    assert isinstance(module, paper.StylizationDownsample)
 
 
 def test_upsample(subtests):
@@ -114,11 +95,11 @@ def test_HourGlassBlock(subtests):
     assert isinstance(hour_glass, paper.HourGlassBlock)
 
     with subtests.test("down"):
-        assert isinstance(hour_glass.down, paper.StylizationDownsample)
+        assert isinstance(hour_glass.down, type(paper.downsample()))
     with subtests.test("intermediate"):
-        assert isinstance(hour_glass.intermediate, nn.Conv2d)
+        assert hour_glass.intermediate is intermediate
     with subtests.test("up"):
-        assert isinstance(hour_glass.up, nn.Upsample)
+        assert isinstance(hour_glass.up, type(paper.upsample()))
 
 
 def test_get_norm_module(subtests):
@@ -321,7 +302,7 @@ def test_level_conv_sequence(subtests):
 
             with subtests.test("noise"):
                 if not impl_params:
-                    assert isinstance(module[0], paper.StylizationNoise)
+                    assert isinstance(module[0], paper.AddNoiseChannels)
 
 
 def test_level(subtests):
