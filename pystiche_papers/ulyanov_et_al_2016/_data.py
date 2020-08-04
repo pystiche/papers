@@ -202,26 +202,19 @@ def batch_sampler(
     data_source: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
     num_batches: Optional[int] = None,
     batch_size: Optional[int] = None,
 ) -> FiniteCycleBatchSampler:
 
     if num_batches is None:
         if impl_params:
-            if instance_norm:
-                num_batches = 2000
-            else:
-                num_batches = 300 if stylization else 150
+            num_batches = 2000 if instance_norm else 300
         else:
             num_batches = 200
 
     if batch_size is None:
         if impl_params:
-            if instance_norm:
-                batch_size = 1
-            else:
-                batch_size = 4 if stylization else 16
+            batch_size = 1 if instance_norm else 4
         else:
             batch_size = 16
 
@@ -237,17 +230,13 @@ def image_loader(
     dataset: Dataset,
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
     batch_sampler: Optional[Sampler] = None,
     num_workers: int = 0,
     pin_memory: bool = True,
 ) -> DataLoader:
     if batch_sampler is None:
         batch_sampler = batch_sampler_(
-            dataset,
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
+            dataset, impl_params=impl_params, instance_norm=instance_norm,
         )
 
     return DataLoader(

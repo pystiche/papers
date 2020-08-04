@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Union, cast
+from typing import Callable, Optional, Union, cast
 
 import torch
 from torch import nn
@@ -20,7 +20,7 @@ from ._utils import optimizer
 from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
 
-__all__ = ["training", "stylization", "texture_synthesis"]
+__all__ = ["training", "stylization"]
 
 
 def training(
@@ -28,7 +28,6 @@ def training(
     style: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
     transformer: Optional[nn.Module] = None,
     criterion: Optional[loss.PerceptualLoss] = None,
     lr_scheduler: Optional[ExponentialLR] = None,
@@ -50,18 +49,14 @@ def training(
 
     if transformer is None:
         transformer = _transformer(
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
+            impl_params=impl_params, instance_norm=instance_norm,
         )
         transformer = transformer.train()
     transformer = transformer.to(device)
 
     if criterion is None:
         criterion = perceptual_loss(
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
+            impl_params=impl_params, instance_norm=instance_norm,
         )
         criterion = criterion.eval()
     criterion = criterion.to(device)
@@ -74,13 +69,7 @@ def training(
         lr_scheduler = _lr_scheduler(optimizer_, impl_params=impl_params,)
 
     if num_epochs is None:
-        if impl_params:
-            if instance_norm:
-                num_epochs = 25
-            else:
-                num_epochs = 10 if stylization else 5
-        else:
-            num_epochs = 10
+        num_epochs = 25 if impl_params and instance_norm else 10
 
     style_transform = _style_transform(
         impl_params=impl_params, instance_norm=instance_norm
@@ -93,21 +82,10 @@ def training(
     style_image = batch_up_image(style_image, loader=content_image_loader)
     criterion.set_style_image(style_image)
 
-    if stylization:
-
-        def criterion_update_fn(
-            input_image: torch.Tensor, criterion: nn.Module
-        ) -> None:
-            cast(loss.PerceptualLoss, criterion).set_content_image(
-                preprocessor(input_image)
-            )
-
-    else:
-
-        def criterion_update_fn(
-            input_image: torch.Tensor, criterion: nn.Module
-        ) -> None:
-            pass
+    def criterion_update_fn(input_image: torch.Tensor, criterion: nn.Module) -> None:
+        cast(loss.PerceptualLoss, criterion).set_content_image(
+            preprocessor(input_image)
+        )
 
     return optim.default_transformer_epoch_optim_loop(
         content_image_loader,
@@ -127,16 +105,12 @@ def stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: bool = False,
-    stylization: bool = True,
 ) -> torch.Tensor:
     device = input_image.device
     if isinstance(transformer, str):
         style = transformer
         transformer = _transformer(
-            style=style,
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
+            style=style, impl_params=impl_params, instance_norm=instance_norm,
         )
         if instance_norm or not impl_params:
             transformer = transformer.eval()
@@ -151,39 +125,6 @@ def stylization(
         postprocessor = _postprocessor()
         postprocessor = postprocessor.to(device)
         output_image = transformer(input_image)
-        output_image = postprocessor(output_image)
-
-    return cast(torch.Tensor, output_image.detach())
-
-
-def texture_synthesis(
-    input: Union[Tuple[int, int], torch.Tensor],
-    transformer: Union[nn.Module, str],
-    impl_params: bool = True,
-    instance_norm: bool = False,
-    stylization: bool = True,
-) -> torch.Tensor:
-    if isinstance(input, torch.Tensor):
-        device = input.device
-    else:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    if isinstance(transformer, str):
-        style = transformer
-        transformer = _transformer(
-            style=style,
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            stylization=stylization,
-        )
-        if instance_norm or not impl_params:
-            transformer = transformer.eval()
-    transformer = transformer.to(device)
-
-    with torch.no_grad():
-        postprocessor = _postprocessor()
-        postprocessor = postprocessor.to(device)
-        output_image = transformer(input)
         output_image = postprocessor(output_image)
 
     return cast(torch.Tensor, output_image.detach())
