@@ -332,9 +332,6 @@ def transformer(
     | ``"udnie"``                   | x        |           |
     +-------------------------------+----------+-----------+
     """
-    if instance_norm and not impl_params:
-        raise RuntimeError
-
     init_weights = style is None
     transformer_ = Transformer(
         impl_params=impl_params, instance_norm=instance_norm, init_weights=init_weights
