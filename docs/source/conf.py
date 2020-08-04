@@ -83,6 +83,9 @@ extensions = [
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.6", None),
+    "torch": ("https://pytorch.org/docs/stable/", None),
+    "torchvision": ("https://pytorch.org/docs/stable/", None),
+    "pystiche": ("https://pystiche.readthedocs.io/en/stable/", None),
 }
 
 
