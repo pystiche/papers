@@ -92,7 +92,6 @@ class GramOperator(ops.GramOperator):
 def style_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
     layer_weights: Union[str, Sequence[float]] = "sum",
@@ -100,13 +99,7 @@ def style_loss(
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
     if score_weight is None:
-        if impl_params:
-            if instance_norm:
-                score_weight = 1e0
-            else:
-                score_weight = 1e3 if stylization else 1e0
-        else:
-            score_weight = 1e0
+        score_weight = 1e3 if impl_params and not instance_norm else 1e0
 
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -132,7 +125,6 @@ def style_loss(
 def perceptual_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
@@ -145,21 +137,17 @@ def perceptual_loss(
     style_loss_ = style_loss(
         impl_params=impl_params,
         instance_norm=instance_norm,
-        stylization=stylization,
         multi_layer_encoder=multi_layer_encoder,
         **style_loss_kwargs,
     )
 
-    if stylization:
-        if content_loss_kwargs is None:
-            content_loss_kwargs = {}
-        content_loss_ = content_loss(
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            multi_layer_encoder=multi_layer_encoder,
-            **content_loss_kwargs,
-        )
-    else:
-        content_loss_ = None  # type: ignore[assignment]
+    if content_loss_kwargs is None:
+        content_loss_kwargs = {}
+    content_loss_ = content_loss(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        multi_layer_encoder=multi_layer_encoder,
+        **content_loss_kwargs,
+    )
 
     return loss.PerceptualLoss(content_loss_, style_loss_)

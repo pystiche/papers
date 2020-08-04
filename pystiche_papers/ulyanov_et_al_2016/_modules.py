@@ -1,12 +1,10 @@
 from collections import OrderedDict
 from math import sqrt
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
-from typing_extensions import Protocol
 
 import torch
 from torch import nn
 
-from pystiche import image
 from pystiche import meta as meta_
 from pystiche import misc
 
@@ -32,142 +30,33 @@ def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tenso
     return torch.cat(inputs, dim=channel_dim)
 
 
-class NoiseFn(Protocol):
-    def __call__(self, size: torch.Size, **meta: Any) -> torch.Tensor:
-        pass
-
-
-class TextureNoiseParams:
+class AddNoiseChannels(nn.Module):
     def __init__(
-        self,
-        input: Union[Tuple[int, int], torch.Tensor],
-        num_noise_channels: int = 3,
-        batch_size: int = 1,
-        **meta: Any,
-    ):
-        def get_size(input: Union[Tuple[int, int], torch.Tensor]) -> Tuple[int, int]:
-            if isinstance(input, torch.Tensor):
-                return image.extract_image_size(input)
-            else:
-                return input
-
-        def get_meta(input: Union[Tuple[int, int], torch.Tensor]) -> Dict[str, Any]:
-            if isinstance(input, torch.Tensor):
-                return meta_.tensor_meta(input, **meta)
-            else:
-                return meta
-
-        self._batch_size = batch_size
-        self._num_noise_channels = num_noise_channels
-        self._image_size = get_size(input)
-        self._meta = get_meta(input)
-
-    @property
-    def size(self) -> torch.Size:
-        return torch.Size(
-            (self._batch_size, self._num_noise_channels, *self._image_size)
-        )
-
-    @property
-    def meta(self) -> Dict[str, Any]:
-        return self._meta
-
-    def downsample(self) -> "TextureNoiseParams":
-        height, width = self._image_size
-        return TextureNoiseParams(
-            (height // 2, width // 2),
-            self._num_noise_channels,
-            batch_size=self._batch_size,
-            **self.meta,
-        )
-
-
-class NoiseModule(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        num_noise_channels: int = 3,
-        noise_fn: Optional[NoiseFn] = None,
+        self, in_channels: int, num_noise_channels: int = 3,
     ):
         super().__init__()
         self.num_noise_channels = num_noise_channels
-
-        if noise_fn is None:
-            noise_fn = cast(NoiseFn, torch.rand)
-        self.noise_fn = noise_fn
-
         self.in_channels = in_channels
         self.out_channels = in_channels + num_noise_channels
 
-
-class StylizationNoise(NoiseModule):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        def get_size(input: torch.Tensor) -> torch.Size:
-            size = list(input.size())
-            size[1] = self.num_noise_channels
-            return torch.Size(size)
-
-        size = get_size(input)
+        size = self._extract_size(input)
         meta = meta_.tensor_meta(input)
-        noise = self.noise_fn(size, **meta)
+        noise = torch.rand(size, **meta)
         return join_channelwise(input, noise)
 
-
-class TextureNoise(NoiseModule):
-    def forward(
-        self,
-        params: Union[TextureNoiseParams, torch.Tensor, Tuple[int, int]],
-        **kwargs: Any,
-    ) -> torch.Tensor:
-        if not isinstance(params, TextureNoiseParams):
-            params = TextureNoiseParams(
-                params, num_noise_channels=self.num_noise_channels, **kwargs
-            )
-        return self.noise_fn(params.size, **params.meta)
+    def _extract_size(self, input: torch.Tensor) -> torch.Size:
+        size = list(input.size())
+        size[1] = self.num_noise_channels
+        return torch.Size(size)
 
 
-def noise(
-    stylization: bool = True,
-    in_channels: Optional[int] = None,
-    num_noise_channels: int = 3,
-    noise_fn: Optional[NoiseFn] = None,
-) -> NoiseModule:
-    if in_channels is None:
-        in_channels = 3 if stylization else 0
-
-    if stylization:
-        noise_class = cast(NoiseModule, StylizationNoise)
-    else:
-        noise_class = cast(NoiseModule, TextureNoise)
-    return cast(
-        NoiseModule,
-        noise_class(
-            in_channels, num_noise_channels=num_noise_channels, noise_fn=noise_fn
-        ),
-    )
+def noise(in_channels: int = 3, num_noise_channels: int = 3,) -> AddNoiseChannels:
+    return AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
 
 
-class StylizationDownsample(nn.AvgPool2d):
-    def __init__(self, kernel_size: int = 2, stride: int = 2, padding: int = 0):
-        super().__init__(kernel_size, stride=stride, padding=padding)
-
-
-class TextureDownsample(nn.Module):
-    def forward(
-        self,
-        params: Union[TextureNoiseParams, torch.Tensor, Tuple[int, int]],
-        **kwargs: Any,
-    ) -> TextureNoiseParams:
-        if not isinstance(params, TextureNoiseParams):
-            params = TextureNoiseParams(params, **kwargs)
-        return params.downsample()
-
-
-def downsample(stylization: bool = True) -> nn.Module:
-    if stylization:
-        return StylizationDownsample()
-    else:
-        return TextureDownsample()
+def downsample(kernel_size: int = 2, stride: int = 2, padding: int = 0) -> nn.AvgPool2d:
+    return nn.AvgPool2d(kernel_size, stride=stride, padding=padding)
 
 
 def upsample() -> nn.Upsample:
@@ -175,11 +64,9 @@ def upsample() -> nn.Upsample:
 
 
 class HourGlassBlock(SequentialWithOutChannels):
-    def __init__(
-        self, intermediate: nn.Module, stylization: bool = True,
-    ):
+    def __init__(self, intermediate: nn.Module):
         modules = (
-            ("down", downsample(stylization=stylization),),
+            ("down", downsample()),
             ("intermediate", intermediate),
             ("up", upsample()),
         )
@@ -347,10 +234,8 @@ def level(
     prev_level_block: Optional[SequentialWithOutChannels],
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
-    in_channels: Optional[int] = None,
+    in_channels: int = 3,
     num_noise_channels: int = 3,
-    noise_fn: Optional[NoiseFn] = None,
     inplace: bool = True,
 ) -> SequentialWithOutChannels:
     def conv_sequence(
@@ -360,10 +245,7 @@ def level(
 
         if use_noise:
             noise_module = noise(
-                stylization,
-                in_channels=in_channels,
-                num_noise_channels=num_noise_channels,
-                noise_fn=noise_fn,
+                in_channels=in_channels, num_noise_channels=num_noise_channels,
             )
             in_channels = noise_module.out_channels
             modules.append(("noise", noise_module))
@@ -382,15 +264,13 @@ def level(
         modules.append(("conv_seq", conv_seq))
         return SequentialWithOutChannels(OrderedDict(modules))
 
-    if in_channels is None:
-        in_channels = 3 if stylization else 0
-    use_noise = not impl_params or not stylization
+    use_noise = not impl_params
     shallow_branch = conv_sequence(in_channels, out_channels=8, use_noise=use_noise)
 
     if prev_level_block is None:
         return shallow_branch
 
-    deep_branch = HourGlassBlock(prev_level_block, stylization=stylization,)
+    deep_branch = HourGlassBlock(prev_level_block)
     branch_block = BranchBlock(deep_branch, shallow_branch, instance_norm=instance_norm)
 
     output_conv_seq = conv_sequence(
@@ -408,16 +288,12 @@ class Transformer(nn.Sequential):
         levels: int,
         impl_params: bool = True,
         instance_norm: bool = True,
-        stylization: bool = True,
         init_weights: bool = True,
     ) -> None:
         pyramid = None
         for _ in range(levels):
             pyramid = level(
-                pyramid,
-                impl_params=impl_params,
-                instance_norm=instance_norm,
-                stylization=stylization,
+                pyramid, impl_params=impl_params, instance_norm=instance_norm,
             )
 
         if impl_params:
@@ -472,18 +348,6 @@ def transformer(
     style: Optional[str] = None,
     impl_params: bool = True,
     instance_norm: bool = True,
-    stylization: bool = True,
-    levels: Optional[int] = None,
+    levels: int = 6,
 ) -> Transformer:
-    if levels is None:
-        if not impl_params:
-            levels = 6 if stylization else 5
-        else:
-            levels = 6
-
-    return Transformer(
-        levels,
-        impl_params=impl_params,
-        instance_norm=instance_norm,
-        stylization=stylization,
-    )
+    return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
