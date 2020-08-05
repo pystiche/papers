@@ -2,6 +2,7 @@ import contextlib
 import os
 import shutil
 import tempfile
+from os import path
 
 import pytest
 
@@ -9,7 +10,13 @@ import torch
 
 from pystiche import image
 
-__all__ = ["get_tempdir", "skip_if_cuda_not_available", "is_callable", "create_guides"]
+__all__ = [
+    "rmtree",
+    "get_tempdir",
+    "skip_if_cuda_not_available",
+    "is_callable",
+    "create_guides",
+]
 
 
 # Copied from
@@ -35,13 +42,18 @@ def onerror(func, path, exc_info):
         raise
 
 
+def rmtree(dir):
+    if path.exists(dir):
+        shutil.rmtree(dir, onerror=onerror)
+
+
 @contextlib.contextmanager
 def get_tempdir(**mkdtemp_kwargs):
     tmp_dir = tempfile.mkdtemp(**mkdtemp_kwargs)
     try:
         yield tmp_dir
     finally:
-        shutil.rmtree(tmp_dir, onerror=onerror)
+        rmtree(tmp_dir)
 
 
 skip_if_cuda_not_available = pytest.mark.skipif(
