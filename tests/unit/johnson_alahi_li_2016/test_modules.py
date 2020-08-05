@@ -31,23 +31,17 @@ def model_url_configs(styles):
 
 
 def model_url_should_be_available(framework, style, impl_params, instance_norm):
-    # TODO: remove when pystiche weights are uploaded
     if framework == "pystiche":
+        return True
+
+    if not impl_params:
         return False
 
-    if framework == "luatorch" and not impl_params:
-        return False
-
-    if (
-        framework == "luatorch"
-        and style in ("composition_vii", "starry_night", "the_wave")
-        and instance_norm
-    ):
+    if style in ("composition_vii", "starry_night", "the_wave") and instance_norm:
         return False
 
     if (
-        framework == "luatorch"
-        and style in ("candy", "feathers", "mosaic", "the_scream", "udnie",)
+        style in ("candy", "feathers", "mosaic", "the_scream", "udnie")
         and not instance_norm
     ):
         return False
