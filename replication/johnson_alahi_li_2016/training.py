@@ -31,7 +31,7 @@ def main(args):
         )
 
         model_name = make_transformer_name(style, args.impl_params, args.instance_norm)
-        save_state_dict(transformer, model_name, root=args.model_dir)
+        save_state_dict(transformer, model_name, root=args.models_dir)
 
 
 def read_style_image(root, style, **read_image_kwargs):

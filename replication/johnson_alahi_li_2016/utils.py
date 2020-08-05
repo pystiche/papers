@@ -33,7 +33,9 @@ def make_name(prefix, style, impl_params, instance_norm):
 
 
 def make_transformer_name(style, impl_params, instance_norm):
-    return make_name("transformer", style, impl_params, instance_norm)
+    return make_name(
+        "johnson_alahi_li_2016_transformer", style, impl_params, instance_norm
+    )
 
 
 def read_local_or_builtin_image(root, name, builtin_images, **read_image_kwargs):
