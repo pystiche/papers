@@ -1,5 +1,4 @@
 import itertools
-from collections import OrderedDict
 
 import pytest
 
@@ -10,57 +9,6 @@ from torch import nn
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
-
-
-def test_SequentialWithOutChannels(subtests):
-    sequentialpaper = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
-    sequential_module_dict = OrderedDict(
-        ((str(idx), module) for idx, module in enumerate(sequentialpaper))
-    )
-    for out_channel_name, out_channels, args in (
-        (None, 5, sequentialpaper),
-        (0, 3, sequentialpaper),
-        (1, 5, sequentialpaper),
-        ("0", 3, (sequential_module_dict,)),
-        ("1", 5, (sequential_module_dict,)),
-    ):
-        with subtests.test(out_channel_name=out_channel_name):
-            sequential = paper.SequentialWithOutChannels(
-                *args, out_channel_name=out_channel_name
-            )
-            assert sequential.out_channels == out_channels
-
-
-def test_join_channelwise(subtests, image_small_0, image_small_1):
-    join_image = paper.join_channelwise(image_small_0, image_small_1)
-    assert isinstance(join_image, torch.Tensor)
-
-    input_num_channels = image.extract_num_channels(image_small_0)
-    assert image.extract_num_channels(
-        join_image
-    ) == input_num_channels + image.extract_num_channels(image_small_1)
-    ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
-    ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
-
-
-def test_AddNoiseChannels(subtests, input_image):
-    in_channels = image.extract_num_channels(input_image)
-    num_noise_channels = in_channels + 1
-    module = paper.AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
-
-    assert isinstance(module, nn.Module)
-
-    with subtests.test("in_channels"):
-        assert module.in_channels == in_channels
-
-    desired_out_channels = in_channels + num_noise_channels
-
-    with subtests.test("out_channels"):
-        assert module.out_channels == desired_out_channels
-
-    with subtests.test("forward"):
-        output_image = module(input_image)
-        assert image.extract_num_channels(output_image) == desired_out_channels
 
 
 def test_noise():
@@ -86,20 +34,6 @@ def test_upsample(subtests):
         assert module.scale_factor == pytest.approx(2.0)
     with subtests.test("mode"):
         assert module.mode == "nearest"
-
-
-def test_HourGlassBlock(subtests):
-    intermediate = nn.Conv2d(3, 3, 1)
-    hour_glass = paper.HourGlassBlock(intermediate)
-
-    assert isinstance(hour_glass, paper.HourGlassBlock)
-
-    with subtests.test("down"):
-        assert isinstance(hour_glass.down, type(paper.downsample()))
-    with subtests.test("intermediate"):
-        assert hour_glass.intermediate is intermediate
-    with subtests.test("up"):
-        assert isinstance(hour_glass.up, type(paper.upsample()))
 
 
 def test_get_norm_module(subtests):

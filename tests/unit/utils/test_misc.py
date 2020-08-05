@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
-from pystiche.image import extract_batch_size, make_single_image
+from pystiche.image import extract_batch_size, extract_num_channels, make_single_image
 from pystiche.optim import OptimLogger
 from pystiche_papers import utils
 from tests import assets
@@ -35,6 +35,18 @@ def test_is_valid_padding():
 
     assert utils.is_valid_padding((1, 2))
     assert not utils.is_valid_padding((1, 0, -1))
+
+
+def test_join_channelwise(subtests, image_small_0, image_small_1):
+    join_image = utils.join_channelwise(image_small_0, image_small_1)
+    assert isinstance(join_image, torch.Tensor)
+
+    input_num_channels = extract_num_channels(image_small_0)
+    assert extract_num_channels(
+        join_image
+    ) == input_num_channels + extract_num_channels(image_small_1)
+    ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
+    ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
 
 
 def test_paper_replication(subtests, caplog):
