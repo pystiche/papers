@@ -37,30 +37,31 @@ def training(
     r"""Training a transformer for the NST.
 
     Args:
-        content_image_loader: Content images used as input for the ``transformer``. Drawing from this
-            should yield a single item.
-        style_image: Style image on which the Transformer should be trained.
+        content_image_loader: Content images used as input for the ``transformer``.
+        style_image: Style image on which the ``transformer`` should be trained.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. If ``None``,
             ``instance_norm`` is set to ``impl_params``. Defaults to ``None``.
-        transformer: Transformer to be optimized. If ``None``, the default transformer from the paper is used.
-        criterion: Optimization criterion. If ``None``, the default criterion from the paper is used.
-        Defaults to ``None``.
-        optimizer: Optimizer. If ``None``, the default optimizer from the paper is used. Defaults to ``None``.
+        transformer: Transformer to be optimized. If ``None``, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016._modules.transformer` from the paper is used.
+        criterion: Optimization criterion. If ``None``, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016._loss.perceptual_loss` from the paper is used.
+            Defaults to ``None``.
+        optimizer: Optimizer. If ``None``, the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.optimizer`
+            from the paper is used. Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
             :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
         log_fn: Optional custom logging function. It is called in every optimization
             step with the current step and loss. If ``None``,
-            :func:`pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
     Returns: Trained transformer for the NST.
-
     """
     style: Optional[str]
     if isinstance(style_image, torch.Tensor):
@@ -128,7 +129,7 @@ def stylization(
     preprocessor: Optional[nn.Module] = None,
     postprocessor: Optional[nn.Module] = None,
 ) -> torch.Tensor:
-    r"""Transforms an input image into a stylised version using the ``transfromer``.
+    r"""Transforms an input image into a stylised version using the transfromer.
 
     Args:
         input_image: Image to be stylised.
@@ -147,7 +148,6 @@ def stylization(
             after the optimization.
 
     Returns: Stylised ``input_image``.
-
     """
     device = input_image.device
 

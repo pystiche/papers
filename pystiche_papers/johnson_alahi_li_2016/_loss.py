@@ -64,12 +64,13 @@ def content_loss(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the correct optimization parameters for the reproduction.
-        multi_layer_encoder: Pretrained ``MultiLayerEncoder``. If ``None``, the default ``multi_layer_encoder``
-        from the paper is used. Defaults to ``None``.
-        layer: Layer from which the encs of the ``multi_layer_encoder`` should be taken. Defaults to "relu2_2".
-        score_weight: Score weight of the operator. If ``None``, the score_weight is
-        determined by the :func:``get_content_score_weight``. Defaults to ``None``.
-    Returns: :class:``ops.FeatureReconstructionOperator``
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`. If ``None``, the
+            default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
+            Defaults to ``None``.
+        layer: Layer from which the encs of the :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`
+            should be taken. Defaults to "relu2_2".
+        score_weight: Score weight of the operator. If ``None``, the score_weight is determined by the
+            :func:`get_content_score_weight`. Defaults to ``None``.
 
     """
     if multi_layer_encoder is None:
@@ -146,17 +147,15 @@ def style_loss(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the correct optimization parameters for the reproduction.
-        multi_layer_encoder: Pretrained ``MultiLayerEncoder``. If ``None``, the default ``multi_layer_encoder``
-        from the paper is used. Defaults to ``None``.
-        layers: Layers from which the encs of the ``multi_layer_encoder`` should be taken. If ``None``,
-        the defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`. If ``None``,
+            the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
+            Defaults to ``None``.
+        layers: Layers from which the encs of the :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder` should be
+            taken. If ``None``, the defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
         layer_weights: Layer weights of the operator. Defaults to "sum".
         score_weight: Score weight of the operator. If ``None``, the score_weight is
-        determined by the :func:``get_content_score_weight``. Defaults to ``None``.
-        **gram_op_kwargs: **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
-
-    Returns:
-
+            determined by the :func:`~pystiche_papers.johnson_alahi_li_2016._loss.get_content_score_weight`. Defaults to ``None``.
+        **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -238,10 +237,7 @@ def regularization(
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the correct optimization parameters for the reproduction.
         score_weight: Score weight of the operator.
-        **total_variation_op_kwargs: **total_variation_op_kwargs: Optional parameters
-        for the ``ops.TotalVariationOperator``.
-
-    Returns:
+        **total_variation_op_kwargs: Optional parameters for the ``ops.TotalVariationOperator``.
 
     """
     if score_weight is None:
@@ -271,13 +267,11 @@ def perceptual_loss(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the correct optimization parameters for the reproduction.
-        of the pretrained transformers.
-        multi_layer_encoder: Pretrained ``MultiLayerEncoder``
-        content_loss_kwargs: **content_loss_kwargs: Optional parameters for the ``content_loss``.
-        style_loss_kwargs: **style_loss_kwargs: Optional parameters for the ``style_loss``.
-        total_variation_kwargs: **total_variation_kwargs: Optional parameters for the ``regularization``.
-
-    Returns:
+            of the pretrained transformers.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`.
+        content_loss_kwargs: Optional parameters for the ``content_loss``.
+        style_loss_kwargs: Optional parameters for the ``style_loss``.
+        total_variation_kwargs: Optional parameters for the ``regularization``.
 
     """
     if multi_layer_encoder is None:
