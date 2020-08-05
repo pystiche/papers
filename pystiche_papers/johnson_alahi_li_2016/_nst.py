@@ -71,6 +71,7 @@ def training(
 
     if impl_params:
         # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L111
+        # A preprocessor is used in the implementation, which is not documented in the paper.
         preprocessor = _preprocessor()
         preprocessor = preprocessor.to(device)
         style_image = preprocessor(style_image)
@@ -118,6 +119,7 @@ def stylization(
     transformer = transformer.to(device)
 
     if impl_params and preprocessor is None:
+        # A preprocessor is used in the implementation, which is not documented in the paper.
         # content:
         # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L104
         # style:
@@ -125,6 +127,7 @@ def stylization(
         preprocessor = _preprocessor()
 
     if impl_params and postprocessor is None:
+        # A postprocessor is used in the implementation, which is not documented in the paper.
         # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L137
         postprocessor = _postprocessor()
 

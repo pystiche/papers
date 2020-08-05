@@ -283,6 +283,8 @@ class Transformer(nn.Sequential):
             )
 
         if impl_params:
+            # Just a torch. nn. Conv2D is used instead of the ConBlock consisting of torch. nn Conv2D,
+            # norm module and activation function as described in the paper.
             # instance_norm:
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/models/pyramid.lua#L61
             # not instance_norm:
@@ -341,5 +343,4 @@ def transformer(
     levels: int = 6,
 ) -> Transformer:
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
-
 
