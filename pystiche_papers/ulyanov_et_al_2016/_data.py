@@ -1,7 +1,6 @@
-from typing import List, Optional, Sized, cast
+from typing import List, Optional, Sized
 from urllib.parse import urljoin
 
-import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 
 from pystiche.data import (

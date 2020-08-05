@@ -1,12 +1,13 @@
-import pytest
 from collections import OrderedDict
+
+import pytest
 
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
-from pystiche_papers import utils
 from pystiche.image import extract_num_channels
+from pystiche_papers import utils
 
 
 def test_Identity():
