@@ -1,6 +1,7 @@
 from torchvision.datasets.utils import download_and_extract_archive
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
+
 from utils import ArgumentParser, make_description
 
 

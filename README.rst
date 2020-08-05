@@ -11,7 +11,7 @@ Reference implementation and replication of prominent NST papers
     * - package
       - |license| |status|
     * - code
-      - |black| |mypy| |lint|
+      - |isort| |black| |mypy| |lint|
     * - tests
       - |tests| |coverage|
     * - docs
@@ -31,6 +31,11 @@ For installation instructions and usage examples please consult the documentatio
   image:: https://www.repostatus.org/badges/latest/wip.svg
     :alt: Project Status: WIP
     :target: https://www.repostatus.org/#wip
+
+.. |isort|
+  image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
+    :target: https://timothycrosley.github.io/isort/
+    :alt: isort
 
 .. |black|
   image:: https://img.shields.io/badge/code%20style-black-000000.svg
