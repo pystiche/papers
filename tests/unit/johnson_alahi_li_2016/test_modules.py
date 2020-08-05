@@ -4,13 +4,14 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
-from torch import hub, nn
+from torch import nn
 
 import pystiche
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import misc
 from pystiche_papers import utils
 from pystiche_papers.johnson_alahi_li_2016._modules import select_url
+from pystiche_papers.utils import load_state_dict_from_url
 
 from tests.asserts import assert_downloads_correctly, assert_is_downloadable
 
@@ -300,18 +301,20 @@ def test_transformer_smoke(subtests, image_medium):
 
 @pytest.mark.large_download
 @pytest.mark.slow
-def test_transformer_load_state_dict_from_url(subtests, mocker, model_url_configs):
+def test_transformer_load_state_dict_from_url(
+    subtests, mocker, tmpdir, model_url_configs
+):
     for config in model_url_configs:
         if not model_url_should_be_available(**config):
             continue
 
         with subtests.test(**config):
             url = select_url(**config)
-            state_dict = hub.load_state_dict_from_url(url)
-
-            with mocker.patch(
-                "pystiche_papers.johnson_alahi_li_2016.modules.load_state_dict_from_url",
+            state_dict = load_state_dict_from_url(url, model_dir=tmpdir)
+            mocker.patch(
+                "pystiche_papers.johnson_alahi_li_2016._modules.load_state_dict_from_url",
                 return_value=state_dict,
-            ):
-                transformer = paper.transformer(**config)
-                ptu.assert_allclose(transformer.state_dict(), state_dict)
+            )
+
+            transformer = paper.transformer(**config)
+            ptu.assert_allclose(transformer.state_dict(), state_dict)

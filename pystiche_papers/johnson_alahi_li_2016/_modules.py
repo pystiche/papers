@@ -4,9 +4,10 @@ from os import path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
-from torch import hub, nn
+from torch import nn
 
 import pystiche
+from pystiche_papers.utils import load_state_dict_from_url
 
 from ..utils import ResidualBlock, same_size_output_padding, same_size_padding
 
@@ -345,6 +346,6 @@ def transformer(
         impl_params=impl_params,
         instance_norm=instance_norm,
     )
-    state_dict = hub.load_state_dict_from_url(url)
+    state_dict = load_state_dict_from_url(url)
     transformer_.load_state_dict(state_dict)
     return transformer_
