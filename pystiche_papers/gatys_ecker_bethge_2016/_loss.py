@@ -45,7 +45,7 @@ def content_loss(
     score_weight: float = 1e0,
 ) -> FeatureReconstructionOperator:
     if multi_layer_encoder is None:
-        multi_layer_encoder = _multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     return FeatureReconstructionOperator(
@@ -79,10 +79,12 @@ class StyleLoss(ops.MultiLayerEncodingOperator):
 
 
 def get_layer_weights(
-    layers: Sequence[str], multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None
+    layers: Sequence[str],
+    impl_params: bool = True,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
 ) -> List[float]:
     if multi_layer_encoder is None:
-        multi_layer_encoder = _multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     nums_channels = []
     for layer in layers:
@@ -108,7 +110,7 @@ def style_loss(
     **gram_loss_kwargs: Any,
 ) -> StyleLoss:
     if multi_layer_encoder is None:
-        multi_layer_encoder = _multi_layer_encoder()
+        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if layers is None:
         layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
