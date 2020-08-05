@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pystiche.image.transforms.functional as F
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche_papers import utils
+
 from tests.utils import is_callable
 
 
