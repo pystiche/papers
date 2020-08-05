@@ -3,6 +3,7 @@ import pytest
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.li_wand_2016 as paper
+
 from tests.utils import is_callable
 
 

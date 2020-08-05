@@ -6,6 +6,7 @@ import pytorch_testing_utils as ptu
 
 import pystiche.image.transforms.functional as F
 import pystiche_papers.gatys_et_al_2017 as paper
+
 from tests.utils import is_callable
 
 

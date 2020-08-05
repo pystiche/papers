@@ -9,10 +9,10 @@ import torch
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import misc, optim
-from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 from . import utils
 from .asserts import assert_dir_exists
+from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 PAPER = "gatys_ecker_bethge_2016"
 

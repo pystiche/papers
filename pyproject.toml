@@ -32,7 +32,7 @@ extra_standard_library = ["importlib_metadata"]
 known_third_party = ["numpy", "pytest"]
 known_pytorch = ["pytorch_testing_utils", "torch", "torchvision"]
 known_first_party = ["pystiche", "pystiche_papers"]
-known_local_folder = ["utils"]
+known_local_folder = ["tests", "utils"]
 sections= ["FUTURE", "STDLIB", "THIRDPARTY", "PYTORCH", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.black]

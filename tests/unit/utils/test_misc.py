@@ -12,6 +12,7 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche.optim import OptimLogger
 from pystiche_papers import utils
+
 from tests import assets
 from tests import utils as utils_
 
