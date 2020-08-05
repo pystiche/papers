@@ -5,50 +5,16 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
 import torch
 from torch import nn
 
-from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import is_valid_padding, same_size_padding
-
-
-class SequentialWithOutChannels(nn.Sequential):
-    def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
-        super().__init__(*args)
-        if out_channel_name is None:
-            out_channel_name = tuple(cast(Dict[str, nn.Module], self._modules).keys())[
-                -1
-            ]
-        elif isinstance(out_channel_name, int):
-            out_channel_name = str(out_channel_name)
-
-        self.out_channels = cast(Dict[str, nn.Module], self._modules)[
-            out_channel_name
-        ].out_channels
-
-
-def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
-    return torch.cat(inputs, dim=channel_dim)
-
-
-class AddNoiseChannels(nn.Module):
-    def __init__(
-        self, in_channels: int, num_noise_channels: int = 3,
-    ):
-        super().__init__()
-        self.num_noise_channels = num_noise_channels
-        self.in_channels = in_channels
-        self.out_channels = in_channels + num_noise_channels
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        size = self._extract_size(input)
-        meta = meta_.tensor_meta(input)
-        noise = torch.rand(size, **meta)
-        return join_channelwise(input, noise)
-
-    def _extract_size(self, input: torch.Tensor) -> torch.Size:
-        size = list(input.size())
-        size[1] = self.num_noise_channels
-        return torch.Size(size)
+from ..utils import (
+    AddNoiseChannels,
+    HourGlassBlock,
+    SequentialWithOutChannels,
+    is_valid_padding,
+    join_channelwise,
+    same_size_padding,
+)
 
 
 def noise(in_channels: int = 3, num_noise_channels: int = 3,) -> AddNoiseChannels:
@@ -61,16 +27,6 @@ def downsample(kernel_size: int = 2, stride: int = 2, padding: int = 0) -> nn.Av
 
 def upsample() -> nn.Upsample:
     return nn.Upsample(scale_factor=2.0, mode="nearest")
-
-
-class HourGlassBlock(SequentialWithOutChannels):
-    def __init__(self, intermediate: nn.Module):
-        modules = (
-            ("down", downsample()),
-            ("intermediate", intermediate),
-            ("up", upsample()),
-        )
-        super().__init__(OrderedDict(modules), out_channel_name="intermediate")
 
 
 def norm(
@@ -270,7 +226,7 @@ def level(
     if prev_level_block is None:
         return shallow_branch
 
-    deep_branch = HourGlassBlock(prev_level_block)
+    deep_branch = HourGlassBlock(downsample(), prev_level_block, upsample())
     branch_block = BranchBlock(deep_branch, shallow_branch, instance_norm=instance_norm)
 
     output_conv_seq = conv_sequence(

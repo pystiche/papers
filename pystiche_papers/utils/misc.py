@@ -25,6 +25,7 @@ __all__ = [
     "same_size_output_padding",
     "is_valid_padding",
     "batch_up_image",
+    "join_channelwise",
     "paper_replication",
     "make_reproducible",
     "get_tmp_dir",
@@ -125,6 +126,10 @@ def batch_up_image(
         raise RuntimeError
 
     return image.repeat(desired_batch_size, 1, 1, 1)
+
+
+def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
+    return torch.cat(inputs, dim=channel_dim)
 
 
 @contextlib.contextmanager

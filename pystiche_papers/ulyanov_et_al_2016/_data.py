@@ -4,8 +4,6 @@ from urllib.parse import urljoin
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 
-import pystiche.image.transforms.functional as F
-from pystiche import image
 from pystiche.data import (
     CreativeCommonsLicense,
     DownloadableImage,
@@ -15,6 +13,8 @@ from pystiche.data import (
 )
 from pystiche.image import transforms
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
+
+from ..utils import OptionalGrayscaleToFakegrayscale
 
 __all__ = [
     "content_transform",
@@ -29,13 +29,6 @@ __all__ = [
 def content_transform(
     edge_size: int = 256, impl_params: bool = True, instance_norm: bool = True,
 ) -> transforms.ComposedTransform:
-    class OptionalGrayscaleToFakegrayscale(transforms.Transform):
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            is_grayscale = image.extract_num_channels(input_image) == 1
-            if is_grayscale:
-                return cast(torch.Tensor, F.grayscale_to_fakegrayscale(input_image))
-            else:
-                return input_image
 
     transforms_: List[transforms.Transform] = []
     if impl_params:

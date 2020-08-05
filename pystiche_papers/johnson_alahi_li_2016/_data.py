@@ -1,11 +1,8 @@
-from typing import Optional, Sized, Tuple, cast
+from typing import Optional, Sized
 from urllib.parse import urljoin
 
-import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 
-import pystiche.image.transforms.functional as F
-from pystiche import image
 from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
@@ -14,6 +11,7 @@ from pystiche.data import (
 from pystiche.image import transforms
 
 from ..data.utils import FiniteCycleBatchSampler
+from ..utils.transforms import OptionalGrayscaleToFakegrayscale, TopLeftCropToMultiple
 
 __all__ = [
     "content_transform",
@@ -28,28 +26,6 @@ __all__ = [
 def content_transform(
     edge_size: int = 256, multiple: int = 16, impl_params: bool = True,
 ) -> transforms.ComposedTransform:
-    class TopLeftCropToMultiple(transforms.Transform):
-        def __init__(self, multiple: int):
-            super().__init__()
-            self.multiple = multiple
-
-        def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
-            old_height, old_width = image.extract_image_size(input_image)
-            new_height = old_height - old_height % self.multiple
-            new_width = old_width - old_width % self.multiple
-            return new_height, new_width
-
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            size = self.calculate_size(input_image)
-            return F.top_left_crop(input_image, size)
-
-    class OptionalGrayscaleToFakegrayscale(transforms.Transform):
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            is_grayscale = image.extract_num_channels(input_image) == 1
-            if is_grayscale:
-                return cast(torch.Tensor, F.grayscale_to_fakegrayscale(input_image))
-            else:
-                return input_image
 
     transforms_ = [
         TopLeftCropToMultiple(multiple),
