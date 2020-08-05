@@ -13,7 +13,7 @@ from typing import Tuple, TypeVar, Union, cast, overload
 import numpy as np
 
 import torch
-from torch import nn
+from torch import hub, nn
 from torch.hub import _get_torch_home
 from torch.utils.data.dataloader import DataLoader
 
@@ -30,6 +30,7 @@ __all__ = [
     "get_tmp_dir",
     "get_sha256_hash",
     "save_state_dict",
+    "load_state_dict_from_url",
 ]
 
 In = TypeVar("In")
@@ -221,3 +222,34 @@ def save_state_dict(
         shutil.move(tmp_file, file)
 
     return file
+
+
+def load_state_dict_from_url(
+    url: str,
+    model_dir: Optional[str] = None,
+    map_location: Optional[Union[torch.device, str]] = None,
+    file_name: Optional[str] = None,
+    **kwargs: Any,
+) -> Dict[str, torch.Tensor]:
+    # This is just for compatibility with torch==1.6.0 until
+    # https://github.com/pytorch/pytorch/issues/42596 is resolved
+    if model_dir is None:
+        model_dir = path.join(hub.get_dir(), "checkpoints")
+    if file_name is None:
+        file_name = path.basename(url)
+
+    try:
+        return cast(
+            Dict[str, torch.Tensor],
+            hub.load_state_dict_from_url(
+                url, model_dir=model_dir, file_name=file_name, **kwargs
+            ),
+        )
+    except RuntimeError as error:
+        if str(error) != "Only one file(not dir) is allowed in the zipfile":
+            raise error
+
+        cached_file = path.join(model_dir, file_name)
+        return cast(
+            Dict[str, torch.Tensor], torch.load(cached_file, map_location=map_location)
+        )
