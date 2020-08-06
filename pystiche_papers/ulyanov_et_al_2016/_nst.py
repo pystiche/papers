@@ -70,12 +70,10 @@ def training(
 
     if num_epochs is None:
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
-        # Due to the use of optim.default_transformer_epoch_optim_loop, the num_iter is the result of
-        # multiplying the number of epochs and the number of batches within an epoch.
+        # The num_iterations are split up into multiple epochs with corresponding num_batches:
         # 50000 = 25 * 2000
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
-        # Due to the use of optim.default_transformer_epoch_optim_loop, the num_iter is the result of
-        # multiplying the number of epochs and the number of batches within an epoch.
+        # The num_iterations are split up into multiple epochs with corresponding num_batches:
         # 3000 = 10 * 300
         num_epochs = 25 if impl_params and instance_norm else 10
 
