@@ -8,12 +8,11 @@ from torch import nn
 from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import (
-    SequentialWithOutChannels,
-    is_valid_padding,
-    join_channelwise,
-    same_size_padding,
-)
+from ..utils import SequentialWithOutChannels, is_valid_padding, same_size_padding
+
+
+def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
+    return torch.cat(inputs, dim=channel_dim)
 
 
 class AddNoiseChannels(nn.Module):

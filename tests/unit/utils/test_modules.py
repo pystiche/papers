@@ -39,14 +39,14 @@ def test_ResidualBlock_shortcut(double_module):
 
 
 def test_SequentialWithOutChannels(subtests):
-    sequentialpaper = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
+    sequential_modules = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
     sequential_module_dict = OrderedDict(
-        ((str(idx), module) for idx, module in enumerate(sequentialpaper))
+        ((str(idx), module) for idx, module in enumerate(sequential_modules))
     )
     for out_channel_name, out_channels, args in (
-        (None, 5, sequentialpaper),
-        (0, 3, sequentialpaper),
-        (1, 5, sequentialpaper),
+        (None, 5, sequential_modules),
+        (0, 3, sequential_modules),
+        (1, 5, sequential_modules),
         ("0", 3, (sequential_module_dict,)),
         ("1", 5, (sequential_module_dict,)),
     ):
@@ -55,3 +55,13 @@ def test_SequentialWithOutChannels(subtests):
                 *args, out_channel_name=out_channel_name
             )
             assert sequential.out_channels == out_channels
+
+
+def test_SequentialWithOutChannels_forward_behaviour(input_image):
+    sequential_modules = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
+    sequential = utils.SequentialWithOutChannels(*sequential_modules)
+    actual = sequential(input_image)
+    desired = input_image
+    for module in sequential_modules:
+        desired = module(desired)
+    ptu.assert_allclose(actual, desired)

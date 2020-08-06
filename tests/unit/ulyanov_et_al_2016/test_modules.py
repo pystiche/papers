@@ -11,6 +11,18 @@ import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
 
 
+def test_join_channelwise(subtests, image_small_0, image_small_1):
+    join_image = paper.join_channelwise(image_small_0, image_small_1)
+    assert isinstance(join_image, torch.Tensor)
+
+    input_num_channels = image.extract_num_channels(image_small_0)
+    assert image.extract_num_channels(
+        join_image
+    ) == input_num_channels + image.extract_num_channels(image_small_1)
+    ptu.assert_allclose(join_image[:, :input_num_channels, :, :], image_small_0)
+    ptu.assert_allclose(join_image[:, input_num_channels:, :, :], image_small_1)
+
+
 def test_AddNoiseChannels(subtests, input_image):
     in_channels = image.extract_num_channels(input_image)
     num_noise_channels = in_channels + 1
