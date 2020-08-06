@@ -54,8 +54,7 @@ def content_loss(
     layer: str = "relu2_2",
     score_weight: Optional[float] = None,
 ) -> ops.FeatureReconstructionOperator:
-    r"""Content_loss from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+    r"""Content_loss from :cite:`JAL2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
@@ -63,12 +62,12 @@ def content_loss(
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the correct optimization parameters for the reproduction.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``None``, the
+        style: Optional style for selecting the optimization parameters for the replication.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``, the
             default :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` from the paper is used.
-        layer: Layer from which the encodings of the ``multi_layer_encoder``
-            should be taken. Defaults to "relu2_2".
-        score_weight: Score weight of the operator. If omitted, the score_weight is determined with respect to ``style`` and ``impl_params``. For details see FIXME
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be taken. Defaults to "relu2_2".
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
+            ``style`` and ``instance_norm``. For details see FIXME
 
     """
     if multi_layer_encoder is None:
@@ -135,8 +134,7 @@ def style_loss(
     score_weight: Optional[float] = None,
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
-    r"""Style_loss from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+    r"""Style_loss from :cite:`JAL2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
@@ -144,15 +142,14 @@ def style_loss(
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the correct optimization parameters for the reproduction.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`. If ``None``,
+        style: Optional style for selecting the optimization parameters for the replication.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
             the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
-            Defaults to ``None``.
-        layers: Layers from which the encs of the :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder` should be
-            taken. If ``None``, the defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
+            defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
         layer_weights: Layer weights of the operator. Defaults to "sum".
-        score_weight: Score weight of the operator. If ``None``, the score_weight is
-            determined by the :func:`~pystiche_papers.johnson_alahi_li_2016._loss.get_content_score_weight`. Defaults to ``None``.
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
+            ``style``, ``instance_norm`` and ``impl_params``. For details see FIXME
         **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
     """
     if multi_layer_encoder is None:
@@ -227,14 +224,14 @@ def regularization(
     score_weight: Optional[float] = None,
     **total_variation_op_kwargs: Any,
 ) -> TotalVariationOperator:
-    r"""Regularization from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016`.
+    r"""Regularization from :cite:`JAL2016`.
 
     Args:
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the correct optimization parameters for the reproduction.
-        score_weight: Score weight of the operator.
+        style: Optional style for selecting the optimization parameters for the replication.
+        score_weight: Score weight of the operator. If omitted, the score_weight is determined with respect to
+            ``style`` and ``instance_norm``. For details see FIXME
         **total_variation_op_kwargs: Optional parameters for the ``ops.TotalVariationOperator``.
 
     """
@@ -264,9 +261,9 @@ def perceptual_loss(
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the correct optimization parameters for the reproduction.
+        style: Optional style for selecting the optimization parameters for the replication.
             of the pretrained transformers.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
         content_loss_kwargs: Optional parameters for the ``content_loss``.
         style_loss_kwargs: Optional parameters for the ``style_loss``.
         total_variation_kwargs: Optional parameters for the ``regularization``.

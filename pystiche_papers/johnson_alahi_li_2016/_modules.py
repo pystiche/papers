@@ -168,8 +168,7 @@ def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
 
 
 def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
-    r"""Encoder part of the Transformer from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+    r"""Encoder part of the Transformer from :cite:`JAL2016` .
 
     Args:
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
@@ -209,8 +208,7 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
-    r"""Decoder part of the Transformer from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+    r"""Decoder part of the Transformer from :cite:`JAL2016` .
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
@@ -268,8 +266,7 @@ def decoder(
 
 
 class Transformer(nn.Module):
-    r"""Transformer from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+    r"""Transformer from :cite:`JAL2016` .
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
@@ -293,7 +290,7 @@ class Transformer(nn.Module):
             self.init_weights()
 
     def init_weights(self) -> None:
-        r"""Initializes the weights of the transformer as described in the paper."""
+        r"""Initializes the weights of the transformer as it is the case in the original implementation."""
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)

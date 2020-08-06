@@ -46,11 +46,11 @@ def training(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. If ``None``,
             ``instance_norm`` is set to ``impl_params``. Defaults to ``None``.
         transformer: Transformer to be optimized. If ``None``, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._modules.transformer` from the paper is used.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` from the paper is used.
         criterion: Optimization criterion. If ``None``, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._loss.perceptual_loss` from the paper is used.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the paper is used.
             Defaults to ``None``.
-        optimizer: Optimizer. If ``None``, the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.optimizer`
+        optimizer: Optimizer. If ``None``, the default :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer`
             from the paper is used. Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
