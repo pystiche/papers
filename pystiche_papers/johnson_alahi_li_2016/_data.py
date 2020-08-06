@@ -78,7 +78,6 @@ def get_style_edge_size(
     )
 
 
-
 def style_transform(
     impl_params: bool = True,
     instance_norm: bool = True,

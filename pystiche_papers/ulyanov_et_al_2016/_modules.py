@@ -343,4 +343,3 @@ def transformer(
     levels: int = 6,
 ) -> Transformer:
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
-

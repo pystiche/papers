@@ -119,7 +119,6 @@ def style_loss(
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
         score_weight = 1e3 if impl_params and not instance_norm else 1e0
 
-
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
