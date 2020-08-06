@@ -18,6 +18,9 @@ __all__ = [
 
 
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
+    r""" Multi-layer encoder based on the VGG19 architecture with the weights of caffe,
+    no internal preprocessing and allowed inplace.
+    """
     return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
@@ -34,11 +37,36 @@ def postprocessor() -> transforms.CaffePostprocessing:
 def optimizer(
     transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
 ) -> optim.Adam:
+    r"""
+
+    Args:
+        transformer: Transformer to be optimized.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Defaults to ``True``.
+
+    Returns:
+        :class:`torch.optim.Adam` optimizer with a learning rate of ``1e-3`` if ``impl_params`` and ``instance_norm``
+        else ``1e-1``. The parameters of ``transformer`` are set as optimization parameters.
+
+    """
     lr = 1e-3 if impl_params and instance_norm else 1e-1
     return optim.Adam(transformer.parameters(), lr=lr)
 
 
 class DelayedExponentialLR(ExponentialLR):
+    r"""Decays the learning rate of each parameter group by gamma every epoch after a certain number of epochs.
+    When last_epoch=-1, sets initial lr as lr.
+
+     Args:
+        optimizer (Optimizer): Wrapped optimizer.
+        gamma (float): Multiplicative factor of learning rate decay.
+        delay (int): Number of epochs before the learning rate is reduced with each epoch.
+        last_epoch (int): The index of last epoch. Default: -1.
+
+    """
     last_epoch: int
     gamma: float
     base_lrs: List[float]
