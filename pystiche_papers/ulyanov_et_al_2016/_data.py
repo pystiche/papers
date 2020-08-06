@@ -86,7 +86,7 @@ def images() -> DownloadableImageCollection:
             md5="dc9ad203263f34352e18bc29b03e1066",
             file="tuebingen_neckarfront__andreas_praefcke.jpg",
         ),
-        "CheHigh": DownloadableImage(
+        "che_high": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/5/58/CheHigh.jpg",
             title="CheHigh",
             author="Alberto Korda",
@@ -95,7 +95,7 @@ def images() -> DownloadableImageCollection:
             md5="cffc0768090c5a705cbb30fdc24c3e64",
             file="CheHigh.jpg",
         ),
-        "The_Tower_of_Babel": DownloadableImage(
+        "tower_of_babel": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/f/fc/Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_%28Vienna%29_-_Google_Art_Project_-_edited.jpg",
             title="The Tower of Babel",
             author="Pieter Bruegel",
@@ -154,7 +154,7 @@ def images() -> DownloadableImageCollection:
             urljoin(style_base_johnson, "the_scream.jpg"),
             md5="619b4f42c84d2b62d3518fb20fa619c2",
         ),
-        "Jean Metzinger": DownloadableImage(
+        "jean_metzinger": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/c/c9/Robert_Delaunay%2C_1906%2C_Portrait_de_Metzinger%2C_oil_on_canvas%2C_55_x_43_cm%2C_DSC08255.jpg",
             title="Portrait of Jean Metzinger",
             author="Jean Metzinger",
