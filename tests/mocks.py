@@ -112,5 +112,11 @@ def mock_images(mocker, *args, **kwargs):
     attach_method_mock(
         images_mock, "__getitem__", side_effect=getitem_side_effect, mocker=mocker
     )
+    attach_method_mock(
+        images_mock,
+        "read",
+        return_value={name: image.read() for name, image in image_mocks.items()},
+        mocker=mocker,
+    )
 
     return images_mock
