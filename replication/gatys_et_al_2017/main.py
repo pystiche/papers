@@ -6,7 +6,7 @@ from os import path
 import torch
 
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche.image import read_guides, write_image
+from pystiche.image import write_image
 from pystiche.image.transforms.functional import (
     grayscale_to_fakegrayscale,
     resize,
@@ -32,6 +32,10 @@ def log_saving_info(logger, output_file):
     logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
 
 
+def read_image_and_guides(image, **read_kwargs):
+    return image.read(**read_kwargs), image.guides.read(**read_kwargs)
+
+
 def figure_2(args):
     @abort_if_cuda_memory_exausts
     def figure_2_d(content_image, style_image):
@@ -52,16 +56,16 @@ def figure_2(args):
     def figure_2_ef(
         label,
         content_image,
-        content_house_guide,
+        content_building_guide,
         content_sky_guide,
-        style_house_image,
-        style_house_guide,
+        style_building_image,
+        style_building_guide,
         style_sky_image,
         style_sky_guide,
     ):
-        content_guides = {"house": content_house_guide, "sky": content_sky_guide}
+        content_guides = {"building": content_building_guide, "sky": content_sky_guide}
         style_images_and_guides = {
-            "house": (style_house_image, style_house_guide),
+            "building": (style_building_image, style_building_guide),
             "sky": (style_sky_image, style_sky_guide),
         }
         with replicate_figure(args.logger, f"2 ({label})", args.impl_params):
@@ -80,21 +84,17 @@ def figure_2(args):
             write_image(output_image, output_file)
 
     images = paper.images()
-    images.download(args.image_source_dir)
 
-    content_image = images["house"].read(device=args.device)
-    content_guides = read_guides(
-        path.join(args.image_guides_dir, "house"), device=args.device
+    content_image, content_guides = read_image_and_guides(
+        images["house"], root=args.image_source_dir, device=args.device
     )
 
-    style1_image = images["watertown"].read(device=args.device)
-    style1_guides = read_guides(
-        path.join(args.image_guides_dir, "watertown"), device=args.device
+    style1_image, style1_guides = read_image_and_guides(
+        images["watertown"], root=args.image_source_dir, device=args.device
     )
 
-    style2_image = images["wheat_field"].read(device=args.device)
-    style2_guides = read_guides(
-        path.join(args.image_guides_dir, "wheat_field"), device=args.device
+    style2_image, style2_guides = read_image_and_guides(
+        images["wheat_field"], root=args.image_source_dir, device=args.device
     )
 
     figure_2_d(content_image, style1_image)
@@ -102,10 +102,10 @@ def figure_2(args):
     figure_2_ef(
         "e",
         content_image,
-        content_guides["house"],
+        content_guides["building"],
         content_guides["sky"],
         style1_image,
-        style1_guides["house"],
+        style1_guides["building"],
         style1_image,
         style1_guides["sky"],
     )
@@ -113,10 +113,10 @@ def figure_2(args):
     figure_2_ef(
         "f",
         content_image,
-        content_guides["house"],
+        content_guides["building"],
         content_guides["sky"],
         style1_image,
-        style1_guides["house"],
+        style1_guides["building"],
         style2_image,
         style2_guides["sky"],
     )
@@ -219,9 +219,12 @@ def figure_3(args):
             write_image(output_image, output_file)
 
     images = paper.images()
-    images.download(args.image_source_dir)
-    content_image = images["schultenhof"].read(device=args.device)
-    style_image = images["starry_night"].read(device=args.device)
+    content_image = images["schultenhof"].read(
+        root=args.image_source_dir, device=args.device
+    )
+    style_image = images["starry_night"].read(
+        root=args.image_source_dir, device=args.device
+    )
 
     figure_3_c(content_image, style_image)
     figure_3_d(content_image, style_image)
