@@ -283,11 +283,8 @@ class Transformer(nn.Sequential):
             )
 
         if impl_params:
-            # Just a torch. nn. Conv2D is used instead of the ConBlock consisting of torch. nn Conv2D,
-            # norm module and activation function as described in the paper.
-            # instance_norm:
+            # Just a torch.nn.Conv2d is used instead of the ConvBlock as described in the paper.
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/models/pyramid.lua#L61
-            # not instance_norm:
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/models/pyramid.lua#L62
             output_conv = cast(
                 Union[nn.Conv2d, ConvBlock],

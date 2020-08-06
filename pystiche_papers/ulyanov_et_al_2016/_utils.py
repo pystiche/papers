@@ -59,9 +59,7 @@ class DelayedExponentialLR(ExponentialLR):
 
 
 def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
-    # instance_norm:
     # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
-    # not instance_norm:
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201
     return (
         ExponentialLR(optimizer, 0.8)
