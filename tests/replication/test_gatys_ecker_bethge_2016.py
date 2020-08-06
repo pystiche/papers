@@ -45,7 +45,10 @@ def images(mocker):
 
 @pytest.fixture
 def nst(mocker):
-    return mocker.patch(make_paper_mock_target("nst"))
+    def side_effect(content_image, *args, **kwargs):
+        return content_image
+
+    return mocker.patch(make_paper_mock_target("nst"), side_effect=side_effect)
 
 
 @pytest.fixture(scope="module")
@@ -89,7 +92,6 @@ def test_parse_input_smoke(subtests, main, args):
         assert isinstance(actual_args.quiet, bool)
 
 
-@pytest.mark.slow
 def test_figure_2_smoke(subtests, images, nst, main, args):
     main.figure_2(args)
 
@@ -122,7 +124,6 @@ def test_figure_2_smoke(subtests, images, nst, main, args):
             assert isinstance(criterion, criterion_type)
 
 
-@pytest.mark.slow
 def test_figure_3_smoke(subtests, images, nst, main, args):
     main.figure_3(args)
 
