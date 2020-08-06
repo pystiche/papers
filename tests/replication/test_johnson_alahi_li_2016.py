@@ -71,7 +71,8 @@ def training_script():
 
 
 @pytest.fixture
-def training_args(tmpdir):
+def training_args(tmpdir, patch_argv):
+    patch_argv("training.py")
     return argparse.Namespace(
         style=[
             "starry_night",
@@ -100,9 +101,11 @@ def stylization_script():
 
 
 @pytest.fixture
-def stylization_args(tmpdir):
+def stylization_args(tmpdir, patch_argv):
+    style = "candy"
+    patch_argv("stylization.py", style)
     return argparse.Namespace(
-        style="candy",
+        style=style,
         content=["chicago", "hoovertowernight"],
         images_source_dir=tmpdir,
         images_results_dir=tmpdir,
@@ -113,8 +116,8 @@ def stylization_args(tmpdir):
     )
 
 
-def test_training_parse_input_smoke(subtests, training_script, training_args):
-    actual_args = training_script.parse_input()
+def test_training_parse_args_smoke(subtests, training_script, training_args):
+    actual_args = training_script.parse_args()
 
     assert set(vars(actual_args)) == set(vars(training_args))
 
@@ -165,7 +168,7 @@ def test_training_main_smoke(
             assert isinstance(style_image, torch.Tensor)
 
 
-def test_stylization_parse_input_smoke(subtests, stylization_script, stylization_args):
+def test_stylization_parse_args_smoke(subtests, stylization_script, stylization_args):
     actual_args = stylization_script.parse_args()
 
     assert set(vars(actual_args)) == set(vars(stylization_args))

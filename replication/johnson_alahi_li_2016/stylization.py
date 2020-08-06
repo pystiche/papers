@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from os import path
 
 import torch
@@ -96,7 +97,7 @@ def save_ouput_image(image, root, content, style, impl_params, instance_norm):
     write_image(image, path.join(root, f"{name}.jpg"))
 
 
-def parse_args():
+def make_parser():
     parser = ArgumentParser(description=make_description("stylization"))
 
     parser.add_argument("style", type=str, help="Style the transformer was trained on.")
@@ -117,7 +118,16 @@ def parse_args():
     parser.add_impl_params_and_instance_norm_arguments()
     parser.add_device_argument()
 
-    args = parser.parse_args()
+    return parser
+
+
+def parse_args(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
+    parser = make_parser()
+
+    args = parser.parse_args(args)
     if not args.content:
         args.content = (
             "chicago",
