@@ -61,7 +61,6 @@ def training(
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
-    Returns: Trained transformer for the NST.
     """
     style: Optional[str]
     if isinstance(style_image, torch.Tensor):
@@ -147,7 +146,6 @@ def stylization(
         postprocessor: Optional preprocessor that is called with the ``output_image``
             after the optimization.
 
-    Returns: Stylised ``input_image``.
     """
     device = input_image.device
 

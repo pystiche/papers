@@ -64,13 +64,11 @@ def content_loss(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the correct optimization parameters for the reproduction.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`. If ``None``, the
-            default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
-            Defaults to ``None``.
-        layer: Layer from which the encs of the :class:`~pystiche.enc.multi_layer_encoder.MultiLayerEncoder`
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``None``, the
+            default :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` from the paper is used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder``
             should be taken. Defaults to "relu2_2".
-        score_weight: Score weight of the operator. If ``None``, the score_weight is determined by the
-            :func:`get_content_score_weight`. Defaults to ``None``.
+        score_weight: Score weight of the operator. If omitted, the score_weight is determined with respect to ``style`` and ``impl_params``. For details see FIXME
 
     """
     if multi_layer_encoder is None:
