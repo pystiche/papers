@@ -15,6 +15,7 @@ from pystiche.image import transforms
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
+from ._utils import _maybe_get_luatorch_param
 
 __all__ = [
     "content_transform",
@@ -55,32 +56,26 @@ def content_transform(
     return transforms.ComposedTransform(*transforms_)
 
 
+LUATORCH_STYLE_EDGE_SIZES = {
+    ("candy", True): 384,
+    ("composition_vii", False): 512,
+    ("feathers", True): 180,
+    ("la_muse", False): 512,
+    ("la_muse", True): 512,
+    ("mosaic", True): 512,
+    ("starry_night", False): 512,
+    ("the_scream", True): 384,
+    ("the_wave", False): 512,
+    ("udnie", True): 256,
+}
+
+
 def get_style_edge_size(
-    impl_params: bool, instance_norm: bool, style: Optional[str] = None
+    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 256,
 ) -> int:
-    def get_default_edge_size() -> int:
-        if not impl_params:
-            return 256
-
-        return 384 if instance_norm else 512
-
-    default_edge_size = get_default_edge_size()
-
-    if style is None or not instance_norm:
-        return default_edge_size
-
-    edge_sizes = {
-        "candy": 384,
-        "la_muse": 512,
-        "mosaic": 512,
-        "feathers": 180,
-        "the_scream": 384,
-        "udnie": 256,
-    }
-    try:
-        return edge_sizes[style]
-    except KeyError:
-        return default_edge_size
+    return _maybe_get_luatorch_param(
+        LUATORCH_STYLE_EDGE_SIZES, impl_params, instance_norm, style, default
+    )
 
 
 def style_transform(
@@ -91,7 +86,7 @@ def style_transform(
     edge: str = "long",
 ) -> transforms.Resize:
     if edge_size is None:
-        edge_size = get_style_edge_size(impl_params, instance_norm, style=style)
+        edge_size = get_style_edge_size(impl_params, instance_norm, style)
     return transforms.Resize(edge_size, edge=edge)
 
 
@@ -160,9 +155,38 @@ def dataset(
     return ImageFolderDataset(root, transform=transform)
 
 
+LUATORCH_NUM_BATCHES = {
+    ("candy", True): 40000,
+    ("composition_vii", False): 60000,
+    ("feathers", True): 60000,
+    ("la_muse", False): 40000,
+    ("la_muse", True): 40000,
+    ("mosaic", True): 60000,
+    ("starry_night", False): 40000,
+    ("the_scream", True): 60000,
+    ("the_wave", False): 40000,
+    ("udnie", True): 40000,
+}
+
+
+def get_num_batches(
+    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 40000,
+) -> int:
+    return _maybe_get_luatorch_param(
+        LUATORCH_NUM_BATCHES, impl_params, instance_norm, style, default
+    )
+
+
 def batch_sampler(
-    data_source: Sized, num_batches: int = 40000, batch_size: int = 4
+    data_source: Sized,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    style: Optional[str] = None,
+    num_batches: Optional[int] = None,
+    batch_size: int = 4,
 ) -> FiniteCycleBatchSampler:
+    if num_batches is None:
+        num_batches = get_num_batches(impl_params, instance_norm, style)
     return FiniteCycleBatchSampler(
         data_source, num_batches=num_batches, batch_size=batch_size
     )

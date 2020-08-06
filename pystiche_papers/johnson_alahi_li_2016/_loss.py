@@ -5,6 +5,7 @@ import torch
 import pystiche.ops.functional as F
 from pystiche import enc, loss, ops
 
+from ._utils import _maybe_get_luatorch_param
 from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
@@ -17,17 +18,32 @@ __all__ = [
 ]
 
 
-def get_content_score_weight(instance_norm: bool, style: Optional[str] = None) -> float:
-    default_score_weight = 1e0
+LUATORCH_CONTENT_SCORE_WEIGHTS = {
+    ("candy", True): 1.0,
+    ("composition_vii", False): 1.0,
+    ("feathers", True): 1.0,
+    ("la_muse", False): 1.0,
+    ("la_muse", True): 0.5,
+    ("mosaic", True): 1.0,
+    ("starry_night", False): 1.0,
+    ("the_scream", True): 1.0,
+    ("the_wave", False): 1.0,
+    ("udnie", True): 0.5,
+}
 
-    if style is None or not instance_norm:
-        return default_score_weight
 
-    score_weights = {"la_muse": 0.5, "udnie": 0.5}
-    try:
-        return score_weights[style]
-    except KeyError:
-        return default_score_weight
+def get_content_score_weight(
+    impl_params: bool,
+    instance_norm: bool,
+    style: Optional[str] = None,
+    default: float = 1e0,
+) -> float:
+    # The paper reports no style score weight so we go with the default value of the
+    # implementation instead
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L36
+    return _maybe_get_luatorch_param(
+        LUATORCH_CONTENT_SCORE_WEIGHTS, impl_params, instance_norm, style, default
+    )
 
 
 def content_loss(
@@ -43,7 +59,7 @@ def content_loss(
     encoder = multi_layer_encoder.extract_encoder(layer)
 
     if score_weight is None:
-        score_weight = get_content_score_weight(instance_norm, style=style)
+        score_weight = get_content_score_weight(impl_params, instance_norm, style)
 
     return ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
 
@@ -64,22 +80,32 @@ class GramOperator(ops.GramOperator):
         return gram_matrix / num_channels
 
 
-def get_style_score_weight(
-    impl_params: bool, instance_norm: bool, style: Optional[str] = None
-) -> float:
-    if style is None or not impl_params:
-        return 5.0
+LUATORCH_STYLE_SCORE_WEIGHTS = {
+    ("candy", True): 10.0,
+    ("composition_vii", False): 5.0,
+    ("feathers", True): 10.0,
+    ("la_muse", False): 5.0,
+    ("la_muse", True): 10.0,
+    ("mosaic", True): 10.0,
+    ("starry_night", False): 3.0,
+    ("the_scream", True): 20.0,
+    ("the_wave", False): 5.0,
+    ("udnie", True): 10.0,
+}
 
-    if instance_norm:
-        if style == "the_scream":
-            return 20.0
-        else:
-            return 10.0
-    else:
-        if style == "starry_night":
-            return 3.0
-        else:
-            return 5.0
+
+def get_style_score_weight(
+    impl_params: bool,
+    instance_norm: bool,
+    style: Optional[str] = None,
+    default: float = 5.0,
+) -> float:
+    # The paper reports no style score weight so we go with the default value of the
+    # implementation instead
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L43
+    return _maybe_get_luatorch_param(
+        LUATORCH_STYLE_SCORE_WEIGHTS, impl_params, instance_norm, style, default
+    )
 
 
 def style_loss(
@@ -99,7 +125,7 @@ def style_loss(
         layers = ("relu1_2", "relu2_2", "relu3_3", "relu4_3")
 
     if score_weight is None:
-        score_weight = get_style_score_weight(impl_params, instance_norm, style=style)
+        score_weight = get_style_score_weight(impl_params, instance_norm, style)
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
@@ -125,44 +151,49 @@ class TotalVariationOperator(ops.TotalVariationOperator):
         )
 
 
+LUATORCH_REGULARIZATION_SCORE_WEIGHTS = {
+    ("candy", True): 1e-4,
+    ("composition_vii", False): 1e-6,
+    ("feathers", True): 1e-5,
+    ("la_muse", False): 1e-5,
+    ("la_muse", True): 1e-4,
+    ("mosaic", True): 1e-5,
+    ("starry_night", False): 1e-5,
+    ("the_scream", True): 1e-5,
+    ("the_wave", False): 1e-4,
+    ("udnie", True): 1e-6,
+}
+
+
 def get_regularization_score_weight(
-    instance_norm: bool, style: Optional[str] = None
+    impl_params: bool,
+    instance_norm: bool,
+    style: Optional[str] = None,
+    default: float = 1e-6,
 ) -> float:
-    default_score_weight = 1e-6
-
-    if style is None:
-        return default_score_weight
-
-    if instance_norm:
-        score_weights = {
-            "candy": 1e-4,
-            "la_muse": 1e-4,
-            "mosaic": 1e-5,
-            "feathers": 1e-5,
-            "the_scream": 1e-5,
-            "udnie": 1e-6,
-        }
-    else:
-        score_weights = {
-            "the_wave": 1e-4,
-            "starry_night": 1e-5,
-            "la_muse": 1e-5,
-            "composition_vii": 1e-6,
-        }
-    try:
-        return score_weights[style]
-    except KeyError:
-        return default_score_weight
+    # The paper reports a range of regularization score weights so we go with the
+    # default value of the implementation instead
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L33
+    return _maybe_get_luatorch_param(
+        LUATORCH_REGULARIZATION_SCORE_WEIGHTS,
+        impl_params,
+        instance_norm,
+        style,
+        default,
+    )
 
 
 def regularization(
+    impl_params: bool = True,
     instance_norm: bool = True,
     style: Optional[str] = None,
     score_weight: Optional[float] = None,
     **total_variation_op_kwargs: Any,
 ) -> TotalVariationOperator:
     if score_weight is None:
-        score_weight = get_regularization_score_weight(instance_norm, style=style)
+        score_weight = get_regularization_score_weight(
+            impl_params, instance_norm, style
+        )
     return TotalVariationOperator(
         score_weight=score_weight, **total_variation_op_kwargs
     )
@@ -203,7 +234,10 @@ def perceptual_loss(
     if total_variation_kwargs is None:
         total_variation_kwargs = {}
     regularization_ = regularization(
-        instance_norm=instance_norm, style=style, **total_variation_kwargs
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        style=style,
+        **total_variation_kwargs,
     )
 
     return loss.PerceptualLoss(content_loss_, style_loss_, regularization_)

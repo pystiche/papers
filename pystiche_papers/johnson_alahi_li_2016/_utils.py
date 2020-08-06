@@ -1,9 +1,36 @@
+from typing import Dict, Optional, Tuple, TypeVar
+
 from torch import nn, optim
 
 from pystiche import enc
 from pystiche.image import transforms
 
-__all__ = ["preprocessor", "postprocessor", "multi_layer_encoder", "optimizer"]
+__all__ = [
+    "_maybe_get_luatorch_param",
+    "preprocessor",
+    "postprocessor",
+    "multi_layer_encoder",
+    "optimizer",
+]
+
+
+T = TypeVar("T")
+
+
+def _maybe_get_luatorch_param(
+    param_dict: Dict[Tuple[str, bool], T],
+    impl_params: bool,
+    instance_norm: bool,
+    style: Optional[str],
+    default: T,
+) -> T:
+    if style is None or not impl_params:
+        return default
+
+    try:
+        return param_dict[(style, instance_norm)]
+    except KeyError:
+        return default
 
 
 def preprocessor() -> transforms.CaffePreprocessing:
