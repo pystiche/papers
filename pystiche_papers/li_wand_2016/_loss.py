@@ -32,7 +32,7 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         super().__init__(encoder, **feature_reconstruction_op_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/content.lua#L15
-        # nn.MSECriterion() was used to calculate the content loss, which by default uses reduction="mean"
+        # nn.MSECriterion() was used as criterion to calculate the content loss, which by default uses reduction="mean"
         self.loss_reduction = "mean" if impl_params else "sum"
 
     def calculate_score(
@@ -79,7 +79,7 @@ class MRFOperator(ops.MRFOperator):
         self.normalize_patches_grad = impl_params
         self.loss_reduction = "sum"
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/style.lua#L34
-        # nn.MSECriterion() was used to calculate the style loss, which does not include the factor 1/2
+        # nn.MSECriterion() was used as criterion to calculate the style loss, which does not include the factor 1/2
         # given in the paper
         self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
