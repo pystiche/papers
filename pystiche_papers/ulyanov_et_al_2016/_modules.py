@@ -8,22 +8,7 @@ from torch import nn
 from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import is_valid_padding, same_size_padding
-
-
-class SequentialWithOutChannels(nn.Sequential):
-    def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
-        super().__init__(*args)
-        if out_channel_name is None:
-            out_channel_name = tuple(cast(Dict[str, nn.Module], self._modules).keys())[
-                -1
-            ]
-        elif isinstance(out_channel_name, int):
-            out_channel_name = str(out_channel_name)
-
-        self.out_channels = cast(Dict[str, nn.Module], self._modules)[
-            out_channel_name
-        ].out_channels
+from ..utils import SequentialWithOutChannels, is_valid_padding, same_size_padding
 
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:

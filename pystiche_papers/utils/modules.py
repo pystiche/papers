@@ -1,9 +1,13 @@
-from typing import Optional, cast
+from typing import Any, Dict, Optional, Union, cast
 
 import torch
 from torch import nn
 
-__all__ = ["Identity", "ResidualBlock"]
+__all__ = [
+    "Identity",
+    "ResidualBlock",
+    "SequentialWithOutChannels",
+]
 
 
 class Identity(nn.Module):
@@ -22,3 +26,18 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.residual(x) + self.shortcut(x))
+
+
+class SequentialWithOutChannels(nn.Sequential):
+    def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
+        super().__init__(*args)
+        if out_channel_name is None:
+            out_channel_name = tuple(cast(Dict[str, nn.Module], self._modules).keys())[
+                -1
+            ]
+        elif isinstance(out_channel_name, int):
+            out_channel_name = str(out_channel_name)
+
+        self.out_channels = cast(Dict[str, nn.Module], self._modules)[
+            out_channel_name
+        ].out_channels

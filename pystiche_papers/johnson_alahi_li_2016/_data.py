@@ -1,4 +1,4 @@
-from typing import Optional, Sized, Tuple, cast
+from typing import Optional, Sized, Tuple
 from urllib.parse import urljoin
 
 import torch
@@ -14,6 +14,7 @@ from pystiche.data import (
 from pystiche.image import transforms
 
 from ..data.utils import FiniteCycleBatchSampler
+from ..utils.transforms import OptionalGrayscaleToFakegrayscale
 
 __all__ = [
     "content_transform",
@@ -42,14 +43,6 @@ def content_transform(
         def forward(self, input_image: torch.Tensor) -> torch.Tensor:
             size = self.calculate_size(input_image)
             return F.top_left_crop(input_image, size)
-
-    class OptionalGrayscaleToFakegrayscale(transforms.Transform):
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            is_grayscale = image.extract_num_channels(input_image) == 1
-            if is_grayscale:
-                return cast(torch.Tensor, F.grayscale_to_fakegrayscale(input_image))
-            else:
-                return input_image
 
     transforms_ = [
         TopLeftCropToMultiple(multiple),

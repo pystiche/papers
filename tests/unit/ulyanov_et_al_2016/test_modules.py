@@ -1,5 +1,4 @@
 import itertools
-from collections import OrderedDict
 
 import pytest
 
@@ -10,25 +9,6 @@ from torch import nn
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
-
-
-def test_SequentialWithOutChannels(subtests):
-    sequentialpaper = (nn.Conv2d(3, 3, 1), nn.Conv2d(3, 5, 1))
-    sequential_module_dict = OrderedDict(
-        ((str(idx), module) for idx, module in enumerate(sequentialpaper))
-    )
-    for out_channel_name, out_channels, args in (
-        (None, 5, sequentialpaper),
-        (0, 3, sequentialpaper),
-        (1, 5, sequentialpaper),
-        ("0", 3, (sequential_module_dict,)),
-        ("1", 5, (sequential_module_dict,)),
-    ):
-        with subtests.test(out_channel_name=out_channel_name):
-            sequential = paper.SequentialWithOutChannels(
-                *args, out_channel_name=out_channel_name
-            )
-            assert sequential.out_channels == out_channels
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
