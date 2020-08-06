@@ -6,6 +6,7 @@ from os import path
 
 import pytest
 
+import pytorch_testing_utils as ptu
 import torch
 
 from pystiche import image
@@ -16,6 +17,7 @@ __all__ = [
     "skip_if_cuda_not_available",
     "is_callable",
     "create_guides",
+    "call_args_list_to_dict",
 ]
 
 
@@ -78,3 +80,47 @@ def create_guides(img):
     )
     bottom_mask = ~top_mask
     return {"top": top_mask.float(), "bottom": bottom_mask.float()}
+
+
+def _allclose(*args, **kwargs):
+    try:
+        ptu.assert_allclose(*args, **kwargs)
+        return True
+    except AssertionError:
+        return False
+
+
+def _xnor(a, b):
+    return not (a ^ b)
+
+
+def call_args_list_to_dict(call_args_list, map, args_idx=None, kwargs_key=None):
+    if _xnor(args_idx is None, kwargs_key is None):
+        raise pytest.UsageError
+    if args_idx is not None:
+
+        def check(call_args, tensor):
+            args, kwargs = call_args
+            return _allclose(args[args_idx], tensor)
+
+    else:  # kwargs_key is not None
+
+        def check(call_args, tensor):
+            args, kwargs = call_args
+            return _allclose(kwargs[kwargs_key], tensor)
+
+    call_args_dict = {}
+    processed_idcs = []
+    for name, tensor in map.items():
+        for idx, call_args in enumerate(call_args_list):
+            if idx in processed_idcs:
+                continue
+
+            if check(call_args, tensor):
+                call_args_dict[name] = call_args
+                processed_idcs.append(idx)
+
+    if len(call_args_dict) < len(call_args_list):
+        raise pytest.UsageError
+
+    return call_args_dict
