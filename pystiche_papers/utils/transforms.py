@@ -1,4 +1,4 @@
-from typing import Tuple, cast
+from typing import cast
 
 import torch
 
@@ -7,26 +7,8 @@ from pystiche import image
 from pystiche.image import transforms
 
 __all__ = [
-    "TopLeftCropToMultiple",
     "OptionalGrayscaleToFakegrayscale",
-    "MirrorHorizontally",
 ]
-
-
-class TopLeftCropToMultiple(transforms.Transform):
-    def __init__(self, multiple: int):
-        super().__init__()
-        self.multiple = multiple
-
-    def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
-        old_height, old_width = image.extract_image_size(input_image)
-        new_height = old_height - old_height % self.multiple
-        new_width = old_width - old_width % self.multiple
-        return new_height, new_width
-
-    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-        size = self.calculate_size(input_image)
-        return F.top_left_crop(input_image, size)
 
 
 class OptionalGrayscaleToFakegrayscale(transforms.Transform):
@@ -36,8 +18,3 @@ class OptionalGrayscaleToFakegrayscale(transforms.Transform):
             return cast(torch.Tensor, F.grayscale_to_fakegrayscale(input_image))
         else:
             return input_image
-
-
-class MirrorHorizontally(transforms.Transform):
-    def forward(self, image: torch.Tensor) -> torch.Tensor:
-        return image.flip(2)

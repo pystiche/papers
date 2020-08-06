@@ -11,6 +11,26 @@ import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
 
 
+def test_AddNoiseChannels(subtests, input_image):
+    in_channels = image.extract_num_channels(input_image)
+    num_noise_channels = in_channels + 1
+    module = paper.AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
+
+    assert isinstance(module, nn.Module)
+
+    with subtests.test("in_channels"):
+        assert module.in_channels == in_channels
+
+    desired_out_channels = in_channels + num_noise_channels
+
+    with subtests.test("out_channels"):
+        assert module.out_channels == desired_out_channels
+
+    with subtests.test("forward"):
+        output_image = module(input_image)
+        assert image.extract_num_channels(output_image) == desired_out_channels
+
+
 def test_noise():
     module = paper.noise()
     assert isinstance(module, paper.AddNoiseChannels)
@@ -34,6 +54,20 @@ def test_upsample(subtests):
         assert module.scale_factor == pytest.approx(2.0)
     with subtests.test("mode"):
         assert module.mode == "nearest"
+
+
+def test_HourGlassBlock(subtests):
+    intermediate = nn.Conv2d(3, 3, 1)
+    hour_glass = paper.HourGlassBlock(intermediate)
+
+    assert isinstance(hour_glass, paper.HourGlassBlock)
+
+    with subtests.test("down"):
+        assert isinstance(hour_glass.down, type(paper.downsample()))
+    with subtests.test("intermediate"):
+        assert hour_glass.intermediate is intermediate
+    with subtests.test("up"):
+        assert isinstance(hour_glass.up, type(paper.upsample()))
 
 
 def test_get_norm_module(subtests):

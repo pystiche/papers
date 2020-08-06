@@ -1,7 +1,7 @@
+import torch
+
 from pystiche import data
 from pystiche.image import transforms
-
-from ..utils.transforms import MirrorHorizontally
 
 __all__ = ["images"]
 
@@ -18,6 +18,11 @@ def make_image_transform(image: str) -> transforms.ComposedTransform:
     if image == "emma":
         image_transform = transforms.Crop(origin=(30, 12), size=(930, 682))
     elif image == "jenny":
+
+        class MirrorHorizontally(transforms.Transform):
+            def forward(self, image: torch.Tensor) -> torch.Tensor:
+                return image.flip(2)
+
         image_transform = transforms.ComposedTransform(
             transforms.Crop(origin=(211, 462), size=(1843, 1386)), MirrorHorizontally()
         )
