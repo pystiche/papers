@@ -1,11 +1,13 @@
 import os
 import re
+import sys
 from os import path
 
 import torch
 
 import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche.image import write_image
 
 from utils import (
     ArgumentParser,
@@ -62,8 +64,13 @@ def load_transformer(model_dir, style, impl_params, instance_norm):
     else:
         try:
             return load(style)
-        except RuntimeError:
-            print("no local or builtin available for this combination")
+        except RuntimeError as error:
+            msg = (
+                f"No pre-trained weights available for the parameter configuration\n\n"
+                f"style: {style}\nimpl_params: {impl_params}\n"
+                f"instance_norm: {instance_norm}"
+            )
+            raise RuntimeError(msg) from error
 
 
 def load_local_weights(root, style, impl_params, instance_norm):
@@ -87,10 +94,10 @@ def read_content_image(root, content, size=None, edge="short", **read_image_kwar
 
 def save_ouput_image(image, root, content, style, impl_params, instance_norm):
     name = make_name(content, style, impl_params, instance_norm)
-    image.write_image(image, path.join(root, f"{name}.jpg"))
+    write_image(image, path.join(root, f"{name}.jpg"))
 
 
-def parse_args():
+def make_parser():
     parser = ArgumentParser(description=make_description("stylization"))
 
     parser.add_argument("style", type=str, help="Style the transformer was trained on.")
@@ -111,7 +118,16 @@ def parse_args():
     parser.add_impl_params_and_instance_norm_arguments()
     parser.add_device_argument()
 
-    args = parser.parse_args()
+    return parser
+
+
+def parse_args(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
+    parser = make_parser()
+
+    args = parser.parse_args(args)
     if not args.content:
         args.content = (
             "chicago",

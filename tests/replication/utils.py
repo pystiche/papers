@@ -1,15 +1,28 @@
 import contextlib
 import importlib.util
 import os
+import sys
 from os import path
 
 from tests.utils import rmtree
 
-__all__ = ["load_module", "dir_manager"]
+__all__ = ["add_to_sys_path", "load_module", "dir_manager"]
 
 REPLICATION_ROOT = path.abspath(
     path.join(path.dirname(__file__), "..", "..", "replication")
 )
+
+
+@contextlib.contextmanager
+def add_to_sys_path(*rel_paths, root=REPLICATION_ROOT):
+    abs_paths = [path.join(root, rel_path) for rel_path in rel_paths]
+    for abs_path in abs_paths:
+        sys.path.insert(0, abs_path)
+    try:
+        yield
+    finally:
+        for abs_path in abs_paths:
+            sys.path.remove(abs_path)
 
 
 def load_module(rel_path, root=REPLICATION_ROOT):
