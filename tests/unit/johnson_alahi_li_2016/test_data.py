@@ -38,8 +38,6 @@ def test_style_transform(subtests, styles):
     for impl_params, instance_norm, style in itertools.product(
         (True, False), (True, False), styles
     ):
-        if not impl_params and instance_norm:
-            continue
 
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
             style_transform = paper.style_transform(
@@ -112,8 +110,7 @@ def test_dataset(subtests, mocker):
 
 
 def test_batch_sampler(subtests):
-    data_source = ()
-    batch_sampler = paper.batch_sampler(data_source)
+    batch_sampler = paper.batch_sampler(())
 
     assert isinstance(batch_sampler, FiniteCycleBatchSampler)
 
