@@ -18,12 +18,14 @@ __all__ = [
 
 class NormalizeUnfoldGrad(torch.autograd.Function):
     @staticmethod
-    def forward(ctx: Any, input: torch.Tensor, dim: int, size: int, step: int) -> torch.Tensor:  # type: ignore[override]
+    def forward(  # type: ignore[override]
+        ctx: Any, input: torch.Tensor, dim: int, size: int, step: int
+    ) -> torch.Tensor:
         ctx.needs_normalizing = step < size
         if ctx.needs_normalizing:
             normalizer = torch.zeros_like(input)
             item = [slice(None) for _ in range(input.dim())]
-            for idx in range(0, normalizer.size()[dim] - size, step):
+            for idx in range(0, normalizer.size()[dim] - size + 1, step):
                 item[dim] = slice(idx, idx + size)
                 normalizer[item].add_(1.0)
 
@@ -32,7 +34,9 @@ class NormalizeUnfoldGrad(torch.autograd.Function):
         return input
 
     @staticmethod
-    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None, None, None]:  # type: ignore[override]
+    def backward(  # type: ignore[override]
+        ctx: Any, grad_output: torch.Tensor
+    ) -> Tuple[torch.Tensor, None, None, None]:
         if ctx.needs_normalizing:
             (normalizer,) = ctx.saved_tensors
             grad_input = grad_output / normalizer
