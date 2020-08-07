@@ -48,6 +48,19 @@ def content_loss(
     layer: str = "relu4_2",
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
+    r"""Content_loss from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.li_wand_2016._multi_layer_encoder` from the paper is used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be taken. Defaults to "relu4_2".
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
+            ``impl_params``. For details see FIXME.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
@@ -105,6 +118,26 @@ def style_loss(
     target_transforms: Optional[Iterable[transforms.Transform]] = None,
     score_weight: Optional[float] = None,
 ) -> ops.MultiLayerEncodingOperator:
+    r"""Style_loss from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.li_wand_2016._multi_layer_encoder` from the paper is used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
+            defaults is used. Defaults to ''("relu3_1", "relu4_1")''.
+        layer_weights: Layer weights of the operator. Defaults to "sum".
+        patch_size: Size of the patch.
+        stride: Stride of the convolution. If ``omitted``, the stride is determined with respect to
+            `impl_params``.
+        target_transforms: Optional augemntation transformations for the target. If ``omitted``, the transfomrs are
+            determined with respect to `impl_params``. For details see FIXME
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
+            `impl_params``. For details see FIXME
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -165,6 +198,17 @@ class TotalVariationOperator(ops.TotalVariationOperator):
 def regularization(
     impl_params: bool = True, exponent: float = 2.0, score_weight: float = 1e-3,
 ) -> TotalVariationOperator:
+    r"""Regularization from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        exponent: Parameter :math:`\beta` . A higher value leads to more smoothed
+            results. Defaults to ``2.0``.
+        score_weight: Score weight of the operator. Defaults to ``1e-3``.
+
+    """
     return TotalVariationOperator(
         impl_params=impl_params, exponent=exponent, score_weight=score_weight
     )
@@ -177,6 +221,19 @@ def perceptual_loss(
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
     regularization_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
+    r"""Perceptual loss comprising content and style loss as well as a regularization from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.li_wand_2016._multi_layer_encoder` from the paper is used.
+        content_loss_kwargs: Optional parameters for the ``content_loss``.
+        style_loss_kwargs: Optional parameters for the ``style_loss``.
+        regularization_kwargs: Optional parameters for the ``regularization``.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
