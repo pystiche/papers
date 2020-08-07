@@ -53,6 +53,58 @@ def extract_normalized_patches2d(
     patch_size: Union[int, Sequence[int]],
     stride: Union[int, Sequence[int]],
 ) -> torch.Tensor:
+    r"""Extract 2-dimensional patches from the input with normalized gradient.
+
+    If ``stride >= patch_size``, this behaves just like
+    :func:`pystiche.extract_patches2d`. Otherwise, the gradient of the input is
+    normalized such that every value is divided by the number of patches it appears in.
+
+    Examples:
+
+        >>> import torch
+        >>> import pystiche
+        >>> input = torch.ones(1, 1, 4, 4).requires_grad_(True)
+        >>> target = torch.zeros(1, 1, 4, 4).detach()
+        >>> # without normalized gradient
+        >>> input_patches = pystiche.extract_patches2d(
+        ...    input, patch_size=2, stride=1
+        ... )
+        >>> target_patches = pystiche.extract_patches2d(
+        ...     target, patch_size=2, stride=1
+        ... )
+        >>> loss = 0.5 * torch.sum((input_patches - target_patches) ** 2.0)
+        >>> loss.backward()
+        >>> input.grad
+        tensor([[[[1., 2., 2., 1.],
+                  [2., 4., 4., 2.],
+                  [2., 4., 4., 2.],
+                  [1., 2., 2., 1.]]]])
+
+        >>> import torch
+        >>> import pystiche
+        >>> import pystiche_papers.li_wand_2016 as paper
+        >>> input = torch.ones(1, 1, 4, 4).requires_grad_(True)
+        >>> target = torch.zeros(1, 1, 4, 4).detach()
+        >>> # with normalized gradient
+        >>> input_patches = paper.extract_normalized_patches2d(
+        ...    input, patch_size=2, stride=1
+        ... )
+        >>> target_patches = pystiche.extract_patches2d(
+        ...     target, patch_size=2, stride=1
+        ... )
+        >>> loss = 0.5 * torch.sum((input_patches - target_patches) ** 2.0)
+        >>> loss.backward()
+        >>> input.grad
+        tensor([[[[1., 1., 1., 1.],
+                  [1., 1., 1., 1.],
+                  [1., 1., 1., 1.],
+                  [1., 1., 1., 1.]]]])
+
+    Args:
+        input: Input tensor of shape :math:`B \times C \times H \times W`
+        patch_size: Patch size
+        stride: Stride
+    """
     patch_size = misc.to_2d_arg(patch_size)
     stride = misc.to_2d_arg(stride)
     for dim, size, step in zip(range(2, input.dim()), patch_size, stride):

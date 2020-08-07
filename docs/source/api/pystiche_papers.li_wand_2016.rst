@@ -4,6 +4,7 @@
 .. automodule:: pystiche_papers.li_wand_2016
 
 .. autofunction:: content_loss
+.. autofunction:: extract_normalized_patches2d
 .. autofunction:: images
 .. autofunction:: image_pyramid
 .. autofunction:: multi_layer_encoder
