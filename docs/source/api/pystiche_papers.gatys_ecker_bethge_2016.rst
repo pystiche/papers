@@ -1,7 +1,7 @@
 ``pystiche_papers.gatys_ecker_bethge_2015``
 ===========================================
 
-.. automodule:: pystiche_papers.gatys_ecker_bethge_2015
+.. automodule:: pystiche_papers.gatys_ecker_bethge_2016
 
 .. autofunction:: content_loss
 .. autofunction:: images
