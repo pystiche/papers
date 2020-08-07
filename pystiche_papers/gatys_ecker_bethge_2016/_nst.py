@@ -27,6 +27,29 @@ def nst(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
 ) -> torch.Tensor:
+    r"""NST from :cite:`GEB2016`.
+
+    Args:
+        content_image: Content image for the NST.
+        style_image: Style image for the NST.
+        num_steps: Number of steps for each level. If sequence of ``int`` its length
+            has to match the length of ``edge_sizes``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        criterion: Optimization criterion. If ``None``, the default
+            :func:`~pystiche_papers.li_wand_2016.perceptual_loss` from the paper is used.
+            Defaults to ``None``.
+        quiet: If ``True``, not information is logged during the optimization. Defaults
+            to ``False``.
+        logger: Optional custom logger. If ``None``,
+            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
+        log_fn: Optional custom logging function. It is called in every optimization
+            step with the current step and loss. If ``None``,
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            ``None``.
+
+    """
     if criterion is None:
         criterion = perceptual_loss(impl_params=impl_params)
 
