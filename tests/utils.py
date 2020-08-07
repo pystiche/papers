@@ -24,8 +24,7 @@ __all__ = [
 # Copied from
 # https://pypi.org/project/pathutils/
 def onerror(func, path, exc_info):
-    """
-    Error handler for ``shutil.rmtree``.
+    """Error handler for ``shutil.rmtree``.
 
     If the error is due to an access error (read only file)
     it attempts to add write permission and then retries.

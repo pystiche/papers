@@ -286,8 +286,7 @@ def transformer(
     impl_params: bool = True,
     instance_norm: bool = True,
 ) -> Transformer:
-    r"""Pretrained transformer from "Perceptual Losses for Real-Time Style Transfer and
-    Super-Resolution" by Johnson, Alahi, and Li (original authors) :cite:`JAL2016` .
+    r"""Pretrained transformer from :cite:`JAL2016` .
 
     Args:
         style: Style the transformer was trained on. Can be one of styles given by
