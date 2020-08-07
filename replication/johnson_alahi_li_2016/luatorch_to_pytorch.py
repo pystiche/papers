@@ -31,21 +31,19 @@ def main(root="."):
     with make_tempdir() as tempdir:
         for url in get_luatorch_urls():
             print(f"Processing {url}")
-
             input_file = download_file(url, tempdir)
-            state_dict = extract_transformer_state_dict(input_file)
+            content = load_lua(input_file, unknown_classes=True)
 
-            style = path.splitext(path.basename(input_file))[0]
-            name_parts = [
-                "transformer",
-                style,
-                "impl_params",
-            ]
-            if "instance_norm" in url:
-                name_parts.append("instance_norm")
-            name = "__".join(name_parts)
-            output_file = save_state_dict(state_dict, name, root)
+            config = extract_configuration(content["opt"])
+            for name, val in config.items():
+                print(f"{name}: {val}")
+
+            state_dict = extract_transformer_state_dict(content["model"])
+            output_file = save_transformer(
+                state_dict, config["style"], config["instance_norm"], root
+            )
             print(f"Saved to {output_file}")
+            print("-" * 80)
 
 
 def get_luatorch_urls():
@@ -74,10 +72,55 @@ def get_luatorch_urls():
     yield from parse(content)
 
 
-def extract_transformer_state_dict(luatorch_file):
-    content = load_lua(luatorch_file, unknown_classes=True)
+def extract_configuration(param_dict):
+    return OrderedDict(
+        (
+            ("style", extract_style(param_dict)),
+            ("instance_norm", extract_instance_norm(param_dict)),
+            ("style_image_size", param_dict["style_image_size"]),
+            ("content_weight", extract_content_weight(param_dict)),
+            ("style_weight", extract_style_weight(param_dict)),
+            ("regularization_weight", extract_regularization_weight(param_dict)),
+            ("num_iterations", param_dict["num_iterations"]),
+        )
+    )
 
-    model = content["model"]
+
+def extract_style(params):
+    return path.splitext(path.basename(params["style_image"]))[0]
+
+
+def extract_instance_norm(params):
+    try:
+        return bool(params["use_instance_norm"])
+    except KeyError:
+        return False
+
+
+def _extract_weight(params, type):
+    key = f"{type}_weight"
+    try:
+        return params[key]
+    except KeyError:
+        weights = params[f"{key}s"]
+        weight = weights[0]
+        assert all(other == weight for other in weights[1:])
+        return weight
+
+
+def extract_style_weight(params):
+    return _extract_weight(params, "style")
+
+
+def extract_content_weight(params):
+    return _extract_weight(params, "content")
+
+
+def extract_regularization_weight(params):
+    return params["tv_strength"]
+
+
+def extract_transformer_state_dict(model):
     modules = iter(model.modules)
     state_dict = OrderedDict()
 
@@ -280,6 +323,14 @@ def download_file(url, root, name=None):
     with open(file, "wb") as fh:
         fh.write(urlopen(url).read())
     return file
+
+
+def save_transformer(state_dict, style, instance_norm, root):
+    name_parts = ["johnson_alahi_li_2016_transformer", style, "impl_params"]
+    if instance_norm:
+        name_parts.append("instance_norm")
+    name = "__".join(name_parts)
+    return save_state_dict(state_dict, name, root)
 
 
 def save_state_dict(

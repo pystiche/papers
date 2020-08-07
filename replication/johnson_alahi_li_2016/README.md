@@ -122,5 +122,5 @@ for a minimal installation:
 
 ```sh
 pip install light-the-torch
-ltt install --force-cpu "torch<1"
+ltt install --force-cpu numpy "torch<1"
 ```
