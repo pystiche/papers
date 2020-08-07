@@ -1,11 +1,83 @@
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch
 from torch import nn, optim
 
+import pystiche
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import enc
 from pystiche.image import transforms
+
+
+def test_extract_normalized_patches2d(subtests):
+    height = 4
+    width = 4
+    patch_size = 2
+    stride = 1
+
+    input = torch.ones(1, 1, height, width).requires_grad_(True)
+    input_normalized = torch.ones(1, 1, height, width).requires_grad_(True)
+    target = torch.zeros(1, 1, height, width).detach()
+
+    input_patches = pystiche.extract_patches2d(
+        input, patch_size=patch_size, stride=stride
+    )
+    input_patches_normalized = paper.extract_normalized_patches2d(
+        input_normalized, patch_size=patch_size, stride=stride
+    )
+    target_patches = pystiche.extract_patches2d(
+        target, patch_size=patch_size, stride=stride
+    )
+
+    loss = 0.5 * torch.sum((input_patches - target_patches) ** 2.0)
+    loss.backward()
+
+    loss_normalized = 0.5 * torch.sum(
+        (input_patches_normalized - target_patches) ** 2.0
+    )
+    loss_normalized.backward()
+
+    with subtests.test("forward"):
+        ptu.assert_allclose(input_patches_normalized, input_patches)
+
+    with subtests.test("backward"):
+        ptu.assert_allclose(input_normalized.grad, torch.ones_like(input_normalized))
+
+
+def test_extract_normalized_patches2d_no_overlap(subtests):
+    height = 4
+    width = 4
+    patch_size = 2
+    stride = 2
+
+    input = torch.ones(1, 1, height, width).requires_grad_(True)
+    input_normalized = torch.ones(1, 1, height, width).requires_grad_(True)
+    target = torch.zeros(1, 1, height, width).detach()
+
+    input_patches = pystiche.extract_patches2d(
+        input, patch_size=patch_size, stride=stride
+    )
+    input_patches_normalized = paper.extract_normalized_patches2d(
+        input_normalized, patch_size=patch_size, stride=stride
+    )
+    target_patches = pystiche.extract_patches2d(
+        target, patch_size=patch_size, stride=stride
+    )
+
+    loss = 0.5 * torch.sum((input_patches - target_patches) ** 2.0)
+    loss.backward()
+
+    loss_normalized = 0.5 * torch.sum(
+        (input_patches_normalized - target_patches) ** 2.0
+    )
+    loss_normalized.backward()
+
+    with subtests.test("forward"):
+        ptu.assert_allclose(input_patches_normalized, input_patches)
+
+    with subtests.test("backward"):
+        ptu.assert_allclose(input_normalized.grad, input.grad)
 
 
 def test_preprocessor():
