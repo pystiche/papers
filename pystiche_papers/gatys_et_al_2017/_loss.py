@@ -22,6 +22,14 @@ def content_loss(
     layer: str = "relu4_2",
     score_weight: float = 1e0,
 ) -> ops.FeatureReconstructionOperator:
+    r"""Content_loss from :cite:`GEB+2017`.
+
+    Args:
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``, the default :func:`~pystiche_papers.gatys_et_al_2017._multi_layer_encoder` from the paper is used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be taken. Defaults to "relu4_2".
+        score_weight: Score weight of the operator. Defaults to ``1e0``.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
@@ -74,6 +82,22 @@ def style_loss(
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
 ) -> StyleLoss:
+    r"""Style_loss from :cite:`GEB+2017`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.gatys_et_al_2017._multi_layer_encoder` from the paper is used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
+            defaults is used. Defaults to ''("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")''.
+        layer_weights: Layer weights of the operator. If ``omitted``, the layer weights are calculated as described
+            in the paper.
+        score_weight: Score weight of the operator. Defaults to ``1e3``.
+        **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -103,6 +127,26 @@ def guided_style_loss(
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
 ) -> ops.MultiRegionOperator:
+    r"""Guided style_loss from :cite:`GEB+2017`.
+
+    Args:
+        regions: Regions of the input image to be stylized.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.gatys_et_al_2017._multi_layer_encoder` from the paper is used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
+            defaults is used. Defaults to ''("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")''.
+        region_weights: Region weights of the operator. Defaults to ``sum``.
+        layer_weights: Layer weights of the operator. If ``omitted``, the layer weights are calculated as described
+            in the paper.
+        score_weight: Score weight of the operator. Defaults to ``1e3``.
+        **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
+
+    Returns:
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -127,15 +171,16 @@ def perceptual_loss(
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
-    r"""
+    r"""Perceptual loss comprising content and style loss from :cite:`GEB+2017`.
 
     Args:
-        impl_params:
-        multi_layer_encoder:
-        content_loss_kwargs:
-        style_loss_kwargs:
-
-    Returns:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.gatys_et_al_2017._multi_layer_encoder` from the paper is used.
+        content_loss_kwargs: Optional parameters for the ``content_loss``.
+        style_loss_kwargs: Optional parameters for the ``style_loss``.
 
     """
     if multi_layer_encoder is None:
@@ -165,6 +210,19 @@ def guided_perceptual_loss(
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.GuidedPerceptualLoss:
+    r"""Guided perceptual loss comprising content and style loss from :cite:`GEB+2017`.
+
+    Args:
+        regions: Regions of the input image to be stylized.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
+            the default :func:`~pystiche_papers.gatys_et_al_2017._multi_layer_encoder` from the paper is used.
+        content_loss_kwargs: Optional parameters for the ``content_loss``.
+        style_loss_kwargs: Optional parameters for the ``style_loss``.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 

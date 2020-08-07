@@ -99,7 +99,7 @@ def guided_nst(
 
     Args:
         content_image: Content image for the guided NST.
-        content_guides: content_image: Content image guided for the guided NST.
+        content_guides: Content image guides for the guided NST.
         style_images_and_guides: Dictionary with the style images and the guides.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
