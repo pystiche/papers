@@ -198,11 +198,16 @@ batch_sampler_ = batch_sampler
 def image_loader(
     dataset: Dataset,
     batch_sampler: Optional[Sampler] = None,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    style: Optional[str] = None,
     num_workers: int = 4,
     pin_memory: bool = True,
 ) -> DataLoader:
     if batch_sampler is None:
-        batch_sampler = batch_sampler_(dataset)
+        batch_sampler = batch_sampler_(
+            dataset, impl_params=impl_params, instance_norm=instance_norm, style=style
+        )
 
     return DataLoader(
         dataset,
