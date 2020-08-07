@@ -45,7 +45,8 @@ def optimizer(
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Defaults to ``True``.
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this flag is used for
+            switching between the github branches. For details see FIXME.
 
     Returns:
         :class:`torch.optim.Adam` optimizer with a learning rate of ``1e-3`` if ``impl_params`` and ``instance_norm``
@@ -86,6 +87,13 @@ class DelayedExponentialLR(ExponentialLR):
 
 
 def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
+    r""" LRScheduler.
+    Args:
+        optimizer: Wrapped optimizer.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+    """
     return (
         ExponentialLR(optimizer, 0.8)
         if impl_params
