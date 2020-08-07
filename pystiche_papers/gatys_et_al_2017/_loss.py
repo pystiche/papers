@@ -127,6 +127,17 @@ def perceptual_loss(
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
+    r"""
+
+    Args:
+        impl_params:
+        multi_layer_encoder:
+        content_loss_kwargs:
+        style_loss_kwargs:
+
+    Returns:
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
