@@ -294,7 +294,7 @@ class Transformer(nn.Module):
             self.init_weights()
 
     def init_weights(self) -> None:
-        r"""Initializes the weights of the transformer as it is the case in the original implementation.
+        r"""Initialize transformer weights.
 
         Uses the default Kaiming initalisation for uniform distributions in luatorch for
         :class:`~torch.nn.Conv2d` and :class:`~torch.nn.ConvTranspose2d`. See
