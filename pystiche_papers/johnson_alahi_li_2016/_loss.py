@@ -62,13 +62,17 @@ def content_loss(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the optimization parameters for the replication of the given
-            pre-trained models from the original repository.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``, the
-            default :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` from the paper is used.
-        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be taken. Defaults to "relu2_2".
-        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
-            ``style`` and ``instance_norm``. For details see FIXME
+        style: Optional style for selecting the optimization parameters for the
+            replication of the given pre-trained models from the original repository.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            ``omitted``, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` from the
+            paper is used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
+            taken. Defaults to "relu2_2".
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is
+            determined with respect to ``style`` and ``instance_norm``. For details see
+            FIXME
 
     """
     if multi_layer_encoder is None:
@@ -143,16 +147,21 @@ def style_loss(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the optimization parameters for the replication of the given
-            pre-trained models from the original repository.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
-            the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
-        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
-            defaults is used. Defaults to ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.
+        style: Optional style for selecting the optimization parameters for the
+            replication of the given pre-trained models from the original repository.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            ``omitted``, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            from the paper is used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
+            taken. If ``None``, the defaults is used. Defaults to
+            ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.
         layer_weights: Layer weights of the operator. Defaults to "sum".
-        score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
-            ``style``, ``instance_norm`` and ``impl_params``. For details see FIXME
-        **gram_op_kwargs: Optional parameters for the :class:`~pystiche.ops.GramOperator`.
+        score_weight: Score weight of the operator. If ``omitted``, the score_weight is
+            determined with respect to ``style``, ``instance_norm`` and ``impl_params``.
+            For details see FIXME
+        **gram_op_kwargs: Optional parameters for the
+            :class:`~pystiche.ops.GramOperator`.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)

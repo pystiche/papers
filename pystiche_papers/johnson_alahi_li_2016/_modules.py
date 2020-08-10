@@ -217,8 +217,8 @@ def decoder(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
 
-    If ``impl_params`` is ``True``, a tanh with a constant factor of 150 is used instead of the (tanh(x) + 1) / 2 in
-    the paper.
+    If ``impl_params`` is ``True``, a tanh with a constant factor of 150 is used instead
+    of the (tanh(x) + 1) / 2 in the paper.
     """
 
     def get_value_range_delimiter() -> nn.Module:
@@ -277,8 +277,8 @@ class Transformer(nn.Module):
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        init_weights: If ``True``, use :meth:`init_weights` to initialize the weights the same way the original
-            implementation did.
+        init_weights: If ``True``, use :meth:`init_weights` to initialize the weights
+            the same way the original implementation did.
     """
 
     def __init__(
@@ -296,13 +296,15 @@ class Transformer(nn.Module):
     def init_weights(self) -> None:
         r"""Initializes the weights of the transformer as it is the case in the original implementation.
 
-        Uses the default Kaiming initalisation for uniform distributions in luatorch for :class:`~torch.nn.Conv2d`
-        and :class:`~torch.nn.ConvTranspose2d`. See https://github.com/Kaixhin/nninit#nninitkaimingmodule-tensor-dist-gain .
+        Uses the default Kaiming initalisation for uniform distributions in luatorch for
+        :class:`~torch.nn.Conv2d` and :class:`~torch.nn.ConvTranspose2d`. See
+        https://github.com/Kaixhin/nninit#nninitkaimingmodule-tensor-dist-gain .
 
         """
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
-                # The default initialisation for nn.SpatialConvolution is used. For details see:
+                # The default initialisation for nn.SpatialConvolution is used.
+                # For details see:
                 # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
                 bound = 1 / sqrt(fan_in)

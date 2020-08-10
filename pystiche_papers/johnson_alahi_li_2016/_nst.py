@@ -38,8 +38,9 @@ def training(
 
     Args:
         content_image_loader: Content images used as input for the ``transformer``.
-        style_image: Style image on which the ``transformer`` should be trained. If the input is an string,
-            the style image is read from the images in :func:`~pystiche_papers.johnson_alahi_li_2016._images`.
+        style_image: Style image on which the ``transformer`` should be trained. If the
+            input is an string, the style image is read from the images in
+            :func:`~pystiche_papers.johnson_alahi_li_2016._images`.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
@@ -49,10 +50,11 @@ def training(
         transformer: Transformer to be optimized. If omitted, the
             :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
         criterion: Optimization criterion. If ``None``, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the paper is used.
-            Defaults to ``None``.
-        optimizer: Optimizer. If ``None``, the default :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer`
-            from the paper is used. Defaults to ``None``.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the
+            paper is used. Defaults to ``None``.
+        optimizer: Optimizer. If ``None``, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` from the paper is
+            used. Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
@@ -62,7 +64,8 @@ def training(
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
-    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing of the images is used.
+    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing of
+    the images is used.
 
     """
     style: Optional[str]
@@ -135,8 +138,9 @@ def stylization(
 
     Args:
         input_image: Image to be stylised.
-        transformer: Pretrained transformer for style transfer or string to load a pretrained transformer.
-            This string is the style parameter of :func:`~pystiche_papers.johnson_alahi_li_2016._transformer`.
+        transformer: Pretrained transformer for style transfer or string to load a
+            pretrained transformer. This string is the style parameter of
+            :func:`~pystiche_papers.johnson_alahi_li_2016._transformer`.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
@@ -150,8 +154,8 @@ def stylization(
         postprocessor: Optional preprocessor that is called with the ``output_image``
             after the optimization.
 
-    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing and postprocessing of the
-    images is used.
+    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing
+    and postprocessing of the images is used.
     """
     device = input_image.device
 
