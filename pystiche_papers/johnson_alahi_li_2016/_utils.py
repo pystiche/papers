@@ -42,13 +42,14 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 
 def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
-    r"""Multi-layer encoder based on the VGG16 architecture with the weights of caffe,
-    no internal preprocessing and allowed inplace.
+    r"""Multi-layer encoder from :cite:`JAL2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see below.
+
+    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing of the images is used.
     """
     return enc.vgg16_multi_layer_encoder(
         weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True
@@ -56,7 +57,8 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
 
 
 def optimizer(transformer: nn.Module) -> optim.Adam:
-    r"""
+    r"""Optimizer from :cite:`JAL2016`.
+
     Args:
         transformer: Transformer to be optimized.
 
