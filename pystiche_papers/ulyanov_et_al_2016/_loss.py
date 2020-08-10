@@ -36,8 +36,9 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
         # not instance_norm:
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
-        # nn.MSECriterion() was used to calculate the content loss, which by default uses reduction="mean" which
-        # also includes the batch_size. However, here again the batch_size is used as an additional division.
+        # nn.MSECriterion() was used to calculate the content loss, which by default
+        # uses reduction="mean" which also includes the batch_size. However, here
+        # again the batch_size is used as an additional division.
         batch_size = image.extract_batch_size(input_repr)
         return score / batch_size
 
@@ -71,8 +72,9 @@ class GramOperator(ops.GramOperator):
         self.loss_reduction = "mean"
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
-        # nn.MSECriterion() was used to calculate the style loss, which by default uses reduction="mean" which
-        # also includes the batch_size. However, here again the batch_size is used as an additional division.
+        # nn.MSECriterion() was used to calculate the style loss, which by default uses
+        # reduction="mean" which also includes the batch_size. However, here again the
+        # batch_size is used as an additional division.
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
