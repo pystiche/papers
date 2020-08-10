@@ -43,10 +43,10 @@ def training(
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. If ``None``,
-            ``instance_norm`` is set to ``impl_params``. Defaults to ``None``.
-        transformer: Transformer to be optimized. If ``None``, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` from the paper is used.
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
+            defaults to ``impl_params``.
+        transformer: Transformer to be optimized. If omitted, the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
         criterion: Optimization criterion. If ``None``, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the paper is used.
             Defaults to ``None``.

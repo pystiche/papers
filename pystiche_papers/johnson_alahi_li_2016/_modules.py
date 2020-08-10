@@ -168,7 +168,7 @@ def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
 
 
 def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
-    r"""Encoder part of the Transformer from :cite:`JAL2016` .
+    r"""Encoder part of the :class:`Transformer` from :cite:`JAL2016` .
 
     Args:
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
@@ -274,7 +274,7 @@ class Transformer(nn.Module):
             the paper. For details see FIXME.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        init_weights: If ``True``, use the procedure defined in the :func:`init_weights` to initialize the weights.
+        init_weights: If ``True``, use :meth:`init_weights` to initialize the weights the same way the original implementation did.
     """
 
     def __init__(

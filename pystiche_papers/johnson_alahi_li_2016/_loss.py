@@ -146,11 +146,11 @@ def style_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
             the default :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder` from the paper is used.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
-            defaults is used. Defaults to ''("relu1_2", "relu2_2", "relu3_3", "relu4_3")''.
+            defaults is used. Defaults to ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.
         layer_weights: Layer weights of the operator. Defaults to "sum".
         score_weight: Score weight of the operator. If ``omitted``, the score_weight is determined with respect to
             ``style``, ``instance_norm`` and ``impl_params``. For details see FIXME
-        **gram_op_kwargs: Optional parameters for the ``ops.GramOperator``.
+        **gram_op_kwargs: Optional parameters for the :class:`~pystiche.ops.GramOperator`.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -264,7 +264,7 @@ def perceptual_loss(
         style: Optional style for selecting the optimization parameters for the replication.
             of the pretrained transformers.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
-        content_loss_kwargs: Optional parameters for the ``content_loss``.
+        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the ``style_loss``.
         total_variation_kwargs: Optional parameters for the ``regularization``.
 
