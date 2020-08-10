@@ -53,7 +53,7 @@ def style_transform(
 ) -> transforms.Resize:
     # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
-    # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-width-height-mode
+    # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
     interpolation_mode = "bicubic" if impl_params and instance_norm else "bilinear"
     return transforms.Resize(
         edge_size, edge="long", interpolation_mode=interpolation_mode
@@ -212,6 +212,7 @@ def batch_sampler(
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
             # 3000 = 10 * 300
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
+            # The number of epochs is defined in _nst.training .
             num_batches = 2000 if instance_norm else 300
         else:
             num_batches = 200
