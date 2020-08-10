@@ -243,11 +243,13 @@ def regularization(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the optimization parameters for the replication of the given
-            pre-trained models from the original repository.
-        score_weight: Score weight of the operator. If omitted, the score_weight is determined with respect to
-            ``style`` and ``instance_norm``. For details see FIXME
-        **total_variation_op_kwargs: Optional parameters for the ``ops.TotalVariationOperator``.
+        style: Optional style for selecting the optimization parameters for the
+            replication of the given pre-trained models from the original repository.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``style`` and ``instance_norm``.
+            For details see FIXME
+        **total_variation_op_kwargs: Optional parameters for the
+             :class:`~pystiche.ops.TotalVariationOperator`.
 
     """
     if score_weight is None:
@@ -276,8 +278,8 @@ def perceptual_loss(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        style: Optional style for selecting the optimization parameters for the replication of the given
-            pre-trained models from the original repository.
+        style: Optional style for selecting the optimization parameters for the
+            replication of the given pre-trained models from the original repository.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the ``style_loss``.
