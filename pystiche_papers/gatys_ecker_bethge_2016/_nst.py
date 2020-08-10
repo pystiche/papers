@@ -33,7 +33,8 @@ def nst(
     device = content_image.device
     criterion = criterion.to(device)
 
-    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb [6]
+    # In paragraph [6]:
+    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     starting_point = "content" if impl_params else "random"
     input_image = misc.get_input_image(
         starting_point=starting_point, content_image=content_image
