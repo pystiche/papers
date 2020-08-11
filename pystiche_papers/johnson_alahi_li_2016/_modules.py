@@ -217,8 +217,10 @@ def decoder(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
 
-    If ``impl_params is True``, a :func:`~torch.tanh` with a constant factor of 150 is used instead
-    of the (tanh(x) + 1) / 2 in the paper.
+    If ``impl_params is True``, a scaled 150 * :func:`~torch.tanh` is used instead of
+    the (:func:`~torch.tanh`(x) + 1) / 2 in the paper. The scaling in the second variant
+    to [0, 255] is then carried out in the
+    :func:`pystiche_papers.johnson_alahi_li_2016.postprocessor`.
     """
 
     def get_value_range_delimiter() -> nn.Module:
@@ -279,6 +281,9 @@ class Transformer(nn.Module):
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         init_weights: If ``True``, use :meth:`init_weights` to initialize the weights
             the same way the original implementation did.
+
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.johnson_alahi_li_2016._modules.decoder`,
     """
 
     def __init__(
@@ -298,7 +303,8 @@ class Transformer(nn.Module):
 
         Uses the default Kaiming initalisation for uniform distributions in luatorch for
         :class:`~torch.nn.Conv2d` and :class:`~torch.nn.ConvTranspose2d`. See
-        https://github.com/Kaixhin/nninit#nninitkaimingmodule-tensor-dist-gain .
+        https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
+        https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialFullConvolution.lua#L43
 
         """
         for module in self.modules():
@@ -342,6 +348,10 @@ def transformer(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
+
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.johnson_alahi_li_2016.Transformer` and
+    :func:`~pystiche_papers.johnson_alahi_li_2016._modules.select_url`.
 
     For ``framework == "pystiche"`` all combinations of parameters are available.
 

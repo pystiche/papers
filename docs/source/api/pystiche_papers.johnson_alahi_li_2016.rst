@@ -8,6 +8,7 @@ table below is used to determine
 
 - the ``size`` the ``style_image`` is resized to with the
   :func:`~pystiche_papers.johnson_alahi_li_2016.style_transform`,
+
 - the ``score_weight`` for
 
   - the :func:`~pystiche_papers.johnson_alahi_li_2016.content_loss`,
@@ -42,6 +43,15 @@ table below is used to determine
 +-----------------------+-------------------+----------+------------------+----------------+--------------------+-----------------+
 | ``"udnie"``           | ``True``          | ``256``  | ``0.5``          | ``10.0``       | ``1e-6``           | ``40000``       |
 +-----------------------+-------------------+----------+------------------+----------------+--------------------+-----------------+
+
+
+An overview of the functions affected by the parameter ``impl_params``:
+
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.training`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.stylization`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016._modules.decoder`,
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016._modules.select_url`
 
 .. automodule:: pystiche_papers.johnson_alahi_li_2016
 

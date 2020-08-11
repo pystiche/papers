@@ -49,18 +49,18 @@ def training(
             defaults to ``impl_params``.
         transformer: Transformer to be optimized. If omitted, the
             :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
-        criterion: Optimization criterion. If ``None``, the default
+        criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the
             paper is used. Defaults to ``None``.
-        optimizer: Optimizer. If ``None``, the default
+        optimizer: Optimizer. If omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` from the paper is
             used. Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
-        logger: Optional custom logger. If ``None``,
+        logger: Optional custom logger. If omitted,
             :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
         log_fn: Optional custom logging function. It is called in every optimization
-            step with the current step and loss. If ``None``,
+            step with the current step and loss. If omitted,
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
