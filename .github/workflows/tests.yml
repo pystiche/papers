@@ -93,6 +93,8 @@ jobs:
         run: tox -e tests-hub --notest
 
       - name: Run tests
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: tox -e tests-hub -- tests/hub --skip-large-download
 
   replication:
