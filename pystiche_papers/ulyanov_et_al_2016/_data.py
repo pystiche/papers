@@ -208,12 +208,12 @@ def batch_sampler(
     if num_batches is None:
         # The num_iterations are split up into multiple epochs with corresponding
         # num_batches:
+        # The number of epochs is defined in _nst.training .
         if impl_params:
             # 50000 = 25 * 2000
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
             # 3000 = 10 * 300
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
-            # The number of epochs is defined in _nst.training .
             num_batches = 2000 if instance_norm else 300
         else:
             # 2000 = 10 * 200
