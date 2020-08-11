@@ -73,8 +73,6 @@ def training(
         # num_batches:
         # 50000 = 25 * 2000
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
-        # The num_iterations are split up into multiple epochs with corresponding
-        # num_batches:
         # 3000 = 10 * 300
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
         # The num_batches is defined in ._data.batch_sampler .

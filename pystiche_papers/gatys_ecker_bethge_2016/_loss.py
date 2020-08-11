@@ -30,8 +30,8 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         # torch.nn.MSELoss() was used to calculate the content loss, which does not
         # include the factor 1/2 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
-        # In paragraph [8]:
         # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [8]
         # torch.nn.MSELoss() was used to calculate the content loss, which by default
         # uses reduction="mean"
         self.loss_reduction = "mean" if impl_params else "sum"
@@ -78,8 +78,8 @@ class StyleLoss(ops.MultiLayerEncodingOperator):
             layer_weights=layer_weights,
             score_weight=score_weight,
         )
-        # In paragraph [3]:
         # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [3]
         # torch.nn.MSELoss() was used to calculate the style loss, which does not
         # include the factor 1/4 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 4.0

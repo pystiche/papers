@@ -206,9 +206,9 @@ def batch_sampler(
 ) -> FiniteCycleBatchSampler:
 
     if num_batches is None:
+        # The num_iterations are split up into multiple epochs with corresponding
+        # num_batches:
         if impl_params:
-            # The num_iterations are split up into multiple epochs with corresponding
-            # num_batches:
             # 50000 = 25 * 2000
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
             # 3000 = 10 * 300
@@ -216,6 +216,7 @@ def batch_sampler(
             # The number of epochs is defined in _nst.training .
             num_batches = 2000 if instance_norm else 300
         else:
+            # 2000 = 10 * 200
             num_batches = 200
 
     if batch_size is None:
