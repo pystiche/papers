@@ -25,8 +25,8 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     ):
         super().__init__(encoder, score_weight=score_weight)
 
-        # In paragraph [8]:
         # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [8]
         # torch.nn.MSELoss() was used to calculate the content loss, which does not
         # include the factor 1/2 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
