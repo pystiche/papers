@@ -25,7 +25,15 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     ):
         super().__init__(encoder, score_weight=score_weight)
 
+        # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [8]
+        # torch.nn.MSELoss() was used to calculate the content loss, which does not
+        # include the factor 1/2 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
+        # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [8]
+        # torch.nn.MSELoss() was used to calculate the content loss, which by default
+        # uses reduction="mean"
         self.loss_reduction = "mean" if impl_params else "sum"
 
     def calculate_score(
@@ -70,7 +78,10 @@ class StyleLoss(ops.MultiLayerEncodingOperator):
             layer_weights=layer_weights,
             score_weight=score_weight,
         )
-
+        # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+        # Cell [3]
+        # torch.nn.MSELoss() was used to calculate the style loss, which does not
+        # include the factor 1/4 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 4.0
 
     def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:

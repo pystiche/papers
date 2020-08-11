@@ -32,6 +32,13 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         if not self.double_batch_size_mean:
             return score
 
+        # instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
+        # not instance_norm:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
+        # nn.MSECriterion() was used to calculate the content loss, which by default
+        # uses reduction="mean" which also includes the batch_size. However, the
+        # score is divided once more by the batch_size in the reference implementation.
         batch_size = image.extract_batch_size(input_repr)
         return score / batch_size
 
@@ -44,10 +51,8 @@ def content_loss(
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
     if score_weight is None:
-        if impl_params:
-            score_weight = 1e0 if instance_norm else 6e-1
-        else:
-            score_weight = 1e0
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
+        score_weight = 6e-1 if impl_params and not instance_norm else 1e0
 
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -65,6 +70,11 @@ class GramOperator(ops.GramOperator):
         super().__init__(encoder, **gram_op_kwargs)
         self.normalize_by_num_channels = impl_params
         self.loss_reduction = "mean"
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
+        # nn.MSECriterion() was used to calculate the style loss, which by default uses
+        # uses reduction="mean" which also includes the batch_size. However, the
+        # score is divided once more by the batch_size in the reference implementation.
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
@@ -99,6 +109,7 @@ def style_loss(
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
     if score_weight is None:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
         score_weight = 1e3 if impl_params and not instance_norm else 1e0
 
     if multi_layer_encoder is None:
@@ -106,6 +117,7 @@ def style_loss(
 
     if layers is None:
         if impl_params and instance_norm:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
             layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1")
         else:
             layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
