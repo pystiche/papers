@@ -64,8 +64,7 @@ def optimizer(transformer: nn.Module) -> optim.Adam:
         transformer: Transformer to be optimized.
 
     Returns:
-        :class:`torch.optim.Adam` optimizer with a learning rate of ``1e-3``. The
-        parameters of ``transformer`` are set as optimization parameters.
+        Optimizer for the ``transformer`` parameters.
 
     """
     return optim.Adam(transformer.parameters(), lr=1e-3)

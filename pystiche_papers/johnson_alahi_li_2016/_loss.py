@@ -160,7 +160,7 @@ def style_loss(
         score_weight: Score weight of the operator. If ``omitted``, the score_weight is
             determined with respect to ``style``, ``instance_norm`` and ``impl_params``.
             For details see FIXME
-        **gram_op_kwargs: Optional parameters for the
+        **gram_op_kwargs: Optional parameters for a
             :class:`~pystiche.ops.GramOperator`.
     """
     if multi_layer_encoder is None:

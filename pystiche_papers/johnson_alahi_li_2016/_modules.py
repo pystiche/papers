@@ -217,7 +217,7 @@ def decoder(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
 
-    If ``impl_params`` is ``True``, a tanh with a constant factor of 150 is used instead
+    If ``impl_params is True``, a :func:`~torch.tanh` with a constant factor of 150 is used instead
     of the (tanh(x) + 1) / 2 in the paper.
     """
 
