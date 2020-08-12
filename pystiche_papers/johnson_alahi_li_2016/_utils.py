@@ -49,8 +49,8 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
             implementation of the original authors rather than what is described in
             the paper. For details see below.
 
-    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing of
-    the images is used.
+    If ``impl_params`` is ``True`` , an internal preprocessing of the images is used,
+    otherwise no internal preprocessing is used.
     """
     return enc.vgg16_multi_layer_encoder(
         weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True

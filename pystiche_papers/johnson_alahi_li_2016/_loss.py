@@ -66,19 +66,17 @@ def content_loss(
             replication of the given pre-trained models from the original repository.
             See score_weight for details.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            ``omitted``, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` from the
-            paper is used.
+            omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` is used.
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
             taken. Defaults to "relu2_2".
-        score_weight: Score weight of the operator. If ``omitted``, the score_weight is
+        score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style`` and ``instance_norm``. For details see
-            https://github.com/pmeier/pystiche_papers/blob/master/docs/source/api/pystiche_papers.johnson_alahi_li_2016.rst
-            .
+            :ref:`here <table-hyperparameters>`.
 
     The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and
-    :func:`get_content_score_weight`.
+    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and a getter
+    function to get the content ``score_weight`` if omitted.
 
     """
     if multi_layer_encoder is None:
@@ -157,24 +155,22 @@ def style_loss(
             replication of the given pre-trained models from the original repository.
             See score_weight for details.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            ``omitted``, the default
+            omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
-            from the paper is used.
+            is used.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
-            taken. If ``None``, the defaults is used. Defaults to
+            taken. If omitted, the defaults is used. Defaults to
             ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.
         layer_weights: Layer weights of the operator. Defaults to ``sum``.
-        score_weight: Score weight of the operator. If ``omitted``, the score_weight is
+        score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style``, ``instance_norm`` and ``impl_params``.
-            For details see
-            https://github.com/pmeier/pystiche_papers/blob/master/docs/source/api/pystiche_papers.johnson_alahi_li_2016.rst
-            .
-        **gram_op_kwargs: Optional parameters for a
+            For details see :ref:`here <table-hyperparameters>`.
+        **gram_op_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
 
     The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and
-    :func:`get_style_score_weight`.
+    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and a getter
+    function to get the style ``score_weight`` if omitted.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -261,14 +257,12 @@ def regularization(
             See score_weight for details.
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style`` and ``instance_norm``.
-            For details see
-            https://github.com/pmeier/pystiche_papers/blob/master/docs/source/api/pystiche_papers.johnson_alahi_li_2016.rst
-            .
+            For details see :ref:`here <table-hyperparameters>`.
         **total_variation_op_kwargs: Optional parameters for the
              :class:`~pystiche.ops.TotalVariationOperator`.
 
-    The parameter ``impl_params`` is passed to the
-    :func:`get_regularization_score_weight`.
+    The parameter ``impl_params`` is passed to a getter
+    function to get the regularization ``score_weight`` if omitted.
     """
     if score_weight is None:
         score_weight = get_regularization_score_weight(
@@ -298,9 +292,7 @@ def perceptual_loss(
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the optimization parameters for the
             replication of the given pre-trained models from the original repository.
-            For details see
-            https://github.com/pmeier/pystiche_papers/blob/master/docs/source/api/pystiche_papers.johnson_alahi_li_2016.rst
-            .
+            For details see :ref:`here <table-hyperparameters>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the :func:`style_loss`.

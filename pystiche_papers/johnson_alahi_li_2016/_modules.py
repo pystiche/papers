@@ -172,7 +172,10 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 
     Args:
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
+            number of in_channels and out_channels is reduced to half the number of
+            in_channels and out_channels in each module except for the first
+            in_channels, if this is set to ``True``.
     """
     modules = (
         nn.ReflectionPad2d(40),
@@ -208,19 +211,24 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
-    r"""Decoder part of the Transformer from :cite:`JAL2016` .
+    r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016` .
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper.
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
+            number of in_channels and out_channels is reduced to half the number of
+            in_channels and out_channels in each module except for the last
+            out_channels, if this is set to ``True``.
 
     If ``impl_params is True``, a scaled 150 * :func:`~torch.tanh` is used instead of
-    the (:func:`~torch.tanh`(x) + 1) / 2 in the paper. The scaling in the second variant
-    to [0, 255] is then carried out in the
-    :func:`pystiche_papers.johnson_alahi_li_2016.postprocessor`.
+    the (:func:`~torch.tanh`(x) + 1) / 2 in the paper. Since the reference
+    implementation does not use internal preprocessing for the criterion, the scaled
+    :func:`~torch.tanh` is used, whereby this necessary preprocessing is learned within
+    the transformer. Thus this corresponds to a rather inaccurate scaling to [0, 255].
+
     """
 
     def get_value_range_delimiter() -> nn.Module:
@@ -271,21 +279,6 @@ def decoder(
 
 
 class Transformer(nn.Module):
-    r"""Transformer from :cite:`JAL2016` .
-
-    Args:
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper.
-        init_weights: If ``True``, use :meth:`init_weights` to initialize the weights
-            the same way the original implementation did.
-
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016._modules.decoder`,
-    """
-
     def __init__(
         self,
         impl_params: bool = True,
@@ -299,25 +292,19 @@ class Transformer(nn.Module):
             self.init_weights()
 
     def init_weights(self) -> None:
-        r"""Initialize transformer weights.
-
-        Uses the default Kaiming initalisation for uniform distributions in luatorch for
-        :class:`~torch.nn.Conv2d` and :class:`~torch.nn.ConvTranspose2d`. See
-        https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
-        https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialFullConvolution.lua#L43
-
-        """
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
                 # The default initialisation for nn.SpatialConvolution is used.
                 # For details see:
                 # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialFullConvolution.lua#L43
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
                 bound = 1 / sqrt(fan_in)
                 nn.init.uniform_(module.weight, -bound, bound)
                 if module.bias is not None:
                     nn.init.uniform_(module.bias, -bound, bound)
             if isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/BatchNormalization.lua#L65
                 # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/InstanceNormalization.lua#L26-L27
                 if module.weight is not None:
                     nn.init.uniform_(module.weight)

@@ -50,11 +50,11 @@ def training(
         transformer: Transformer to be optimized. If omitted, the
             :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
         criterion: Optimization criterion. If omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` from the
-            paper is used. Defaults to ``None``.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` is used.
+            Defaults to ``None``.
         optimizer: Optimizer. If omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` from the paper is
-            used. Defaults to ``None``.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` is used. Defaults
+            to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If omitted,

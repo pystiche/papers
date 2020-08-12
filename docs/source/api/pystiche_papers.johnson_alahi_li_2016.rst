@@ -1,6 +1,24 @@
 ``pystiche_papers.johnson_alahi_li_2016``
 =========================================
 
+Unfortunately, the parameters in the reference implementation differ from the parameters
+described in the paper. If ``impl_params is True``, the parameters from the reference
+implementation are used instead of the parameters from the paper. The following
+functions are affected by the parameter ``impl_params``:
+
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.training`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.stylization`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.content_transform`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.style_transform`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.batch_sampler`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.transformer`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.content_loss`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.style_loss`
+  - the :func:`~pystiche_papers.johnson_alahi_li_2016.regularization`
+
+.. _table-hyperparameters:
+
 The original authors provided models together with the used hyperparameters.
 Unfortunately, the used hyperparameters deviate from the defaults given in the
 reference implementation. If you specify a ``style`` and ``impl_params is True`` the
@@ -17,6 +35,7 @@ table below is used to determine
 
 - the ``num_batches`` of the
   :func:`~pystiche_papers.johnson_alahi_li_2016.image_loader`.
+
 
 +-----------------------+-------------------+----------+------------------+----------------+--------------------+-----------------+
 | ``style``             | ``instance_norm`` | ``size`` | ``score_weight``                                       | ``num_batches`` |
@@ -44,14 +63,6 @@ table below is used to determine
 | ``"udnie"``           | ``True``          | ``256``  | ``0.5``          | ``10.0``       | ``1e-6``           | ``40000``       |
 +-----------------------+-------------------+----------+------------------+----------------+--------------------+-----------------+
 
-
-An overview of the functions affected by the parameter ``impl_params``:
-
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.training`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.stylization`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016._modules.decoder`,
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016._modules.select_url`
 
 .. automodule:: pystiche_papers.johnson_alahi_li_2016
 
