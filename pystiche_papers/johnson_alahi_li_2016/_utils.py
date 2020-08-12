@@ -63,8 +63,5 @@ def optimizer(transformer: nn.Module) -> optim.Adam:
     Args:
         transformer: Transformer to be optimized.
 
-    Returns:
-        Optimizer for the ``transformer`` parameters.
-
     """
     return optim.Adam(transformer.parameters(), lr=1e-3)

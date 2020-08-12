@@ -64,7 +64,7 @@ def training(
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
-    If ``impl_params`` is ``True`` , an external instead of an internal preprocessing of
+    If ``impl_params is True`` , an external instead of an internal preprocessing of
     the images is used.
 
     """

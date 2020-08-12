@@ -304,7 +304,7 @@ def perceptual_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the :func:`style_loss`.
-        total_variation_kwargs: Optional parameters for the :func:`content_loss`.
+        total_variation_kwargs: Optional parameters for the :func:`regularization`.
 
     The parameter ``impl_params`` is passed to the
     :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`,
