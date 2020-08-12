@@ -21,13 +21,15 @@ def postprocessor() -> nn.Module:
 
 
 def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
-    r"""Multi-layer encoder based on the VGG19 architecture with the weights of caffe,
-    no internal preprocessing and allowed inplace.
+    r"""Multi-layer encoder from :cite:`GEB2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper.
+
+    If ``impl_params is True`` the :class:`~torch.nn.MaxPool2d` in the
+    ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
     multi_layer_encoder = enc.vgg19_multi_layer_encoder(
@@ -45,11 +47,9 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
 
 
 def optimizer(input_image: torch.Tensor) -> optim.LBFGS:
-    r"""
+    r"""Optimizer from :cite:`GEB2016`.
+
         Args:
             input_image: Image to be optimized.
-        Returns:
-            :class:`torch.optim.LBFGS` optimizer with a learning rate of ``1.0``. The
-            pixels of ``input_image`` are set as optimization parameters.
         """
     return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)

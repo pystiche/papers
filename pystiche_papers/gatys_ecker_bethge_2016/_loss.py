@@ -57,11 +57,19 @@ def content_loss(
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
-            the default :func:`~pystiche_papers.gatys_ecker_bethge_2015._multi_layer_encoder` from the paper is used.
-        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be taken. Defaults to "relu4_2".
+            the paper. For details see below.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
+            taken. Defaults to "relu4_2".
         score_weight: Score weight of the operator. Defaults to ``1e0``.
+
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` and the
+    :class:`ops.FeatureReconstructionOperator` to initialize it with the different
+    parameters. For details see :ref:`here <table-hyperparameters>`.
 
     """
     if multi_layer_encoder is None:
@@ -138,14 +146,21 @@ def style_loss(
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
-            the default :func:`~pystiche_papers.gatys_ecker_bethge_2015._multi_layer_encoder` from the paper is used.
-        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be taken. If ``None``, the
-            defaults is used. Defaults to ''("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")''.
-        layer_weights: Layer weights of the operator. If ``omitted``, the layer weights are calculated as described
-            in the paper.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
+            taken. If omitted, the defaults is used. Defaults to
+            ''("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")''.
+        layer_weights: Layer weights of the operator. If omitted, the layer weights are
+            calculated as described in the paper.
         score_weight: Score weight of the operator. Defaults to ``1e3``.
-        **gram_loss_kwargs: Optional parameters for the ``ops.GramOperator``.
+        **gram_loss_kwargs: Optional parameters for the
+            :class:`~pystiche.ops.GramOperator`.
+
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
 
     """
     if multi_layer_encoder is None:
@@ -182,16 +197,22 @@ def perceptual_loss(
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
-    r"""Perceptual loss comprising content and style loss from :cite:`GEB2016`.
+    r"""Perceptual loss from :cite:`GEB2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If ``omitted``,
-            the default :func:`~pystiche_papers.gatys_ecker_bethge_2015._multi_layer_encoder` from the paper is used.
-        content_loss_kwargs: Optional parameters for the ``content_loss``.
-        style_loss_kwargs: Optional parameters for the ``style_loss``.
+            the paper.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            used.
+        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
+        style_loss_kwargs: Optional parameters for the :func:`style_loss`.
+
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`,
+    :func:`content_loss` and :func:`style_loss`.
 
     """
     if multi_layer_encoder is None:

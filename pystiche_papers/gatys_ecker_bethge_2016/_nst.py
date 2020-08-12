@@ -36,9 +36,9 @@ def nst(
             has to match the length of ``edge_sizes``.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
-        criterion: Optimization criterion. If ``None``, the default
-            :func:`~pystiche_papers.li_wand_2016.perceptual_loss` from the paper is used.
+            the paper. For details see below.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.perceptual_loss` is used.
             Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
@@ -49,6 +49,10 @@ def nst(
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
+    The parameter ``impl_params`` is passed to the
+    :func:`~pystiche_papers.gatys_ecker_bethge_2016.perceptual_loss` and if
+    ``impl_params is True`` the content_image is set as the starting point instead of a
+    random initialized image.
     """
     if criterion is None:
         criterion = perceptual_loss(impl_params=impl_params)
