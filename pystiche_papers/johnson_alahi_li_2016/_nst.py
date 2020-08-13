@@ -34,6 +34,39 @@ def training(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
 ) -> nn.Module:
+    r"""Training a transformer for the NST.
+
+    Args:
+        content_image_loader: Content images used as input for the ``transformer``.
+        style_image: Style image on which the ``transformer`` should be trained. If the
+            input is an string, the style image is read from the images in
+            :func:`~pystiche_papers.johnson_alahi_li_2016._images`.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
+            defaults to ``impl_params``.
+        transformer: Transformer to be optimized. If omitted, the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` is used.
+            Defaults to ``None``.
+        optimizer: Optimizer. If omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` is used. Defaults
+            to ``None``.
+        quiet: If ``True``, not information is logged during the optimization. Defaults
+            to ``False``.
+        logger: Optional custom logger. If omitted,
+            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
+        log_fn: Optional custom logging function. It is called in every optimization
+            step with the current step and loss. If omitted,
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            ``None``.
+
+    If ``impl_params is True`` , an external preprocessing of the images is used.
+
+    """
     style: Optional[str]
     if isinstance(style_image, torch.Tensor):
         device = style_image.device
@@ -103,6 +136,29 @@ def stylization(
     preprocessor: Optional[nn.Module] = None,
     postprocessor: Optional[nn.Module] = None,
 ) -> torch.Tensor:
+    r"""Transforms an input image into a stylised version using the transfromer.
+
+    Args:
+        input_image: Image to be stylised.
+        transformer: Pretrained transformer for style transfer or string to load a
+            pretrained transformer. This string is the style parameter of
+            :func:`~pystiche_papers.johnson_alahi_li_2016._transformer`.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
+            defaults to ``impl_params``.
+        framework: Framework that was used to train the the transformer. Can be one of
+            ``"pystiche"`` (default) and ``"luatorch"``.
+        preprocessor: Optional preprocessor that is called with the ``input_image``
+            before the optimization.
+        postprocessor: Optional preprocessor that is called with the ``output_image``
+            after the optimization.
+
+    If ``impl_params`` is ``True`` , an external preprocessing and postprocessing of the
+    images is used.
+    """
     device = input_image.device
 
     if instance_norm is None:

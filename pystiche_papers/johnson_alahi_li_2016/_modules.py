@@ -168,6 +168,13 @@ def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
 
 
 def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
+    r"""Encoder part of the :class:`Transformer` from :cite:`JAL2016` .
+
+    Args:
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
+            number of channels of the convolution layers is reduced by half.
+    """
     modules = (
         nn.ReflectionPad2d(40),
         conv_block(
@@ -202,6 +209,27 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
+    r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016`.
+
+    Args:
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
+            number of channels of the convolution layers is reduced by half.
+
+    If ``impl_params is True``, the output of the decoder is not externally
+    pre-processed before being fed into the
+    :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this step is
+    necessary to get meaningful encodings from the
+    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the
+    pre-processing transform has to be learned within the output layer of the decoder.
+    To make this possible, ``150 * tanh(input)`` is used as activation in contrast to
+    the ``(tanh(input) + 1) / 2`` given in the paper.
+
+    """
+
     def get_value_range_delimiter() -> nn.Module:
         if impl_params:
             # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L25
@@ -268,12 +296,18 @@ class Transformer(nn.Module):
     def init_weights(self) -> None:
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
+                # The default initialisation for nn.SpatialConvolution is used.
+                # For details see:
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialFullConvolution.lua#L43
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
                 bound = 1 / sqrt(fan_in)
                 nn.init.uniform_(module.weight, -bound, bound)
                 if module.bias is not None:
                     nn.init.uniform_(module.bias, -bound, bound)
             if isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/BatchNormalization.lua#L65
+                # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/InstanceNormalization.lua#L26-L27
                 if module.weight is not None:
                     nn.init.uniform_(module.weight)
                 if module.bias is not None:
@@ -300,7 +334,7 @@ def transformer(
             ``"pystiche"`` (default) and ``"luatorch"``.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
 
