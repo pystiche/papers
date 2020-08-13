@@ -26,20 +26,20 @@ def nst(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
 ) -> torch.Tensor:
-    r""" NST from :cite:`LW2016`.
+    r"""NST from :cite:`LW2016`.
 
     Args:
         content_image: Content image for the NST.
         style_image: Style image for the NST.
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
-        criterion: Optimization criterion. If ``None``, the default
-            :func:`~pystiche_papers.li_wand_2016.perceptual_loss` from the paper is used.
-            Defaults to ``None``.
-        image_pyramid: Image pyramid. If ``None``, the default
-            :func:`~pystiche_papers.li_wand_2016.image_pyramid` from the paper is used.
-            Defaults to ``None``.
+            the paper.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.li_wand_2016.perceptual_loss` is used. Defaults to
+            ``None``.
+        image_pyramid: Image pyramid. If omitted, the default
+            :func:`~pystiche_papers.li_wand_2016.image_pyramid` is used. Defaults to
+            ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
