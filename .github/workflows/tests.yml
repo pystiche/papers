@@ -92,10 +92,16 @@ jobs:
       - name: Create environment
         run: tox -e tests-hub --notest
 
+      - name: Load torch.hub checkpoints from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/torch/hub/checkpoints
+          key: torch-hub-checkpoints-${{ hashFiles('hubconf.py') }}
+
       - name: Run tests
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: tox -e tests-hub -- tests/hub --skip-large-download
+        run: tox -e tests-hub
 
   replication:
     runs-on: ubuntu-latest
