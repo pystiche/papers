@@ -39,6 +39,45 @@ def training(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
 ) -> nn.Module:
+    r"""Training a transformer for the NST.
+
+    Args:
+        content_image_loader: Content images used as input for the ``transformer``.
+        style: Style image on which the ``transformer`` should be trained. If the
+            input is an string, the style image is read from the images in
+            :func:`~pystiche_papers.ulyanov_et_al_2016.images`.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between the github branches. For details see
+            FIXME.
+        transformer: Transformer to be optimized. If omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used. Defaults to
+            ``None``.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.perceptual_loss` is used.
+            Defaults to ``None``.
+        lr_scheduler: LRScheduler. If omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler` is used. Defaults
+            to ``None``.
+        num_epochs: Optional number of epochs. If omitted, the num_epochs is determined
+            with respect to ``instance_norm`` and ``impl_params``. For details see
+            FIXME.
+        get_optimizer: Optional getter for the optimizer. If omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer` is used. Defaults to
+            ``None``.
+        quiet: If ``True``, not information is logged during the optimization. Defaults
+            to ``False``.
+        logger: Optional custom logger. If ``None``,
+            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
+        log_fn: Optional custom logging function. It is called in every optimization
+            step with the current step and loss. If ``None``,
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            ``None``.
+
+    """
     if isinstance(style, str):
         device = misc.get_device()
         images = _images()
@@ -113,6 +152,21 @@ def stylization(
     impl_params: bool = True,
     instance_norm: bool = False,
 ) -> torch.Tensor:
+    r"""Transforms an input image into a stylised version using the transformer.
+
+    Args:
+        input_image: Image to be stylised.
+        transformer: Pretrained transformer for style transfer or string to load a
+            pretrained transformer.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between the github branches. For details see
+            FIXME.
+
+    """
     device = input_image.device
     if isinstance(transformer, str):
         style = transformer

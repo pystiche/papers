@@ -50,6 +50,27 @@ def content_loss(
     layer: str = "relu4_2",
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
+    r"""Content_loss from :cite:`ULVL2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between the github branches. For details see
+            FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
+            Defaults to ``None``.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
+            taken. Defaults to "relu4_2".
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``style`` and ``instance_norm``. For details see
+            FIXME.
+
+    """
     if score_weight is None:
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
         score_weight = 6e-1 if impl_params and not instance_norm else 1e0
@@ -108,6 +129,31 @@ def style_loss(
     score_weight: Optional[float] = None,
     **gram_op_kwargs: Any,
 ) -> ops.MultiLayerEncodingOperator:
+    r"""Style_loss from :cite:`ULVL2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between the github branches. For details see
+            FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
+            Defaults to ``None``.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
+            taken. If omitted, the layers are determined with respect to ``impl_params``
+            and ``instance_norm``. For details see FIXME.
+        layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``instance_norm`` and ``impl_params``. For
+            details see FIXME.
+        **gram_op_kwargs: Optional parameters for the
+            :class:`~pystiche.ops.GramOperator`.
+
+    """
     if score_weight is None:
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
         score_weight = 1e3 if impl_params and not instance_norm else 1e0
@@ -141,6 +187,24 @@ def perceptual_loss(
     content_loss_kwargs: Optional[Dict[str, Any]] = None,
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
+    r"""Perceptual loss from :cite:`ULVL2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see FIXME.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between the github branches. For details see
+            FIXME.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            is used. Defaults to ``None``.
+        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
+        style_loss_kwargs: Optional parameters for the :func:`style_loss`.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
