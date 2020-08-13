@@ -57,7 +57,7 @@ def content_loss(
     r"""Content_loss from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than

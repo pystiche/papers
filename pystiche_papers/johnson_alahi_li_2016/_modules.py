@@ -173,9 +173,7 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
     Args:
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
-            number of in_channels and out_channels is reduced to half the number of
-            in_channels and out_channels in each module except for the first
-            in_channels, if this is set to ``True``.
+            number of channels of the convolution layers is reduced by half.
     """
     modules = (
         nn.ReflectionPad2d(40),
@@ -223,11 +221,14 @@ def decoder(
             in_channels and out_channels in each module except for the last
             out_channels, if this is set to ``True``.
 
-    If ``impl_params is True``, a scaled 150 * :func:`~torch.tanh` is used instead of
-    the (:func:`~torch.tanh`(x) + 1) / 2 in the paper. Since the reference
-    implementation does not use internal preprocessing for the criterion, the scaled
-    :func:`~torch.tanh` is used, whereby this necessary preprocessing is learned within
-    the transformer. Thus this corresponds to a rather inaccurate scaling to [0, 255].
+    If ``impl_params is True``, the output of the decoder is not externally 
+    pre-processed before being fed into the 
+    :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this step is 
+    necessary to get meaningful encodings from the 
+    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the 
+    pre-processing transform has to be learned within the output layer of the decoder. 
+    To make this possible, ``150 * tanh(input)`` is used as activation in contrast to 
+    the ``(tanh(input) + 1) / 2`` given in the paper.
 
     """
 
