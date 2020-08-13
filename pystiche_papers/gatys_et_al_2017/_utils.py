@@ -16,9 +16,7 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
-    r"""Multi-layer encoder from :cite:`GEB+2017`.
-
-    """
+    r"""Multi-layer encoder from :cite:`GEB+2017`."""
     return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )

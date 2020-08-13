@@ -37,6 +37,9 @@ def nst(
         criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.gatys_et_al_2017.perceptual_loss` is used. Defaults
             to ``None``.
+        image_pyramid: Image Pyramid. If omitted, the default
+            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used. Defaults to
+            ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
@@ -108,7 +111,8 @@ def guided_nst(
             :func:`~pystiche_papers.gatys_et_al_2017.guided_perceptual_loss` is used.
             Defaults to ``None``.
         image_pyramid: Image Pyramid. If omitted, the default
-            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used. Defaults to
+            ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
