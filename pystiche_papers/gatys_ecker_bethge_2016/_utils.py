@@ -49,8 +49,8 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
 def optimizer(input_image: torch.Tensor) -> optim.LBFGS:
     r"""Optimizer from :cite:`GEB2016`.
 
-        Args:
-            input_image: Image to be optimized.
+    Args:
+        input_image: Image to be optimized.
 
     """
     return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)
