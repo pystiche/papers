@@ -17,7 +17,7 @@ functions are affected by the parameter ``impl_params``:
   - the :func:`~pystiche_papers.johnson_alahi_li_2016.style_loss`
   - the :func:`~pystiche_papers.johnson_alahi_li_2016.regularization`
 
-.. _table-hyperparameters:
+.. _table-hyperparameters-johnson_alahi_li_2016:
 
 The original authors provided models together with the used hyperparameters.
 Unfortunately, the used hyperparameters deviate from the defaults given in the

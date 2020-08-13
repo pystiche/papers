@@ -45,9 +45,9 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see below.
+            the paper.
 
     If ``impl_params`` is ``True`` , an internal preprocessing of the images is used,
     otherwise no internal preprocessing is used.

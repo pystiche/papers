@@ -71,12 +71,9 @@ def content_loss(
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
             taken. Defaults to "relu2_2".
         score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``style`` and ``instance_norm``. For details see
-            :ref:`here <table-hyperparameters>`.
-
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and a getter
-    function to get the content ``score_weight`` if omitted.
+            determined with respect to ``style``, ``impl_params`` and
+            ``instance_norm``. For details see
+            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
 
     """
     if multi_layer_encoder is None:
@@ -146,7 +143,7 @@ def style_loss(
     r"""Style_loss from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
@@ -163,14 +160,11 @@ def style_loss(
             ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.
         layer_weights: Layer weights of the operator. Defaults to ``sum``.
         score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``style``, ``instance_norm`` and ``impl_params``.
-            For details see :ref:`here <table-hyperparameters>`.
+            determined with respect to ``style``, ``impl_params`` and ``instance_norm``.
+            For details see :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
         **gram_op_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
 
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` and a getter
-    function to get the style ``score_weight`` if omitted.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -247,7 +241,7 @@ def regularization(
     r"""Regularization from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
@@ -256,13 +250,12 @@ def regularization(
             replication of the given pre-trained models from the original repository.
             See score_weight for details.
         score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``style`` and ``instance_norm``.
-            For details see :ref:`here <table-hyperparameters>`.
+            determined with respect to ``style``, ``impl_params`` and
+            ``instance_norm``. For details see
+            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
         **total_variation_op_kwargs: Optional parameters for the
              :class:`~pystiche.ops.TotalVariationOperator`.
 
-    The parameter ``impl_params`` is passed to a getter
-    function to get the regularization ``score_weight`` if omitted.
     """
     if score_weight is None:
         score_weight = get_regularization_score_weight(
@@ -285,22 +278,21 @@ def perceptual_loss(
     r"""Perceptual loss comprising content and style loss as well as a regularization.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the optimization parameters for the
             replication of the given pre-trained models from the original repository.
-            For details see :ref:`here <table-hyperparameters>`.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`.
+            For details see :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            is used.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the :func:`style_loss`.
         total_variation_kwargs: Optional parameters for the :func:`regularization`.
-
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`,
-    :func:`content_loss`, :func:`style_loss` and :func:`regularization`.
 
     """
     if multi_layer_encoder is None:

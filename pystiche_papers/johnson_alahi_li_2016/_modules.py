@@ -209,7 +209,7 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 def decoder(
     impl_params: bool = True, instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
-    r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016` .
+    r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
@@ -217,17 +217,15 @@ def decoder(
             the paper. For details see below.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
-            number of in_channels and out_channels is reduced to half the number of
-            in_channels and out_channels in each module except for the last
-            out_channels, if this is set to ``True``.
+            number of channels of the convolution layers is reduced by half.
 
-    If ``impl_params is True``, the output of the decoder is not externally 
-    pre-processed before being fed into the 
-    :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this step is 
-    necessary to get meaningful encodings from the 
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the 
-    pre-processing transform has to be learned within the output layer of the decoder. 
-    To make this possible, ``150 * tanh(input)`` is used as activation in contrast to 
+    If ``impl_params is True``, the output of the decoder is not externally
+    pre-processed before being fed into the
+    :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this step is
+    necessary to get meaningful encodings from the
+    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the
+    pre-processing transform has to be learned within the output layer of the decoder.
+    To make this possible, ``150 * tanh(input)`` is used as activation in contrast to
     the ``(tanh(input) + 1) / 2`` given in the paper.
 
     """
@@ -336,10 +334,6 @@ def transformer(
             the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
-
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.Transformer` and
-    :func:`~pystiche_papers.johnson_alahi_li_2016._modules.select_url`.
 
     For ``framework == "pystiche"`` all combinations of parameters are available.
 
