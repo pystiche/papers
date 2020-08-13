@@ -75,7 +75,6 @@ jobs:
         with:
           python-version: 3.6
 
-
       - name: Upgrade pip
         run: python -m pip install --upgrade "pip>20.1"
 
@@ -103,10 +102,16 @@ jobs:
       - name: Create environment
         run: tox -e tests-hub --notest
 
+      - name: Load torch.hub checkpoints cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/torch/hub/checkpoints
+          key: torch-hub-checkpoints
+
       - name: Run tests
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: tox -e tests-hub -- tests/hub --skip-large-download
+        run: tox -e tests-hub
 
   replication:
     runs-on: ubuntu-latest
