@@ -32,9 +32,8 @@ def nst(
     Args:
         content_image: Content image for the NST.
         style_image: Style image for the NST.
-        num_steps: Number of steps for each level. If sequence of ``int`` its length
-            has to match the length of ``edge_sizes``.
-        impl_params: If ``True``, use the parameters used in the reference
+        num_steps: Number of steps for each level.
+        impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
         criterion: Optimization criterion. If omitted, the default
@@ -49,10 +48,8 @@ def nst(
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
 
-    The parameter ``impl_params`` is passed to the
-    :func:`~pystiche_papers.gatys_ecker_bethge_2016.perceptual_loss` and if
-    ``impl_params is True`` the content_image is set as the starting point instead of a
-    random initialized image.
+    If ``impl_params is True`` the content_image is set as the starting point instead of
+    a random initialized image.
     """
     if criterion is None:
         criterion = perceptual_loss(impl_params=impl_params)
