@@ -36,7 +36,7 @@ def postprocessor() -> transforms.CaffePostprocessing:
 def optimizer(
     transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
 ) -> optim.Adam:
-    r""" Optimizer from :cite:`ULVL2016`.
+    r"""Optimizer from :cite:`ULVL2016`.
 
     Args:
         transformer: Transformer to be optimized.
@@ -57,13 +57,12 @@ def optimizer(
 class DelayedExponentialLR(ExponentialLR):
     r"""Decays the learning rate of each parameter group by gamma after the delay.
 
-     Args:
+    Args:
         optimizer: Wrapped optimizer.
         gamma: Multiplicative factor of learning rate decay.
         delay: Number of epochs before the learning rate is reduced with each epoch.
         **kwargs: Optional parameters for the
              :class:`~torch.optim.lr_scheduler.ExponentialLR`.
-
     """
     last_epoch: int
     gamma: float
@@ -72,6 +71,7 @@ class DelayedExponentialLR(ExponentialLR):
     def __init__(
         self, optimizer: Optimizer, gamma: float, delay: int, **kwargs: Any
     ) -> None:
+
         self.delay = delay
         super().__init__(optimizer, gamma, **kwargs)
 
@@ -84,7 +84,7 @@ class DelayedExponentialLR(ExponentialLR):
 
 
 def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
-    r"""LRScheduler from :cite:`ULVL2016`.
+    r"""Learning rate scheduler from :cite:`ULVL2016`.
 
     Args:
         optimizer: Wrapped optimizer.
