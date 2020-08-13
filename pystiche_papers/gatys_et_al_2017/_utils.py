@@ -16,8 +16,7 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
-    r"""Multi-layer encoder based on the VGG19 architecture with the weights of caffe,
-    no internal preprocessing and allowed inplace.
+    r"""Multi-layer encoder from :cite:`GEB+2017`.
 
     """
     return enc.vgg19_multi_layer_encoder(
@@ -26,11 +25,10 @@ def multi_layer_encoder() -> enc.MultiLayerEncoder:
 
 
 def optimizer(input_image: torch.Tensor) -> optim.LBFGS:
-    r"""
+    r"""Optimizer from :cite:`GEB+2017`.
+
         Args:
             input_image: Image to be optimized.
-        Returns:
-            :class:`torch.optim.LBFGS` optimizer with a learning rate of ``1.0``. The
-            pixels of ``input_image`` are set as optimization parameters.
-        """
+
+    """
     return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)
