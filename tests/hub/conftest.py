@@ -11,21 +11,29 @@ def github():
     def format(owner, repository, branch):
         return f"{owner}/{repository}:{branch}"
 
+    default = format("pmeier", "pystiche_papers", "master")
+
     if os.getenv("GITHUB_ACTIONS", False):
         context = json.loads(os.getenv("GITHUB_CONTEXT"))
 
-        is_pr = context["event_name"] == "pull_request"
         repository = context["repository"].split("/")[-1]
+        event_name = context["event_name"]
 
-        if is_pr:
-            label = context["event"]["pull_request"]["head"]["label"]
-            owner, branch = label.split(":")
-        else:
+        if event_name == "push":
             owner = context["repository_owner"]
             branch = context["event"]["ref"].rsplit("/", 1)[-1]
+        elif event_name == "pull_request":
+            label = context["event"]["pull_request"]["head"]["label"]
+            owner, branch = label.split(":")
+        elif event_name == "schedule":
+            owner = context["repository_owner"]
+            branch = context["ref"].rsplit("/", 1)[-1]
+        else:
+            return default
+
         return format(owner, repository, branch)
-    else:
-        return format("pmeier", "pystiche_papers", "master")
+
+    return default
 
 
 @pytest.fixture(scope="package", autouse=True)
