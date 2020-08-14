@@ -42,11 +42,12 @@ def optimizer(
         transformer: Transformer to be optimized.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
 
     """
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29
@@ -90,8 +91,13 @@ def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> Exponential
         optimizer: Wrapped optimizer.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
 
+    If ``impl_params`` is ``True`` , an :class:`~torch.optim.lr_scheduler.ExponentialLR`
+    with a ``gamma`` of 0.8 is used instead of a
+    :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with a ``gamma`` of
+    0.7 and a ``delay`` of 5.
     """
     # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201

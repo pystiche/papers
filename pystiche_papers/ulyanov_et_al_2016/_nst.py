@@ -48,11 +48,12 @@ def training(
             :func:`~pystiche_papers.ulyanov_et_al_2016.images`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
         transformer: Transformer to be optimized. If omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used. Defaults to
             ``None``.
@@ -64,7 +65,7 @@ def training(
             to ``None``.
         num_epochs: Optional number of epochs. If omitted, the num_epochs is determined
             with respect to ``instance_norm`` and ``impl_params``. For details see
-            FIXME.
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         get_optimizer: Optional getter for the optimizer. If omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer` is used. Defaults to
             ``None``.
@@ -160,11 +161,12 @@ def stylization(
             pretrained transformer.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
 
     """
     device = input_image.device

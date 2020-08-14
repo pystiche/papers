@@ -17,6 +17,9 @@ functions are affected by the parameter ``impl_params``:
   - :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.transformer`.
 
+
+.. _table-branches-ulyanov_et_al_2016:
+
 The original authors have provided two implementations. Unfortunately, the
 hyperparameters used differ from those in the paper, as well as
 among the individual implementations themselves. If you use ``instance_norm`` and
@@ -38,6 +41,54 @@ among the individual implementations themselves. If you use ``instance_norm`` an
 |                 +-----------+-------------+----------------------+
 |                 | ``False`` | ``"paper"`` |      ``"paper"``     |
 +-----------------+-----------+-------------+----------------------+
+
+.. _table-hyperparameters-ulyanov_et_al_2016:
+
+The following table provides an overview of the parameters:
+
+- the ``num_epochs`` of the :func:`~pystiche_papers.ulyanov_et_al_2016.training`,
+
+- the ``lr`` the learning rate of the
+  :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer`,
+
+- the ``num_batches`` and ``batch_size`` of the
+  :func:`~pystiche_papers.ulyanov_et_al_2016.image_loader`,
+
+- the ``score_weight`` for
+
+  - the :func:`~pystiche_papers.ulyanov_et_al_2016.content_loss`,
+  - the :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`, as well as
+
+- the ``layers`` for
+
+  - the :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`.
+
+The ``layers`` have either ``4 layers`` ``("relu1_1", "relu2_1", "relu3_1", "relu4_1")``
+or ``5 Layer`` ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
+
+
++-------------------+---------------+--------------+-----------------------+
+|   Parameter       |  ``"paper"``  | ``"master"`` | ``"texture_nets_v1"`` |
++===================+===============+==============+=======================+
+|  ``num_epochs``   |      10       |      10      |           25          |
++-------------------+---------------+--------------+-----------------------+
+|     ``lr``        |     1e-1      |    1e-3      |         1e-1          |
++-------------------+---------------+--------------+-----------------------+
+|  ``num_batches``  |     200       |     2000     |          300          |
++-------------------+---------------+--------------+-----------------------+
+|  ``batch_size``   |      16       |       1      |           4           |
++-------------------+---------------+--------------+-----------------------+
+| ``content_loss``  |               |              |                       |
++-------------------+---------------+--------------+-----------------------+
+| ``score_weight``  |      1e0      |      1e0     |          6e1          |
++-------------------+---------------+--------------+-----------------------+
+| ``style_loss``    |               |              |                       |
++-------------------+---------------+--------------+-----------------------+
+| ``score_weight``  |      1e0      |      1e0     |          1e3          |
++-------------------+---------------+--------------+-----------------------+
+| ``layers``        |  ``5 Layer``  |  ``4 Layer`` |     ``5 Layer``       |
++-------------------+---------------+--------------+-----------------------+
+
 
 .. automodule:: pystiche_papers.ulyanov_et_al_2016
 

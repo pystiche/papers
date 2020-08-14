@@ -55,11 +55,12 @@ def content_loss(
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>` and below.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
@@ -68,7 +69,9 @@ def content_loss(
             taken. Defaults to "relu4_2".
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style`` and ``instance_norm``. For details see
-            FIXME.
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+
+    If ``impl_params`` is ``True`` , the score is divided once more by the batch_size.
 
     """
     if score_weight is None:
@@ -134,24 +137,28 @@ def style_loss(
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>` and below.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
             Defaults to ``None``.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the layers are determined with respect to ``impl_params``
-            and ``instance_norm``. For details see FIXME.
+            and ``instance_norm``. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``instance_norm`` and ``impl_params``. For
-            details see FIXME.
+            details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         **gram_op_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
+
+    If ``impl_params`` is ``True`` , the score is divided once more by the batch_size.
 
     """
     if score_weight is None:
@@ -192,11 +199,11 @@ def perceptual_loss(
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
-            FIXME.
+            :ref:`here <table-branches-ulyanov_et_al_2016>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
