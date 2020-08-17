@@ -32,13 +32,12 @@ def nst(
     Args:
         content_image: Content image for the NST.
         style_image: Style image for the NST.
-        num_steps: Number of steps for each level.
+        num_steps: Number of steps for each level. Defaults to ``500``.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
         criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.perceptual_loss` is used.
-            Defaults to ``None``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,

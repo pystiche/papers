@@ -152,7 +152,8 @@ def style_loss(
             taken. If omitted, the defaults is used. Defaults to
             ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
         layer_weights: Layer weights of the operator. If omitted, the layer weights are
-            calculated as described in the paper.
+            calculated with ``1.0 / num_channels^2`` as described in the paper. Here the
+            ``num_channels`` are the number of channels in the respective layer.
         score_weight: Score weight of the operator. Defaults to ``1e3``.
         **gram_loss_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
