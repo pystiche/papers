@@ -132,8 +132,7 @@ def style_loss(
             the paper. For details see below.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted,  the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used. Defaults
-            to ``None``.
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used. 
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the defaults is used. Defaults to
             ``("relu3_1", "relu4_1")``.
@@ -142,7 +141,7 @@ def style_loss(
         stride: Stride of the convolution. If omitted, the stride is determined with
             respect to `impl_params``. For details see below.
         target_transforms: Optional augemntation transformations for the target. If
-            omitted, the transfomrms are determined with respect to `impl_params``. For
+            omitted, the transforms are determined with respect to ``impl_params``. For
             details see below.
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to `impl_params``. For details see below.
@@ -247,8 +246,7 @@ def perceptual_loss(
             the paper.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used. Defaults
-            to ``None``.
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the :func:`style_loss`.
         regularization_kwargs: Optional parameters for the :func:`regularization`.

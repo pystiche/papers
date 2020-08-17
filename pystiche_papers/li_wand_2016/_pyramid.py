@@ -20,7 +20,7 @@ def image_pyramid(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
-        max_edge_size: Maximum edge size. Defaults to 384.
+        max_edge_size: Maximum edge size. Defaults to ``384``.
         num_steps: Number of steps for each level. If omitted, the number is
             determined with respect to ``impl_params``. For details see below. Defaults
             to ``None``.
@@ -28,7 +28,7 @@ def image_pyramid(
             the number of steps of factor two between ``max_edge_size`` and
             ``min_edge_size`` or with respect to ``impl_params``. For details see below.
         min_edge_size: Minimum edge size for the automatic calculation of
-            ``num_levels``. Defaults to 64.
+            ``num_levels``. Defaults to ``64``.
         edge: Corresponding edge to the edge size for each level. Can be ``"short"`` or
             ``"long"``. If sequence of ``str`` its length has to match the length of
             ``edge_sizes``. Defaults to ``"long"``.
