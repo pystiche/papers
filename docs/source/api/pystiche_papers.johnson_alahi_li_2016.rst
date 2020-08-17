@@ -20,7 +20,7 @@ parts are affected:
 .. _table-hyperparameters-johnson_alahi_li_2016:
 
 Furthermore, the original authors provided models together with the used
-hyperparameters to train the. Unfortunately, the used hyperparameters not only deviate
+hyperparameters to train them. Unfortunately, the used hyperparameters not only deviate
 from the paper, but also from the defaults given in the reference implementation. If
 you specify a ``style`` and ``impl_params is True`` the table below is used to
 determine
