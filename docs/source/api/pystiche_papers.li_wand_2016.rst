@@ -4,12 +4,12 @@
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
 implementation are used instead of the parameters from the paper. The following
-functions are affected by the parameter ``impl_params``:
+parts are affected:
 
-  - the :func:`~pystiche_papers.li_wand_2016.image_pyramid`,
-  - the :func:`~pystiche_papers.li_wand_2016.content_loss`,
-  - the :func:`~pystiche_papers.li_wand_2016.style_loss`,
-  - the :func:`~pystiche_papers.li_wand_2016.regularization`.
+  - :func:`~pystiche_papers.li_wand_2016.image_pyramid`,
+  - :func:`~pystiche_papers.li_wand_2016.content_loss`,
+  - :func:`~pystiche_papers.li_wand_2016.style_loss`,
+  - :func:`~pystiche_papers.li_wand_2016.regularization`.
 
 
 

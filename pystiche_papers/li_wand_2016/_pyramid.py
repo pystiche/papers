@@ -19,14 +19,17 @@ def image_pyramid(
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see below.
+            the paper.
         max_edge_size: Maximum edge size. Defaults to ``384``.
         num_steps: Number of steps for each level. If omitted, the number is
-            determined with respect to ``impl_params``. For details see below. Defaults
-            to ``None``.
+            determined with respect to ``impl_params``. Defaults to ``100`` if
+            ``impl_params is True`` otherwise ``200``.
         num_levels: Optional number of levels. If omitted, the number is determined by
             the number of steps of factor two between ``max_edge_size`` and
-            ``min_edge_size`` or with respect to ``impl_params``. For details see below.
+            ``min_edge_size`` or with respect to ``impl_params``. Defaults to ``3`` if
+            ``impl_params is True`` otherwise the number is determined by
+            the number of steps of factor two between ``max_edge_size`` and
+            ``min_edge_size``.
         min_edge_size: Minimum edge size for the automatic calculation of
             ``num_levels``. Defaults to ``64``.
         edge: Corresponding edge to the edge size for each level. Can be ``"short"`` or
@@ -34,10 +37,6 @@ def image_pyramid(
             ``edge_sizes``. Defaults to ``"long"``.
         **octave_image_pyramid_kwargs: Optional parameters for the
             :class:`~pystiche.pyramid.OctaveImagePyramid`.
-
-    If ``impl_params is True`` , 100 num_steps are used instead of the 200 num_steps.
-    Additionally 3 num_levels are used instead of the default calculation from
-    :class:`~pystiche.pyramid.OctaveImagePyramid`.
 
     """
     if num_steps is None:

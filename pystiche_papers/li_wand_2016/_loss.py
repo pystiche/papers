@@ -56,15 +56,15 @@ def content_loss(
             the paper. For details see below.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used. Defaults
-            to ``None``.
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to "relu4_2".
+            taken. Defaults to ``"relu4_2"``.
         score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``impl_params``. For details see below.
+            determined with respect to ``impl_params``. Defaults to ``2e1`` if
+            ``impl_params is True`` otherwise ``1e0``.
 
-    If ``impl_params is True`` , a score_weight of 2e1 is used instead of 1e0, and a
-    loss reduction of ``"mean"`` is used instead of ``"sum"``.
+        If ``impl_params is True`` , a loss reduction of ``"mean"`` is used instead of
+        ``"sum"``.
 
     """
     if multi_layer_encoder is None:
@@ -132,26 +132,36 @@ def style_loss(
             the paper. For details see below.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted,  the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used. 
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the defaults is used. Defaults to
             ``("relu3_1", "relu4_1")``.
         layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
-        patch_size: Size of the patch.
+        patch_size: Size of the patch. Defaults to ``3``.
         stride: Stride of the convolution. If omitted, the stride is determined with
-            respect to `impl_params``. For details see below.
+            respect to `impl_params``. Defaults to ``2`` if ``impl_params is True``
+            otherwise ``1``.
         target_transforms: Optional augemntation transformations for the target. If
             omitted, the transforms are determined with respect to ``impl_params``. For
             details see below.
         score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to `impl_params``. For details see below.
+            determined with respect to `impl_params``. Defaults to ``1e-4`` if
+            ``impl_params is True`` otherwise ``1e0``.
 
-    If ``impl_params is True`` , a stride of 2 is used instead of 1, a score_weight of
-    1e-4 instead of the 1e0, and an additional score correction factor of 1.0 / 2.0 is
-    used instead of none. Additionally, no transformations are used in the scaling and
-    rotation. In the paper two additional transformations are used in the scaling and
-    the rotation. Furthermore, normalized patches are used instead of the unnormalized
-    patches.
+    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
+    is used instead of none. Additionally, no transformations are used in the scaling
+    and rotation. In the paper two additional transformations are used in the scaling
+    and the rotation. Furthermore, normalized patches are used instead of the
+    unnormalized  patches. For details see
+    `extract_normalized_patches2d <https://github.com/pmeier/pystiche_papers/blob/b15202068d683c8b60f8a437e562f3d922fe0f3e/pystiche_papers/li_wand_2016/_utils.py#L51>`_
+    .
+
+    The parameters ``patch_size`` and ``stride`` can either be:
+
+    * a single int – in which case the same value is used for the height and width
+      dimension
+    * a tuple of two ints – in which case, the first int is used for the height
+      dimension, and the second int for the width dimension
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -223,7 +233,7 @@ def regularization(
             results. Defaults to ``2.0``.
         score_weight: Score weight of the operator. Defaults to ``1e-3``.
 
-    If ``impl_params is True`` , an additional score correction factor of 1.0 / 2.0
+    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
     is used instead of none.
     """
     return TotalVariationOperator(

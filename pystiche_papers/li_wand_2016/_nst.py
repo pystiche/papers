@@ -37,8 +37,7 @@ def nst(
         criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.li_wand_2016.perceptual_loss` is used.
         image_pyramid: Image pyramid. If omitted, the default
-            :func:`~pystiche_papers.li_wand_2016.image_pyramid` is used. Defaults to
-            ``None``.
+            :func:`~pystiche_papers.li_wand_2016.image_pyramid` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
