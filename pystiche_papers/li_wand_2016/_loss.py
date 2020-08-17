@@ -149,17 +149,16 @@ def style_loss(
             ``impl_params is True`` otherwise ``1e0``.
 
     If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
-    is used instead. Additionally, no transformations are used in the scaling
+    is used. Additionally, no transformations are used in the scaling
     and rotation. In the paper two additional transformations are used in the scaling
     and the rotation. Furthermore, normalized patches are used instead of the
     unnormalized  patches. For details see
-    `extract_normalized_patches2d <https://github.com/pmeier/pystiche_papers/blob/b15202068d683c8b60f8a437e562f3d922fe0f3e/pystiche_papers/li_wand_2016/_utils.py#L51>`_
-    .
+    :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d`.
 
     The parameters ``patch_size`` and ``stride`` can either be:
 
-    * a single :class:`int` – in which case the same value is used for the height and width
-      dimension
+    * a single :class:`int` – in which case the same value is used for the height and
+      width dimension
     * a tuple of two ints – in which case, the first int is used for the vertical
       dimension, and the second int for the horizontal dimension
     """
