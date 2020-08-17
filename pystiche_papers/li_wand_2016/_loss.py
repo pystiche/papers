@@ -137,7 +137,7 @@ def style_loss(
             taken. If omitted, the defaults is used. Defaults to
             ``("relu3_1", "relu4_1")``.
         layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
-        patch_size: Size of the patch. Defaults to ``3``.
+        patch_size: Size of a patch. Defaults to ``3``.
         stride: Stride of the convolution. If omitted, the stride is determined with
             respect to `impl_params``. Defaults to ``2`` if ``impl_params is True``
             otherwise ``1``.
@@ -149,7 +149,7 @@ def style_loss(
             ``impl_params is True`` otherwise ``1e0``.
 
     If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
-    is used instead of none. Additionally, no transformations are used in the scaling
+    is used instead. Additionally, no transformations are used in the scaling
     and rotation. In the paper two additional transformations are used in the scaling
     and the rotation. Furthermore, normalized patches are used instead of the
     unnormalized  patches. For details see
@@ -158,10 +158,10 @@ def style_loss(
 
     The parameters ``patch_size`` and ``stride`` can either be:
 
-    * a single int – in which case the same value is used for the height and width
+    * a single :class:`int` – in which case the same value is used for the height and width
       dimension
-    * a tuple of two ints – in which case, the first int is used for the height
-      dimension, and the second int for the width dimension
+    * a tuple of two ints – in which case, the first int is used for the vertical
+      dimension, and the second int for the horizontal dimension
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -234,7 +234,7 @@ def regularization(
         score_weight: Score weight of the operator. Defaults to ``1e-3``.
 
     If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
-    is used instead of none.
+    is used.
     """
     return TotalVariationOperator(
         impl_params=impl_params, exponent=exponent, score_weight=score_weight
