@@ -13,7 +13,7 @@ def image_pyramid(
     r"""Image pyramid from :cite:`GEB+2017`.
 
     Args:
-        edge_sizes: Edge sizes for each level.
+        edge_sizes: Edge sizes for each level. Defaults to ``(500, 800)``.
         num_steps: Number of steps for each level. If sequence of ``int`` its length
             has to match the length of ``edge_sizes``.
         **image_pyramid_kwargs: Optional parameters for the
