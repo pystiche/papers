@@ -4,25 +4,26 @@
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
 implementation are used instead of the parameters from the paper. The following
-functions are affected by the parameter ``impl_params``:
+parts are affected:
 
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.training`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.stylization`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.content_transform`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.style_transform`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.batch_sampler`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.transformer`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.content_loss`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.style_loss`
-  - the :func:`~pystiche_papers.johnson_alahi_li_2016.regularization`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.training`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.stylization`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.content_transform`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.style_transform`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.batch_sampler`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.transformer`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.content_loss`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.style_loss`
+  - :func:`~pystiche_papers.johnson_alahi_li_2016.regularization`
 
 .. _table-hyperparameters-johnson_alahi_li_2016:
 
-The original authors provided models together with the used hyperparameters.
-Unfortunately, the used hyperparameters deviate from the defaults given in the
-reference implementation. If you specify a ``style`` and ``impl_params is True`` the
-table below is used to determine
+Furthermore, the original authors provided models together with the used
+hyperparameters to train them. Unfortunately, the used hyperparameters not only deviate
+from the paper, but also from the defaults given in the reference implementation. If
+you specify a ``style`` and ``impl_params is True`` the table below is used to
+determine
 
 - the ``size`` the ``style_image`` is resized to with the
   :func:`~pystiche_papers.johnson_alahi_li_2016.style_transform`,
