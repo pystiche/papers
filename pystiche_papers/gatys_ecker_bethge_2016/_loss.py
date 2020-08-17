@@ -66,7 +66,7 @@ def content_loss(
             taken. Defaults to "relu4_2".
         score_weight: Score weight of the operator. Defaults to ``1e0``.
 
-    If ``impl_params is True`` , no additional score correction factor of 1.0 / 2.0
+    If ``impl_params is True`` , no additional score correction factor of ``1.0 / 2.0``
     is used. Furthermore, a loss reduction ``"mean"`` is used instead of a ``"sum"``.
 
     """
@@ -158,7 +158,7 @@ def style_loss(
         **gram_loss_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
 
-    If ``impl_params is True`` , no additional score correction factor of 1.0 / 4.0
+    If ``impl_params is True`` , no additional score correction factor of ``1.0 / 4.0``
     is used.
 
     """

@@ -3,13 +3,13 @@
 
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following
-functions are affected by the parameter ``impl_params``:
+implementation are used instead of the parameters from the paper. The following parts
+are affected:
 
-  - the :func:`~pystiche_papers.gatys_ecker_bethge_2016.nst`,
-  - the :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`,
-  - the :func:`~pystiche_papers.gatys_ecker_bethge_2016.content_loss`,
-  - the :func:`~pystiche_papers.gatys_ecker_bethge_2016.style_loss`.
+  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.nst`,
+  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`,
+  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.content_loss`,
+  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.style_loss`.
 
 .. automodule:: pystiche_papers.gatys_ecker_bethge_2016
 
