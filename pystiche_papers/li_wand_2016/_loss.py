@@ -141,26 +141,27 @@ def style_loss(
         stride: Stride of the sliding window. If omitted, the stride is determined with
             respect to `impl_params``. Defaults to ``2`` if ``impl_params is True``
             otherwise ``1``.
-        target_transforms: Optional augemntation transformations for the target. If
+        target_transforms: Optional augmentation transformations for the target. If
             omitted, the transforms are determined with respect to ``impl_params``. For
             details see below.
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to `impl_params``. Defaults to ``1e-4`` if
             ``impl_params is True`` otherwise ``1e0``.
 
-    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
-    is used. Additionally, no transformations are used in the scaling
-    and rotation. In the paper two additional transformations are used in the scaling
-    and the rotation. Furthermore, normalized patches are used instead of the
-    unnormalized  patches. For details see
-    :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d`.
+    If ``impl_params is True``:
+
+    * an additional score correction factor of ``1.0 / 2.0`` is used
+    * Normalized patches are used instead of the unnormalized patches. For details see
+      :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d`.
+    * No transformations are used instead of two additional transformations in the
+      scaling and the rotation.
 
     The parameters ``patch_size`` and ``stride`` can either be:
 
     * a single :class:`int` – in which case the same value is used for the height and
       width dimension
-    * a tuple of two :class:`int` s – in which case, the first int is used for the vertical
-      dimension, and the second int for the horizontal dimension
+    * a tuple of two :class:`int` s – in which case, the first int is used for the
+      vertical dimension, and the second int for the horizontal dimension
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
