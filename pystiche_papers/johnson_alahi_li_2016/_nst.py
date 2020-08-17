@@ -38,23 +38,21 @@ def training(
 
     Args:
         content_image_loader: Content images used as input for the ``transformer``.
-        style_image: Style image on which the ``transformer`` should be trained. If the
-            input is an string, the style image is read from the images in
-            :func:`~pystiche_papers.johnson_alahi_li_2016._images`.
+        style_image: Style image on which the ``transformer`` should be trained. If
+            ``str``, the image is read from
+            :func:`~pystiche_papers.johnson_alahi_li_2016.images`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
             defaults to ``impl_params``.
-        transformer: Transformer to be optimized. If omitted, the
+        transformer: Transformer to be optimized. If omitted,
             :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
         criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` is used.
-            Defaults to ``None``.
-        optimizer: Optimizer. If omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` is used. Defaults
-            to ``None``.
+        optimizer: Optimizer for the transformer. If omitted, the default
+            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If omitted,
@@ -140,9 +138,9 @@ def stylization(
 
     Args:
         input_image: Image to be stylised.
-        transformer: Pretrained transformer for style transfer or string to load a
-            pretrained transformer. This string is the style parameter of
-            :func:`~pystiche_papers.johnson_alahi_li_2016._transformer`.
+        transformer: Pretrained transformer for style transfer or the ``style`` to load
+            a pretrained transformer with
+            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
@@ -150,7 +148,8 @@ def stylization(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
             defaults to ``impl_params``.
         framework: Framework that was used to train the the transformer. Can be one of
-            ``"pystiche"`` (default) and ``"luatorch"``.
+            ``"pystiche"`` (default) and ``"luatorch"``. This only has an effect, if
+            if a pretrained ``transformer`` is loaded.
         preprocessor: Optional preprocessor that is called with the ``input_image``
             before the optimization.
         postprocessor: Optional preprocessor that is called with the ``output_image``

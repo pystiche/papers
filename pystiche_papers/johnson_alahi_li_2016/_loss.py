@@ -64,16 +64,17 @@ def content_loss(
             :class:`~torch.nn.BatchNorm2d` as described in the paper.
         style: Optional style for selecting the optimization parameters for the
             replication of the given pre-trained models from the original repository.
-            See score_weight for details.
+            See ``score_weight`` for details.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` is used.
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to "relu2_2".
+            taken. Defaults to ``"relu2_2"``.
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style``, ``impl_params`` and
             ``instance_norm``. For details see
-            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
+            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`. Defaults to
+            ``1e0``.
 
     """
     if multi_layer_encoder is None:
@@ -153,8 +154,7 @@ def style_loss(
             See score_weight for details.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
-            is used.
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` is used.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the defaults is used. Defaults to
             ``("relu1_2", "relu2_2", "relu3_3", "relu4_3")``.

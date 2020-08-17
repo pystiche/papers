@@ -327,7 +327,7 @@ def transformer(
 
     Args:
         style: Style the transformer was trained on. Can be one of styles given by
-            :func:`pystiche_papers.johnson_alahi_li_2016.images`. If omitted, the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.images`. If omitted, the
             transformer is initialized with random weights according to the procedure
             used by the original authors.
         framework: Framework that was used to train the the transformer. Can be one of
