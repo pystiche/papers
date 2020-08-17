@@ -162,6 +162,7 @@ def style_loss(
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style``, ``impl_params`` and ``instance_norm``.
             For details see :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
+            Defaults to ``5.0``.
         **gram_op_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
 
@@ -252,7 +253,8 @@ def regularization(
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``style``, ``impl_params`` and
             ``instance_norm``. For details see
-            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`.
+            :ref:`here <table-hyperparameters-johnson_alahi_li_2016>`. Defaults to
+            ``1e-6``.
         **total_variation_op_kwargs: Optional parameters for the
              :class:`~pystiche.ops.TotalVariationOperator`.
 
