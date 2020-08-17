@@ -137,8 +137,8 @@ def style_loss(
             taken. If omitted, the defaults is used. Defaults to
             ``("relu3_1", "relu4_1")``.
         layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
-        patch_size: Size of a patch. Defaults to ``3``.
-        stride: Stride of the convolution. If omitted, the stride is determined with
+        patch_size: Size of the sliding window. Defaults to ``3``.
+        stride: Stride of the sliding window. If omitted, the stride is determined with
             respect to `impl_params``. Defaults to ``2`` if ``impl_params is True``
             otherwise ``1``.
         target_transforms: Optional augemntation transformations for the target. If
@@ -159,7 +159,7 @@ def style_loss(
 
     * a single :class:`int` – in which case the same value is used for the height and
       width dimension
-    * a tuple of two ints – in which case, the first int is used for the vertical
+    * a tuple of two :class:`int` s – in which case, the first int is used for the vertical
       dimension, and the second int for the horizontal dimension
     """
     if multi_layer_encoder is None:
