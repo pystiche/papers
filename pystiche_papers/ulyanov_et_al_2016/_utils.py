@@ -89,15 +89,10 @@ def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> Exponential
 
     Args:
         optimizer: Wrapped optimizer.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-
-    If ``impl_params`` is ``True`` , an :class:`~torch.optim.lr_scheduler.ExponentialLR`
-    with a ``gamma`` of 0.8 is used instead of a
-    :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with a ``gamma`` of
-    0.7 and a ``delay`` of 5.
+        impl_params: If ``True``, an :class:`~torch.optim.lr_scheduler.ExponentialLR`
+        with a ``gamma of 0.8`` is used instead of a
+        :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with a
+        ``gamma of 0.7`` and a ``delay of 5``.
     """
     # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201

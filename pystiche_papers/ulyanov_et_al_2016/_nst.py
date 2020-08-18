@@ -55,20 +55,16 @@ def training(
             flag is used for switching between the github branches. For details see
             :ref:`here <table-branches-ulyanov_et_al_2016>`.
         transformer: Transformer to be optimized. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used. Defaults to
-            ``None``.
+            :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used.
         criterion: Optimization criterion. If omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.perceptual_loss` is used.
-            Defaults to ``None``.
         lr_scheduler: LRScheduler. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler` is used. Defaults
-            to ``None``.
+            :func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler` is used.
         num_epochs: Optional number of epochs. If omitted, the num_epochs is determined
             with respect to ``instance_norm`` and ``impl_params``. For details see
             :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         get_optimizer: Optional getter for the optimizer. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer` is used. Defaults to
-            ``None``.
+            :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,

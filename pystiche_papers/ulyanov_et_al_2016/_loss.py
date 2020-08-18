@@ -64,14 +64,13 @@ def content_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-            Defaults to ``None``.
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to "relu4_2".
-        score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``style`` and ``instance_norm``. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+            taken. Defaults to ``"relu4_2"``.
+        score_weight: Score weight of the operator. If omitted, the ``score_weight`` is
+            determined with respect to ``impl_params`` and ``instance_norm``. For
+            details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
 
-    If ``impl_params`` is ``True`` , the score is divided once more by the batch_size.
+    If ``impl_params is True`` , the score is divided once more by the batch_size.
 
     """
     if score_weight is None:
@@ -146,13 +145,12 @@ def style_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-            Defaults to ``None``.
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the layers are determined with respect to ``impl_params``
             and ``instance_norm``. For details see
             :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
-        score_weight: Score weight of the operator. If omitted, the score_weight is
+        score_weight: Score weight of the operator. If omitted, the ``score_weight`` is
             determined with respect to ``instance_norm`` and ``impl_params``. For
             details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         **gram_op_kwargs: Optional parameters for the
@@ -207,7 +205,7 @@ def perceptual_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
-            is used. Defaults to ``None``.
+            is used.
         content_loss_kwargs: Optional parameters for the :func:`content_loss`.
         style_loss_kwargs: Optional parameters for the :func:`style_loss`.
 
