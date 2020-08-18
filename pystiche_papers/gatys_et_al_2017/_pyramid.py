@@ -14,8 +14,7 @@ def image_pyramid(
 
     Args:
         edge_sizes: Edge sizes for each level. Defaults to ``(500, 800)``.
-        num_steps: Number of steps for each level. If sequence of ``int`` its length
-            has to match the length of ``edge_sizes``. Defaults to  ``(500, 200)``.
+        num_steps: Number of steps for each level. Defaults to  ``(500, 200)``.
         **image_pyramid_kwargs: Optional parameters for the
             :class:`~pystiche.pyramid.ImagePyramid`.
 
