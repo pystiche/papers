@@ -51,6 +51,25 @@ def content_loss(
     layer: str = "relu4_2",
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
+    r"""Content_loss from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
+            taken. Defaults to ``"relu4_2"``.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``2e1`` if
+            ``impl_params is True`` otherwise ``1e0``.
+
+    If ``impl_params is True`` , a loss reduction of ``"mean"`` is used instead of
+    ``"sum"``.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
     encoder = multi_layer_encoder.extract_encoder(layer)
@@ -115,6 +134,45 @@ def style_loss(
     target_transforms: Optional[Iterable[transforms.Transform]] = None,
     score_weight: Optional[float] = None,
 ) -> ops.MultiLayerEncodingOperator:
+    r"""Style_loss from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted,  the default
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
+            taken. If omitted, the defaults is used. Defaults to
+            ``("relu3_1", "relu4_1")``.
+        layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
+        patch_size: Size of the sliding window. Defaults to ``3``.
+        stride: Stride of the sliding window. If omitted, the stride is determined with
+            respect to `impl_params``. Defaults to ``2`` if ``impl_params is True``
+            otherwise ``1``.
+        target_transforms: Optional augmentation transformations for the target. If
+            omitted, the transforms are determined with respect to ``impl_params``. For
+            details see below.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to `impl_params``. Defaults to ``1e-4`` if
+            ``impl_params is True`` otherwise ``1e0``.
+
+    If ``impl_params is True``,
+
+    * an additional score correction factor of ``1.0 / 2.0`` is used,
+    * normalized patches are used (see
+      :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d` for
+      details), and
+    * no target augmentation transformations are used.
+
+    The parameters ``patch_size`` and ``stride`` can either be:
+
+    * a single :class:`int` – in which case the same value is used for the height and
+      width dimension
+    * a tuple of two :class:`int` s – in which case, the first int is used for the
+      vertical dimension, and the second int for the horizontal dimension
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
@@ -179,6 +237,18 @@ class TotalVariationOperator(ops.TotalVariationOperator):
 def regularization(
     impl_params: bool = True, exponent: float = 2.0, score_weight: float = 1e-3,
 ) -> TotalVariationOperator:
+    r"""Regularization from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        exponent: A higher value leads to more smoothed results. Defaults to ``2.0``.
+        score_weight: Score weight of the operator. Defaults to ``1e-3``.
+
+    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
+    is used.
+    """
     return TotalVariationOperator(
         impl_params=impl_params, exponent=exponent, score_weight=score_weight
     )
@@ -191,6 +261,20 @@ def perceptual_loss(
     style_loss_kwargs: Optional[Dict[str, Any]] = None,
     regularization_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
+    r"""Perceptual loss from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
+            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
+        style_loss_kwargs: Optional parameters for the :func:`style_loss`.
+        regularization_kwargs: Optional parameters for the :func:`regularization`.
+
+    """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
