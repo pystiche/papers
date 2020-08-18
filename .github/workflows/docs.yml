@@ -47,7 +47,7 @@ jobs:
         run: tox -e docs-html --notest
 
       - name: Build html documentation
-        run: tox -e docs-html
+        run: tox -e docs-html -- -W --keep-going
 
       - name: Upload build
         uses: actions/upload-artifact@v2
