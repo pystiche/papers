@@ -1,4 +1,4 @@
-``pystiche_papers.gatys_ecker_bethge_2015``
+``pystiche_papers.gatys_ecker_bethge_2016``
 ===========================================
 
 Unfortunately, the parameters in the reference implementation differ from the parameters

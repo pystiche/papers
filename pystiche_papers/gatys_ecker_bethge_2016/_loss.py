@@ -66,8 +66,10 @@ def content_loss(
             taken. Defaults to "relu4_2".
         score_weight: Score weight of the operator. Defaults to ``1e0``.
 
-    If ``impl_params is True`` , no additional score correction factor of ``1.0 / 2.0``
-    is used. Furthermore, a loss reduction ``"mean"`` is used instead of a ``"sum"``.
+    If ``impl_params is True``,
+
+    * no additional score correction factor of ``1.0 / 2.0`` is used, and
+    * a loss reduction ``"mean"`` is used instead of a ``"sum"``.
 
     """
     if multi_layer_encoder is None:
@@ -152,8 +154,9 @@ def style_loss(
             taken. If omitted, the defaults is used. Defaults to
             ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
         layer_weights: Layer weights of the operator. If omitted, the layer weights are
-            calculated with ``1.0 / num_channels ** 2.0`` as described in the paper. Here the
-            ``num_channels`` are the number of channels in the respective layer.
+            calculated with ``1.0 / num_channels ** 2.0`` as described in the paper.
+            Here the ``num_channels`` are the number of channels in the respective
+            layer.
         score_weight: Score weight of the operator. Defaults to ``1e3``.
         **gram_loss_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.

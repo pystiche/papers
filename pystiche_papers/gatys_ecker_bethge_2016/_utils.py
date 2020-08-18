@@ -24,12 +24,8 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`GEB2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-
-    If ``impl_params is True`` the :class:`~torch.nn.MaxPool2d` in the
-    ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
+        impl_params: If ``True``, the :class:`~torch.nn.MaxPool2d` in
+            the ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
     multi_layer_encoder = enc.vgg19_multi_layer_encoder(
