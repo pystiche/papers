@@ -26,6 +26,28 @@ def nst(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
 ) -> torch.Tensor:
+    r"""NST from :cite:`GEB+2017`.
+
+    Args:
+        content_image: Content image for the NST.
+        style_image: Style image for the NST.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.gatys_et_al_2017.perceptual_loss` is used.
+        image_pyramid: Image Pyramid. If omitted, the default
+            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used.
+        quiet: If ``True``, not information is logged during the optimization. Defaults
+            to ``False``.
+        logger: Optional custom logger. If ``None``,
+            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
+        log_fn: Optional custom logging function. It is called in every optimization
+            step with the current step and loss. If ``None``,
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            ``None``.
+
+    """
     if criterion is None:
         criterion = perceptual_loss(impl_params=impl_params)
 
@@ -74,6 +96,30 @@ def guided_nst(
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
 ) -> torch.Tensor:
+    r"""Guided NST from :cite:`GEB+2017`.
+
+    Args:
+        content_image: Content image for the guided NST.
+        content_guides: Content image guides for the guided NST.
+        style_images_and_guides: Dictionary with the style images and the corresponding
+            guides for each region.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        criterion: Optimization criterion. If omitted, the default
+            :func:`~pystiche_papers.gatys_et_al_2017.guided_perceptual_loss` is used.
+        image_pyramid: Image Pyramid. If omitted, the default
+            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used.
+        quiet: If ``True``, not information is logged during the optimization. Defaults
+            to ``False``.
+        logger: Optional custom logger. If ``None``,
+            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
+        log_fn: Optional custom logging function. It is called in every optimization
+            step with the current step and loss. If ``None``,
+            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
+            ``None``.
+
+    """
     regions = set(content_guides.keys())
     if regions != set(style_images_and_guides.keys()):
         # FIXME
