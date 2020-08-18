@@ -63,7 +63,7 @@ def content_loss(
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
             used.
         layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to "relu4_2".
+            taken. Defaults to ``"relu4_2"``.
         score_weight: Score weight of the operator. Defaults to ``1e0``.
 
     If ``impl_params is True``,
