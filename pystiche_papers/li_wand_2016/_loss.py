@@ -63,8 +63,8 @@ def content_loss(
             determined with respect to ``impl_params``. Defaults to ``2e1`` if
             ``impl_params is True`` otherwise ``1e0``.
 
-        If ``impl_params is True`` , a loss reduction of ``"mean"`` is used instead of
-        ``"sum"``.
+    If ``impl_params is True`` , a loss reduction of ``"mean"`` is used instead of
+    ``"sum"``.
 
     """
     if multi_layer_encoder is None:
