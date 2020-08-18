@@ -229,8 +229,7 @@ def regularization(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
-        exponent: Parameter :math:`\beta` . A higher value leads to more smoothed
-            results. Defaults to ``2.0``.
+        exponent: A higher value leads to more smoothed results. Defaults to ``2.0``.
         score_weight: Score weight of the operator. Defaults to ``1e-3``.
 
     If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
