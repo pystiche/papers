@@ -13,7 +13,6 @@ def test_optimizer_modules(subtests):
         with subtests.test("parameters"):
             optimizer = paper.optimizer(optimizer_params)
 
-
             assert isinstance(optimizer, optim.Adam)
             assert len(optimizer.param_groups) == 1
 
