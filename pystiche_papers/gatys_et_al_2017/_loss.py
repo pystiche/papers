@@ -150,15 +150,15 @@ def guided_style_loss(
         layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
             taken. If omitted, the defaults is used. Defaults to
             ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
-        region_weights: Region weights of the operator. Defaults to ``sum``.
+        region_weights: Region weights of the operator. Defaults to ``"sum"``.
         layer_weights: Layer weights of the operator. If omitted, the layer weights are
-            calculated with ``1.0 / num_channels^2`` as described in the paper. Here the
+            calculated with ``1.0 / num_channels ** 2.0`` as described in the paper. Here the
             ``num_channels`` are the number of channels in the respective layer.
         score_weight: Score weight of the operator. Defaults to ``1e3``.
         **gram_op_kwargs: Optional parameters for the
             :class:`~pystiche.ops.GramOperator`.
 
-    If ``impl_params is True`` , no additional score correction factor of 1.0 / 4.0
+    If ``impl_params is True`` , no additional score correction factor of ``1.0 / 4.0``
     is used.
 
     """
