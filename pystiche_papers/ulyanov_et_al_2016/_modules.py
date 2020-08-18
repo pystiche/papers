@@ -20,7 +20,7 @@ class AddNoiseChannels(nn.Module):
 
     Args:
         in_channels: Number of input channels.
-        num_noise_channels: Number of additional noise channels. Defaults to 3.
+        num_noise_channels: Number of additional noise channels. Defaults to ``3``.
     """
 
     def __init__(
@@ -108,12 +108,19 @@ class ConvBlock(SequentialWithOutChannels):
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
-        stride: Stride of the convolution. Defaults to 1.
+        stride: Stride of the convolution. Defaults to ``1``.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
             FIXME.
         inplace: Can optionally do the operation in-place. Defaults to ``True``.
+
+    The parameters ``kernel_size`` and ``stride`` can either be:
+
+    * a single :class:`int` – in which case the same value is used for the height and
+      width dimension
+    * a tuple of two :class:`int` s – in which case, the first int is used for the
+      vertical dimension, and the second int for the horizontal dimension
 
     """
 
@@ -207,7 +214,7 @@ class JoinBlock(nn.Module):
             flag is used for switching between the github branches. For details see
             FIXME.
         channel_dim: The dimension over which the tensors are concatenated. Defaults to
-            1.
+            ``1``.
 
     """
 
@@ -308,8 +315,8 @@ def level(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
             FIXME.
-        in_channels: Number of channels in the input image. Defaults to 3.
-        num_noise_channels: Number of additional noise channels. Defaults to 3.
+        in_channels: Number of channels in the input image. Defaults to ``3``.
+        num_noise_channels: Number of additional noise channels. Defaults to ``3``.
         inplace: Can optionally do the operation in-place. Defaults to ``True``.
 
     """
@@ -430,7 +437,7 @@ def transformer(
     instance_norm: bool = True,
     levels: int = 6,
 ) -> Transformer:
-    r"""Initialized the Transformer from :cite:`ULVL2016`.
+    r"""Transformer from :cite:`ULVL2016`.
 
     Args:
         style: FIXME this should be removed.
@@ -441,7 +448,7 @@ def transformer(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
             FIXME.
-        levels: Number of levels in the Transformer. Defaults to 6.
+        levels: Number of levels in the Transformer. Defaults to ``6``.
 
     """
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
