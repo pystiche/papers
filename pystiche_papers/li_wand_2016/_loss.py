@@ -151,7 +151,9 @@ def style_loss(
     If ``impl_params is True``,
 
     * an additional score correction factor of ``1.0 / 2.0`` is used,
-    * normalized patches are used (see :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d` for details), and
+    * normalized patches are used (see
+      :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d` for
+      details), and
     * no target augmentation transformations are used.
 
     The parameters ``patch_size`` and ``stride`` can either be:
