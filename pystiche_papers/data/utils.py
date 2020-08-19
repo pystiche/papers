@@ -1,11 +1,14 @@
 import itertools
-from typing import Iterator, Sized, Tuple
+from typing import Any, Iterator, List, Sized, Tuple
 
+from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import Sampler
 
 __all__ = [
     "InfiniteCycleBatchSampler",
     "FiniteCycleBatchSampler",
+    "DelayedExponentialLR",
 ]
 
 
@@ -39,3 +42,32 @@ class FiniteCycleBatchSampler(InfiniteCycleBatchSampler):
 
     def __len__(self) -> int:
         return self.num_batches
+
+
+class DelayedExponentialLR(ExponentialLR):
+    r"""Decays the learning rate of each parameter group by gamma after the delay.
+
+    Args:
+        optimizer: Wrapped optimizer.
+        gamma: Multiplicative factor of learning rate decay.
+        delay: Number of epochs before the learning rate is reduced with each epoch.
+        **kwargs: Optional parameters for the
+             :class:`~torch.optim.lr_scheduler.ExponentialLR`.
+    """
+
+    last_epoch: int
+    gamma: float
+    base_lrs: List[float]
+
+    def __init__(
+        self, optimizer: Optimizer, gamma: float, delay: int, **kwargs: Any
+    ) -> None:
+        self.delay = delay
+        super().__init__(optimizer, gamma, **kwargs)
+
+    def get_lr(self) -> List[float]:  # type: ignore[override]
+        exp = self.last_epoch - self.delay + 1
+        if exp > 0:
+            return [base_lr * self.gamma ** exp for base_lr in self.base_lrs]
+        else:
+            return self.base_lrs

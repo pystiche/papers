@@ -1,3 +1,6 @@
+import pytorch_testing_utils as ptu
+from torch import nn, optim
+
 from pystiche_papers.data import utils
 
 
@@ -37,3 +40,26 @@ def test_InfiniteCycleBatchSampler_len():
     num_batches = 2
     batch_sampler = utils.FiniteCycleBatchSampler(data_source, num_batches)
     assert len(batch_sampler) == num_batches
+
+
+def test_DelayedExponentialLR():
+    base_lr = 1e3
+    transformer = nn.Conv2d(3, 3, 1)
+    gamma = 0.1
+    delay = 2
+    num_steps = 5
+
+    def get_optimizer(transformer):
+        return optim.Adam(transformer.parameters(), lr=base_lr)
+
+    optimizer = get_optimizer(transformer)
+    lr_scheduler = utils.DelayedExponentialLR(optimizer, gamma, delay)
+
+    for i in range(num_steps):
+        if i >= delay:
+            base_lr *= gamma
+
+        param_group = optimizer.param_groups[0]
+        assert param_group["lr"] == ptu.approx(base_lr)
+        optimizer.step()
+        lr_scheduler.step()
