@@ -23,10 +23,10 @@ are affected:
 The original authors have published two very similar papers, one with
 :class:`~torch.nn.BatchNorm2d` and a later one with :class:`~torch.nn.InstanceNorm2d`:
 
-  - ``master``: Corresponds to the reference implementation of this
-    ``paper <https://arxiv.org/abs/1701.02096>`_.
-  - ``texture_nets_v1``: Corresponds to the reference implementation of this
-    ``paper <https://arxiv.org/abs/1603.03417>`_.
+  - ``master``: Corresponds to the reference implementation of the
+    `paper texture_nets_v2 <https://arxiv.org/abs/1701.02096>`_.
+  - ``texture_nets_v1``: Corresponds to the reference implementation of the
+    `paper texture_nets_v1 <https://arxiv.org/abs/1603.03417>`_.
 
 Unfortunately, the hyperparameters used differ from those in the papers, as well as
 among the individual implementations themselves. If you use ``instance_norm`` and
