@@ -3,8 +3,8 @@
 
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following
-functions are affected by the parameter ``impl_params``:
+implementation are used instead of the parameters from the paper. The following parts
+are affected:
 
   - :func:`~pystiche_papers.ulyanov_et_al_2016.training`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.stylization`,
@@ -20,8 +20,15 @@ functions are affected by the parameter ``impl_params``:
 
 .. _table-branches-ulyanov_et_al_2016:
 
-The original authors have provided two implementations. Unfortunately, the
-hyperparameters used differ from those in the paper, as well as
+The original authors have published two very similar papers, one with
+:class:`~torch.nn.BatchNorm2d` and a later one with :class:`~torch.nn.InstanceNorm2d`:
+
+  - ``master``: Corresponds to the reference implementation of this
+    ``paper <https://arxiv.org/abs/1701.02096>`_.
+  - ``texture_nets_v1``: Corresponds to the reference implementation of this
+    ``paper <https://arxiv.org/abs/1603.03417>`_.
+
+Unfortunately, the hyperparameters used differ from those in the papers, as well as
 among the individual implementations themselves. If you use ``instance_norm`` and
 ``impl_params`` as in the following table, the appropriate parameters will be used:
 
@@ -29,8 +36,9 @@ among the individual implementations themselves. If you use ``instance_norm`` an
     `master <https://github.com/pmeier/texture_nets/tree/master>`_.
   - ``texture_nets_v1``: The parameters specified in the implementation branch
     `texture_nets_v1 <https://github.com/pmeier/texture_nets/tree/texture_nets_v1>`_.
-  - ``"paper"``: The parameters specified in the paper. Here instance_norm is only used
-    to use either :class:`~torch.nn.InstanceNorm2d` or :class:`~torch.nn.BatchNorm2d`.
+  - ``"paper"``: The parameters specified in the papers. Here ``instance_norm`` is only
+    used to use either :class:`~torch.nn.InstanceNorm2d` or
+    :class:`~torch.nn.BatchNorm2d`.
 
 +-----------------+-----------+------------------------------------+
 |                 |           |        ``instance_norm``           |
