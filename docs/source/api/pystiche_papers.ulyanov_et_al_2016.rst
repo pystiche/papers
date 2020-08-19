@@ -27,7 +27,7 @@ among the individual implementations themselves. If you use ``instance_norm`` an
 
   - ``master``: The parameters specified in the implementation branch
     `master <https://github.com/pmeier/texture_nets/tree/master>`_.
-  - ``"texture_nets_v1"``: The parameters specified in the implementation branch
+  - ``texture_nets_v1``: The parameters specified in the implementation branch
     `texture_nets_v1 <https://github.com/pmeier/texture_nets/tree/texture_nets_v1>`_.
   - ``"paper"``: The parameters specified in the paper. Here instance_norm is only used
     to use either :class:`~torch.nn.InstanceNorm2d` or :class:`~torch.nn.BatchNorm2d`.
@@ -37,7 +37,7 @@ among the individual implementations themselves. If you use ``instance_norm`` an
 +-----------------+-----------+-------------+----------------------+
 |                 |           |   ``True``  |       ``False``      |
 +-----------------+-----------+-------------+----------------------+
-| ``impl_params`` | ``True``  | ``"master"``|``"texture_nets_v1"`` |
+| ``impl_params`` | ``True``  | ``master``  | ``texture_nets_v1``  |
 |                 +-----------+-------------+----------------------+
 |                 | ``False`` | ``"paper"`` |      ``"paper"``     |
 +-----------------+-----------+-------------+----------------------+
@@ -68,7 +68,7 @@ or ``5 Layer`` ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
 
 
 +-------------------+---------------+--------------+-----------------------+
-|   Parameter       |  ``"paper"``  | ``"master"`` | ``"texture_nets_v1"`` |
+|   Parameter       |  ``"paper"``  |  ``master``  |  ``texture_nets_v1``  |
 +===================+===============+==============+=======================+
 |  ``num_epochs``   |      10       |      10      |           25          |
 +-------------------+---------------+--------------+-----------------------+

@@ -46,8 +46,8 @@ def optimizer(
             :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            :ref:`here <table-branches-ulyanov_et_al_2016>`.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
 
     """
     # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29

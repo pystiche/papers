@@ -52,8 +52,8 @@ def training(
             :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            :ref:`here <table-branches-ulyanov_et_al_2016>`.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         transformer: Transformer to be optimized. If omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used.
         criterion: Optimization criterion. If omitted, the default
@@ -161,8 +161,8 @@ def stylization(
             :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            :ref:`here <table-branches-ulyanov_et_al_2016>`.
+            flag is used for switching between two reference implementations For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
 
     """
     device = input_image.device
