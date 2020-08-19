@@ -113,7 +113,7 @@ class ConvBlock(SequentialWithOutChannels):
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
             FIXME.
-        inplace: Can optionally do the operation in-place. Defaults to ``True``.
+        inplace: If ``True`` perform the activation in-place.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
 
@@ -303,7 +303,7 @@ def level(
     num_noise_channels: int = 3,
     inplace: bool = True,
 ) -> SequentialWithOutChannels:
-    r"""Defines one level of the Transformer from :cite:`ULVL2016`.
+    r"""Defines one level of the transformer from :cite:`ULVL2016`.
 
     Args:
         prev_level_block: Optional Input from the previous level. If ``None``, only one
@@ -440,7 +440,6 @@ def transformer(
     r"""Transformer from :cite:`ULVL2016`.
 
     Args:
-        style: FIXME this should be removed.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see FIXME.
@@ -448,7 +447,7 @@ def transformer(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between the github branches. For details see
             FIXME.
-        levels: Number of levels in the Transformer. Defaults to ``6``.
+        levels: Number of levels in the transformer. Defaults to ``6``.
 
     """
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
