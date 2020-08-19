@@ -23,9 +23,9 @@ functions are affected by the parameter ``impl_params``:
 The original authors have provided two implementations. Unfortunately, the
 hyperparameters used differ from those in the paper, as well as
 among the individual implementations themselves. If you use ``instance_norm`` and
-``imp_params`` as in the following table, the appropriate parameters will be used:
+``impl_params`` as in the following table, the appropriate parameters will be used:
 
-  - ``"master"``: The parameters specified in the implementation branch
+  - ``master``: The parameters specified in the implementation branch
     `master <https://github.com/pmeier/texture_nets/tree/master>`_.
   - ``"texture_nets_v1"``: The parameters specified in the implementation branch
     `texture_nets_v1 <https://github.com/pmeier/texture_nets/tree/texture_nets_v1>`_.

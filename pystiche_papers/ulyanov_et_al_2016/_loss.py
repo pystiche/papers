@@ -70,7 +70,7 @@ def content_loss(
             determined with respect to ``impl_params`` and ``instance_norm``. For
             details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
 
-    If ``impl_params is True`` , the score is divided once more by the batch_size.
+    If ``impl_params is True`` , the score is divided twice by the batch_size.
 
     """
     if score_weight is None:
