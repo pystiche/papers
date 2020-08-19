@@ -59,7 +59,8 @@ class HourGlassBlock(SequentialWithOutChannels):
     r"""HourGlassBlock from :cite:`ULVL2016`.
 
     Args:
-        intermediate: Middle :class:`~torch.nn.Module` of the block.
+        intermediate: Middle :class:`~torch.nn.Module` of the block. The
+        ``out_channels`` is taken from ``intermediate``.
     """
 
     def __init__(self, intermediate: nn.Module):
@@ -107,12 +108,13 @@ class ConvBlock(SequentialWithOutChannels):
         kernel_size: Size of the convolving kernel.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         stride: Stride of the convolution. Defaults to ``1``.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         inplace: If ``True`` perform the activation in-place.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
@@ -160,17 +162,25 @@ class ConvBlock(SequentialWithOutChannels):
 class ConvSequence(SequentialWithOutChannels):
     r"""Sequence of convolutional blocks that occurs repeatedly in :cite:`ULVL2016`.
 
+    Each sequence contains three ``ConvBlock`` from :cite:`ULVL2016`:
+
+    * A convolution with ``in_channels`` as input and ``out_channels`` as output and a
+      ``kernel_size=3``.
+    * A convolution with ``out_channels`` as input and output and a ``kernel_size=3``.
+    * A convolution with ``out_channels`` as input and output and a ``kernel_size=1``.
+
     Args:
         in_channels: Number of channels in the input.
         out_channels: Number of channels produced by the convolution
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
-        inplace: Can optionally do the operation in-place. Defaults to ``True``.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        inplace: If ``True`` perform the activation in-place.
 
     """
 
@@ -206,13 +216,17 @@ class ConvSequence(SequentialWithOutChannels):
 class JoinBlock(nn.Module):
     r"""JoinBlock from :cite:`ULVL2016`.
 
+    This block concatenate two inputs along the ``channel _dim`` with previous
+    normalization modules. It therefore corresponds to the ``JoinBlock`` from the paper
+    only without upsample block.
+
     Args:
         branch_in_channels: Number of channels in the branch input.
         names: Optional names for the blocks. If omitted, the blocks are numbered.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         channel_dim: The dimension over which the tensors are concatenated. Defaults to
             ``1``.
 
@@ -258,13 +272,16 @@ class JoinBlock(nn.Module):
 class BranchBlock(nn.Module):
     r"""BranchBlock from :cite:`ULVL2016`.
 
+    This block combines the ``deep_branch`` with the ``shallow_branch`` using a
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.JoinBlock`.
+
     Args:
         deep_branch: Input from the branch one step deeper in the pyramid.
         shallow_branch: Input from the current branch.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
     """
 
     def __init__(
@@ -305,19 +322,31 @@ def level(
 ) -> SequentialWithOutChannels:
     r"""Defines one level of the transformer from :cite:`ULVL2016`.
 
+    A level contains either only a
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence` if it is the first
+    level or a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock`
+    followed by a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`. The
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock` gets
+    ``prev_level_block`` as ``intermediate`` in an
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.HourGlassBlock` as
+    ``deep_branch`` and a
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence` as
+    ``shallow_branch``.
+
     Args:
         prev_level_block: Optional Input from the previous level. If ``None``, only one
             ConvSequence is returned.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         in_channels: Number of channels in the input image. Defaults to ``3``.
         num_noise_channels: Number of additional noise channels. Defaults to ``3``.
-        inplace: Can optionally do the operation in-place. Defaults to ``True``.
+        inplace: If ``True`` perform the activation in-place.
 
     """
 
@@ -432,21 +461,19 @@ class Transformer(nn.Sequential):
 
 
 def transformer(
-    style: Optional[str] = None,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    levels: int = 6,
+    impl_params: bool = True, instance_norm: bool = True, levels: int = 6,
 ) -> Transformer:
     r"""Transformer from :cite:`ULVL2016`.
 
     Args:
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
-            the paper. For details see FIXME.
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between the github branches. For details see
-            FIXME.
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         levels: Number of levels in the transformer. Defaults to ``6``.
 
     """
