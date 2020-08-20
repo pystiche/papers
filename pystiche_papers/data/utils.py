@@ -55,13 +55,13 @@ class DelayedExponentialLR(ExponentialLR):
              :class:`~torch.optim.lr_scheduler.ExponentialLR`.
     """
 
-    last_epoch: int
-    gamma: float
-    base_lrs: List[float]
-
     def __init__(
         self, optimizer: Optimizer, gamma: float, delay: int, **kwargs: Any
     ) -> None:
+        self.last_epoch: int
+        self.gamma: float
+        self.base_lrs: List[float]
+
         self.delay = delay
         super().__init__(optimizer, gamma, **kwargs)
 

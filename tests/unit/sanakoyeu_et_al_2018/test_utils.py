@@ -1,3 +1,5 @@
+import pytest
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn, optim
@@ -51,7 +53,7 @@ def test_ExponentialMovingAverageMeter(subtests):
             ema.update(val)
             desired = desired * (1.0 - smoothing_factor) + smoothing_factor * val
 
-        current = ema.global_avg()
+        current = ema.global_avg
         assert current == ptu.approx(desired)
 
 
@@ -62,9 +64,8 @@ def test_ExponentialMovingAverageMeter_update_with_tensor(subtests):
     name = "test_ema"
     ema = paper.ExponentialMovingAverageMeter(name, init_val)
 
-
     with subtests.test("init_val"):
-        assert ema.global_avg() == pytest.approx(init_val)
+        assert ema.global_avg == pytest.approx(init_val)
 
     with subtests.test("global_avg"):
         desired = init_val
@@ -72,7 +73,7 @@ def test_ExponentialMovingAverageMeter_update_with_tensor(subtests):
             ema.update(val)
             desired = desired * (1.0 - smoothing_factor) + smoothing_factor * val
 
-        current = ema.global_avg()
+        current = ema.global_avg
         assert current == ptu.approx(desired)
 
 
@@ -81,6 +82,4 @@ def test_ExponentialMovingAverageMeter_str_smoke():
     meter = paper.ExponentialMovingAverageMeter(
         "test_exponential_moving_average_meter", init_val
     )
-    assert isinstance(str(meter), str)
-    meter.update(0.0)
     assert isinstance(str(meter), str)

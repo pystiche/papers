@@ -55,7 +55,7 @@ def test_DelayedExponentialLR():
     optimizer = get_optimizer(transformer)
     lr_scheduler = utils.DelayedExponentialLR(optimizer, gamma, delay)
 
-    for i in range(num_steps):
+    for i in range(num_epochs):
         if i >= delay:
             base_lr *= gamma
 

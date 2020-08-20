@@ -38,7 +38,7 @@ class ExponentialMovingAverageMeter(FloatMeter):
     def __init__(
         self,
         name: str,
-        init_val: float,
+        init_val: float = 0.0,
         smoothing_factor: float = 0.05,
         fmt: str = "{:f}",
     ) -> None:
