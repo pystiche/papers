@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - sanakoyeu-2018
       - releases/*
 
   pull_request:
