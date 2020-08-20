@@ -20,17 +20,20 @@ are affected:
 
 .. _table-branches-ulyanov_et_al_2016:
 
-The original authors have published two very similar papers, one with
-:class:`~torch.nn.BatchNorm2d` and a later one with :class:`~torch.nn.InstanceNorm2d`:
+The original authors experimented with the network architecture and described two
+versions of the network in different papers, replacing the
+:class:`~torch.nn.BatchNorm2d` by :class:`~torch.nn.InstanceNorm2d` as an improvement.
+They call it StyleNet with a postfix BN if it is equipped with
+:class:`~torch.nn.BatchNorm2d` or IN for :class:`~torch.nn.InstanceNorm2d`:
 
   - ``master``: Corresponds to the reference implementation of the
-    `paper texture_nets_v2 <https://arxiv.org/abs/1701.02096>`_.
+    `StyleNet_IN <https://arxiv.org/abs/1701.02096>`_.
   - ``texture_nets_v1``: Corresponds to the reference implementation of the
-    `paper texture_nets_v1 <https://arxiv.org/abs/1603.03417>`_.
+    `StyleNet_BN <https://arxiv.org/abs/1603.03417>`_.
 
 Unfortunately, the hyperparameters used differ from those in the papers, as well as
 among the individual implementations themselves. If you use ``instance_norm`` and
-``impl_params`` as in the following table, the appropriate parameters will be used:
+``impl_params``, the appropriate parameters will be used:
 
   - ``master``: The parameters specified in the implementation branch
     `master <https://github.com/pmeier/texture_nets/tree/master>`_.
