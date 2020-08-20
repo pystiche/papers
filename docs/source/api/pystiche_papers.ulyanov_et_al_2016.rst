@@ -84,7 +84,6 @@ The ``layers`` have either configuration ``1``
 | ``style_layers``          | ``1``       | ``2``               |
 +---------------------------+-------------+---------------------+
 
-
 .. automodule:: pystiche_papers.ulyanov_et_al_2016
 
 .. autofunction:: batch_sampler
