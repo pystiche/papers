@@ -44,7 +44,7 @@ def training(
     Args:
         content_image_loader: Content images used as input for the ``transformer``.
         style: Style image on which the ``transformer`` should be trained. If the
-            input is an string, the style image is read from the images in
+            input is an string, the style image is read from
             :func:`~pystiche_papers.ulyanov_et_al_2016.images`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
