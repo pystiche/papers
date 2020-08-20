@@ -102,6 +102,12 @@ def activation(
 class ConvBlock(SequentialWithOutChannels):
     r"""ConvBlock from :cite:`ULVL2016`.
 
+    This block contains a :class:`~torch.nn.ReflectionPad2d` followed by a
+    :class:`~torch.nn.Conv2d` with subsequent normalization depending on
+    ``instance_norm`` and an activation function depending on ``impl_params`` and
+    ``instance_norm``. The activation function is either a :class:`~torch.nn.ReLU` or a
+    :class:`~torch.nn.LeakyReLU` with ``slope=0.01``.
+
     Args:
         in_channels: Number of channels in the input.
         out_channels:  Number of channels produced by the convolution.
@@ -162,12 +168,9 @@ class ConvBlock(SequentialWithOutChannels):
 class ConvSequence(SequentialWithOutChannels):
     r"""Sequence of convolutional blocks that occurs repeatedly in :cite:`ULVL2016`.
 
-    Each sequence contains three ``ConvBlock`` from :cite:`ULVL2016`:
-
-    * A convolution with ``in_channels`` as input and ``out_channels`` as output and a
-      ``kernel_size=3``.
-    * A convolution with ``out_channels`` as input and output and a ``kernel_size=3``.
-    * A convolution with ``out_channels`` as input and output and a ``kernel_size=1``.
+    Each sequence contains three
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` blocks while the
+    first two have a ``kernel_size of 3`` and the last one a ``kernel_size of 1``.
 
     Args:
         in_channels: Number of channels in the input.
@@ -216,13 +219,14 @@ class ConvSequence(SequentialWithOutChannels):
 class JoinBlock(nn.Module):
     r"""JoinBlock from :cite:`ULVL2016`.
 
-    This block concatenate two inputs along the ``channel _dim`` with previous
-    normalization modules. It therefore corresponds to the ``JoinBlock`` from the paper
-    only without upsample block.
+    This block cats an arbitrary number of inputs along the ``channel _dim`` with
+    prefixed normalization modules. It therefore corresponds to the ``JoinBlock`` from
+    the paper only without upsample block.
 
     Args:
         branch_in_channels: Number of channels in the branch input.
-        names: Optional names for the blocks. If omitted, the blocks are numbered.
+        names: Optional names for the normalization modules. If omitted, the modules
+            will be numbered.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between two reference implementations. For
@@ -461,11 +465,17 @@ class Transformer(nn.Sequential):
 
 
 def transformer(
-    impl_params: bool = True, instance_norm: bool = True, levels: int = 6,
+    style: Optional[str] = None,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    levels: int = 6,
 ) -> Transformer:
     r"""Transformer from :cite:`ULVL2016`.
 
     Args:
+        style: Style the transformer was trained on. Can be one of styles given by
+            :func:`~pystiche_papers.ulyanov_et_al_2016.images`. If omitted, the
+            transformer is initialized with random weights.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see
