@@ -1,5 +1,3 @@
-import pytest
-
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
@@ -7,37 +5,76 @@ from torch.utils.data import DataLoader
 import pystiche.image.transforms.functional as F
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.data import ImageFolderDataset
+from pystiche.image import transforms
+from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
 
-from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
-
 
 def test_image_transform():
+    edge_size = 16
     make_reproducible()
-    image = torch.rand(1, 1, 16, 31)
+    image = torch.rand(1, 1, 800, 800)
 
-    content_transform = paper.content_transform(impl_params=False)
-    actual = content_transform(image)
+    utils.make_reproducible()
+    image_transform = paper.image_transform(edge_size=edge_size)
+    actual = image_transform(image)
 
-    desired = F.grayscale_to_fakegrayscale(F.resize(image[:, :, :16, :16], 256))
+    transform = transforms.ValidRandomCrop(edge_size)
+    utils.make_reproducible()
+    desired = F.grayscale_to_fakegrayscale(transform(image))
 
     ptu.assert_allclose(actual, desired)
 
 
-@pytest.mark.slow
-def test_images_smoke(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_is_downloadable(image)
+def test_image_transform_optional_rescale(subtests):
 
+    with subtests.test("too large image"):
+        edge_size = 16
+        make_reproducible()
+        image = torch.rand(1, 1, 2000, 800)
 
-@pytest.mark.large_download
-@pytest.mark.slow
-def test_images(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_downloads_correctly(image)
+        utils.make_reproducible()
+        image_transform = paper.image_transform(edge_size=edge_size)
+        actual = image_transform(image)
+
+        image = F.rescale(image, factor=0.9)
+        transform = transforms.ValidRandomCrop(edge_size)
+        utils.make_reproducible()
+        desired = F.grayscale_to_fakegrayscale(transform(image))
+
+        ptu.assert_allclose(actual, desired)
+
+    with subtests.test("too small image"):
+        edge_size = 16
+        make_reproducible()
+        image = torch.rand(1, 1, 400, 800)
+
+        utils.make_reproducible()
+        image_transform = paper.image_transform(edge_size=edge_size)
+        actual = image_transform(image)
+        image = F.rescale(image, factor=2)
+        transform = transforms.ValidRandomCrop(edge_size)
+        utils.make_reproducible()
+        desired = F.grayscale_to_fakegrayscale(transform(image))
+
+        ptu.assert_allclose(actual, desired)
+
+    with subtests.test("very small image"):
+        edge_size = 16
+        make_reproducible()
+        image = torch.rand(1, 1, 16, 16)
+
+        utils.make_reproducible()
+        image_transform = paper.image_transform(edge_size=edge_size)
+        actual = image_transform(image)
+
+        image = F.resize(image, (800, 800), "bilinear")
+        transform = transforms.ValidRandomCrop(edge_size)
+        utils.make_reproducible()
+        desired = F.grayscale_to_fakegrayscale(transform(image))
+
+        ptu.assert_allclose(actual, desired)
 
 
 def test_dataset(subtests, mocker):
@@ -67,7 +104,6 @@ def test_batch_sampler_num_batches_default(subtests):
         with subtests.test(impl_params=impl_params):
             batch_sampler = paper.batch_sampler((), impl_params=impl_params)
             assert batch_sampler.num_batches == num_batches
-
 
 
 def test_image_loader(subtests):
