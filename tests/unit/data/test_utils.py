@@ -47,7 +47,7 @@ def test_DelayedExponentialLR():
     transformer = nn.Conv2d(3, 3, 1)
     gamma = 0.1
     delay = 2
-    num_steps = 5
+    num_epochs = 5
 
     def get_optimizer(transformer):
         return optim.Adam(transformer.parameters(), lr=base_lr)

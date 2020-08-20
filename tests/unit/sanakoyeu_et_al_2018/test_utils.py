@@ -45,7 +45,7 @@ def test_ExponentialMovingAverageMeter(subtests):
     with subtests.test("name"):
         assert ema.name == name
 
-    with subtests.test("local average"):
+    with subtests.test("global_avg"):
         desired = init_val
         for val in vals:
             ema.update(val)
@@ -62,13 +62,11 @@ def test_ExponentialMovingAverageMeter_update_with_tensor(subtests):
     name = "test_ema"
     ema = paper.ExponentialMovingAverageMeter(name, init_val)
 
-    with subtests.test("name"):
-        assert ema.name == name
 
     with subtests.test("init_val"):
-        assert ema.global_avg() == init_val
+        assert ema.global_avg() == pytest.approx(init_val)
 
-    with subtests.test("local average"):
+    with subtests.test("global_avg"):
         desired = init_val
         for val in vals:
             ema.update(val)

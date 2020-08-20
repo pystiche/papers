@@ -50,7 +50,7 @@ class DelayedExponentialLR(ExponentialLR):
     Args:
         optimizer: Wrapped optimizer.
         gamma: Multiplicative factor of learning rate decay.
-        delay: Number of epochs before the learning rate is reduced with each epoch.
+        delay: Number of epochs before the learning rate decays.
         **kwargs: Optional parameters for the
              :class:`~torch.optim.lr_scheduler.ExponentialLR`.
     """

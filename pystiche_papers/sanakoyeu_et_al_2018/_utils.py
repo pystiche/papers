@@ -57,6 +57,7 @@ class ExponentialMovingAverageMeter(FloatMeter):
     def update(self, new_val: Union[torch.Tensor, float]) -> None:  # type: ignore[override]
         super().update(self.calculate_val(new_val))
 
+    @property
     def global_avg(self) -> float:
         return self.last_val
 
