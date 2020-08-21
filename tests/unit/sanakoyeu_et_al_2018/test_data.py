@@ -1,3 +1,4 @@
+import functools
 import os
 from distutils import dir_util
 from os import path
@@ -12,11 +13,17 @@ import pystiche
 import pystiche.image.transforms.functional as F
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.data import ImageFolderDataset
-from pystiche.image import make_single_image, transforms, write_image
+from pystiche.image import (
+    extract_image_size,
+    make_single_image,
+    transforms,
+    write_image,
+)
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
+from tests import asserts
 from tests.asserts import assert_is_downloadable
 from tests.utils import make_tar
 
@@ -45,40 +52,73 @@ def test_image_transform():
     ptu.assert_allclose(actual, desired)
 
 
-def test_ClampSize_too_large_image():
-    make_reproducible()
-    image = torch.rand(1, 1, 2000, 800)
-
-    make_reproducible()
-    rescale = paper.ClampSize()
-    actual = rescale(image)
-
-    desired = F.rescale(image, factor=0.9)
-
-    ptu.assert_allclose(actual, desired)
+def test_ClampSize_invalid_sizes():
+    with pytest.raises(ValueError):
+        paper.ClampSize(min_edge_size=2, max_edge_size=1)
 
 
-def test_ClampSize_too_small_image():
-    make_reproducible()
-    image = torch.rand(1, 1, 400, 800)
+def test_ClampSize_normal_image(image):
+    short_edge_size, long_edge_size = sorted(extract_image_size(image))
+    min_edge_size = short_edge_size // 2
+    max_edge_size = long_edge_size * 2
+    transform = paper.ClampSize(
+        min_edge_size=min_edge_size, max_edge_size=max_edge_size
+    )
 
-    rescale = paper.ClampSize()
-    actual = rescale(image)
-    desired = F.rescale(image, factor=2)
-
-    ptu.assert_allclose(actual, desired)
+    assert transform(image) is image
 
 
-def test_ClampSize_very_small_image():
-    make_reproducible()
-    image = torch.rand(1, 1, 16, 16)
+def test_ClampSize_too_large_image(image):
+    long_edge_size = max(extract_image_size(image))
+    max_edge_size = long_edge_size // 2
+    min_edge_size = max_edge_size - 1
+    transform = paper.ClampSize(
+        min_edge_size=min_edge_size, max_edge_size=max_edge_size
+    )
 
-    rescale = paper.ClampSize()
-    actual = rescale(image)
+    actual = transform(image)
+    expected = F.resize(image, max_edge_size, edge="long")
+    ptu.assert_allclose(actual, expected)
 
-    desired = F.resize(image, (800, 800), "bilinear")
 
-    ptu.assert_allclose(actual, desired)
+def test_ClampSize_too_small_image(image):
+    short_edge_size = min(extract_image_size(image))
+    min_edge_size = short_edge_size * 2
+    max_edge_size = min_edge_size + 1
+    transform = paper.ClampSize(
+        min_edge_size=min_edge_size, max_edge_size=max_edge_size
+    )
+
+    actual = transform(image)
+    expected = F.resize(image, min_edge_size, edge="short")
+    ptu.assert_allclose(actual, expected)
+
+
+def test_ClampSize_far_too_small_image(image_small_landscape):
+    short_edge_size = min(extract_image_size(image_small_landscape))
+    min_edge_size = short_edge_size * 5
+    max_edge_size = min_edge_size + 1
+    transform = paper.ClampSize(
+        min_edge_size=min_edge_size, max_edge_size=max_edge_size
+    )
+
+    actual = transform(image_small_landscape)
+    expected = F.resize(image_small_landscape, (min_edge_size, min_edge_size))
+    ptu.assert_allclose(actual, expected)
+
+
+def test_ClampSize_repr(subtests):
+    kwargs = {"min_edge_size": 1, "max_edge_size": 2, "interpolation_mode": "bicubic"}
+    transform = paper.ClampSize(**kwargs)
+
+    assert isinstance(repr(transform), str)
+
+    assert_property_in_repr = functools.partial(
+        asserts.assert_property_in_repr, repr(transform)
+    )
+    for name, value in kwargs.items():
+        with subtests.test(name):
+            assert_property_in_repr(name, value)
 
 
 def test_WikiArt_unknown_style(tmpdir):

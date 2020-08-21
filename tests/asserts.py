@@ -10,6 +10,7 @@ __all__ = [
     "assert_downloads_correctly",
     "assert_image_is_downloadable",
     "assert_image_downloads_correctly",
+    "assert_property_in_repr",
 ]
 
 USER_AGENT = "pystiche_papers/test_suite"
@@ -60,3 +61,7 @@ def assert_image_downloads_correctly(image):
         return path.join(root, image.file)
 
     assert_downloads_correctly(None, md5=image.md5, downloader=downloader)
+
+
+def assert_property_in_repr(repr, name, value):
+    assert f"{name}={value}" in repr
