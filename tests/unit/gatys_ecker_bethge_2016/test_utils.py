@@ -7,6 +7,8 @@ import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import enc, meta
 from pystiche.image import transforms
 
+from tests import mocks
+
 
 def test_preprocessor():
     assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
@@ -18,7 +20,7 @@ def test_postprocessor():
 
 @pytest.mark.slow
 def test_multi_layer_encoder(subtests, mocker):
-    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
+    mocks.patch_models_load_state_dict_from_url(mocker=mocker)
 
     multi_layer_encoder = paper.multi_layer_encoder()
     assert isinstance(multi_layer_encoder, enc.VGGMultiLayerEncoder)
@@ -37,7 +39,7 @@ def test_multi_layer_encoder(subtests, mocker):
 
 @pytest.mark.slow
 def test_multi_layer_encoder_avg_pool(mocker):
-    mocker.patch("pystiche.enc.models.vgg.VGGMultiLayerEncoder._load_weights")
+    mocks.patch_models_load_state_dict_from_url(mocker=mocker)
 
     multi_layer_encoder = paper.multi_layer_encoder(impl_params=False)
     pool_modules = [

@@ -6,7 +6,7 @@ import torch
 __all__ = [
     "make_mock_target",
     "attach_method_mock",
-    "patch_multi_layer_encoder_load_weights",
+    "patch_models_load_state_dict_from_url",
     "patch_multi_layer_encoder_loader",
     "mock_images",
 ]
@@ -26,29 +26,17 @@ def attach_method_mock(mock, method, mocker=DEFAULT_MOCKER, **attrs):
     mock.attach_mock(method_mock, method)
 
 
-_MULTI_LAYER_ENCODER_LOAD_WEIGHTS_TARGETS = {
-    "vgg": make_mock_target(
-        "enc", "models", "vgg", "VGGMultiLayerEncoder", "_load_weights", pkg="pystiche"
-    ),
-    "alexnet": make_mock_target(
-        "enc",
-        "models",
-        "alexnet",
-        "AlexNetMultiLayerEncoder",
-        "_load_weights",
-        pkg="pystiche",
-    ),
-}
-
-
-def patch_multi_layer_encoder_load_weights(models=None, mocker=DEFAULT_MOCKER):
-    if models is None:
-        models = _MULTI_LAYER_ENCODER_LOAD_WEIGHTS_TARGETS.keys()
-
-    return {
-        model: mocker.patch(_MULTI_LAYER_ENCODER_LOAD_WEIGHTS_TARGETS[model])
-        for model in models
-    }
+def patch_models_load_state_dict_from_url(mocker=DEFAULT_MOCKER):
+    return mocker.patch(
+        make_mock_target(
+            "enc",
+            "models",
+            "utils",
+            "ModelMultiLayerEncoder",
+            "load_state_dict_from_url",
+            pkg="pystiche",
+        )
+    )
 
 
 @functools.lru_cache(maxsize=4)
@@ -67,7 +55,7 @@ def patch_multi_layer_encoder_loader(
     mocker=DEFAULT_MOCKER,
 ):
     if patch_load_weights:
-        patch_multi_layer_encoder_load_weights(mocker=mocker)
+        patch_models_load_state_dict_from_url(mocker=mocker)
 
     if clear_cache:
         _load_multi_layer_encoder.cache_clear()
