@@ -23,8 +23,8 @@ are affected:
 The original authors experimented with the network architecture and described two
 versions of the network in different papers, replacing the
 :class:`~torch.nn.BatchNorm2d` by :class:`~torch.nn.InstanceNorm2d` as an improvement.
-They call it StyleNet with a postfix BN if it is equipped with
-:class:`~torch.nn.BatchNorm2d` or IN for :class:`~torch.nn.InstanceNorm2d`:
+They call it StyleNet with a postfix BN if :class:`~torch.nn.BatchNorm2d` or IN if
+:class:`~torch.nn.InstanceNorm2d` is used:
 
   - ``master``: Corresponds to the reference implementation of the
     `StyleNet_IN <https://arxiv.org/abs/1701.02096>`_.
@@ -66,23 +66,23 @@ The ``layers`` have either configuration ``1``
 ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
 
 
-+---------------------------+--------------+-----------------------+
-|   Parameter               |  ``master``  |  ``texture_nets_v1``  |
-+===========================+==============+=======================+
-|  ``num_epochs``           |      10      |           25          |
-+---------------------------+--------------+-----------------------+
-| ``learning_rate``                |    1e-3      |         1e-1          |
-+---------------------------+--------------+-----------------------+
-| ``num_batches``           |     2000     |          300          |
-+---------------------------+--------------+-----------------------+
-|  ``batch_size``           |       1      |           4           |
-+---------------------------+--------------+-----------------------+
-| ``content_score_weight``  |      1e0     |          6e1          |
-+---------------------------+--------------+-----------------------+
-| ``style_score_weight``    |      1e0     |          1e3          |
-+---------------------------+--------------+-----------------------+
-| ``style_layers``          |    ``1``     |       ``2``           |
-+---------------------------+--------------+-----------------------+
++---------------------------+-------------+---------------------+
+| Parameter                 | ``master``  |``texture_nets_v1``  |
++===========================+=============+=====================+
+| ``num_epochs``            | ``10``      | ``25``              |
++---------------------------+-------------+---------------------+
+| ``learning_rate``         | ``1e-3``    | ``1e-1``            |
++---------------------------+-------------+---------------------+
+| ``num_batches``           | ``2000``    | ``300``             |
++---------------------------+-------------+---------------------+
+| ``batch_size``            | ``1``       | ``4``               |
++---------------------------+-------------+---------------------+
+| ``content_score_weight``  | ``1e0``     | ``6e1``             |
++---------------------------+-------------+---------------------+
+| ``style_score_weight``    | ``1e0``     | ``1e3``             |
++---------------------------+-------------+---------------------+
+| ``style_layers``          | ``1``       | ``2``               |
++---------------------------+-------------+---------------------+
 
 
 .. automodule:: pystiche_papers.ulyanov_et_al_2016
