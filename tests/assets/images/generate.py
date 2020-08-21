@@ -19,10 +19,10 @@ def generate_small_images(root, name="small", image_size=(32, 32)):
         write_image(root, f"{name}_{idx}", image_size)
 
     landscape_size = (image_size[0] // 2, image_size[1])
-    write_image(root, f"{name}_landscape.png", landscape_size)
+    write_image(root, f"{name}_landscape", landscape_size)
 
     portrait_size = (image_size[0], image_size[1] // 2)
-    write_image(root, f"{name}_portrait.png", portrait_size)
+    write_image(root, f"{name}_portrait", portrait_size)
 
 
 def generate_medium_image(root, name="medium", image_size=(128, 128)):
