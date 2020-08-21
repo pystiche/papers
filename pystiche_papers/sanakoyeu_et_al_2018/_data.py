@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, Dict, Optional, Sized
+from typing import Any, Dict, Optional, Sized, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -55,6 +55,7 @@ class ClampSize(transforms.Transform):
         ):
             return image
 
+        size: Union[int, Tuple[int, int]]
         if long_edge_size > self.max_edge_size:
             size = self.max_edge_size
             edge = "long"
@@ -66,8 +67,11 @@ class ClampSize(transforms.Transform):
             )
             edge = "short"
 
-        return F.resize(
-            image, size, edge=edge, interpolation_mode=self.interpolation_mode
+        return cast(
+            torch.Tensor,
+            F.resize(
+                image, size, edge=edge, interpolation_mode=self.interpolation_mode
+            ),
         )
 
     def _properties(self) -> Dict[str, Any]:
