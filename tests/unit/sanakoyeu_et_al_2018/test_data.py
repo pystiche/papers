@@ -6,74 +6,60 @@ import pystiche.image.transforms.functional as F
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.data import ImageFolderDataset
 from pystiche.image import transforms
-from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
+from pystiche_papers.utils import make_reproducible
 
 
 def test_image_transform():
     edge_size = 16
-    utils.make_reproducible()
+    make_reproducible()
     image = torch.rand(1, 1, 800, 800)
 
-    utils.make_reproducible()
+    make_reproducible()
     image_transform = paper.image_transform(edge_size=edge_size)
     actual = image_transform(image)
 
     transform = transforms.ValidRandomCrop(edge_size)
-    utils.make_reproducible()
+    make_reproducible()
     desired = F.grayscale_to_fakegrayscale(transform(image))
 
     ptu.assert_allclose(actual, desired)
 
 
-def test_image_transform_optional_rescale(subtests):
+def test_BoundedRescale_too_large_image():
+    make_reproducible()
+    image = torch.rand(1, 1, 2000, 800)
 
-    with subtests.test("too large image"):
-        edge_size = 16
-        make_reproducible()
-        image = torch.rand(1, 1, 2000, 800)
+    make_reproducible()
+    rescale = paper.BoundedRescale()
+    actual = rescale(image)
 
-        utils.make_reproducible()
-        image_transform = paper.image_transform(edge_size=edge_size)
-        actual = image_transform(image)
+    desired = F.rescale(image, factor=0.9)
 
-        image = F.rescale(image, factor=0.9)
-        transform = transforms.ValidRandomCrop(edge_size)
-        utils.make_reproducible()
-        desired = F.grayscale_to_fakegrayscale(transform(image))
+    ptu.assert_allclose(actual, desired)
 
-        ptu.assert_allclose(actual, desired)
 
-    with subtests.test("too small image"):
-        edge_size = 16
-        make_reproducible()
-        image = torch.rand(1, 1, 400, 800)
+def test_BoundedRescale_too_small_image():
+    make_reproducible()
+    image = torch.rand(1, 1, 400, 800)
 
-        utils.make_reproducible()
-        image_transform = paper.image_transform(edge_size=edge_size)
-        actual = image_transform(image)
-        image = F.rescale(image, factor=2)
-        transform = transforms.ValidRandomCrop(edge_size)
-        utils.make_reproducible()
-        desired = F.grayscale_to_fakegrayscale(transform(image))
+    rescale = paper.BoundedRescale()
+    actual = rescale(image)
+    desired = F.rescale(image, factor=2)
 
-        ptu.assert_allclose(actual, desired)
+    ptu.assert_allclose(actual, desired)
 
-    with subtests.test("very small image"):
-        edge_size = 16
-        make_reproducible()
-        image = torch.rand(1, 1, 16, 16)
 
-        utils.make_reproducible()
-        image_transform = paper.image_transform(edge_size=edge_size)
-        actual = image_transform(image)
+def test_BoundedRescale_very_small_image():
+    make_reproducible()
+    image = torch.rand(1, 1, 16, 16)
 
-        image = F.resize(image, (800, 800), "bilinear")
-        transform = transforms.ValidRandomCrop(edge_size)
-        utils.make_reproducible()
-        desired = F.grayscale_to_fakegrayscale(transform(image))
+    rescale = paper.BoundedRescale()
+    actual = rescale(image)
 
-        ptu.assert_allclose(actual, desired)
+    desired = F.resize(image, (800, 800), "bilinear")
+
+    ptu.assert_allclose(actual, desired)
 
 
 def test_dataset(subtests, mocker):
