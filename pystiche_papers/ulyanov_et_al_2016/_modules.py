@@ -276,12 +276,12 @@ class JoinBlock(nn.Module):
 class BranchBlock(nn.Module):
     r"""BranchBlock from :cite:`ULVL2016`.
 
-    This block combines the ``deep_branch`` with the ``shallow_branch`` using a
+    Joins the branch from the previous pyramid with the current level using a
     :class:`~pystiche_paper.ulyanov_et_al_2016._modules.JoinBlock`.
 
     Args:
-        deep_branch: Input from the branch one step deeper in the pyramid.
-        shallow_branch: Input from the current branch.
+        deep_branch: Input from the previous pyramid.
+        shallow_branch: Input from the current level.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between two reference implementations. For
