@@ -177,7 +177,7 @@ def test_WikiArt_download_existing_sub_dir(wiki_art_style, tmpdir):
     os.mkdir(path.join(tmpdir, wiki_art_style))
 
     with pytest.raises(RuntimeError):
-        paper.WikiArt(tmpdir, wiki_art_style)
+        paper.WikiArt(tmpdir, wiki_art_style, download=True)
 
 
 def test_style_dataset_smoke(subtests, wiki_art_style, patch_collect_images, tmpdir):
