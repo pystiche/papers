@@ -60,9 +60,10 @@ class HourGlassBlock(SequentialWithOutChannels):
 
     Args:
         intermediate: Module in between the down- and upsampling.
-        
+
     Attributes:
         out_channels: ``ìntermediate.out_channels``
+
     """
 
     def __init__(self, intermediate: nn.Module):
@@ -104,11 +105,8 @@ def activation(
 class ConvBlock(SequentialWithOutChannels):
     r"""ConvBlock from :cite:`ULVL2016`.
 
-    This block contains a :class:`~torch.nn.ReflectionPad2d` followed by a
-    :class:`~torch.nn.Conv2d` with subsequent normalization depending on
-    ``instance_norm`` and an activation function depending on ``impl_params`` and
-    ``instance_norm``. The activation function is either a :class:`~torch.nn.ReLU` or a
-    :class:`~torch.nn.LeakyReLU` with ``slope=0.01``.
+    This block contains a convolution followed by normalization and activation. The
+    input is reflection-padded to preserve the size.
 
     Args:
         in_channels: Number of channels in the input.
@@ -124,6 +122,10 @@ class ConvBlock(SequentialWithOutChannels):
             flag is used for switching between two reference implementations. For
             details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         inplace: If ``True`` perform the activation in-place.
+
+    If ``impl_params and instance_norm is True`` the activation function is a
+    :class:`~torch.nn.ReLU` otherwise a :class:`~torch.nn.LeakyReLU` with
+    ``slope=0.01``.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
 
@@ -221,8 +223,8 @@ class ConvSequence(SequentialWithOutChannels):
 class JoinBlock(nn.Module):
     r"""JoinBlock from :cite:`ULVL2016` without upsampling.
 
-    This block concatenates an arbitrary number of inputs along the ``channel _dim`` with
-    prefixed normalization modules.
+    This block concatenates an arbitrary number of inputs along the ``channel _dim``
+    with prefixed normalization modules.
 
     Args:
         branch_in_channels: Number of channels in the branch input.
@@ -327,20 +329,16 @@ def level(
 ) -> SequentialWithOutChannels:
     r"""Defines one level of the transformer from :cite:`ULVL2016`.
 
-    A level contains either only a
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence` if it is the first
-    level or a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock`
-    followed by a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`. The
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock` gets
-    ``prev_level_block`` as ``intermediate`` in an
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.HourGlassBlock` as
-    ``deep_branch`` and a
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence` as
-    ``shallow_branch``.
+    A level contains :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`
+    if it is the first level otherwise the ``prev_level_block`` is put into
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.HourGlassBlock` and joined with
+    a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock` and finally
+    followed by another
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`.
 
     Args:
-        prev_level_block: Previous pyramid level. If given, it is incorporated in the current level.
-            ConvSequence is returned.
+        prev_level_block: Previous pyramid level. If given, it is incorporated in the
+            current level. ConvSequence is returned.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see
