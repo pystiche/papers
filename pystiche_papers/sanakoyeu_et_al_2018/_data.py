@@ -15,46 +15,60 @@ from pystiche.misc import verify_str_arg
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils import OptionalGrayscaleToFakegrayscale
 
-__all__ = ["WikiArt"]
+__all__ = [
+    "BoundedRescale",
+    "image_transform",
+    "WikiArt",
+    "style_dataset",
+    "batch_sampler",
+    "image_loader",
+]
+
+
+class BoundedRescale(Transform):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L49-L68
+    def __init__(
+        self,
+        interpolation_mode: str = "bilinear",
+        maximal_size: int = 1800,
+        minimal_size: int = 800,
+    ):
+        super().__init__()
+        self.interpolation_mode = interpolation_mode
+        self.maximal_size = maximal_size
+        self.minimal_size = minimal_size
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        if max(image.shape) > self.maximal_size:
+            return F.rescale(
+                image, factor=self.maximal_size / max(extract_image_size(image))
+            )
+        if min(image.shape) < self.minimal_size:
+            alpha = self.minimal_size / float(min(extract_image_size(image)))
+            if alpha < 4.0:
+                return F.rescale(image, factor=alpha)
+            else:
+                return cast(
+                    torch.Tensor,
+                    F.resize(
+                        image,
+                        (self.minimal_size, self.minimal_size),
+                        self.interpolation_mode,
+                    ),
+                )
+        return image
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["interpolation_mode"] = self.interpolation_mode
+        dct["maximal_size"] = self.maximal_size
+        dct["minimal_size"] = self.minimal_size
+        return dct
 
 
 def image_transform(edge_size: int = 768,) -> ComposedTransform:
-    class OptionalRescale(Transform):
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L49-L68
-        def __init__(
-            self, interpolation_mode: str = "bilinear",
-        ):
-            super().__init__()
-            self.interpolation_mode = interpolation_mode
-
-        def forward(
-            self, image: torch.Tensor, maximal_size: int = 1800, minimal_size: int = 800
-        ) -> torch.Tensor:
-            if max(image.shape) > maximal_size:
-                return F.rescale(
-                    image, factor=maximal_size / max(extract_image_size(image))
-                )
-            if min(image.shape) < minimal_size:
-                alpha = minimal_size / float(min(extract_image_size(image)))
-                if alpha < 4.0:
-                    return F.rescale(image, factor=alpha)
-                else:
-                    return cast(
-                        torch.Tensor,
-                        F.resize(
-                            image, (minimal_size, minimal_size), self.interpolation_mode
-                        ),
-                    )
-            return image
-
-        def _properties(self) -> Dict[str, Any]:
-            dct = super()._properties()
-            if self.interpolation_mode != "bilinear":
-                dct["interpolation_mode"] = self.interpolation_mode
-            return dct
-
     transforms = (
-        OptionalRescale(),
+        BoundedRescale(),
         ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     )
@@ -85,7 +99,7 @@ class WikiArt(ImageFolderDataset):
         style: str,
         transform: Optional[nn.Module] = None,
         download: bool = False,
-    ):
+    ) -> None:
         self.root = root = path.abspath(path.expanduser(root))
         self.style = self._verify_style(style)
 
@@ -114,7 +128,7 @@ class WikiArt(ImageFolderDataset):
     def url(self) -> str:
         return f"{self.BASE_URL}{path.basename(self.archive)}"
 
-    def download(self):
+    def download(self) -> None:
         if path.exists(self.sub_dir):
             msg = (
                 f"The directory {self.sub_dir} already exists. If you want to "
@@ -180,7 +194,12 @@ def batch_sampler(
 ) -> FiniteCycleBatchSampler:
 
     if num_batches is None:
+        # The num_iterations are split up into multiple epochs with corresponding
+        # num_batches:
+        # The number of epochs is defined in _nst.training .
+        # 300_000 = 1 * 300_000
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L68
+        # 300_000 = 3 * 100_000
         num_batches = 300_000 if impl_params else 100_000
 
     if batch_size is None:
