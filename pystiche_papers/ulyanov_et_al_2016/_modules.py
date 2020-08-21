@@ -16,7 +16,7 @@ def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tenso
 
 
 class AddNoiseChannels(nn.Module):
-    r"""Adds noise channels in the size of the input to the input.
+    r"""Adds white noise channels to the input.
 
     Args:
         in_channels: Number of input channels.
@@ -59,8 +59,10 @@ class HourGlassBlock(SequentialWithOutChannels):
     r"""HourGlassBlock from :cite:`ULVL2016`.
 
     Args:
-        intermediate: Middle :class:`~torch.nn.Module` of the block. The
-        ``out_channels`` is taken from ``intermediate``.
+        intermediate: Module in between the down- and upsampling.
+        
+    Attributes:
+        out_channels: ``ìntermediate.out_channels``
     """
 
     def __init__(self, intermediate: nn.Module):
@@ -170,7 +172,7 @@ class ConvSequence(SequentialWithOutChannels):
 
     Each sequence contains three
     :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` blocks while the
-    first two have a ``kernel_size of 3`` and the last one a ``kernel_size of 1``.
+    first two uses ``kernel_size == 3``, the last one uses ``kernel_size == 1``.
 
     Args:
         in_channels: Number of channels in the input.
@@ -217,11 +219,10 @@ class ConvSequence(SequentialWithOutChannels):
 
 
 class JoinBlock(nn.Module):
-    r"""JoinBlock from :cite:`ULVL2016`.
+    r"""JoinBlock from :cite:`ULVL2016` without upsampling.
 
-    This block cats an arbitrary number of inputs along the ``channel _dim`` with
-    prefixed normalization modules. It therefore corresponds to the ``JoinBlock`` from
-    the paper only without upsample block.
+    This block concatenates an arbitrary number of inputs along the ``channel _dim`` with
+    prefixed normalization modules.
 
     Args:
         branch_in_channels: Number of channels in the branch input.
@@ -276,12 +277,12 @@ class JoinBlock(nn.Module):
 class BranchBlock(nn.Module):
     r"""BranchBlock from :cite:`ULVL2016`.
 
-    Joins the branch from the previous pyramid with the current level using a
+    Joins the branch from the previous pyramid level with the current using a
     :class:`~pystiche_paper.ulyanov_et_al_2016._modules.JoinBlock`.
 
     Args:
-        deep_branch: Input from the previous pyramid.
-        shallow_branch: Input from the current level.
+        deep_branch: Previous pyramid level.
+        shallow_branch: Current pyramid level.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between two reference implementations. For
@@ -338,7 +339,7 @@ def level(
     ``shallow_branch``.
 
     Args:
-        prev_level_block: Optional Input from the previous level. If ``None``, only one
+        prev_level_block: Previous pyramid level. If given, it is incorporated in the current level.
             ConvSequence is returned.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
