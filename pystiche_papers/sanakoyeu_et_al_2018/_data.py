@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, Dict, Optional, Sized, cast
+from typing import Any, Dict, Optional, Sized
 
 import torch
 from torch import nn
@@ -30,41 +30,52 @@ class ClampSize(Transform):
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L49-L68
     def __init__(
         self,
+        min_edge_size: int = 800,
+        max_edge_size: int = 1800,
         interpolation_mode: str = "bilinear",
-        maximal_size: int = 1800,
-        minimal_size: int = 800,
     ):
         super().__init__()
+
+        if max_edge_size < min_edge_size:
+            raise ValueError(
+                f"max_edge_size cannot be smaller than min_edge_size: "
+                f"{max_edge_size} < {min_edge_size}"
+            )
+
+        self.max_edge_size = max_edge_size
+        self.min_edge_size = min_edge_size
         self.interpolation_mode = interpolation_mode
-        self.maximal_size = maximal_size
-        self.minimal_size = minimal_size
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        if max(image.shape) > self.maximal_size:
-            return cast(torch.Tensor, F.resize(image, self.maximal_size, edge="long"))
+        short_edge_size, long_edge_size = sorted(extract_image_size(image))
 
-        if min(image.shape) < self.minimal_size:
-            alpha = self.minimal_size / float(min(extract_image_size(image)))
-            if alpha < 4.0:
-                return cast(
-                    torch.Tensor, F.resize(image, self.minimal_size, edge="short")
-                )
-            else:
-                return cast(
-                    torch.Tensor,
-                    F.resize(
-                        image,
-                        (self.minimal_size, self.minimal_size),
-                        self.interpolation_mode,
-                    ),
-                )
-        return image
+        if (
+            short_edge_size >= self.min_edge_size
+            and long_edge_size <= self.max_edge_size
+        ):
+            return image
+
+        if long_edge_size > self.max_edge_size:
+            size = self.max_edge_size
+            edge = "long"
+        else:  # short_edge_size < self.min_edge_size
+            size = (
+                self.min_edge_size
+                if short_edge_size / self.min_edge_size > 0.25
+                else (self.min_edge_size, self.min_edge_size)
+            )
+            edge = "short"
+
+        return F.resize(
+            image, size, edge=edge, interpolation_mode=self.interpolation_mode
+        )
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
-        dct["interpolation_mode"] = self.interpolation_mode
-        dct["maximal_size"] = self.maximal_size
-        dct["minimal_size"] = self.minimal_size
+        dct["min_edge_size"] = self.min_edge_size
+        dct["max_edge_size"] = self.max_edge_size
+        if self.interpolation_mode != "bilinear":
+            dct["interpolation_mode"] = self.interpolation_mode
         return dct
 
 
