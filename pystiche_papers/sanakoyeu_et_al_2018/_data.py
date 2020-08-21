@@ -20,6 +20,7 @@ __all__ = [
     "image_transform",
     "WikiArt",
     "style_dataset",
+    "dataset",
     "batch_sampler",
     "image_loader",
 ]
@@ -93,6 +94,7 @@ class WikiArt(ImageFolderDataset):
         "vincent-van-gogh_road-with-cypresses-1890": "6e629d6a03c65bc510bba8b619aad291",
         "wassily-kandinsky": "b506040ee2d038b8f3767125d04bde5f",
     }
+    STYLES = tuple(sorted(MD5_CHECKSUMS.keys()))
 
     def __init__(
         self,
@@ -111,7 +113,7 @@ class WikiArt(ImageFolderDataset):
         self.root = root
 
     def _verify_style(self, style: str) -> str:
-        return verify_str_arg(style, "style", tuple(self.MD5_CHECKSUMS.keys()))
+        return verify_str_arg(style, "style", self.STYLES)
 
     @property
     def sub_dir(self) -> str:

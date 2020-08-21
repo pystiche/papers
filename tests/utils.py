@@ -2,6 +2,7 @@ import contextlib
 import itertools
 import os
 import shutil
+import tarfile
 import tempfile
 from os import path
 
@@ -20,6 +21,7 @@ __all__ = [
     "create_guides",
     "call_args_list_to_dict",
     "generate_param_combinations",
+    "make_tar",
 ]
 
 
@@ -132,3 +134,12 @@ def generate_param_combinations(**kwargs):
     iterables = tuple(kwargs.values())
     for params in itertools.product(*iterables):
         yield dict(zip(names, params))
+
+
+def make_tar(file, dir, name=None, compress=None):
+    if name is None:
+        name = path.basename(dir)
+    if compress is None:
+        compress = file.endswith(".gz")
+    with tarfile.open(file, "w:gz" if compress else "w") as fh:
+        fh.add(dir, arcname=name)
