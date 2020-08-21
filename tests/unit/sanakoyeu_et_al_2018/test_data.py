@@ -26,12 +26,12 @@ def test_image_transform():
     ptu.assert_allclose(actual, desired)
 
 
-def test_BoundedRescale_too_large_image():
+def test_ClampSize_too_large_image():
     make_reproducible()
     image = torch.rand(1, 1, 2000, 800)
 
     make_reproducible()
-    rescale = paper.BoundedRescale()
+    rescale = paper.ClampSize()
     actual = rescale(image)
 
     desired = F.rescale(image, factor=0.9)
@@ -39,22 +39,22 @@ def test_BoundedRescale_too_large_image():
     ptu.assert_allclose(actual, desired)
 
 
-def test_BoundedRescale_too_small_image():
+def test_ClampSize_too_small_image():
     make_reproducible()
     image = torch.rand(1, 1, 400, 800)
 
-    rescale = paper.BoundedRescale()
+    rescale = paper.ClampSize()
     actual = rescale(image)
     desired = F.rescale(image, factor=2)
 
     ptu.assert_allclose(actual, desired)
 
 
-def test_BoundedRescale_very_small_image():
+def test_ClampSize_very_small_image():
     make_reproducible()
     image = torch.rand(1, 1, 16, 16)
 
-    rescale = paper.BoundedRescale()
+    rescale = paper.ClampSize()
     actual = rescale(image)
 
     desired = F.resize(image, (800, 800), "bilinear")

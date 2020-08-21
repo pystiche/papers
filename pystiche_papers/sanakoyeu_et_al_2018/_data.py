@@ -16,7 +16,7 @@ from ..data.utils import FiniteCycleBatchSampler
 from ..utils import OptionalGrayscaleToFakegrayscale
 
 __all__ = [
-    "BoundedRescale",
+    "ClampSize",
     "image_transform",
     "WikiArt",
     "style_dataset",
@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-class BoundedRescale(Transform):
+class ClampSize(Transform):
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L49-L68
     def __init__(
         self,
@@ -40,13 +40,14 @@ class BoundedRescale(Transform):
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         if max(image.shape) > self.maximal_size:
-            return F.rescale(
-                image, factor=self.maximal_size / max(extract_image_size(image))
-            )
+            return cast(torch.Tensor, F.resize(image, self.maximal_size, edge="long"))
+
         if min(image.shape) < self.minimal_size:
             alpha = self.minimal_size / float(min(extract_image_size(image)))
             if alpha < 4.0:
-                return F.rescale(image, factor=alpha)
+                return cast(
+                    torch.Tensor, F.resize(image, self.minimal_size, edge="short")
+                )
             else:
                 return cast(
                     torch.Tensor,
@@ -68,7 +69,7 @@ class BoundedRescale(Transform):
 
 def image_transform(edge_size: int = 768,) -> ComposedTransform:
     transforms = (
-        BoundedRescale(),
+        ClampSize(),
         ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     )
