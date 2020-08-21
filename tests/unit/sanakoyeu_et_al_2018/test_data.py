@@ -8,12 +8,11 @@ from pystiche.data import ImageFolderDataset
 from pystiche.image import transforms
 from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
-from pystiche_papers.utils import make_reproducible
 
 
 def test_image_transform():
     edge_size = 16
-    make_reproducible()
+    utils.make_reproducible()
     image = torch.rand(1, 1, 800, 800)
 
     utils.make_reproducible()
