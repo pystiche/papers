@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset, Sampler
 from torchvision.datasets.utils import download_and_extract_archive
 
 from pystiche.data import ImageFolderDataset
-from pystiche.image.transforms import ComposedTransform, Transform, ValidRandomCrop
+from pystiche.image import transforms
 from pystiche.image.transforms import functional as F
 from pystiche.image.utils import extract_image_size
 from pystiche.misc import verify_str_arg
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class ClampSize(Transform):
+class ClampSize(transforms.Transform):
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L49-L68
     def __init__(
         self,
@@ -79,13 +79,12 @@ class ClampSize(Transform):
         return dct
 
 
-def image_transform(edge_size: int = 768,) -> ComposedTransform:
-    transforms = (
+def image_transform(edge_size: int = 768,) -> transforms.ComposedTransform:
+    return transforms.ComposedTransform(
         ClampSize(),
-        ValidRandomCrop((edge_size, edge_size)),
+        transforms.ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     )
-    return ComposedTransform(*transforms)
 
 
 class WikiArt(ImageFolderDataset):
@@ -194,7 +193,9 @@ def style_dataset(
 #     return None
 
 
-def dataset(root: str, transform: Optional[Transform] = None,) -> ImageFolderDataset:
+def dataset(
+    root: str, transform: Optional[transforms.Transform] = None,
+) -> ImageFolderDataset:
     if transform is None:
         transform = image_transform()
     return ImageFolderDataset(root, transform=transform)
