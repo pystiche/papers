@@ -105,7 +105,7 @@ def activation(
 class ConvBlock(SequentialWithOutChannels):
     r"""ConvBlock from :cite:`ULVL2016`.
 
-    This block contains a convolution followed by normalization and activation. The
+    This block comprises a convolution followed by normalization and activation. The
     input is reflection-padded to preserve the size.
 
     Args:
@@ -173,8 +173,8 @@ class ConvSequence(SequentialWithOutChannels):
     r"""Sequence of convolutional blocks that occurs repeatedly in :cite:`ULVL2016`.
 
     Each sequence contains three
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` blocks while the
-    first two uses ``kernel_size == 3``, the last one uses ``kernel_size == 1``.
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` s. The
+    first two use ``kernel_size == 3`` and the third one uses ``kernel_size == 1``.
 
     Args:
         in_channels: Number of channels in the input.
@@ -329,16 +329,15 @@ def level(
 ) -> SequentialWithOutChannels:
     r"""Defines one level of the transformer from :cite:`ULVL2016`.
 
-    A level contains :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`
-    if it is the first level otherwise the ``prev_level_block`` is put into
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.HourGlassBlock` and joined with
-    a :class:`~pystiche_paper.ulyanov_et_al_2016._modules.BranchBlock` and finally
-    followed by another
-    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvSequence`.
+    The basic building block of a level is a :class:`ConvSequence` . If a previous 
+    level exists, i. e. the current level is not the first one, the previous level is 
+    incorporated by embedding it in an :class:`HourGlassBlock`. The outputs of both 
+    levels are joined with a :class:`BranchBlock` and finally fed through another 
+    :class:`ConvSequence`.
 
     Args:
         prev_level_block: Previous pyramid level. If given, it is incorporated in the
-            current level. ConvSequence is returned.
+            current level.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see
