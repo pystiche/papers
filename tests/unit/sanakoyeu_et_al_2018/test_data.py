@@ -205,16 +205,13 @@ def test_content_dataset(subtests, patch_collect_images):
         assert isinstance(dataset.transform, type(paper.image_transform()))
 
 
-def test_batch_sampler():
-    batch_sampler = paper.batch_sampler(())
-
-    assert isinstance(batch_sampler, RandomSampler)
-
-
-def test_batch_sampler_num_samples_default(subtests):
+def test_batch_sampler(subtests):
     for impl_params, num_samples in ((True, 300_000), (False, 100_000)):
+        batch_sampler = paper.batch_sampler((), impl_params=impl_params)
+
+        assert isinstance(batch_sampler, RandomSampler)
+
         with subtests.test(impl_params=impl_params):
-            batch_sampler = paper.batch_sampler((), impl_params=impl_params)
             assert batch_sampler.num_samples == num_samples
 
 
