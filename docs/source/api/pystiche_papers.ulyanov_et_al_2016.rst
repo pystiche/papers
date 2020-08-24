@@ -61,7 +61,7 @@ The following table provides an overview of the parameters:
 
   - the :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`.
 
-The ``layers`` have either configuration ``1``
+The ``style_layers`` have either configuration ``1``
 ``("relu1_1", "relu2_1", "relu3_1", "relu4_1")`` or  configuration ``2``
 ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
 
@@ -83,6 +83,7 @@ The ``layers`` have either configuration ``1``
 +---------------------------+-------------+---------------------+
 | ``style_layers``          | ``1``       | ``2``               |
 +---------------------------+-------------+---------------------+
+
 
 .. automodule:: pystiche_papers.ulyanov_et_al_2016
 

@@ -58,9 +58,11 @@ def upsample() -> nn.Upsample:
 class HourGlassBlock(SequentialWithOutChannels):
     r"""HourGlassBlock from :cite:`ULVL2016`.
 
-    This block comprises a downsample to half the size using
-    :class:`~torch.nn.AvgPool2d` followed by a processing with ``intermediate`` and an
-    upsample to twice the size using :class:`~torch.nn.Upsample`.
+    This block comprises a
+    :func:`~pystiche_paper.ulyanov_et_al_2016._modules.downsample`  to half the size
+    using :class:`~torch.nn.AvgPool2d` followed by a processing with ``intermediate``
+    and an :func:`~pystiche_paper.ulyanov_et_al_2016._modules.upsample` to twice the
+    size using :class:`~torch.nn.Upsample`.
 
     Args:
         intermediate: Module in between the down- and upsampling.
