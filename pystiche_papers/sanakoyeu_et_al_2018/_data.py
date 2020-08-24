@@ -84,6 +84,8 @@ class ClampSize(transforms.Transform):
 
 
 def image_transform(edge_size: int = 768,) -> transforms.ComposedTransform:
+    # TODO: Add image augmentator with random affine transform hsv transfomration and
+    #  random flip of the image
     return transforms.ComposedTransform(
         ClampSize(),
         transforms.ValidRandomCrop((edge_size, edge_size)),
