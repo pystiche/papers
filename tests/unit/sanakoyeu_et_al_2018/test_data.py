@@ -210,8 +210,8 @@ def test_batch_sampler(subtests):
 
     assert isinstance(batch_sampler, RandomSampler)
 
-    with subtests.test("num_batches"):
-        assert batch_sampler.batch_size == 1
+    with subtests.test("num_samples"):
+        assert batch_sampler.num_samples == 1
 
 
 def test_batch_sampler_num_batches_default(subtests):
