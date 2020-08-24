@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Sized, Tuple, Union, cast
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data.sampler import RandomSampler
 from torchvision.datasets.utils import download_and_extract_archive
 
 from pystiche.data import ImageFolderDataset
@@ -12,7 +13,6 @@ from pystiche.image.transforms import functional as F
 from pystiche.image.utils import extract_image_size
 from pystiche.misc import verify_str_arg
 
-from ..data.utils import FiniteCycleBatchSampler
 from ..utils import OptionalGrayscaleToFakegrayscale
 
 __all__ = [
@@ -180,27 +180,19 @@ def content_dataset(
 
 
 def batch_sampler(
-    data_source: Sized,
-    impl_params: bool = True,
-    num_batches: Optional[int] = None,
-    batch_size: Optional[int] = None,
-) -> FiniteCycleBatchSampler:
+    data_source: Sized, impl_params: bool = True, num_samples: Optional[int] = None,
+) -> RandomSampler:
 
-    if num_batches is None:
+    if num_samples is None:
         # The num_iterations are split up into multiple epochs with corresponding
         # num_batches:
         # The number of epochs is defined in _nst.training .
         # 300_000 = 1 * 300_000
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L68
         # 300_000 = 3 * 100_000
-        num_batches = 300_000 if impl_params else 100_000
+        num_samples = 300_000 if impl_params else 100_000
 
-    if batch_size is None:
-        batch_size = 1
-
-    return FiniteCycleBatchSampler(
-        data_source, num_batches=num_batches, batch_size=batch_size
-    )
+    return RandomSampler(data_source, replacement=True, num_samples=num_samples)
 
 
 batch_sampler_ = batch_sampler
@@ -214,7 +206,7 @@ def image_loader(
     pin_memory: bool = True,
 ) -> DataLoader:
     if batch_sampler is None:
-        batch_sampler = batch_sampler_(dataset, impl_params=impl_params)
+        batch_sampler = cast(Sampler, batch_sampler_(dataset, impl_params=impl_params))
 
     return DataLoader(
         dataset,

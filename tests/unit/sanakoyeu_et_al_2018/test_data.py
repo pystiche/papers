@@ -8,6 +8,7 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import RandomSampler
 
 import pystiche
 import pystiche.image.transforms.functional as F
@@ -19,7 +20,6 @@ from pystiche.image import (
     transforms,
     write_image,
 )
-from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
@@ -208,17 +208,17 @@ def test_content_dataset(subtests, patch_collect_images):
 def test_batch_sampler(subtests):
     batch_sampler = paper.batch_sampler(())
 
-    assert isinstance(batch_sampler, FiniteCycleBatchSampler)
+    assert isinstance(batch_sampler, RandomSampler)
 
     with subtests.test("num_batches"):
         assert batch_sampler.batch_size == 1
 
 
 def test_batch_sampler_num_batches_default(subtests):
-    for impl_params, num_batches in ((True, 300_000), (False, 100_000)):
+    for impl_params, num_samples in ((True, 300_000), (False, 100_000)):
         with subtests.test(impl_params=impl_params):
             batch_sampler = paper.batch_sampler((), impl_params=impl_params)
-            assert batch_sampler.num_batches == num_batches
+            assert batch_sampler.num_samples == num_samples
 
 
 def test_image_loader(subtests):
