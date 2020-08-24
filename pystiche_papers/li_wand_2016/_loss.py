@@ -185,10 +185,10 @@ def style_loss(
 
     if target_transforms is None:
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
-        num_scale_steps = 1 if impl_params else 3
+        num_scale_steps = 0 if impl_params else 3
         scale_step_width = 5e-2
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
-        num_rotate_steps = 1 if impl_params else 2
+        num_rotate_steps = 0 if impl_params else 2
         rotate_step_width = 7.5
         target_transforms = MRFOperator.scale_and_rotate_transforms(
             num_scale_steps=num_scale_steps,
