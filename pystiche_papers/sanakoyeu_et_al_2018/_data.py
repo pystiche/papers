@@ -20,7 +20,7 @@ __all__ = [
     "image_transform",
     "WikiArt",
     "style_dataset",
-    "dataset",
+    "content_dataset",
     "batch_sampler",
     "image_loader",
 ]
@@ -169,35 +169,9 @@ def style_dataset(
     return WikiArt(root, style, transform=transform, download=download)
 
 
-# TODO: Implement this
-# def images(root: Optional[str] = None,
-#   download: bool = True,
-#   overwrite: bool = False):
-#
-#     # base_sanakoyeu =
-#     "https://hcicloud.iwr.uni-heidelberg.de/index.php/s/NcJj2oLBTYuT1tf/download?path=%2F&files="
-#     # tar1 = "berthe-morisot.tar.gz"
-#     # tar2 = "edvard-munch.tar.gz"
-#     # tar3 = "el-greco.tar.gz"
-#     # tar4 = "ernst-ludwig-kirchner.tar.gz"
-#     # tar5 = "jackson-pollock.tar.gz"
-#     # tar6 = "monet_water-lilies-1914.tar.gz"
-#     # tar7 = "nicholas-roerich.tar.gz"
-#     # tar8 = "pablo-picasso.tar.gz"
-#     # tar9 = "paul-cezanne.tar.gz"
-#     # tar10 = "paul-gauguin.tar.gz"
-#     # tar11 = "sample_photographs.tar.gz"
-#     # tar12 = "samuel-peploe.tar.gz"
-#     # tar13 = "vincent-van-gogh_road-with-cypresses-1890.tar.gz"
-#     # tar14 = "wassily-kandinsky.tar.gz"
-#     # places365_url = (
-#     #     "data.csail.mit.edu/places/places365/train_large_places365standard.tar"
-#     # )
-#
-#     return None
-
-
-def dataset(
+# TODO: implement this properly with download, ...
+#  URL: data.csail.mit.edu/places/places365/train_large_places365standard.tar
+def content_dataset(
     root: str, transform: Optional[transforms.Transform] = None,
 ) -> ImageFolderDataset:
     if transform is None:
