@@ -196,8 +196,8 @@ def test_style_dataset_smoke(subtests, wiki_art_style, patch_collect_images, tmp
         assert isinstance(dataset.transform, type(paper.image_transform()))
 
 
-def test_dataset(subtests, patch_collect_images):
-    dataset = paper.dataset("root")
+def test_content_dataset(subtests, patch_collect_images):
+    dataset = paper.content_dataset("root")
 
     assert isinstance(dataset, ImageFolderDataset)
 
