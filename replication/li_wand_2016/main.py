@@ -5,6 +5,7 @@ from os import path
 import pystiche_papers.li_wand_2016 as paper
 from pystiche.image import write_image
 from pystiche.misc import get_device
+from pystiche.ops import MRFOperator
 from pystiche.optim import OptimLogger
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
@@ -30,7 +31,7 @@ def figure_6(args):
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L65-L70
         style_loss_kwargs = {
-            "target_transforms": paper._loss.MRFOperator.scale_and_rotate_transforms(
+            "target_transforms": MRFOperator.scale_and_rotate_transforms(
                 num_scale_steps=1,
                 scale_step_width=5e-2,
                 num_rotate_steps=1,
