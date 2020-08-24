@@ -3,7 +3,6 @@ from typing import List, Tuple, Union, cast
 import torch
 from torch import nn
 
-
 from ..utils import ResidualBlock, same_size_padding
 
 __all__ = [
@@ -159,6 +158,12 @@ class ConvTransponseBlock(nn.Module):
 
 
 def residual_block(channels: int) -> ResidualBlock:
+    r"""Residualblock from :cite:`SKL+2018`.
+
+    Args:
+        channels: Number of channels in the input.
+
+    """
     in_channels = out_channels = channels
     kernel_size = 3
     padding = same_size_padding(kernel_size)

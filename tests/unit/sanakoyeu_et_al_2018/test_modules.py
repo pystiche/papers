@@ -5,7 +5,7 @@ from torch import nn
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
-from pystiche_papers.utils import ResidualBlock, same_size_padding
+from pystiche_papers.utils import Identity, ResidualBlock, same_size_padding
 
 
 def test_get_padding(subtests):
@@ -121,6 +121,9 @@ def test_residual_block(subtests, input_image):
     with subtests.test("residual"):
         assert isinstance(residual_block.residual, nn.Sequential)
         assert len(residual_block.residual) == 4
+
+    with subtests.test("shortcut"):
+        assert isinstance(residual_block.shortcut, Identity)
 
     with subtests.test("forward size"):
         output_image = residual_block(input_image)
