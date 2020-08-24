@@ -58,6 +58,10 @@ def upsample() -> nn.Upsample:
 class HourGlassBlock(SequentialWithOutChannels):
     r"""HourGlassBlock from :cite:`ULVL2016`.
 
+    This block comprises a downsample to half the size using
+    :class:`~torch.nn.AvgPool2d` followed by a processing with ``intermediate`` and an
+    upsample to twice the size using :class:`~torch.nn.Upsample`.
+
     Args:
         intermediate: Module in between the down- and upsampling.
 
@@ -329,10 +333,10 @@ def level(
 ) -> SequentialWithOutChannels:
     r"""Defines one level of the transformer from :cite:`ULVL2016`.
 
-    The basic building block of a level is a :class:`ConvSequence` . If a previous 
-    level exists, i. e. the current level is not the first one, the previous level is 
-    incorporated by embedding it in an :class:`HourGlassBlock`. The outputs of both 
-    levels are joined with a :class:`BranchBlock` and finally fed through another 
+    The basic building block of a level is a :class:`ConvSequence` . If a previous
+    level exists, i. e. the current level is not the first one, the previous level is
+    incorporated by embedding it in an :class:`HourGlassBlock`. The outputs of both
+    levels are joined with a :class:`BranchBlock` and finally fed through another
     :class:`ConvSequence`.
 
     Args:
