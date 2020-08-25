@@ -90,7 +90,7 @@ def test_ConvBlock(subtests):
                     )
 
 
-def test_ConvTransponseBlock(subtests, input_image):
+def test_DeConvBlock(subtests, input_image):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 2

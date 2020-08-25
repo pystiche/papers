@@ -99,11 +99,10 @@ class ConvBlock(nn.Sequential):
         super().__init__(*modules)
 
 
-class ConvTransponseBlock(nn.Module):
-    r"""ConvTransponse from :cite:`SKL+2018`.
+class DeConvBlock(nn.Module):
+    r"""DeConvBlock from :cite:`SKL+2018`.
 
-    This block upsamples the input to twice the size followed by a convolution,
-    a normalization and an optional activation.
+    This block upsamples the input to twice the size followed by a :class:`ConvBlock`.
 
     Args:
         in_channels: Number of channels in the input.
