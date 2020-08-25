@@ -61,7 +61,7 @@ class ConvBlock(nn.Sequential):
         stride: Stride of the convolution. Defaults to ``1``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"valid"``.
-        act: The act is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
+        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
             a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or ``None`` for no
             activation. Defaults to ``"relu"``.
         inplace: If ``True`` perform the activation in-place.
@@ -112,7 +112,7 @@ class ConvTransponseBlock(nn.Module):
         stride: Stride of the interpolation. Defaults to ``2``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
-        act: The act is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
+        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
             a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or ``None`` for no
             activation. Defaults to ``"relu"``.
         inplace: If ``True`` perform the activation in-place.
@@ -158,7 +158,7 @@ class ConvTransponseBlock(nn.Module):
 
 
 def residual_block(channels: int) -> ResidualBlock:
-    r"""Residualblock from :cite:`SKL+2018`.
+    r"""Residual block from :cite:`SKL+2018`.
 
     Args:
         channels: Number of channels in the input.
