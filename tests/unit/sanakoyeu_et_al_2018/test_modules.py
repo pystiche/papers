@@ -28,7 +28,7 @@ def test_get_padding_wrong_string():
 def test_get_activation(subtests):
     for str_act, desired in (("relu", nn.ReLU), ("lrelu", nn.LeakyReLU)):
         with subtests.test(str_act):
-            actual = paper.activation(str_act)
+            actual = paper.get_activation(str_act)
 
             assert isinstance(actual, desired)
 
@@ -42,7 +42,7 @@ def test_get_activation(subtests):
 
 def test_get_activation_wrong_string():
     with pytest.raises(ValueError):
-        paper.activation("")
+        paper.get_activation("")
 
 
 def test_conv(subtests):
