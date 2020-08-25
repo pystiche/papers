@@ -3,9 +3,9 @@ from typing import List, Tuple, Union, cast
 import torch
 from torch import nn
 
-from ..utils import ResidualBlock, same_size_padding
-
 from pystiche.misc import verify_str_arg
+
+from ..utils import ResidualBlock, same_size_padding
 
 __all__ = [
     "get_padding",
@@ -157,6 +157,11 @@ class ConvTransponseBlock(nn.Module):
 
 def residual_block(channels: int) -> ResidualBlock:
     r"""Residual block from :cite:`SKL+2018`.
+
+    This block comprises two
+    :class:`~pystiche_paper.sanakoyeu_et_al_2018._modules.ConvBlock` without activation
+    but respective prior reflection padding to maintain the input size as a ``residual``
+    of a :class:`pystiche_papers.utils.modules.ResidualBlock`.
 
     Args:
         channels: Number of channels in the input.
