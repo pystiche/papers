@@ -5,6 +5,8 @@ from torch import nn
 
 from ..utils import ResidualBlock, same_size_padding
 
+from pystiche.misc import verify_str_arg
+
 __all__ = [
     "get_padding",
     "get_activation",
@@ -18,21 +20,17 @@ __all__ = [
 def get_padding(
     padding: str, kernel_size: Union[Tuple[int, int], int]
 ) -> Union[Tuple[int, int], int]:
+    padding = verify_str_arg(padding, valid_args=["same", "valid"])
     if padding == "same":
         return cast(Tuple[int, int], same_size_padding(kernel_size))
-    elif padding == "valid":
-        return 0
-    else:
-        raise ValueError
+    return 0
 
 
 def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
+    act = verify_str_arg(act, valid_args=["relu", "lrelu"])
     if act == "relu":
         return nn.ReLU(inplace=inplace)
-    elif act == "lrelu":
-        return nn.LeakyReLU(negative_slope=0.2, inplace=inplace)
-    else:
-        raise ValueError
+    return nn.LeakyReLU(negative_slope=0.2, inplace=inplace)
 
 
 def conv(
