@@ -49,8 +49,8 @@ def conv(
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
-    This block comprises a :class:`~torch.nn.Conv2d` followed by normalization with
-    :class:`~torch.nn.InstanceNorm2d` and if ``act is not None`` an activation.
+    This block comprises a convolution followed by normalization and if
+    ``act is not None`` an activation.
 
     Args:
         in_channels: Number of channels in the input.
@@ -100,8 +100,8 @@ class ConvBlock(nn.Sequential):
 class ConvTransponseBlock(nn.Module):
     r"""ConvTransponse from :cite:`SKL+2018`.
 
-    This block comprises a :func:`~torch.nn.functional.interpolate` followed by a
-    :class:`~pystiche_paper.sanakoyeu_et_al_2018._modules.ConvBlock`.
+    This block comprises an interpolation to twice the size followed by a convolution,
+    a normalization and if ``act is not None`` an activation.
 
     Args:
         in_channels: Number of channels in the input.
