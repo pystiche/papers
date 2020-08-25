@@ -7,7 +7,7 @@ from ..utils import ResidualBlock, same_size_padding
 
 __all__ = [
     "get_padding",
-    "activation",
+    "get_activation",
     "conv",
     "ConvBlock",
     "ConvTransponseBlock",
@@ -26,7 +26,7 @@ def get_padding(
         raise ValueError
 
 
-def activation(act: str = "relu", inplace: bool = True) -> nn.Module:
+def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
     if act == "relu":
         return nn.ReLU(inplace=inplace)
     elif act == "lrelu":
@@ -61,9 +61,9 @@ class ConvBlock(nn.Sequential):
         stride: Stride of the convolution. Defaults to ``1``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"valid"``.
-        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
-            a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or ``None`` for no
-            activation. Defaults to ``"relu"``.
+        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
+            ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
+            ``None`` for no activation. Defaults to ``"relu"``.
         inplace: If ``True`` perform the activation in-place.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
@@ -94,7 +94,7 @@ class ConvBlock(nn.Sequential):
         modules.append(nn.InstanceNorm2d(out_channels))
 
         if act is not None:
-            modules.append(activation(act=act, inplace=inplace))
+            modules.append(get_activation(act=act, inplace=inplace))
 
         super().__init__(*modules)
 
@@ -112,9 +112,9 @@ class ConvTransponseBlock(nn.Module):
         stride: Stride of the interpolation. Defaults to ``2``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
-        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`, ``"lrelu"`` for
-            a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or ``None`` for no
-            activation. Defaults to ``"relu"``.
+        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
+            ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
+            ``None`` for no activation. Defaults to ``"relu"``.
         inplace: If ``True`` perform the activation in-place.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
