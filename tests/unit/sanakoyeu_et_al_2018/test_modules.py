@@ -84,15 +84,15 @@ def test_DeConvBlock(subtests, input_image):
     kernel_size = 3
     stride = 2
 
-    conv_transponse_block = paper.ConvTransponseBlock(
+    deconv_block = paper.DeConvBlock(
         in_channels, out_channels, kernel_size, stride=stride
     )
 
-    output_image = conv_transponse_block(input_image)
+    output_image = deconv_block(input_image)
     assert isinstance(output_image, torch.Tensor)
 
     with subtests.test("conv_module"):
-        assert isinstance(conv_transponse_block.conv, paper.ConvBlock)
+        assert isinstance(deconv_block.conv, paper.ConvBlock)
 
     with subtests.test("interpolate"):
         desired_image = nn.functional.interpolate(

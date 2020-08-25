@@ -12,7 +12,7 @@ __all__ = [
     "get_activation",
     "conv",
     "ConvBlock",
-    "ConvTransponseBlock",
+    "DeConvBlock",
     "residual_block",
 ]
 
