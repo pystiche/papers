@@ -1,4 +1,4 @@
-from typing import Any, Sequence, Tuple, Union, cast
+from typing import Any, Sequence, Tuple, Union
 
 import torch
 from torch import optim
@@ -121,10 +121,9 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`LW2016`."""
-    multi_layer_encoder = enc.vgg19_multi_layer_encoder(  # type: ignore[attr-defined]
+    return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
-    return cast(enc.VGGMultiLayerEncoder, multi_layer_encoder)
 
 
 def optimizer(input_image: torch.Tensor) -> optim.LBFGS:

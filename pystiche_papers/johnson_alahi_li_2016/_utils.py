@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple, TypeVar, cast
+from typing import Dict, Optional, Tuple, TypeVar
 
 from torch import nn, optim
 
@@ -48,10 +48,9 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
         impl_params: If ``True``, the necessary preprocessing of the images is
             performed internally.
     """
-    multi_layer_encoder = enc.vgg16_multi_layer_encoder(  # type: ignore[attr-defined]
+    return enc.vgg16_multi_layer_encoder(
         weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True
     )
-    return cast(enc.VGGMultiLayerEncoder, multi_layer_encoder)
 
 
 def optimizer(transformer: nn.Module) -> optim.Adam:

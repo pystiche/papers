@@ -1,5 +1,3 @@
-from typing import cast
-
 import torch
 from torch import nn, optim
 
@@ -30,10 +28,9 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
             the ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
-    multi_layer_encoder = enc.vgg19_multi_layer_encoder(  # type: ignore[attr-defined]
+    multi_layer_encoder = enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
-    multi_layer_encoder = cast(enc.VGGMultiLayerEncoder, multi_layer_encoder)
     if impl_params:
         return multi_layer_encoder
 
