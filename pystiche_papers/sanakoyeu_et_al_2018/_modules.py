@@ -23,7 +23,8 @@ def get_padding(
     padding = verify_str_arg(padding, valid_args=["same", "valid"])
     if padding == "same":
         return cast(Tuple[int, int], same_size_padding(kernel_size))
-    return 0
+    else:  # padding == "valid"
+        return 0
 
 
 def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
@@ -50,7 +51,8 @@ def conv(
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
-    This block comprises a convolution followed by a normalization and an optional activation.
+    This block comprises a convolution followed by a normalization and an optional
+    activation.
 
     Args:
         in_channels: Number of channels in the input.
@@ -101,7 +103,7 @@ class ConvTransponseBlock(nn.Module):
     r"""ConvTransponse from :cite:`SKL+2018`.
 
     This block upsamples the input to twice the size followed by a convolution,
-    a normalization and if ``act is not None`` an activation.
+    a normalization and an optional activation.
 
     Args:
         in_channels: Number of channels in the input.
