@@ -48,21 +48,27 @@ def noise(in_channels: int = 3, num_noise_channels: int = 3,) -> AddNoiseChannel
 
 
 def downsample(kernel_size: int = 2, stride: int = 2, padding: int = 0) -> nn.AvgPool2d:
+    r"""Downsample the input to half the size using an :class:`~torch.nn.AvgPool2d`.
+
+    Args:
+        kernel_size: Size of the kernel. Defaults to ``2``.
+        stride: Stride of the kernel. Defaults to ``2``.
+        padding: Padding to be added on both sides. Defaults to ``0``.
+
+    """
     return nn.AvgPool2d(kernel_size, stride=stride, padding=padding)
 
 
 def upsample() -> nn.Upsample:
+    r"""Upsample the input to twice the size using an :class:`~torch.nn.Upsample`."""
     return nn.Upsample(scale_factor=2.0, mode="nearest")
 
 
 class HourGlassBlock(SequentialWithOutChannels):
     r"""HourGlassBlock from :cite:`ULVL2016`.
 
-    This block comprises a
-    :func:`downsample`  to half the size
-    using :class:`~torch.nn.AvgPool2d` followed by a processing with ``intermediate``
-    and an :func:`upsample` to twice the
-    size using :class:`~torch.nn.Upsample`.
+    This block embeds an ``intermediate`` module between a :func:`downsample` and
+    :func:`upsample` operation.
 
     Args:
         intermediate: Module in between the down- and upsampling.
