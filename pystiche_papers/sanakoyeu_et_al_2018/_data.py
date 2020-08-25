@@ -169,8 +169,8 @@ def style_dataset(
     return WikiArt(root, style, transform=transform, download=download)
 
 
-# TODO: implement this properly with download, ...
-#  URL: data.csail.mit.edu/places/places365/train_large_places365standard.tar
+# TODO: replace this with torchvision.datasets.Places365 as soon as
+#  https://github.com/pytorch/vision/pull/2610 is part of a release
 def content_dataset(
     root: str, transform: Optional[transforms.Transform] = None,
 ) -> ImageFolderDataset:
