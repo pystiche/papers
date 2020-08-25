@@ -1,4 +1,4 @@
-from typing import Any, List, cast
+from typing import Any, List
 
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
@@ -18,10 +18,9 @@ __all__ = [
 
 
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
-    multi_layer_encoder = enc.vgg19_multi_layer_encoder(  # type: ignore[attr-defined]
+    return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
-    return cast(enc.VGGMultiLayerEncoder, multi_layer_encoder)
 
 
 def preprocessor() -> transforms.CaffePreprocessing:
