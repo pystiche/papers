@@ -30,7 +30,8 @@ def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
     act = verify_str_arg(act, valid_args=["relu", "lrelu"])
     if act == "relu":
         return nn.ReLU(inplace=inplace)
-    return nn.LeakyReLU(negative_slope=0.2, inplace=inplace)
+    else:  # act == "lrelu"
+        return nn.LeakyReLU(negative_slope=0.2, inplace=inplace)
 
 
 def conv(
@@ -49,8 +50,7 @@ def conv(
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
-    This block comprises a convolution followed by normalization and if
-    ``act is not None`` an activation.
+    This block comprises a convolution followed by a normalization and an optional activation.
 
     Args:
         in_channels: Number of channels in the input.
@@ -100,7 +100,7 @@ class ConvBlock(nn.Sequential):
 class ConvTransponseBlock(nn.Module):
     r"""ConvTransponse from :cite:`SKL+2018`.
 
-    This block comprises an interpolation to twice the size followed by a convolution,
+    This block upsamples the input to twice the size followed by a convolution,
     a normalization and if ``act is not None`` an activation.
 
     Args:
@@ -159,7 +159,7 @@ def residual_block(channels: int) -> ResidualBlock:
     r"""Residual block from :cite:`SKL+2018`.
 
     This block comprises two
-    :class:`~pystiche_paper.sanakoyeu_et_al_2018._modules.ConvBlock` without activation
+    :class:`ConvBlock` without activation
     but respective prior reflection padding to maintain the input size as a ``residual``
     of a :class:`pystiche_papers.utils.modules.ResidualBlock`.
 
