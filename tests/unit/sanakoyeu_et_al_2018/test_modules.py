@@ -19,12 +19,6 @@ def test_get_padding(subtests):
             assert actual == desired
 
 
-def test_get_padding_wrong_string():
-    kernel_size = 3
-    with pytest.raises(ValueError):
-        paper.get_padding("", kernel_size)
-
-
 def test_get_activation(subtests):
     for str_act, desired in (("relu", nn.ReLU), ("lrelu", nn.LeakyReLU)):
         with subtests.test(str_act):
@@ -38,11 +32,6 @@ def test_get_activation(subtests):
             if isinstance(actual, nn.LeakyReLU):
                 with subtests.test("slope"):
                     assert actual.negative_slope == pytest.approx(0.2)
-
-
-def test_get_activation_wrong_string():
-    with pytest.raises(ValueError):
-        paper.get_activation("")
 
 
 def test_conv(subtests):
