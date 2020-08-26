@@ -1,4 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from collections import OrderedDict
+from typing import List, Tuple, Union, cast, Dict
 
 import torch
 from torch import nn
@@ -21,6 +23,10 @@ __all__ = [
     "decoder",
     "Transformer",
     "transformer",
+    "get_transformation_block",
+    "TransformerBlock",
+    "DiscriminatorEncoder",
+    "prediction_module"
 ]
 
 
@@ -273,3 +279,193 @@ def transformer(style: Optional[str] = None,) -> Transformer:
 
     """
     return Transformer()
+
+
+def get_transformation_block(
+    in_channels: int,
+    kernel_size: Union[Tuple[int, int], int],
+    stride: Union[Tuple[int, int], int],
+    padding: Union[Tuple[int, int], int],
+    impl_params: bool = True,
+) -> nn.Module:
+    if impl_params:
+        return nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
+    return nn.Conv2d(in_channels, 3, kernel_size, stride=stride, padding=padding)
+
+
+class TransformerBlock(nn.Module):
+    r"""TransformerBlock from :cite:`SKL+2018`.
+
+    This block takes an image as input and produce a transformed image of the same size.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+        kernel_size: Size of the convolving kernel. Defaults to ``10``.
+        stride: Stride of the convolution. Defaults to ``1``.
+        padding: Padding of the input. It can be either ``"valid"`` for no padding or
+            ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+
+    If ``impl_params is True``, an :class:`~torch.nn.AvgPool2d` is used instead of a
+    :class:`~torch.nn.Conv2d` with :func:`~torch.nn.utils.weight_norm`.
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 3,
+        kernel_size: Union[Tuple[int, int], int] = 10,
+        stride: Union[Tuple[int, int], int] = 1,
+        padding: str = "same",
+        impl_params: bool = True,
+    ):
+        super().__init__()
+        self.impl_params = impl_params
+
+        padding = get_padding(padding, kernel_size)
+
+        self.forwardBlock = get_transformation_block(
+            in_channels, kernel_size, stride, padding, impl_params=impl_params,
+        )
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        if self.impl_params:
+            return cast(torch.Tensor, self.forwardBlock(input))
+        else:
+            return cast(torch.Tensor, nn.utils.weight_norm(self.forwardBlock(input)))
+
+
+def discriminator_encoder_modules(
+    in_channels: int = 3, inplace: bool = True,
+) -> Dict[str, nn.Sequential]:
+    # FIXME:  if/when the Python interpreter will learn to accept the correct signature
+    # https://stackoverflow.com/questions/41207128/how-do-i-specify-ordereddict-k-v-types-for-mypy-type-annotation
+
+    modules = OrderedDict(
+        {
+            "scale_0": ConvBlock(
+                in_channels,
+                128,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_1": ConvBlock(
+                128,
+                128,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_2": ConvBlock(
+                128,
+                256,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_3": ConvBlock(
+                256,
+                512,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_4": ConvBlock(
+                in_channels=512,
+                out_channels=512,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_5": ConvBlock(
+                512,
+                1024,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+            "scale_6": ConvBlock(
+                1024,
+                1024,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            ),
+        }
+    )
+    return cast(Dict[str, nn.Sequential], modules)
+
+
+class DiscriminatorEncoder(enc.MultiLayerEncoder):
+    r"""Encoder part of the Discriminator from :cite:`SKL+2018`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+    """
+
+    def __init__(self, in_channels: int = 3) -> None:
+        super().__init__(
+            self._collect_modules(
+                discriminator_encoder_modules(in_channels=in_channels)
+            )
+        )
+
+    def _collect_modules(
+        self, wrapped_modules: Dict[str, nn.Sequential]
+    ) -> List[Tuple[str, nn.Module]]:
+        modules = []
+        block = 0
+        for sequential in wrapped_modules.values():
+            for module in sequential._modules.values():
+                if isinstance(module, nn.Conv2d):
+                    name = f"conv{block}"
+                elif isinstance(module, nn.InstanceNorm2d):
+                    name = f"inst_n{block}"
+                else:  # isinstance(module, nn.LeakyReLU):
+                    name = f"lrelu{block}"
+                    # each LeakyReLU layer marks the end of the current block
+                    block += 1
+
+                modules.append((name, module))
+        return modules
+
+
+def prediction_module(
+    in_channels: int, kernel_size: Union[Tuple[int, int], int], padding: str = "same"
+) -> nn.Module:
+    r"""Prediction module from :cite:`SKL+2018`.
+
+    This block comprises a convolutional, which is used as an auxiliary classifier to
+    capture image details on different scales of the
+    :class:`~pystiche_paper.sanakoyeu_et_al_2018._modules.DiscriminatorEncoder`.
+
+    Args:
+        in_channels: Number of channels in the input.
+        kernel_size: Size of the convolving kernel.
+        padding: Padding of the input. It can be either be``"valid"`` for no padding or
+            ``"same"`` to keep the size. Defaults to ``"same"``.
+
+    """
+    return conv(
+        in_channels=in_channels,
+        out_channels=1,
+        kernel_size=kernel_size,
+        stride=1,
+        padding=padding,
+    )
