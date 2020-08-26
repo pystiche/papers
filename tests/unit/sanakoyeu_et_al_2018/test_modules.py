@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -198,6 +199,102 @@ def test_decoder(subtests, input_image):
         input = torch.randn(10, 10)
         ptu.assert_allclose(module(input), torch.tanh(input / 2))
 
+
+def test_get_transformation_block(subtests):
+    in_channels = out_channels = 3
+    kernel_size = 3
+    stride = 2
+    padding = 2
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            transformation_block = paper.get_transformation_block(
+                in_channels=in_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                impl_params=impl_params,
+            )
+
+            assert isinstance(
+                transformation_block, nn.AvgPool2d if impl_params else nn.Conv2d
+            )
+
+            with subtests.test("kernel_size"):
+                assert (
+                    transformation_block.kernel_size == misc.to_2d_arg(kernel_size)
+                    if not impl_params
+                    else kernel_size
+                )
+            with subtests.test("stride"):
+                assert (
+                    transformation_block.stride == misc.to_2d_arg(stride)
+                    if not impl_params
+                    else stride
+                )
+            with subtests.test("padding"):
+                assert (
+                    transformation_block.padding == misc.to_2d_arg(padding)
+                    if not impl_params
+                    else padding
+                )
+
+            if isinstance(transformation_block, nn.Conv2d):
+                with subtests.test("in_channels"):
+                    assert transformation_block.in_channels == in_channels
+                with subtests.test("out_channels"):
+                    assert transformation_block.out_channels == out_channels
+
+
+def test_TransformerBlock(subtests):
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            transformer_block = paper.TransformerBlock(impl_params=impl_params)
+
+            with subtests.test("forwardBlock"):
+                assert isinstance(
+                    transformer_block.forwardBlock,
+                    nn.AvgPool2d if impl_params else nn.Conv2d,
+                )
+
+            if not impl_params:
+                with subtests.test("weight_norm"):
+                    assert True  # TODO: Implement this test
+
+
+def test_discriminator_encoder_modules(subtests):
+    channel_config = [
+        (3, 128),
+        (128, 128),
+        (128, 256),
+        (256, 512),
+        (512, 512),
+        (512, 1024),
+        (1024, 1024),
+    ]
+    names = [
+        "scale_0",
+        "scale_1",
+        "scale_2",
+        "scale_3",
+        "scale_4",
+        "scale_5",
+        "scale_6",
+    ]
+
+    modules = paper.discriminator_encoder_modules()
+
+    assert isinstance(modules, OrderedDict)
+
+    with subtests.test("names"):
+        assert list(modules.keys()) == names
+
+    in_out_channels = []
+    for module in modules.values():
+        with subtests.test("modules"):
+            assert isinstance(module, paper.ConvBlock)
+            in_out_channels.append((module[0].in_channels, module[0].out_channels))
+
+
     with subtests.test("channel_config"):
         assert in_out_channels == channel_config
 
@@ -219,3 +316,27 @@ def test_Transformer_smoke(subtests, input_image):
 def test_transformer():
     transformer = paper.transformer()
     assert isinstance(transformer, paper.Transformer)
+def test_prediction_module(subtests):
+    in_channels = 3
+    kernel_size = 3
+
+    prediction_module = paper.prediction_module(in_channels, kernel_size)
+
+    assert isinstance(prediction_module, nn.Conv2d)
+
+    with subtests.test("in_channels"):
+        assert prediction_module.in_channels == in_channels
+    with subtests.test("out_channels"):
+        assert prediction_module.out_channels == 1
+
+    with subtests.test("kernel_size"):
+        assert prediction_module.kernel_size == misc.to_2d_arg(kernel_size)
+
+    with subtests.test("stride"):
+        assert prediction_module.stride == misc.to_2d_arg(1)
+
+    with subtests.test("padding"):
+        assert prediction_module.padding == misc.to_2d_arg(
+            same_size_padding(kernel_size)
+        )
+
