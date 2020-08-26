@@ -317,6 +317,22 @@ def test_Transformer_smoke(subtests, input_image):
 def test_transformer():
     transformer = paper.transformer()
     assert isinstance(transformer, paper.Transformer)
+
+
+def test_DiscriminatorEncoder():
+    modules = []
+    for i in range(0, 7):
+        modules.append(("conv" + str(i), nn.Conv2d))
+        modules.append(("inst_n" + str(i), nn.InstanceNorm2d))
+        modules.append(("lrelu" + str(i), nn.LeakyReLU))
+
+    discriminator_encoder = paper.DiscriminatorEncoder()
+
+    for name, module in modules:
+        actual = getattr(discriminator_encoder, name)
+        assert isinstance(actual, module)
+
+
 def test_prediction_module(subtests):
     in_channels = 3
     kernel_size = 3
