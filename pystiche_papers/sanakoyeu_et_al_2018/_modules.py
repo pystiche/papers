@@ -25,8 +25,10 @@ __all__ = [
     "transformer",
     "get_transformation_block",
     "TransformerBlock",
+    "discriminator_encoder_modules",
     "DiscriminatorEncoder",
     "prediction_module",
+    "get_prediction_modules",
 ]
 
 
@@ -452,8 +454,7 @@ def prediction_module(
     r"""Prediction module from :cite:`SKL+2018`.
 
     This block comprises a convolutional, which is used as an auxiliary classifier to
-    capture image details on different scales of the
-    :class:`~pystiche_paper.sanakoyeu_et_al_2018._modules.DiscriminatorEncoder`.
+    capture image details on different scales of the :class:`DiscriminatorEncoder`.
 
     Args:
         in_channels: Number of channels in the input.
@@ -469,3 +470,13 @@ def prediction_module(
         stride=1,
         padding=padding,
     )
+
+
+def get_prediction_modules() -> Dict[str, nn.Module]:
+    return {
+        "lrelu0": prediction_module(128, 5),
+        "lrelu1": prediction_module(128, 10),
+        "lrelu3": prediction_module(512, 10),
+        "lrelu5": prediction_module(1024, 6),
+        "lrelu6": prediction_module(1024, 3),
+    }
