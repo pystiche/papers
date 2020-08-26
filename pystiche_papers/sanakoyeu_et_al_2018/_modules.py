@@ -108,7 +108,7 @@ class UpsampleConvBlock(nn.Module):
         in_channels: Number of channels in the input.
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
-        scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2``.
+        scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2.0``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
         act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
@@ -128,7 +128,7 @@ class UpsampleConvBlock(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
-        scale_factor: Union[Tuple[int, int], int] = 2,
+        scale_factor: Union[Tuple[float, float], float] = 2.0,
         padding: str = "same",
         act: Union[str, None] = "relu",
         inplace: bool = True,
