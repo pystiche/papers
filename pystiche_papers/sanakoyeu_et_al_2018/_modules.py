@@ -3,10 +3,10 @@ from typing import List, Tuple, Union, cast
 import torch
 from torch import nn
 
-from pystiche.misc import verify_str_arg
-
 import pystiche
 from pystiche.enc import SequentialEncoder
+from pystiche.misc import verify_str_arg
+
 from ..utils import ResidualBlock, same_size_padding
 
 __all__ = [
@@ -16,6 +16,11 @@ __all__ = [
     "ConvBlock",
     "UpsampleConvBlock",
     "residual_block",
+    "transformer_encoder",
+    "transformer_decoder",
+    "DecoderSigmoidOutput",
+    "Decoder",
+    "Transformer"
 ]
 
 
@@ -214,18 +219,10 @@ def transformer_decoder(
     for i in range(num_res_block):
         modules.append(residual_block(256))
 
-    modules.append(
-        UpsampleConvBlock(in_channels=256, out_channels=256, kernel_size=3)
-    )
-    modules.append(
-        UpsampleConvBlock(in_channels=256, out_channels=128, kernel_size=3)
-    )
-    modules.append(
-        UpsampleConvBlock(in_channels=128, out_channels=64, kernel_size=3)
-    )
-    modules.append(
-        UpsampleConvBlock(in_channels=64, out_channels=32, kernel_size=3)
-    )
+    modules.append(UpsampleConvBlock(in_channels=256, out_channels=256, kernel_size=3))
+    modules.append(UpsampleConvBlock(in_channels=256, out_channels=128, kernel_size=3))
+    modules.append(UpsampleConvBlock(in_channels=128, out_channels=64, kernel_size=3))
+    modules.append(UpsampleConvBlock(in_channels=64, out_channels=32, kernel_size=3))
     modules.append(nn.ReflectionPad2d(3))
     modules.append(
         conv(
