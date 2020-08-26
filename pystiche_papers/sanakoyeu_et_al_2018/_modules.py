@@ -20,7 +20,7 @@ __all__ = [
     "transformer_decoder",
     "DecoderSigmoidOutput",
     "Decoder",
-    "Transformer"
+    "Transformer",
 ]
 
 
