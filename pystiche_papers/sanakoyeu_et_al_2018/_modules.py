@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from collections import OrderedDict
-from typing import List, Tuple, Union, cast, Dict
+from typing import Dict, List, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -26,7 +26,7 @@ __all__ = [
     "get_transformation_block",
     "TransformerBlock",
     "DiscriminatorEncoder",
-    "prediction_module"
+    "prediction_module",
 ]
 
 

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -339,4 +340,3 @@ def test_prediction_module(subtests):
         assert prediction_module.padding == misc.to_2d_arg(
             same_size_padding(kernel_size)
         )
-
