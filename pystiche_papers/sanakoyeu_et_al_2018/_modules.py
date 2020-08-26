@@ -12,7 +12,7 @@ __all__ = [
     "get_activation",
     "conv",
     "ConvBlock",
-    "DeConvBlock",
+    "UpsampleConvBlock",
     "residual_block",
 ]
 
@@ -99,16 +99,16 @@ class ConvBlock(nn.Sequential):
         super().__init__(*modules)
 
 
-class DeConvBlock(nn.Module):
-    r"""DeConvBlock from :cite:`SKL+2018`.
+class UpsampleConvBlock(nn.Module):
+    r"""UpsampleConvBlock from :cite:`SKL+2018`.
 
-    This block upsamples the input to twice the size followed by a :class:`ConvBlock`.
+    This block upsamples the input followed by a :class:`ConvBlock`.
 
     Args:
         in_channels: Number of channels in the input.
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
-        stride: Stride of the interpolation. Defaults to ``2``.
+        scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2``.
         padding: Padding of the input. It can be either ``"valid"`` for no padding or
             ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
         act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
@@ -128,13 +128,13 @@ class DeConvBlock(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
-        stride: Union[Tuple[int, int], int] = 2,
+        scale_factor: Union[Tuple[int, int], int] = 2,
         padding: str = "same",
         act: Union[str, None] = "relu",
         inplace: bool = True,
     ) -> None:
         super().__init__()
-        self.stride = stride
+        self.scale_factor = scale_factor
         self.conv = ConvBlock(
             in_channels,
             out_channels,
@@ -150,7 +150,7 @@ class DeConvBlock(nn.Module):
             torch.Tensor,
             self.conv(
                 nn.functional.interpolate(
-                    input, scale_factor=self.stride, mode="nearest"
+                    input, scale_factor=self.scale_factor, mode="nearest"
                 )
             ),
         )
