@@ -5,6 +5,8 @@ from torch import nn
 
 from pystiche.misc import verify_str_arg
 
+import pystiche
+from pystiche.enc import SequentialEncoder
 from ..utils import ResidualBlock, same_size_padding
 
 __all__ = [
@@ -184,3 +186,86 @@ def residual_block(channels: int) -> ResidualBlock:
     )
 
     return ResidualBlock(residual)
+
+
+def transformer_encoder(in_channels: int = 3,) -> SequentialEncoder:
+    r"""Encoder part of the :class:`Transformer` from :cite:`SKL+2018`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+
+    """
+    modules = (
+        nn.ReflectionPad2d(15),
+        ConvBlock(in_channels=in_channels, out_channels=32, kernel_size=3, stride=1),
+        ConvBlock(in_channels=32, out_channels=32, kernel_size=3, stride=2),
+        ConvBlock(in_channels=32, out_channels=64, kernel_size=3, stride=2),
+        ConvBlock(in_channels=64, out_channels=128, kernel_size=3, stride=2),
+        ConvBlock(in_channels=128, out_channels=256, kernel_size=3, stride=2),
+    )
+    return SequentialEncoder(modules)
+
+
+def transformer_decoder(
+    out_channels: int = 3, num_res_block: int = 9,
+) -> pystiche.SequentialModule:
+
+    modules: List[nn.Module] = []
+    for i in range(num_res_block):
+        modules.append(residual_block(256))
+
+    modules.append(
+        UpsampleConvBlock(in_channels=256, out_channels=256, kernel_size=3)
+    )
+    modules.append(
+        UpsampleConvBlock(in_channels=256, out_channels=128, kernel_size=3)
+    )
+    modules.append(
+        UpsampleConvBlock(in_channels=128, out_channels=64, kernel_size=3)
+    )
+    modules.append(
+        UpsampleConvBlock(in_channels=64, out_channels=32, kernel_size=3)
+    )
+    modules.append(nn.ReflectionPad2d(3))
+    modules.append(
+        conv(
+            in_channels=32,
+            out_channels=out_channels,
+            kernel_size=7,
+            stride=1,
+            padding="valid",
+        )
+    )
+    return pystiche.SequentialModule(*modules)
+
+
+class DecoderSigmoidOutput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return torch.sigmoid(input) * 2 - 1
+
+
+class Decoder(nn.Module):
+    r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.decoder = transformer_decoder()
+        self.output_module = DecoderSigmoidOutput()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.output_module(self.decoder(input)))
+
+
+class Transformer(nn.Module):
+    r"""Transformer from :cite:`SKL+2018`."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = transformer_encoder()
+        self.decoder = Decoder()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.decoder(self.encoder(input)))
