@@ -18,7 +18,7 @@ __all__ = [
     "residual_block",
     "encoder",
     "decoder",
-    "DecoderSigmoidOutput",
+    "DecoderTanhOutput",
     "Decoder",
     "Transformer",
 ]
@@ -236,12 +236,12 @@ def decoder(
     return pystiche.SequentialModule(*modules)
 
 
-class DecoderSigmoidOutput(nn.Module):
+class DecoderTanhOutput(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return torch.sigmoid(input) * 2 - 1
+        return torch.tanh(input / 2)
 
 
 class Decoder(nn.Module):
@@ -250,7 +250,7 @@ class Decoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.decoder = decoder()
-        self.output_module = DecoderSigmoidOutput()
+        self.output_module = DecoderTanhOutput()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.output_module(self.decoder(input)))

@@ -192,13 +192,13 @@ def test_decoder(subtests):
         assert in_out_channels == channel_config
 
 
-def test_DecoderSigmoidOutput(input_image):
+def test_DecoderTanhOutput(input_image):
     image = input_image * 100
-    decoder_output_module = paper.DecoderSigmoidOutput()
+    decoder_output_module = paper.DecoderTanhOutput()
     actual = decoder_output_module(image)
 
     assert isinstance(actual, torch.Tensor)
-    desired = torch.sigmoid(image) * 2 - 1
+    desired = torch.tanh(image / 2)
     ptu.assert_allclose(actual, desired)
 
 
@@ -209,7 +209,7 @@ def test_Decoder(subtests):
         assert isinstance(decoder.decoder, pystiche.SequentialModule)
 
     with subtests.test("output_module"):
-        assert isinstance(decoder.output_module, paper.DecoderSigmoidOutput)
+        assert isinstance(decoder.output_module, paper.DecoderTanhOutput)
 
 
 def test_Transformer_smoke(subtests, input_image):
