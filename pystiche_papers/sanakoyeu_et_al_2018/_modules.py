@@ -1,8 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import itertools
-from collections import OrderedDict
 from functools import partial
-from typing import Any, Dict, Iterable, Iterator, List, Tuple, Union, cast
+from typing import Any, Iterable, Iterator, List, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -27,7 +26,6 @@ __all__ = [
     "transformer",
     "discriminator_encoder_modules",
     "DiscriminatorMultiLayerEncoder",
-    "prediction_module",
 ]
 
 
@@ -290,51 +288,29 @@ def pairwise(iterable: Iterable) -> Iterator[Tuple[Any, Any]]:
 
 def discriminator_encoder_modules(
     in_channels: int = 3, inplace: bool = True
-) -> OrderedDict:
+) -> List[Tuple[str, nn.Sequential]]:
     conv_block = partial(
         ConvBlock, kernel_size=5, stride=2, padding="same", act="lrelu", inplace=inplace
     )
 
     channels = (in_channels, 128, 128, 256, 512, 512, 1024, 1024)
-    return OrderedDict(
-        [
-            (f"scale_{idx}", conv_block(in_channels, out_channels))
-            for idx, (in_channels, out_channels) in enumerate(pairwise(channels))
-        ]
-    )
+    return [
+        (f"scale_{idx}", conv_block(in_channels, out_channels))
+        for idx, (in_channels, out_channels) in enumerate(pairwise(channels))
+    ]
+
+
 
 class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
-    r"""Encoder part of the Discriminator from :cite:`SKL+2018`.
+    r"""Discriminator from :cite:`SKL+2018`.
 
     Args:
         in_channels: Number of channels in the input. Defaults to ``3``.
     """
 
     def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(
-            self._collect_modules(
-                discriminator_encoder_modules(in_channels=in_channels)
-            )
-        )
-
-    def _collect_modules(
-        self, wrapped_modules: Dict[str, nn.Sequential]
-    ) -> List[Tuple[str, nn.Module]]:
-        modules = []
-        block = 0
-        for sequential in wrapped_modules.values():
-            for module in sequential._modules.values():
-                if isinstance(module, nn.Conv2d):
-                    name = f"conv{block}"
-                elif isinstance(module, nn.InstanceNorm2d):
-                    name = f"inst_n{block}"
-                else:  # isinstance(module, nn.LeakyReLU):
-                    name = f"lrelu{block}"
-                    # each LeakyReLU layer marks the end of the current block
-                    block += 1
-
-                modules.append((name, module))
-        return modules
+        print(discriminator_encoder_modules(in_channels=in_channels))
+        super().__init__(discriminator_encoder_modules(in_channels=in_channels))
 
 
 def prediction_module(

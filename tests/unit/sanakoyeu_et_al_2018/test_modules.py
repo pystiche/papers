@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -224,16 +222,16 @@ def test_discriminator_encoder_modules(subtests):
 
     modules = paper.discriminator_encoder_modules()
 
-    assert isinstance(modules, OrderedDict)
-
-    with subtests.test("names"):
-        assert list(modules.keys()) == names
-
     in_out_channels = []
-    for module in modules.values():
+    module_names = []
+    for name, module in modules:
         with subtests.test("modules"):
             assert isinstance(module, paper.ConvBlock)
             in_out_channels.append((module[0].in_channels, module[0].out_channels))
+            module_names.append(name)
+
+    with subtests.test("names"):
+        assert module_names == names
 
 
     with subtests.test("channel_config"):
