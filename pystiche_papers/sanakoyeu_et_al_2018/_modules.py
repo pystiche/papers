@@ -16,8 +16,8 @@ __all__ = [
     "ConvBlock",
     "UpsampleConvBlock",
     "residual_block",
-    "transformer_encoder",
-    "transformer_decoder",
+    "encoder",
+    "decoder",
     "DecoderSigmoidOutput",
     "Decoder",
     "Transformer",
@@ -193,7 +193,7 @@ def residual_block(channels: int) -> ResidualBlock:
     return ResidualBlock(residual)
 
 
-def transformer_encoder(in_channels: int = 3,) -> SequentialEncoder:
+def encoder(in_channels: int = 3,) -> SequentialEncoder:
     r"""Encoder part of the :class:`Transformer` from :cite:`SKL+2018`.
 
     Args:
@@ -211,12 +211,12 @@ def transformer_encoder(in_channels: int = 3,) -> SequentialEncoder:
     return SequentialEncoder(modules)
 
 
-def transformer_decoder(
+def decoder(
     out_channels: int = 3, num_residual_blocks: int = 9,
 ) -> pystiche.SequentialModule:
 
     modules: List[nn.Module] = []
-    for i in range(num_res_block):
+    for i in range(num_residual_blocks):
         modules.append(residual_block(256))
 
     modules.append(UpsampleConvBlock(in_channels=256, out_channels=256, kernel_size=3))
@@ -249,7 +249,7 @@ class Decoder(nn.Module):
 
     def __init__(self) -> None:
         super().__init__()
-        self.decoder = transformer_decoder()
+        self.decoder = decoder()
         self.output_module = DecoderSigmoidOutput()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -261,7 +261,7 @@ class Transformer(nn.Module):
 
     def __init__(self) -> None:
         super().__init__()
-        self.encoder = transformer_encoder()
+        self.encoder = encoder()
         self.decoder = Decoder()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:

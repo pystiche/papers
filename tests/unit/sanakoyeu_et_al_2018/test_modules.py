@@ -119,10 +119,10 @@ def test_residual_block(subtests, input_image):
         assert output_image.size() == input_image.size()
 
 
-def test_transformer_encoder(subtests):
+def test_encoder(subtests):
     channel_config = [(3, 32), (32, 32), (32, 64), (64, 128), (128, 256)]
 
-    encoder = paper.transformer_encoder()
+    encoder = paper.encoder()
 
     assert isinstance(encoder, SequentialEncoder)
 
@@ -140,8 +140,8 @@ def test_transformer_encoder(subtests):
         assert in_out_channels == channel_config
 
 
-def test_transformer_decoder(subtests):
-    num_res_block = 2
+def test_decoder(subtests):
+    num_residual_blocks = 2
     channel_config = [
         (256, 256),
         (256, 256),
@@ -152,14 +152,14 @@ def test_transformer_decoder(subtests):
         (32, 3),
     ]
 
-    decoder = paper.transformer_decoder(num_res_block=num_res_block)
+    decoder = paper.decoder(num_residual_blocks=num_residual_blocks)
 
     assert isinstance(decoder, pystiche.SequentialModule)
 
     in_out_channels = []
     for i, module in enumerate(decoder.children()):
         with subtests.test("modules"):
-            if i in range(0, num_res_block):
+            if i in range(0, num_residual_blocks):
                 with subtests.test("residualblocks"):
                     assert isinstance(module, ResidualBlock)
                     in_out_channels.append(
@@ -168,16 +168,16 @@ def test_transformer_decoder(subtests):
                             module.residual[-1][0].out_channels,
                         )
                     )
-            if i in range(num_res_block, num_res_block + 4):
+            if i in range(num_residual_blocks, num_residual_blocks + 4):
                 assert isinstance(module, paper.UpsampleConvBlock)
                 in_out_channels.append(
                     (module.conv[0].in_channels, module.conv[0].out_channels)
                 )
-            if i == num_res_block + 4:
+            if i == num_residual_blocks + 4:
                 with subtests.test("padding_module"):
                     assert isinstance(module, nn.ReflectionPad2d)
 
-            if i == num_res_block + 5:
+            if i == num_residual_blocks + 5:
                 with subtests.test("last_conv"):
                     assert isinstance(module, nn.Conv2d)
                     with subtests.test("kernel_size"):
