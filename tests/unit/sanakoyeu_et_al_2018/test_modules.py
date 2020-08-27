@@ -315,14 +315,14 @@ def test_transformer():
     assert isinstance(transformer, paper.Transformer)
 
 
-def test_DiscriminatorEncoder():
+def test_DiscriminatorMultiLayerEncoder():
     modules = []
     for i in range(0, 7):
         modules.append(("conv" + str(i), nn.Conv2d))
         modules.append(("inst_n" + str(i), nn.InstanceNorm2d))
         modules.append(("lrelu" + str(i), nn.LeakyReLU))
 
-    discriminator_encoder = paper.DiscriminatorEncoder()
+    discriminator_encoder = paper.DiscriminatorMultiLayerEncoder()
 
     for name, module in modules:
         actual = getattr(discriminator_encoder, name)

@@ -28,7 +28,7 @@ __all__ = [
     "get_transformation_block",
     "TransformerBlock",
     "discriminator_encoder_modules",
-    "DiscriminatorEncoder",
+    "DiscriminatorMultiLayerEncoder",
     "prediction_module",
 ]
 
@@ -366,8 +366,7 @@ def discriminator_encoder_modules(
         ]
     )
 
-
-class DiscriminatorEncoder(enc.MultiLayerEncoder):
+class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
     r"""Encoder part of the Discriminator from :cite:`SKL+2018`.
 
     Args:
