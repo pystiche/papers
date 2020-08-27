@@ -201,62 +201,6 @@ def test_decoder(subtests, input_image):
         ptu.assert_allclose(module(input), torch.tanh(input / 2))
 
 
-def test_get_transformation_block(subtests):
-    in_channels = out_channels = 3
-    kernel_size = 3
-    stride = 2
-    padding = 2
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            transformation_block = paper.get_transformation_block(
-                in_channels=in_channels,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-                impl_params=impl_params,
-            )
-
-            assert isinstance(
-                transformation_block, nn.AvgPool2d if impl_params else nn.Conv2d
-            )
-
-            with subtests.test("kernel_size"):
-                assert (
-                    transformation_block.kernel_size == misc.to_2d_arg(kernel_size)
-                    if not impl_params
-                    else kernel_size
-                )
-            with subtests.test("stride"):
-                assert (
-                    transformation_block.stride == misc.to_2d_arg(stride)
-                    if not impl_params
-                    else stride
-                )
-            with subtests.test("padding"):
-                assert (
-                    transformation_block.padding == misc.to_2d_arg(padding)
-                    if not impl_params
-                    else padding
-                )
-
-            if isinstance(transformation_block, nn.Conv2d):
-                with subtests.test("in_channels"):
-                    assert transformation_block.in_channels == in_channels
-                with subtests.test("out_channels"):
-                    assert transformation_block.out_channels == out_channels
-
-
-def test_TransformerBlock(subtests):
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            transformer_block = paper.TransformerBlock(impl_params=impl_params)
-
-            with subtests.test("forwardBlock"):
-                assert isinstance(
-                    transformer_block.forwardBlock,
-                    nn.AvgPool2d if impl_params else nn.Conv2d,
-                )
-
 
 def test_discriminator_encoder_modules(subtests):
     channel_config = [

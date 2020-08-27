@@ -25,8 +25,6 @@ __all__ = [
     "decoder",
     "Transformer",
     "transformer",
-    "get_transformation_block",
-    "TransformerBlock",
     "discriminator_encoder_modules",
     "DiscriminatorMultiLayerEncoder",
     "prediction_module",
@@ -282,67 +280,6 @@ def transformer(style: Optional[str] = None,) -> Transformer:
 
     """
     return Transformer()
-
-
-def get_transformation_block(
-    in_channels: int,
-    kernel_size: Union[Tuple[int, int], int],
-    stride: Union[Tuple[int, int], int],
-    padding: Union[Tuple[int, int], int],
-    impl_params: bool = True,
-) -> nn.Module:
-    if impl_params:
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
-        return nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
-    return cast(
-        nn.Module,
-        nn.utils.weight_norm(
-            nn.Conv2d(in_channels, 3, kernel_size, stride=stride, padding=padding)
-        ),
-    )
-
-
-class TransformerBlock(nn.Module):
-    r"""TransformerBlock from :cite:`SKL+2018`.
-
-    This block takes an image as input and produce a transformed image of the same size.
-
-    Args:
-        in_channels: Number of channels in the input. Defaults to ``3``.
-        kernel_size: Size of the convolving kernel. Defaults to ``10``.
-        stride: Stride of the convolution. Defaults to ``1``.
-        padding: Padding of the input. It can be either ``"valid"`` for no padding or
-            ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-
-    If ``impl_params is True``, an :class:`~torch.nn.AvgPool2d` is used instead of a
-    :class:`~torch.nn.Conv2d` with :func:`~torch.nn.utils.weight_norm`.
-    """
-
-    def __init__(
-        self,
-        in_channels: int = 3,
-        kernel_size: Union[Tuple[int, int], int] = 10,
-        stride: Union[Tuple[int, int], int] = 1,
-        padding: str = "same",
-        impl_params: bool = True,
-    ):
-        super().__init__()
-        self.impl_params = impl_params
-
-        padding = get_padding(padding, kernel_size)
-
-        self.forwardBlock = get_transformation_block(
-            in_channels, kernel_size, stride, padding, impl_params=impl_params,
-        )
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if self.impl_params:
-            return cast(torch.Tensor, self.forwardBlock(input))
-        else:
-            return cast(torch.Tensor, self.forwardBlock(input))
 
 
 def pairwise(iterable: Iterable) -> Iterator[Tuple[Any, Any]]:
