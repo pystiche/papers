@@ -338,80 +338,29 @@ class TransformerBlock(nn.Module):
             return cast(torch.Tensor, nn.utils.weight_norm(self.forwardBlock(input)))
 
 
-def discriminator_encoder_modules(
-    in_channels: int = 3, inplace: bool = True,
-) -> Dict[str, nn.Sequential]:
-    # FIXME:  if/when the Python interpreter will learn to accept the correct signature
-    # https://stackoverflow.com/questions/41207128/how-do-i-specify-ordereddict-k-v-types-for-mypy-type-annotation
+from functools import partial
+import itertools
+from typing import Iterable
 
-    modules = OrderedDict(
-        {
-            "scale_0": ConvBlock(
-                in_channels,
-                128,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_1": ConvBlock(
-                128,
-                128,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_2": ConvBlock(
-                128,
-                256,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_3": ConvBlock(
-                256,
-                512,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_4": ConvBlock(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_5": ConvBlock(
-                512,
-                1024,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-            "scale_6": ConvBlock(
-                1024,
-                1024,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            ),
-        }
+
+def pairwise(iterable: Iterable):
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+def discriminator_encoder_modules(in_channels: int = 3, inplace: bool = True):
+    conv_block = partial(
+        ConvBlock, kernel_size=5, stride=2, padding="same", act="lrelu", inplace=inplace
     )
-    return cast(Dict[str, nn.Sequential], modules)
+
+    channels = (in_channels, 128, 128, 256, 512, 512, 1024)
+    return OrderedDict(
+        [
+            (f"scale_{idx}", conv_block(in_channels, out_channels))
+            for idx, (in_channels, out_channels) in pairwise(channels)
+        ]
+    )
 
 
 class DiscriminatorEncoder(enc.MultiLayerEncoder):
