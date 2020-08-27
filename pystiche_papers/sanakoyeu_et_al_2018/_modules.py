@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+import itertools
 from collections import OrderedDict
-from typing import Dict, List, Tuple, Union, cast
+from functools import partial
+from typing import Any, Dict, Iterable, Iterator, List, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -291,8 +293,14 @@ def get_transformation_block(
     impl_params: bool = True,
 ) -> nn.Module:
     if impl_params:
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
         return nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
-    return nn.Conv2d(in_channels, 3, kernel_size, stride=stride, padding=padding)
+    return cast(
+        nn.Module,
+        nn.utils.weight_norm(
+            nn.Conv2d(in_channels, 3, kernel_size, stride=stride, padding=padding)
+        ),
+    )
 
 
 class TransformerBlock(nn.Module):
@@ -335,21 +343,18 @@ class TransformerBlock(nn.Module):
         if self.impl_params:
             return cast(torch.Tensor, self.forwardBlock(input))
         else:
-            return cast(torch.Tensor, nn.utils.weight_norm(self.forwardBlock(input)))
+            return cast(torch.Tensor, self.forwardBlock(input))
 
 
-from functools import partial
-import itertools
-from typing import Iterable
-
-
-def pairwise(iterable: Iterable):
+def pairwise(iterable: Iterable) -> Iterator[Tuple[Any, Any]]:
     a, b = itertools.tee(iterable)
     next(b, None)
     return zip(a, b)
 
 
-def discriminator_encoder_modules(in_channels: int = 3, inplace: bool = True):
+def discriminator_encoder_modules(
+    in_channels: int = 3, inplace: bool = True
+) -> OrderedDict:
     conv_block = partial(
         ConvBlock, kernel_size=5, stride=2, padding="same", act="lrelu", inplace=inplace
     )

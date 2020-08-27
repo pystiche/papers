@@ -257,10 +257,6 @@ def test_TransformerBlock(subtests):
                     nn.AvgPool2d if impl_params else nn.Conv2d,
                 )
 
-            if not impl_params:
-                with subtests.test("weight_norm"):
-                    assert True  # TODO: Implement this test
-
 
 def test_discriminator_encoder_modules(subtests):
     channel_config = [
