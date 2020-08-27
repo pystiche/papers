@@ -30,7 +30,6 @@ __all__ = [
     "discriminator_encoder_modules",
     "DiscriminatorEncoder",
     "prediction_module",
-    "get_prediction_modules",
 ]
 
 
@@ -424,13 +423,3 @@ def prediction_module(
         stride=1,
         padding=padding,
     )
-
-
-def get_prediction_modules() -> Dict[str, nn.Module]:
-    return {
-        "lrelu0": prediction_module(128, 5),
-        "lrelu1": prediction_module(128, 10),
-        "lrelu3": prediction_module(512, 10),
-        "lrelu5": prediction_module(1024, 6),
-        "lrelu6": prediction_module(1024, 3),
-    }

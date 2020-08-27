@@ -352,22 +352,3 @@ def test_prediction_module(subtests):
         assert prediction_module.padding == misc.to_2d_arg(
             same_size_padding(kernel_size)
         )
-
-
-def test_get_prediction_modules(subtests):
-    channel_config = [(128, 1), (128, 1), (512, 1), (1024, 1), (1024, 1)]
-    names = ["lrelu0", "lrelu1", "lrelu3", "lrelu5", "lrelu6"]
-
-    modules = paper.get_prediction_modules()
-
-    with subtests.test("names"):
-        assert list(modules.keys()) == names
-
-    in_out_channels = []
-    for module in modules.values():
-        with subtests.test("modules"):
-            assert isinstance(module, nn.Module)
-            in_out_channels.append((module.in_channels, module.out_channels))
-
-    with subtests.test("channel_config"):
-        assert in_out_channels == channel_config
