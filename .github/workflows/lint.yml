@@ -16,6 +16,7 @@ on:
       - "requirements-dev.txt"
       - "setup.cfg"
       - "tox.ini"
+      - ".pre-commit-config.yaml"
 
   schedule:
     - cron: "0 4 * * *"
