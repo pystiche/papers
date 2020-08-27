@@ -295,11 +295,11 @@ def discriminator_encoder_modules(
         ConvBlock, kernel_size=5, stride=2, padding="same", act="lrelu", inplace=inplace
     )
 
-    channels = (in_channels, 128, 128, 256, 512, 512, 1024)
+    channels = (in_channels, 128, 128, 256, 512, 512, 1024, 1024)
     return OrderedDict(
         [
             (f"scale_{idx}", conv_block(in_channels, out_channels))
-            for idx, (in_channels, out_channels) in pairwise(channels)
+            for idx, (in_channels, out_channels) in enumerate(pairwise(channels))
         ]
     )
 
