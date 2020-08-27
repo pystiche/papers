@@ -212,7 +212,7 @@ def transformer_encoder(in_channels: int = 3,) -> SequentialEncoder:
 
 
 def transformer_decoder(
-    out_channels: int = 3, num_res_block: int = 9,
+    out_channels: int = 3, num_residual_blocks: int = 9,
 ) -> pystiche.SequentialModule:
 
     modules: List[nn.Module] = []
