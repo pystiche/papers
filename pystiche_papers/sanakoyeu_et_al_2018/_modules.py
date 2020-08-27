@@ -309,7 +309,6 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
     """
 
     def __init__(self, in_channels: int = 3) -> None:
-        print(discriminator_encoder_modules(in_channels=in_channels))
         super().__init__(discriminator_encoder_modules(in_channels=in_channels))
 
 
