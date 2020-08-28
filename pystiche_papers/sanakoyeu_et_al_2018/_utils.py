@@ -10,6 +10,14 @@ from pystiche.optim.meter import FloatMeter
 from ..data.utils import DelayedExponentialLR
 
 
+def preprocessor(x: torch.Tensor) -> torch.Tensor:
+    return x * 2 - 1
+
+
+def postprocessor(x: torch.Tensor) -> torch.Tensor:
+    return (x + 1) / 2
+
+
 def optimizer(
     params: Union[nn.Module, Iterator[torch.nn.parameter.Parameter]]
 ) -> Optimizer:

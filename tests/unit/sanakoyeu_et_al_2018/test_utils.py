@@ -7,6 +7,18 @@ from torch import nn, optim
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 
 
+def test_preprocessor(input_image):
+    actual = paper.preprocessor(input_image)
+    desired = input_image * 2 - 1
+    ptu.assert_allclose(actual, desired)
+
+
+def test_postprocessor(input_image):
+    actual = paper.postprocessor(input_image)
+    desired = (input_image + 1) / 2
+    ptu.assert_allclose(actual, desired)
+
+
 def test_optimizer_modules(subtests):
     transformer = nn.Conv2d(3, 3, 1)
     params = tuple(transformer.parameters())
