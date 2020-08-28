@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Tuple, Union, cast
+from typing import Any, Dict, List, Tuple, Union, cast
 
 import more_itertools
 
@@ -7,7 +7,7 @@ import torch
 from torch import nn
 
 import pystiche
-from pystiche.enc import SequentialEncoder
+from pystiche import enc
 from pystiche.misc import verify_str_arg
 
 from ..utils import ResidualBlock, same_size_padding
@@ -21,7 +21,6 @@ __all__ = [
     "residual_block",
     "encoder",
     "decoder",
-    "Decoder",
     "Transformer",
 ]
 
@@ -195,7 +194,7 @@ def residual_block(channels: int) -> ResidualBlock:
     return ResidualBlock(residual)
 
 
-def encoder(in_channels: int = 3,) -> SequentialEncoder:
+def encoder(in_channels: int = 3,) -> enc.SequentialEncoder:
     r"""Encoder part of the :class:`Transformer` from :cite:`SKL+2018`.
 
     Args:
@@ -217,59 +216,47 @@ def encoder(in_channels: int = 3,) -> SequentialEncoder:
         ]
     )
 
-    return SequentialEncoder(modules)
+    return enc.SequentialEncoder(modules)
+
+
+class ValueRangeDelimiter(pystiche.Module):
+    r"""Maps the values to the interval (-1.0, 1.0)."""
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return torch.tanh(input / 2)
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["output_range"] = (-1.0, 1.0)
+        return dct
 
 
 def decoder(
     out_channels: int = 3, num_residual_blocks: int = 9,
 ) -> pystiche.SequentialModule:
-
-    modules: List[nn.Module] = []
-    for i in range(num_residual_blocks):
-        modules.append(residual_block(256))
+    r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
+    residual_blocks = [residual_block(256) for _ in range(num_residual_blocks)]
 
     channels = (256, 256, 128, 64, 32)
     upsample_conv_block = partial(UpsampleConvBlock, kernel_size=3)
-    modules.extend(
-        [
-            upsample_conv_block(in_channels=in_channels, out_channels=out_channels)
-            for in_channels, out_channels in more_itertools.pairwise(channels)
-        ]
-    )
-    modules.append(nn.ReflectionPad2d(3))
-    modules.append(
+    upsample_conv_blocks = [
+        upsample_conv_block(in_channels=in_channels, out_channels=out_channels)
+        for in_channels, out_channels in more_itertools.pairwise(channels)
+    ]
+
+    return pystiche.SequentialModule(
+        *residual_blocks,
+        *upsample_conv_blocks,
+        nn.ReflectionPad2d(3),
         conv(
             in_channels=32,
             out_channels=out_channels,
             kernel_size=7,
             stride=1,
             padding="valid",
-        )
+        ),
+        ValueRangeDelimiter(),
     )
-    return pystiche.SequentialModule(*modules)
-
-
-class Decoder(pystiche.Module):
-    r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
-
-    def __init__(self) -> None:
-        class ValueRangeDelimiter(nn.Module):
-            r"""Maps the values to the interval (-1.0, 1.0)."""
-
-            def forward(self, input: torch.Tensor) -> torch.Tensor:
-                return torch.tanh(input / 2)
-                
-            def _properties() -> Dict[str, Any]:
-                dct = super()._properties()
-                dct["output_range"] = "(-1.0, 1.0)"
-                return dct
-
-        super().__init__()
-        self.decoder = decoder()
-        self.output_module = ValueRangeDelimiter()
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self.output_module(self.decoder(input)))
 
 
 class Transformer(nn.Module):
@@ -278,7 +265,7 @@ class Transformer(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.encoder = encoder()
-        self.decoder = Decoder()
+        self.decoder = decoder()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
