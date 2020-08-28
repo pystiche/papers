@@ -1,7 +1,4 @@
-from functools import partial
 from typing import Any, Dict, List, Tuple, Union, cast
-
-import more_itertools
 
 import torch
 from torch import nn
@@ -9,6 +6,7 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
+from pystiche_papers.utils import channel_progression
 
 from ..utils import ResidualBlock, same_size_padding
 
@@ -205,17 +203,14 @@ def encoder(in_channels: int = 3,) -> enc.SequentialEncoder:
         nn.ReflectionPad2d(15),
         ConvBlock(in_channels=in_channels, out_channels=32, kernel_size=3, stride=1),
     ]
-    channels = (32, 32, 64, 128, 256)
-
-    conv_block = partial(ConvBlock, kernel_size=3, stride=2)
-
     modules.extend(
-        [
-            conv_block(in_channels, out_channels)
-            for in_channels, out_channels in more_itertools.pairwise(channels)
-        ]
+        channel_progression(
+            lambda in_channels, out_channels: ConvBlock(
+                in_channels, out_channels, kernel_size=3, stride=2
+            ),
+            channels=(32, 32, 64, 128, 256),
+        )
     )
-
     return enc.SequentialEncoder(modules)
 
 
@@ -236,14 +231,12 @@ def decoder(
 ) -> pystiche.SequentialModule:
     r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
     residual_blocks = [residual_block(256) for _ in range(num_residual_blocks)]
-
-    channels = (256, 256, 128, 64, 32)
-    upsample_conv_block = partial(UpsampleConvBlock, kernel_size=3)
-    upsample_conv_blocks = [
-        upsample_conv_block(in_channels=in_channels, out_channels=out_channels)
-        for in_channels, out_channels in more_itertools.pairwise(channels)
-    ]
-
+    upsample_conv_blocks = channel_progression(
+        lambda in_channels, out_channels: UpsampleConvBlock(
+            in_channels, out_channels, kernel_size=3
+        ),
+        channels=(256, 256, 128, 64, 32),
+    )
     return pystiche.SequentialModule(
         *residual_blocks,
         *upsample_conv_blocks,
