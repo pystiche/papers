@@ -259,18 +259,18 @@ class Decoder(nn.Module):
     r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
 
     def __init__(self) -> None:
+        class ValueRangeDelimiter(nn.Module):
+            r"""Maps the values to the interval (-1.0, 1.0)."""
+
+            def forward(self, input: torch.Tensor) -> torch.Tensor:
+                return torch.tanh(input / 2)
+
         super().__init__()
         self.decoder = decoder()
-        self.output_module = self.ValueRangeDelimiter()
+        self.output_module = ValueRangeDelimiter()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.output_module(self.decoder(input)))
-
-    class ValueRangeDelimiter(nn.Module):
-        r"""Maps the values to the interval (-1.0, 1.0)."""
-
-        def forward(self, input: torch.Tensor) -> torch.Tensor:
-            return torch.tanh(input / 2)
 
 
 class Transformer(nn.Module):
