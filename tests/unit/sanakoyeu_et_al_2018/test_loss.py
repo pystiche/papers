@@ -15,7 +15,7 @@ def test_transformed_image_loss(subtests):
 
             with subtests.test("score_weight"):
                 assert (
-                    transformed_image_loss.encoder.score_weight == pytest.approx(1e2)
+                    transformed_image_loss.score_weight == pytest.approx(1e2)
                     if impl_params
                     else pytest.approx(1.0)
                 )
