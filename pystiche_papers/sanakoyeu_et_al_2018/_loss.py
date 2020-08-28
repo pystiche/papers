@@ -4,10 +4,6 @@ import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.enc.encoder import Encoder
 from pystiche.ops.comparison import FeatureReconstructionOperator
 
-__all__ = [
-    "transformed_image_loss",
-]
-
 
 def transformed_image_loss(
     transformer_block: Optional[Encoder] = None,
