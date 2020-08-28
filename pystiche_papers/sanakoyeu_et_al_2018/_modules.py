@@ -5,6 +5,7 @@ from torch import nn
 
 import pystiche
 from pystiche import enc
+from pystiche.enc.encoder import Encoder
 from pystiche.misc import verify_str_arg
 from pystiche_papers.utils import AutoPadConv2d, channel_progression
 
@@ -342,7 +343,7 @@ def get_transformation_block(
     )
 
 
-class TransformerBlock(nn.Module):
+class TransformerBlock(Encoder):
     r"""TransformerBlock from :cite:`SKL+2018`.
 
     This block takes an image as input and produce a transformed image of the same size.
@@ -383,3 +384,6 @@ class TransformerBlock(nn.Module):
             return cast(torch.Tensor, self.forwardBlock(input))
         else:
             return cast(torch.Tensor, self.forwardBlock(input))
+
+    def propagate_guide(self, guide: torch.Tensor) -> torch.Tensor:
+        pass
