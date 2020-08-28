@@ -1,5 +1,7 @@
 from typing import List, Tuple, Union, cast
 
+import more_itertools
+
 import torch
 from torch import nn
 
@@ -200,14 +202,24 @@ def encoder(in_channels: int = 3,) -> SequentialEncoder:
         in_channels: Number of channels in the input. Defaults to ``3``.
 
     """
-    modules = (
+    modules = [
         nn.ReflectionPad2d(15),
         ConvBlock(in_channels=in_channels, out_channels=32, kernel_size=3, stride=1),
-        ConvBlock(in_channels=32, out_channels=32, kernel_size=3, stride=2),
-        ConvBlock(in_channels=32, out_channels=64, kernel_size=3, stride=2),
-        ConvBlock(in_channels=64, out_channels=128, kernel_size=3, stride=2),
-        ConvBlock(in_channels=128, out_channels=256, kernel_size=3, stride=2),
+    ]
+    channels = (32, 32, 64, 128, 256)
+
+    modules.extend(
+        [
+            ConvBlock(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                stride=2,
+            )
+            for in_channels, out_channels in more_itertools.pairwise(channels)
+        ]
     )
+
     return SequentialEncoder(modules)
 
 
@@ -219,10 +231,15 @@ def decoder(
     for i in range(num_residual_blocks):
         modules.append(residual_block(256))
 
-    modules.append(UpsampleConvBlock(in_channels=256, out_channels=256, kernel_size=3))
-    modules.append(UpsampleConvBlock(in_channels=256, out_channels=128, kernel_size=3))
-    modules.append(UpsampleConvBlock(in_channels=128, out_channels=64, kernel_size=3))
-    modules.append(UpsampleConvBlock(in_channels=64, out_channels=32, kernel_size=3))
+    channels = (256, 256, 128, 64, 32)
+    modules.extend(
+        [
+            UpsampleConvBlock(
+                in_channels=in_channels, out_channels=out_channels, kernel_size=3
+            )
+            for in_channels, out_channels in more_itertools.pairwise(channels)
+        ]
+    )
     modules.append(nn.ReflectionPad2d(3))
     modules.append(
         conv(
