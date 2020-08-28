@@ -192,24 +192,20 @@ def test_decoder(subtests):
         assert in_out_channels == channel_config
 
 
-def test_DecoderTanhOutput(input_image):
-    image = input_image * 100
-    decoder_output_module = paper.DecoderTanhOutput()
-    actual = decoder_output_module(image)
-
-    assert isinstance(actual, torch.Tensor)
-    desired = torch.tanh(image / 2)
-    ptu.assert_allclose(actual, desired)
-
-
-def test_Decoder(subtests):
+def test_Decoder(subtests, input_image):
     decoder = paper.Decoder()
 
     with subtests.test("decoder"):
         assert isinstance(decoder.decoder, pystiche.SequentialModule)
 
     with subtests.test("output_module"):
-        assert isinstance(decoder.output_module, paper.DecoderTanhOutput)
+        image = input_image * 100
+        output_module = decoder.output_module
+        assert isinstance(output_module, nn.Module)
+
+        actual = output_module(image)
+        desired = torch.tanh(image / 2)
+        ptu.assert_allclose(actual, desired)
 
 
 def test_Transformer_smoke(subtests, input_image):
