@@ -249,7 +249,7 @@ def decoder(
     return pystiche.SequentialModule(*modules)
 
 
-class Decoder(nn.Module):
+class Decoder(pystiche.Module):
     r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
 
     def __init__(self) -> None:
@@ -258,6 +258,11 @@ class Decoder(nn.Module):
 
             def forward(self, input: torch.Tensor) -> torch.Tensor:
                 return torch.tanh(input / 2)
+                
+            def _properties() -> Dict[str, Any]:
+                dct = super()._properties()
+                dct["output_range"] = "(-1.0, 1.0)"
+                return dct
 
         super().__init__()
         self.decoder = decoder()
