@@ -140,7 +140,7 @@ def test_encoder(subtests):
         assert in_out_channels == channel_config
 
 
-def test_decoder(subtests):
+def test_decoder(subtests, input_image):
     num_residual_blocks = 2
     channel_config = [
         (256, 256),
@@ -157,55 +157,49 @@ def test_decoder(subtests):
     assert isinstance(decoder, pystiche.SequentialModule)
 
     in_out_channels = []
-    for i, module in enumerate(decoder.children()):
-        with subtests.test("modules"):
-            if i in range(0, num_residual_blocks):
-                with subtests.test("residualblocks"):
-                    assert isinstance(module, ResidualBlock)
-                    in_out_channels.append(
-                        (
-                            module.residual[1][0].in_channels,
-                            module.residual[-1][0].out_channels,
-                        )
-                    )
-            if i in range(num_residual_blocks, num_residual_blocks + 4):
-                assert isinstance(module, paper.UpsampleConvBlock)
-                in_out_channels.append(
-                    (module.conv[0].in_channels, module.conv[0].out_channels)
+    children = decoder.children()
+    with subtests.test("residual_blocks"):
+        for _ in range(num_residual_blocks):
+            module = next(children)
+            assert isinstance(module, ResidualBlock)
+            in_out_channels.append(
+                (
+                    module.residual[1][0].in_channels,
+                    module.residual[-1][0].out_channels,
                 )
-            if i == num_residual_blocks + 4:
-                with subtests.test("padding_module"):
-                    assert isinstance(module, nn.ReflectionPad2d)
+            )
 
-            if i == num_residual_blocks + 5:
-                with subtests.test("last_conv"):
-                    assert isinstance(module, nn.Conv2d)
-                    with subtests.test("kernel_size"):
-                        assert module.kernel_size == misc.to_2d_arg(7)
-                    with subtests.test("stride"):
-                        assert module.stride == misc.to_2d_arg(1)
-                    with subtests.test("padding"):
-                        assert module.padding == misc.to_2d_arg(0)
-                in_out_channels.append((module.in_channels, module.out_channels))
+    with subtests.test("upsample_conv_blocks"):
+        for _ in range(4):
+            module = next(children)
+            assert isinstance(module, paper.UpsampleConvBlock)
+            in_out_channels.append(
+                (module.conv[0].in_channels, module.conv[0].out_channels)
+            )
+
+    module = next(children)
+    with subtests.test("padding_module"):
+        assert isinstance(module, nn.ReflectionPad2d)
+
+    module = next(children)
+    with subtests.test("last_conv"):
+        assert isinstance(module, nn.Conv2d)
+        with subtests.test("kernel_size"):
+            assert module.kernel_size == misc.to_2d_arg(7)
+        with subtests.test("stride"):
+            assert module.stride == misc.to_2d_arg(1)
+        with subtests.test("padding"):
+            assert module.padding == misc.to_2d_arg(0)
+        in_out_channels.append((module.in_channels, module.out_channels))
+
+    module = next(children)
+    with subtests.test("value_range_delimiter"):
+        torch.manual_seed(0)
+        input = torch.randn(10, 10)
+        ptu.assert_allclose(module(input), torch.tanh(input / 2))
 
     with subtests.test("channel_config"):
         assert in_out_channels == channel_config
-
-
-def test_Decoder(subtests, input_image):
-    decoder = paper.Decoder()
-
-    with subtests.test("decoder"):
-        assert isinstance(decoder.decoder, pystiche.SequentialModule)
-
-    with subtests.test("output_module"):
-        image = input_image * 100
-        output_module = decoder.output_module
-        assert isinstance(output_module, nn.Module)
-
-        actual = output_module(image)
-        desired = torch.tanh(image / 2)
-        ptu.assert_allclose(actual, desired)
 
 
 def test_Transformer_smoke(subtests, input_image):
@@ -216,7 +210,7 @@ def test_Transformer_smoke(subtests, input_image):
         assert isinstance(transformer.encoder, SequentialEncoder)
 
     with subtests.test("decoder"):
-        assert isinstance(transformer.decoder, paper.Decoder)
+        assert isinstance(transformer.decoder, pystiche.SequentialModule)
 
     with subtests.test("forward size"):
         assert input_image.size() == output_image.size()
