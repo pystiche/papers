@@ -1,4 +1,4 @@
-import functools
+from functools import partial
 from typing import List, Tuple, Union, cast
 
 import more_itertools
@@ -208,17 +208,13 @@ def encoder(in_channels: int = 3,) -> SequentialEncoder:
     ]
     channels = (32, 32, 64, 128, 256)
 
-    functools.partial(
-        modules.append,
-        *[
-            ConvBlock(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=3,
-                stride=2,
-            )
+    conv_block = partial(ConvBlock, kernel_size=3, stride=2)
+
+    modules.extend(
+        [
+            conv_block(in_channels, out_channels)
             for in_channels, out_channels in more_itertools.pairwise(channels)
-        ],
+        ]
     )
 
     return SequentialEncoder(modules)
@@ -233,14 +229,12 @@ def decoder(
         modules.append(residual_block(256))
 
     channels = (256, 256, 128, 64, 32)
-    functools.partial(
-        modules.append,
-        *[
-            UpsampleConvBlock(
-                in_channels=in_channels, out_channels=out_channels, kernel_size=3
-            )
+    upsample_conv_block = partial(UpsampleConvBlock, kernel_size=3)
+    modules.extend(
+        [
+            upsample_conv_block(in_channels=in_channels, out_channels=out_channels)
             for in_channels, out_channels in more_itertools.pairwise(channels)
-        ],
+        ]
     )
     modules.append(nn.ReflectionPad2d(3))
     modules.append(
