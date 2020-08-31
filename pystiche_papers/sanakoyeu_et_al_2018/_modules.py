@@ -362,3 +362,12 @@ class TransformerBlock(enc.SequentialEncoder):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return super().forward(input)
+
+def get_prediction_modules() -> Dict[str, nn.Module]:
+    return {
+        "lrelu0": prediction_module(128, 5),
+        "lrelu1": prediction_module(128, 10),
+        "lrelu3": prediction_module(512, 10),
+        "lrelu5": prediction_module(1024, 6),
+        "lrelu6": prediction_module(1024, 3),
+    }
