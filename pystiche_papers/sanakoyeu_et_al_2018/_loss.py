@@ -289,3 +289,110 @@ def transformed_image_loss(
     return ops.FeatureReconstructionOperator(
         transformer_block, score_weight=score_weight
     )
+from typing import Optional
+
+import torch
+
+from pystiche import ops
+from pystiche.enc import SequentialEncoder
+from pystiche.loss.perceptual import PerceptualLoss
+
+__all__ = [
+    "FeatureReconstructionOperator",
+    "style_aware_content_loss",
+    "transformer_loss",
+]
+
+
+class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
+    def __init__(
+        self,
+        encoder: SequentialEncoder,
+        score_weight: float = 1.0,
+        impl_params: bool = True,
+    ):
+        super().__init__(encoder, score_weight=score_weight)
+        self.impl_params = impl_params
+
+    def calculate_score(  # type: ignore[override]
+        self, input_repr: torch.Tensor, target_repr: torch.Tensor, ctx: None
+    ) -> torch.Tensor:
+        if self.impl_params:
+            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L194
+            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L177-L178
+            return torch.mean(torch.abs(input_repr - target_repr))
+        else:
+            return super().calculate_score(input_repr, target_repr, ctx)
+
+
+def style_aware_content_loss(
+    encoder: SequentialEncoder,
+    impl_params: bool = True,
+    score_weight: Optional[float] = None,
+) -> FeatureReconstructionOperator:
+    r"""Style_aware_content_loss from from :cite:`SKL+2018`.
+
+    Args:
+        encoder: Trainable :class:`~pystiche.enc.SequentialEncoder`.
+        impl_params:  If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``1e2`` if
+            ``impl_params is True`` otherwise ``1e0``.
+
+    If ``impl_params is True``, the ``score`` is calculated with a normalized absolute
+    distance instead of a normalized squared euclidean distance.
+    """
+    if score_weight is None:
+        if impl_params:
+            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
+            score_weight = 1e2
+        else:
+            score_weight = 1e0
+
+    return FeatureReconstructionOperator(
+        encoder, score_weight=score_weight, impl_params=impl_params
+    )
+
+
+def transformer_loss(
+    encoder: SequentialEncoder,
+    impl_params: bool = True,
+    style_aware_content_operator: Optional[FeatureReconstructionOperator] = None,
+    transformed_image_operator: Optional[FeatureReconstructionOperator] = None,
+    style_loss: Optional[MultiLayerDicriminatorEncodingOperator] = None,
+) -> PerceptualLoss:
+    r"""Transformer_loss from from :cite:`SKL+2018`.
+
+    Args:
+        encoder: Trainable :class:`~pystiche.enc.SequentialEncoder`.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        style_aware_content_operator: :class:`~pystiche.ops.OperatorContainer`.
+        transformed_image_operator: :func:`transformed_image_loss`.
+        style_loss: Optional :func:`style_aware_content_loss`.
+
+    """
+    if style_aware_content_operator is None:
+        style_aware_content_operator = style_aware_content_loss(
+            encoder, impl_params=impl_params
+        )
+
+    if transformed_image_operator is None:
+        transformed_image_operator = transformed_image_loss(impl_params=impl_params)
+
+    content_loss = ops.OperatorContainer(
+        (
+            (
+                ("style_aware_content_loss", style_aware_content_operator),
+                ("tranformed_image_loss", transformed_image_operator),
+            )
+        )
+    )
+
+    if style_loss is None:
+        style_loss = discriminator_operator()
+
+    return PerceptualLoss(content_loss, style_loss)

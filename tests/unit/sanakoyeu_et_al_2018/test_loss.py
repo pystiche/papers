@@ -216,3 +216,55 @@ def test_transformed_image_loss(subtests):
                     if impl_params
                     else pytest.approx(1.0)
                 )
+from torch.nn.functional import mse_loss
+
+import pystiche_papers.ulyanov_et_al_2016 as paper
+from pystiche import image, loss, ops
+
+
+def test_FeatureReconstructionOperator(
+    subtests, multi_layer_encoder_with_layer, target_image, input_image
+):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
+    target_enc = encoder(target_image)
+    input_enc = encoder(input_image)
+
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params)
+            op.set_target_image(target_image)
+            actual = op(input_image)
+
+            score = (
+                torch.mean(torch.abs(input_enc - target_enc))
+                if impl_params
+                else mse_loss(input_enc, target_enc)
+            )
+
+            desired = (
+                score / image.extract_batch_size(input_enc) if impl_params else score
+            )
+            assert actual == ptu.approx(desired)
+
+
+def test_style_aware_content_loss(subtests):
+    for impl_params, score_weight in ((True, 1e2), (False, 1e0)):
+        with subtests.test(impl_params=impl_params):
+            content_loss = paper.style_aware_content_loss(impl_params=impl_params)
+            assert content_loss.score_weight == pytest.approx(score_weight)
+
+
+def test_transformer_loss(subtests):
+    perceptual_loss = paper.perceptual_loss()
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
+
+    with subtests.test("content_loss"):
+        assert isinstance(perceptual_loss.content_loss, ops.OperatorContainer)
+        for module in perceptual_loss.children():
+            assert isinstance(module, ops.FeatureReconstructionOperator)
+
+    with subtests.test("style_loss"):
+        assert isinstance(
+            perceptual_loss.style_loss, paper.MultiLayerDicriminatorEncodingOperator
+        )
