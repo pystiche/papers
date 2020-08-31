@@ -5,7 +5,6 @@ from torch import nn
 
 import pystiche
 from pystiche import enc
-from pystiche.enc.encoder import Encoder
 from pystiche.misc import verify_str_arg
 from pystiche_papers.utils import AutoPadConv2d, channel_progression
 
@@ -343,7 +342,7 @@ def get_transformation_block(
     )
 
 
-class TransformerBlock(Encoder):
+class TransformerBlock(enc.SequentialEncoder):
     r"""TransformerBlock from :cite:`SKL+2018`.
 
     This block takes an image as input and produce a transformed image of the same size.
@@ -370,20 +369,21 @@ class TransformerBlock(Encoder):
         padding: str = "same",
         impl_params: bool = True,
     ):
-        super().__init__()
-        self.impl_params = impl_params
-
-        padding = get_padding(padding, kernel_size)
-
-        self.forwardBlock = get_transformation_block(
-            in_channels, kernel_size, stride, padding, impl_params=impl_params,
+        kwargs = {
+            "kernel_size": kernel_size,
+            "stride": stride,
+            "padding": get_padding(padding, kernel_size),
+        }
+        module = (
+            nn.AvgPool2d(**kwargs)  # type: ignore[arg-type]
+            if impl_params
+            else nn.utils.weight_norm(nn.Conv2d(in_channels, in_channels, **kwargs))  # type: ignore[arg-type]
         )
+        super().__init__((module,))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if self.impl_params:
-            return cast(torch.Tensor, self.forwardBlock(input))
-        else:
-            return cast(torch.Tensor, self.forwardBlock(input))
+        input = nn.functional.pad(input, [0, 1, 0, 1])
 
-    def propagate_guide(self, guide: torch.Tensor) -> torch.Tensor:
-        pass
+        for module in self.children():
+            input = module(input)
+        return input

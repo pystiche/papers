@@ -279,13 +279,17 @@ def test_get_transformation_block(subtests):
                     assert transformation_block.out_channels == out_channels
 
 
-def test_TransformerBlock(subtests):
+def test_TransformerBlock(subtests, input_image):
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
             transformer_block = paper.TransformerBlock(impl_params=impl_params)
 
-            with subtests.test("forwardBlock"):
-                assert isinstance(
-                    transformer_block.forwardBlock,
-                    nn.AvgPool2d if impl_params else nn.Conv2d,
-                )
+            with subtests.test("module"):
+                for module in transformer_block.children():
+                    assert isinstance(
+                        module, nn.AvgPool2d if impl_params else nn.Conv2d
+                    )
+
+            with subtests.test("forward_size"):
+                output_image = transformer_block(input_image)
+                assert output_image.size() == input_image.size()

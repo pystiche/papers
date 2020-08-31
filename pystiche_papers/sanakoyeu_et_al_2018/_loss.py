@@ -1,13 +1,14 @@
 from typing import Optional
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche.enc.encoder import Encoder
+from pystiche.enc.encoder import SequentialEncoder
 from pystiche.ops.comparison import FeatureReconstructionOperator
 
 __all__ = ["transformed_image_loss"]
 
+
 def transformed_image_loss(
-    transformer_block: Optional[Encoder] = None,
+    transformer_block: Optional[SequentialEncoder] = None,
     impl_params: bool = True,
     score_weight: Optional[float] = None,
 ) -> FeatureReconstructionOperator:
