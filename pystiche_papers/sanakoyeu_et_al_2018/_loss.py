@@ -1,4 +1,3 @@
-
 from typing import Optional
 
 from pystiche.enc.encoder import SequentialEncoder
@@ -49,7 +48,7 @@ __all__ = [
     "DiscriminatorEncodingOperator",
     "MultiLayerDicriminatorEncodingOperator",
     "discriminator_operator",
-    "DiscriminatorLoss"
+    "DiscriminatorLoss",
 ]
 
 
@@ -208,7 +207,10 @@ def discriminator_operator(
     layer_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ) -> MultiLayerDicriminatorEncodingOperator:
-    r"""Discriminator from :cite:`SKL+2018`.
+    r"""Discriminator prediction from :cite:`SKL+2018`.
+
+    Capture image details at different scales with the ``prediction_modules`` and sum up
+    all losses and accuracies on the different ``layers``.
 
     Args:
         in_channels: Number of channels in the input.
@@ -235,6 +237,7 @@ def discriminator_operator(
 
     if score_weight is None:
         if impl_params:
+            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L98
             score_weight = 1e0
         else:
             score_weight = 1e-3
@@ -270,13 +273,17 @@ def discriminator_operator(
     )
 
 
-class DiscriminatorLoss(ops.Operator):
-    def __init__(self, discriminator: MultiLayerDicriminatorEncodingOperator) -> None:
-        r"""Discriminator loss from :cite:`SKL+2018`.
+class DiscriminatorLoss(nn.Module):
+    r"""Discriminator loss from :cite:`SKL+2018`.
 
-        Args:
-            discriminator: Trainable :class:`MultiLayerDicriminatorEncodingOperator`.
-        """
+    Calculates the loss and accuracy of the current discriminator on all real and fake
+    input images.
+
+    Args:
+        discriminator: Trainable :class:`MultiLayerDicriminatorEncodingOperator`.
+    """
+
+    def __init__(self, discriminator: MultiLayerDicriminatorEncodingOperator) -> None:
         super().__init__()
         self.discriminator = discriminator
         self.acc = torch.empty(1)
@@ -317,5 +324,6 @@ class DiscriminatorLoss(ops.Operator):
         input_painting: torch.Tensor,
         input_photo: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        return self.calculate_loss(self.discriminator, output_photo, input_painting, input_photo)
-
+        return self.calculate_loss(
+            self.discriminator, output_photo, input_painting, input_photo
+        )
