@@ -25,10 +25,7 @@ def transformed_image_loss(
             ``impl_params is True`` otherwise ``1e0``.
     """
     if score_weight is None:
-        if impl_params:
-            score_weight = 1e2
-        else:
-            score_weight = 1e0
+        score_weight = 1e2 if impl_params else 1e0
 
     if transformer_block is None:
         transformer_block = paper.TransformerBlock()

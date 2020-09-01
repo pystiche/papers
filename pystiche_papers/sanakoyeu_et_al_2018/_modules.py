@@ -384,6 +384,4 @@ class TransformerBlock(enc.SequentialEncoder):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         input = nn.functional.pad(input, [0, 1, 0, 1])
 
-        for module in self.children():
-            input = module(input)
-        return input
+        return super().forward(input)
