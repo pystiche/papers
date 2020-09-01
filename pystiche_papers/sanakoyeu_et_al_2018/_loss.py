@@ -49,6 +49,7 @@ __all__ = [
     "DiscriminatorEncodingOperator",
     "MultiLayerDicriminatorEncodingOperator",
     "discriminator_operator",
+    "DiscriminatorLoss"
 ]
 
 
@@ -182,7 +183,7 @@ class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
         acc = []
         for op in self._modules.values():
             if isinstance(op, DiscriminatorEncodingOperator):
-                acc.append(op.get_current_acc())
+                acc.append(op.get_current_acc)
         return torch.mean(torch.stack(acc))
 
     def process_input_image(
@@ -269,7 +270,7 @@ def discriminator_operator(
     )
 
 
-class DiscriminatorLoss(nn.Module):
+class DiscriminatorLoss(ops.Operator):
     def __init__(self, discriminator: MultiLayerDicriminatorEncodingOperator) -> None:
         r"""Discriminator loss from :cite:`SKL+2018`.
 
@@ -280,32 +281,35 @@ class DiscriminatorLoss(nn.Module):
         self.discriminator = discriminator
         self.acc = torch.empty(1)
 
+    @property
     def get_current_acc(self) -> torch.Tensor:
         return self.acc
 
-    def calculate_score(
+    def calculate_loss(
         self,
         discriminator: MultiLayerDicriminatorEncodingOperator,
         output_photo: torch.Tensor,
         input_painting: torch.Tensor,
         input_photo: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> torch.Tensor:
         loss = discriminator(input_painting, real=True)
-        acc = discriminator.get_discriminator_acc()
+        acc = discriminator.get_discriminator_acc
         for key, value in zip(
             loss.keys(), discriminator(output_photo, real=False).values()
         ):
             loss[key] = loss[key] + value
 
-        acc += discriminator.get_discriminator_acc()
+        acc += discriminator.get_discriminator_acc
         if input_photo is not None:
             for key, value in zip(
                 loss.keys(), discriminator(input_photo, real=False).values()
             ):
                 loss[key] = loss[key] + value
-            acc += discriminator.get_discriminator_acc()
-            return loss, acc / 3
-        return loss, acc / 2
+            acc += discriminator.get_discriminator_acc
+            self.acc = acc / 3
+            return loss
+        self.acc = acc / 2
+        return loss
 
     def forward(
         self,
@@ -313,7 +317,5 @@ class DiscriminatorLoss(nn.Module):
         input_painting: torch.Tensor,
         input_photo: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        loss, self.acc = discriminator_loss(
-            self.discriminator, output_photo, input_painting, input_photo
-        )
-        return loss
+        return self.calculate_loss(self.discriminator, output_photo, input_painting, input_photo)
+
