@@ -363,6 +363,30 @@ class TransformerBlock(enc.SequentialEncoder):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return super().forward(input)
 
+def prediction_module(
+    in_channels: int, kernel_size: Union[Tuple[int, int], int], padding: str = "same"
+) -> nn.Module:
+    r"""Prediction module from :cite:`SKL+2018`.
+
+    This block comprises a convolutional, which is used as an auxiliary classifier to
+    capture image details on different scales of the :class:`DiscriminatorEncoder`.
+
+    Args:
+        in_channels: Number of channels in the input.
+        kernel_size: Size of the convolving kernel.
+        padding: Padding of the input. It can be either be``"valid"`` for no padding or
+            ``"same"`` to keep the size. Defaults to ``"same"``.
+
+    """
+    return conv(
+        in_channels=in_channels,
+        out_channels=1,
+        kernel_size=kernel_size,
+        stride=1,
+        padding=padding,
+    )
+
+
 def get_prediction_modules() -> Dict[str, nn.Module]:
     return {
         "lrelu0": prediction_module(128, 5),
