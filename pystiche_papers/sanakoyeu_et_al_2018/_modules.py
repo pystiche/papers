@@ -20,7 +20,7 @@ __all__ = [
     "encoder",
     "decoder",
     "Transformer",
-    "transformer"
+    "transformer",
 ]
 
 
