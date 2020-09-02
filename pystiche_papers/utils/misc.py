@@ -55,6 +55,29 @@ def elementwise(
     return fn(inputs)
 
 
+def is_even(inputs: Union[int, SequenceType[int]]) -> bool:
+    if isinstance(inputs, Sequence):
+        return any(input % 2 == 0 for input in inputs)
+    return inputs % 2 == 0
+
+
+def even_kernel_padding_correction(
+    kernel_sizes: Union[int, SequenceType[int]]
+) -> Tuple[int, ...]:
+    paddings = elementwise(lambda x: (x - 1) // 2, kernel_sizes)
+    if isinstance(paddings, Sequence):
+        return sum(
+            tuple(
+                (padding, padding + 1) if is_even(kernel_size) else (padding, padding)
+                for padding, kernel_size in zip(
+                    paddings, kernel_sizes  # type: ignore[arg-type]
+                )
+            ),
+            (),
+        )
+    return (paddings, paddings + 1)
+
+
 @overload
 def same_size_padding(kernel_size: int) -> int:
     ...
@@ -68,6 +91,8 @@ def same_size_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
 def same_size_padding(
     kernel_size: Union[int, SequenceType[int]]
 ) -> Union[int, Tuple[int, ...]]:
+    if is_even(kernel_size):
+        return even_kernel_padding_correction(kernel_size)
     return elementwise(lambda x: (x - 1) // 2, kernel_size)  # type: ignore[no-any-return]
 
 
