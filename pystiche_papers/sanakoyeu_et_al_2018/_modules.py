@@ -25,6 +25,7 @@ __all__ = [
     "Transformer",
     "transformer",
     "discriminator_encoder_modules",
+    "Discriminator",
     "DiscriminatorMultiLayerEncoder",
 ]
 
@@ -300,8 +301,7 @@ def discriminator_encoder_modules(
     ]
 
 
-
-class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
+class Discriminator(pystiche.Module):
     r"""Discriminator from :cite:`SKL+2018`.
 
     Args:
@@ -310,3 +310,15 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
 
     def __init__(self, in_channels: int = 3) -> None:
         super().__init__(discriminator_encoder_modules(in_channels=in_channels))
+
+
+class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
+    r"""Discriminator from :cite:`SKL+2018` as :class:`pystiche.enc.MultiLayerEncoder`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+    """
+
+    def __init__(self, in_channels: int = 3) -> None:
+        discriminator = Discriminator(in_channels=in_channels)
+        super().__init__([*discriminator.named_children()])
