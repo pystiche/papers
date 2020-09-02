@@ -214,3 +214,8 @@ def test_Transformer_smoke(subtests, input_image):
 
     with subtests.test("forward size"):
         assert input_image.size() == output_image.size()
+
+
+def test_transformer():
+    transformer = paper.transformer()
+    assert isinstance(transformer, paper.Transformer)

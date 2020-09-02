@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -20,6 +20,7 @@ __all__ = [
     "encoder",
     "decoder",
     "Transformer",
+    "transformer"
 ]
 
 
@@ -253,8 +254,6 @@ def decoder(
 
 
 class Transformer(nn.Module):
-    r"""Transformer from :cite:`SKL+2018`."""
-
     def __init__(self) -> None:
         super().__init__()
         self.encoder = encoder()
@@ -262,3 +261,15 @@ class Transformer(nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
+
+
+def transformer(style: Optional[str] = None,) -> Transformer:
+    r"""Transformer from :cite:`SKL+2018`.
+
+    Args:
+        style: Style the transformer was trained on. Can be one of styles given by
+            :func:`~pystiche_papers.sanakoyeu_et_al_2018.images`. If omitted, the
+            transformer is initialized with random weights.
+
+    """
+    return Transformer()
