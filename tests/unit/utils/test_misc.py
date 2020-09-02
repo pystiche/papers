@@ -21,6 +21,8 @@ def test_same_size_padding():
     assert utils.same_size_padding(kernel_size=1) == 0
     assert utils.same_size_padding(kernel_size=3) == 1
     assert utils.same_size_padding(kernel_size=(1, 3)) == (0, 1)
+    assert utils.same_size_padding(kernel_size=2) == (0, 1)
+    assert utils.same_size_padding(kernel_size=(2, 4)) == (0, 1, 1, 2)
 
 
 def test_same_size_output_padding():
