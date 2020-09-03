@@ -1,9 +1,12 @@
-from typing import List, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
 
+import pystiche
+from pystiche import enc
 from pystiche.misc import verify_str_arg
+from pystiche_papers.utils import channel_progression
 
 from ..utils import ResidualBlock, same_size_padding
 
@@ -14,6 +17,10 @@ __all__ = [
     "ConvBlock",
     "UpsampleConvBlock",
     "residual_block",
+    "encoder",
+    "decoder",
+    "Transformer",
+    "transformer",
 ]
 
 
@@ -184,3 +191,85 @@ def residual_block(channels: int) -> ResidualBlock:
     )
 
     return ResidualBlock(residual)
+
+
+def encoder(in_channels: int = 3,) -> enc.SequentialEncoder:
+    r"""Encoder part of the :class:`Transformer` from :cite:`SKL+2018`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+
+    """
+    modules = [
+        nn.ReflectionPad2d(15),
+        ConvBlock(in_channels=in_channels, out_channels=32, kernel_size=3, stride=1),
+    ]
+    modules.extend(
+        channel_progression(
+            lambda in_channels, out_channels: ConvBlock(
+                in_channels, out_channels, kernel_size=3, stride=2
+            ),
+            channels=(32, 32, 64, 128, 256),
+        )
+    )
+    return enc.SequentialEncoder(modules)
+
+
+class ValueRangeDelimiter(pystiche.Module):
+    r"""Maps the values to the interval (-1.0, 1.0)."""
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return torch.tanh(input / 2)
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["output_range"] = (-1.0, 1.0)
+        return dct
+
+
+def decoder(
+    out_channels: int = 3, num_residual_blocks: int = 9,
+) -> pystiche.SequentialModule:
+    r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
+    residual_blocks = [residual_block(256) for _ in range(num_residual_blocks)]
+    upsample_conv_blocks = channel_progression(
+        lambda in_channels, out_channels: UpsampleConvBlock(
+            in_channels, out_channels, kernel_size=3
+        ),
+        channels=(256, 256, 128, 64, 32),
+    )
+    return pystiche.SequentialModule(
+        *residual_blocks,
+        *upsample_conv_blocks,
+        nn.ReflectionPad2d(3),
+        conv(
+            in_channels=32,
+            out_channels=out_channels,
+            kernel_size=7,
+            stride=1,
+            padding="valid",
+        ),
+        ValueRangeDelimiter(),
+    )
+
+
+class Transformer(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = encoder()
+        self.decoder = decoder()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.decoder(self.encoder(input)))
+
+
+def transformer(style: Optional[str] = None,) -> Transformer:
+    r"""Transformer from :cite:`SKL+2018`.
+
+    Args:
+        style: Style the transformer was trained on. Can be one of styles given by
+            :func:`~pystiche_papers.sanakoyeu_et_al_2018.images`. If omitted, the
+            transformer is initialized with random weights.
+
+    """
+    return Transformer()
