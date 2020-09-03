@@ -1,7 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
-import itertools
 from functools import partial
-from typing import Any, Iterable, Iterator, List, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -24,7 +22,6 @@ __all__ = [
     "decoder",
     "Transformer",
     "transformer",
-    "discriminator_encoder_modules",
     "Discriminator",
     "DiscriminatorMultiLayerEncoder",
 ]
@@ -281,26 +278,6 @@ def transformer(style: Optional[str] = None,) -> Transformer:
     return Transformer()
 
 
-def pairwise(iterable: Iterable) -> Iterator[Tuple[Any, Any]]:
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
-
-def discriminator_encoder_modules(
-    in_channels: int = 3, inplace: bool = True
-) -> List[Tuple[str, nn.Sequential]]:
-    conv_block = partial(
-        ConvBlock, kernel_size=5, stride=2, padding="same", act="lrelu", inplace=inplace
-    )
-
-    channels = (in_channels, 128, 128, 256, 512, 512, 1024, 1024)
-    return [
-        (f"scale_{idx}", conv_block(in_channels, out_channels))
-        for idx, (in_channels, out_channels) in enumerate(pairwise(channels))
-    ]
-
-
 class Discriminator(pystiche.Module):
     r"""Discriminator from :cite:`SKL+2018`.
 
@@ -309,7 +286,26 @@ class Discriminator(pystiche.Module):
     """
 
     def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(discriminator_encoder_modules(in_channels=in_channels))
+        def discriminator_encoder_modules(
+            in_channels: int = 3, inplace: bool = True
+        ) -> List[nn.Sequential]:
+            conv_block = partial(
+                ConvBlock,
+                kernel_size=5,
+                stride=2,
+                padding="same",
+                act="lrelu",
+                inplace=inplace,
+            )
+
+            return channel_progression(
+                lambda in_channels, out_channels: conv_block(in_channels, out_channels),
+                channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
+            )
+
+        super().__init__(
+            indexed_children=discriminator_encoder_modules(in_channels=in_channels)
+        )
 
 
 class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
@@ -321,4 +317,4 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
 
     def __init__(self, in_channels: int = 3) -> None:
         discriminator = Discriminator(in_channels=in_channels)
-        super().__init__([*discriminator.named_children()])
+        super().__init__(tuple(discriminator.named_children()))

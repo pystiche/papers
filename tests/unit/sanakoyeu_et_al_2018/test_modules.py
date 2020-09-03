@@ -198,42 +198,6 @@ def test_decoder(subtests, input_image):
         input = torch.randn(10, 10)
         ptu.assert_allclose(module(input), torch.tanh(input / 2))
 
-
-
-def test_discriminator_encoder_modules(subtests):
-    channel_config = [
-        (3, 128),
-        (128, 128),
-        (128, 256),
-        (256, 512),
-        (512, 512),
-        (512, 1024),
-        (1024, 1024),
-    ]
-    names = [
-        "scale_0",
-        "scale_1",
-        "scale_2",
-        "scale_3",
-        "scale_4",
-        "scale_5",
-        "scale_6",
-    ]
-
-    modules = paper.discriminator_encoder_modules()
-
-    in_out_channels = []
-    module_names = []
-    for name, module in modules:
-        with subtests.test("modules"):
-            assert isinstance(module, paper.ConvBlock)
-            in_out_channels.append((module[0].in_channels, module[0].out_channels))
-            module_names.append(name)
-
-    with subtests.test("names"):
-        assert module_names == names
-
-
     with subtests.test("channel_config"):
         assert in_out_channels == channel_config
 
@@ -257,16 +221,26 @@ def test_transformer():
     assert isinstance(transformer, paper.Transformer)
 
 
-def test_DiscriminatorMultiLayerEncoder():
-    modules = []
-    for i in range(0, 7):
-        modules.append(("conv" + str(i), nn.Conv2d))
-        modules.append(("inst_n" + str(i), nn.InstanceNorm2d))
-        modules.append(("lrelu" + str(i), nn.LeakyReLU))
+def test_discriminator_modules(subtests):
+    channel_config = [
+        (3, 128),
+        (128, 128),
+        (128, 256),
+        (256, 512),
+        (512, 512),
+        (512, 1024),
+        (1024, 1024),
+    ]
 
-    discriminator_encoder = paper.DiscriminatorMultiLayerEncoder()
+    discriminator = paper.Discriminator()
 
-    for name, module in modules:
-        actual = getattr(discriminator_encoder, name)
-        assert isinstance(actual, module)
+    in_out_channels = []
+    module_names = []
+    for name, module in discriminator.named_children():
+        with subtests.test("modules"):
+            assert isinstance(module, paper.ConvBlock)
+            in_out_channels.append((module[0].in_channels, module[0].out_channels))
+            module_names.append(name)
 
+    with subtests.test("channel_config"):
+        assert in_out_channels == channel_config
