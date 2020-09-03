@@ -271,3 +271,23 @@ def test_load_state_dict_from_url_torch_1_6_0(subtests, tmpdir):
         ptu.assert_allclose(
             utils.load_state_dict_from_url(url, model_dir=tmpdir), state_dict
         )
+
+
+def test_channel_progression(subtests):
+    actual_modules = utils.channel_progression(
+        lambda in_channels, out_channels: nn.Conv2d(
+            in_channels, out_channels, kernel_size=3
+        ),
+        channels=(32, 64, 128, 256),
+    )
+    desired_modules = [
+        nn.Conv2d(32, 64, kernel_size=3),
+        nn.Conv2d(64, 128, kernel_size=3),
+        nn.Conv2d(128, 256, kernel_size=3),
+    ]
+
+    for actual, desired in zip(actual_modules, desired_modules):
+        with subtests.test("in_channels"):
+            assert actual.in_channels == desired.in_channels
+        with subtests.test("out_channels"):
+            assert actual.out_channels == desired.out_channels

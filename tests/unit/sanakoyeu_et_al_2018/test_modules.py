@@ -1,10 +1,13 @@
 import pytest
 
+import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
+import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
+from pystiche.enc import SequentialEncoder
 from pystiche_papers.utils import ResidualBlock, same_size_padding
 
 
@@ -114,3 +117,105 @@ def test_residual_block(subtests, input_image):
     with subtests.test("forward size"):
         output_image = residual_block(input_image)
         assert output_image.size() == input_image.size()
+
+
+def test_encoder(subtests):
+    channel_config = [(3, 32), (32, 32), (32, 64), (64, 128), (128, 256)]
+
+    encoder = paper.encoder()
+
+    assert isinstance(encoder, SequentialEncoder)
+
+    in_out_channels = []
+    for i, module in enumerate(encoder.children()):
+        with subtests.test("modules"):
+            if i == 0:
+                with subtests.test("padding_module"):
+                    assert isinstance(module, nn.ReflectionPad2d)
+            else:
+                assert isinstance(module, paper.ConvBlock)
+                in_out_channels.append((module[0].in_channels, module[0].out_channels))
+
+    with subtests.test("channel_config"):
+        assert in_out_channels == channel_config
+
+
+def test_decoder(subtests, input_image):
+    num_residual_blocks = 2
+    channel_config = [
+        (256, 256),
+        (256, 256),
+        (256, 256),
+        (256, 128),
+        (128, 64),
+        (64, 32),
+        (32, 3),
+    ]
+
+    decoder = paper.decoder(num_residual_blocks=num_residual_blocks)
+
+    assert isinstance(decoder, pystiche.SequentialModule)
+
+    in_out_channels = []
+    children = decoder.children()
+    with subtests.test("residual_blocks"):
+        for _ in range(num_residual_blocks):
+            module = next(children)
+            assert isinstance(module, ResidualBlock)
+            in_out_channels.append(
+                (
+                    module.residual[1][0].in_channels,
+                    module.residual[-1][0].out_channels,
+                )
+            )
+
+    with subtests.test("upsample_conv_blocks"):
+        for _ in range(4):
+            module = next(children)
+            assert isinstance(module, paper.UpsampleConvBlock)
+            in_out_channels.append(
+                (module.conv[0].in_channels, module.conv[0].out_channels)
+            )
+
+    module = next(children)
+    with subtests.test("padding_module"):
+        assert isinstance(module, nn.ReflectionPad2d)
+
+    module = next(children)
+    with subtests.test("last_conv"):
+        assert isinstance(module, nn.Conv2d)
+        with subtests.test("kernel_size"):
+            assert module.kernel_size == misc.to_2d_arg(7)
+        with subtests.test("stride"):
+            assert module.stride == misc.to_2d_arg(1)
+        with subtests.test("padding"):
+            assert module.padding == misc.to_2d_arg(0)
+        in_out_channels.append((module.in_channels, module.out_channels))
+
+    module = next(children)
+    with subtests.test("value_range_delimiter"):
+        torch.manual_seed(0)
+        input = torch.randn(10, 10)
+        ptu.assert_allclose(module(input), torch.tanh(input / 2))
+
+    with subtests.test("channel_config"):
+        assert in_out_channels == channel_config
+
+
+def test_Transformer_smoke(subtests, input_image):
+    transformer = paper.Transformer()
+    output_image = transformer(input_image)
+
+    with subtests.test("encoder"):
+        assert isinstance(transformer.encoder, SequentialEncoder)
+
+    with subtests.test("decoder"):
+        assert isinstance(transformer.decoder, pystiche.SequentialModule)
+
+    with subtests.test("forward size"):
+        assert input_image.size() == output_image.size()
+
+
+def test_transformer():
+    transformer = paper.transformer()
+    assert isinstance(transformer, paper.Transformer)

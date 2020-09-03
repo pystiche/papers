@@ -4,12 +4,13 @@ import random
 import shutil
 import tempfile
 from collections import OrderedDict
-from collections.abc import Sequence
 from os import path
-from typing import Any, Callable, Dict, Iterator, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Sequence
 from typing import Sequence as SequenceType
 from typing import Tuple, TypeVar, Union, cast, overload
 
+import more_itertools
 import numpy as np
 
 import torch
@@ -31,6 +32,7 @@ __all__ = [
     "get_sha256_hash",
     "save_state_dict",
     "load_state_dict_from_url",
+    "channel_progression",
 ]
 
 In = TypeVar("In")
@@ -253,3 +255,14 @@ def load_state_dict_from_url(
         return cast(
             Dict[str, torch.Tensor], torch.load(cached_file, map_location=map_location)
         )
+
+
+T = TypeVar("T")
+
+
+def channel_progression(
+    module_fn: Callable[[int, int], T], channels: Sequence[int]
+) -> List[T]:
+    return [
+        module_fn(*channels_pair) for channels_pair in more_itertools.pairwise(channels)
+    ]
