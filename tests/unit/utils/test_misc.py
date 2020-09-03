@@ -25,6 +25,20 @@ def test_same_size_padding():
     assert utils.same_size_padding(kernel_size=(2, 4)) == (0, 1, 1, 2)
 
 
+def test_same_size_padding_image_size(subtests, input_image):
+    in_channels = out_channels = 3
+    for kernel_size in ((1,1), (2,2), (3,3), (4,4)):
+        with subtests.test(kernel_size=kernel_size):
+            conv = nn.Conv2d(
+                in_channels,
+                out_channels,
+                kernel_size=kernel_size,
+                padding=utils.same_size_padding(kernel_size),
+            )
+            output_image = conv(input_image)
+            assert input_image.size() == output_image.size()
+
+
 def test_same_size_output_padding():
     assert utils.same_size_output_padding(stride=1) == 0
     assert utils.same_size_output_padding(stride=2) == 1
