@@ -5,12 +5,7 @@ from torch import nn
 
 from ..utils import get_padding
 
-__all__ = [
-    "Identity",
-    "ResidualBlock",
-    "SequentialWithOutChannels",
-    "PaddedConv2D"
-]
+__all__ = ["Identity", "ResidualBlock", "SequentialWithOutChannels", "PaddedConv2D"]
 
 
 class Identity(nn.Module):
