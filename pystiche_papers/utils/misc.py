@@ -18,12 +18,14 @@ from torch.hub import _get_torch_home
 from torch.utils.data.dataloader import DataLoader
 
 from pystiche.image import extract_batch_size, is_single_image, make_batched_image
+from pystiche.misc import verify_str_arg
 from pystiche.optim import OptimLogger
 
 __all__ = [
     "same_size_padding",
     "same_size_output_padding",
     "is_valid_padding",
+    "get_padding",
     "batch_up_image",
     "paper_replication",
     "make_reproducible",
@@ -55,29 +57,6 @@ def elementwise(
     return fn(inputs)
 
 
-def is_even(inputs: Union[int, SequenceType[int]]) -> bool:
-    if isinstance(inputs, Sequence):
-        return any(input % 2 == 0 for input in inputs)
-    return inputs % 2 == 0
-
-
-def even_kernel_padding_correction(
-    kernel_sizes: Union[int, SequenceType[int]]
-) -> Tuple[int, ...]:
-    paddings = elementwise(lambda x: (x - 1) // 2, kernel_sizes)
-    if isinstance(paddings, Sequence):
-        return sum(
-            tuple(
-                (padding, padding + 1) if is_even(kernel_size) else (padding, padding)
-                for padding, kernel_size in zip(
-                    paddings, kernel_sizes  # type: ignore[arg-type]
-                )
-            ),
-            (),
-        )
-    return (paddings, paddings + 1)
-
-
 @overload
 def same_size_padding(kernel_size: int) -> int:
     ...
@@ -91,9 +70,23 @@ def same_size_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
 def same_size_padding(
     kernel_size: Union[int, SequenceType[int]]
 ) -> Union[int, Tuple[int, ...]]:
-    if is_even(kernel_size):
-        return even_kernel_padding_correction(kernel_size)
     return elementwise(lambda x: (x - 1) // 2, kernel_size)  # type: ignore[no-any-return]
+
+
+@overload
+def full_padding(kernel_size: int) -> int:
+    ...
+
+
+@overload
+def full_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
+    ...
+
+
+def full_padding(
+    kernel_size: Union[int, SequenceType[int]]
+) -> Union[int, Tuple[int, ...]]:
+    return elementwise(lambda x: x - 1, kernel_size)  # type: ignore[no-any-return]
 
 
 @overload
@@ -120,6 +113,18 @@ def is_valid_padding(padding: Union[int, SequenceType[int]]) -> bool:
         return is_valid(padding)
     else:
         return all(elementwise(is_valid, padding))
+
+
+def get_padding(
+    padding: str, kernel_size: Union[Tuple[int, int], int]
+) -> Union[Tuple[int, int], int]:
+    padding = verify_str_arg(padding, valid_args=["same", "valid", "full"])
+    if padding == "same":
+        return cast(Tuple[int, int], same_size_padding(kernel_size))
+    elif padding == "full":
+        return cast(Tuple[int, int], full_padding(kernel_size))
+    else:  # padding == "valid"
+        return 0
 
 
 def batch_up_image(
