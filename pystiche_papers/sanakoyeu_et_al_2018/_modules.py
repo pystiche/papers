@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
@@ -286,25 +285,18 @@ class Discriminator(pystiche.Module):
     """
 
     def __init__(self, in_channels: int = 3) -> None:
-        def discriminator_encoder_modules(
-            in_channels: int = 3, inplace: bool = True
-        ) -> List[nn.Sequential]:
-            conv_block = partial(
-                ConvBlock,
-                kernel_size=5,
-                stride=2,
-                padding="same",
-                act="lrelu",
-                inplace=inplace,
-            )
-
-            return channel_progression(
-                lambda in_channels, out_channels: conv_block(in_channels, out_channels),
+        super().__init__(
+            indexed_children=channel_progression(
+                lambda in_channels, out_channels: ConvBlock(
+                    in_channels,
+                    out_channels,
+                    kernel_size=5,
+                    stride=2,
+                    padding="same",
+                    act="lrelu",
+                ),
                 channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
             )
-
-        super().__init__(
-            indexed_children=discriminator_encoder_modules(in_channels=in_channels)
         )
 
 
@@ -316,5 +308,4 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
     """
 
     def __init__(self, in_channels: int = 3) -> None:
-        discriminator = Discriminator(in_channels=in_channels)
-        super().__init__(tuple(discriminator.named_children()))
+        super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
