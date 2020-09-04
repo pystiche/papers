@@ -21,6 +21,8 @@ __all__ = [
     "decoder",
     "Transformer",
     "transformer",
+    "Discriminator",
+    "DiscriminatorMultiLayerEncoder",
 ]
 
 
@@ -273,3 +275,37 @@ def transformer(style: Optional[str] = None,) -> Transformer:
 
     """
     return Transformer()
+
+
+class Discriminator(pystiche.Module):
+    r"""Discriminator from :cite:`SKL+2018`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+    """
+
+    def __init__(self, in_channels: int = 3) -> None:
+        super().__init__(
+            indexed_children=channel_progression(
+                lambda in_channels, out_channels: ConvBlock(
+                    in_channels,
+                    out_channels,
+                    kernel_size=5,
+                    stride=2,
+                    padding="same",
+                    act="lrelu",
+                ),
+                channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
+            )
+        )
+
+
+class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
+    r"""Discriminator from :cite:`SKL+2018` as :class:`pystiche.enc.MultiLayerEncoder`.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+    """
+
+    def __init__(self, in_channels: int = 3) -> None:
+        super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
