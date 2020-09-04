@@ -219,3 +219,28 @@ def test_Transformer_smoke(subtests, input_image):
 def test_transformer():
     transformer = paper.transformer()
     assert isinstance(transformer, paper.Transformer)
+
+
+def test_discriminator_modules(subtests):
+    channel_config = [
+        (3, 128),
+        (128, 128),
+        (128, 256),
+        (256, 512),
+        (512, 512),
+        (512, 1024),
+        (1024, 1024),
+    ]
+
+    discriminator = paper.Discriminator()
+
+    in_out_channels = []
+    module_names = []
+    for name, module in discriminator.named_children():
+        with subtests.test("modules"):
+            assert isinstance(module, paper.ConvBlock)
+            in_out_channels.append((module[0].in_channels, module[0].out_channels))
+            module_names.append(name)
+
+    with subtests.test("channel_config"):
+        assert in_out_channels == channel_config
