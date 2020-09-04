@@ -23,6 +23,7 @@ from pystiche.optim import OptimLogger
 
 __all__ = [
     "same_size_padding",
+    "full_padding",
     "same_size_output_padding",
     "is_valid_padding",
     "get_padding",
