@@ -40,9 +40,9 @@ import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
 import pystiche
-import pystiche.papers.sanakoyeu_et_al_2018 as paper
+import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import ops
-from pystiche.enc import Encoder, SequentialEncoder
+from pystiche.enc import Encoder, MultiLayerEncoder
 
 __all__ = [
     "DiscriminatorEncodingOperator",
@@ -69,11 +69,11 @@ class DiscriminatorEncodingOperator(ops.EncodingRegularizationOperator):
         self, encoder: Encoder, prediction_module: nn.Module, score_weight: float = 1e0,
     ) -> None:
         super().__init__(encoder, score_weight=score_weight)
-        self.pred_module = prediction_module
+        self.prediction_module = prediction_module
         self.acc = torch.empty(1)
 
     def input_enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self.pred_module(enc))
+        return cast(torch.Tensor, self.prediction_module(enc))
 
     def process_input_image(
         self, image: torch.Tensor, real: bool = True
@@ -129,6 +129,9 @@ class DiscriminatorEncodingOperator(ops.EncodingRegularizationOperator):
 
         return torch.mean(get_acc_mask(prediction, real))
 
+    def get_current_acc(self) -> torch.Tensor:
+        return self.acc
+
     def calculate_score(
         self, prediction: torch.Tensor, real: bool = True
     ) -> torch.Tensor:
@@ -140,16 +143,12 @@ class DiscriminatorEncodingOperator(ops.EncodingRegularizationOperator):
     ) -> Union[torch.Tensor, pystiche.LossDict]:
         return self.process_input_image(input_image, real=real) * self.score_weight
 
-    @property
-    def get_current_acc(self) -> torch.Tensor:
-        return self.acc
-
 
 class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
     r"""Convenience container for multiple :class:`DiscriminatorEncodingOperator` s.
 
     Args:
-        encoder: SequentialEncoder.
+        encoder: :class:`~pystiche.enc.MultiLayerEncoder`.
         layers: Layers of the ``encoder`` that the children operators operate on.
         get_encoding_op: Callable that returns a children operator given a
             :class:`pystiche.enc.SingleLayerEncoder` extracted from the
@@ -163,7 +162,7 @@ class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
 
     def __init__(
         self,
-        encoder: SequentialEncoder,
+        encoder: MultiLayerEncoder,
         layers: Sequence[str],
         get_encoding_op: Callable[[Encoder, float], ops.EncodingOperator],
         layer_weights: Union[str, Sequence[float]] = "sum",
@@ -181,8 +180,8 @@ class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
     def get_discriminator_acc(self) -> torch.Tensor:
         acc = []
         for op in self._modules.values():
-            if isinstance(op, DiscriminatorEncodingOperator):
-                acc.append(op.get_current_acc)
+            if isinstance(op, paper.DiscriminatorEncodingOperator):
+                acc.append(op.get_current_acc())
         return torch.mean(torch.stack(acc))
 
     def process_input_image(
@@ -201,9 +200,9 @@ class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
 def discriminator_operator(
     in_channels: int = 3,
     impl_params: bool = True,
-    encoder: Optional[paper.DiscriminatorEncoder] = None,
+    encoder: Optional[MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
-    prediction_modules: Optional[Dict[str, nn.Module]] = None,
+    prediction_modules: Union[Dict[str, nn.Module], None] = None,
     layer_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ) -> MultiLayerDicriminatorEncodingOperator:
@@ -217,15 +216,16 @@ def discriminator_operator(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        encoder: Trainable :class:`~pystiche.enc.SequentialEncoder`. If omitted, the
-            default  :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorEncoder`
+        encoder: Trainable :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the
+            default
+            :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
             is used.
         layers: Layers from which the encodings of the ``encoder`` should be
             taken. If omitted, the defaults is used. Defaults to
-            ``("lrelu0", "lrelu1", "lrelu3", "lrelu5", "lrelu6")``.
+            ``("0", "1", "3", "5", "6")``.
         prediction_modules: Auxiliary classifier used to process the encodings into a
             prediction. If omitted, the default
-            :func:`~pystiche_papers.sanakoyeu_et_al_2018.get_prediction_modules` is
+            :func:`~pystiche_papers.sanakoyeu_et_al_2018.get_prediction_modules` are
             used.
         layer_weights: Layer weights of the operator. Defaults to ``sum``.
         score_weight: Score weight of the operator. If omitted, the score_weight is
@@ -233,7 +233,7 @@ def discriminator_operator(
             ``impl_params is True`` otherwise ``1e-3``.
     """
     if encoder is None:
-        encoder = paper.DiscriminatorEncoder(in_channels=in_channels)
+        encoder = paper.DiscriminatorMultiLayerEncoder(in_channels=in_channels)
 
     if score_weight is None:
         if impl_params:
@@ -243,7 +243,7 @@ def discriminator_operator(
             score_weight = 1e-3
 
     if layers is None:
-        layers = ("lrelu0", "lrelu1", "lrelu3", "lrelu5", "lrelu6")
+        layers = ("0", "1", "3", "5", "6")
 
     if prediction_modules is None:
         prediction_modules = paper.get_prediction_modules()
@@ -260,8 +260,9 @@ def discriminator_operator(
     def get_encoding_op(
         encoder: Encoder, layer_weight: float
     ) -> DiscriminatorEncodingOperator:
+        prediction_module = prediction_modules[cast(str, encoder.layer)]  # type: ignore[index]
         return DiscriminatorEncodingOperator(
-            encoder, prediction_modules[encoder.layer], score_weight=layer_weight,
+            encoder, prediction_module, score_weight=layer_weight,
         )
 
     return MultiLayerDicriminatorEncodingOperator(
@@ -300,23 +301,23 @@ class DiscriminatorLoss(nn.Module):
         input_photo: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         loss = discriminator(input_painting, real=True)
-        acc = discriminator.get_discriminator_acc
+        acc = discriminator.get_discriminator_acc()
         for key, value in zip(
             loss.keys(), discriminator(output_photo, real=False).values()
         ):
             loss[key] = loss[key] + value
 
-        acc += discriminator.get_discriminator_acc
+        acc += discriminator.get_discriminator_acc()
         if input_photo is not None:
             for key, value in zip(
                 loss.keys(), discriminator(input_photo, real=False).values()
             ):
                 loss[key] = loss[key] + value
-            acc += discriminator.get_discriminator_acc
+            acc += discriminator.get_discriminator_acc()
             self.acc = acc / 3
-            return loss
+            return cast(torch.Tensor, loss)
         self.acc = acc / 2
-        return loss
+        return cast(torch.Tensor, loss)
 
     def forward(
         self,

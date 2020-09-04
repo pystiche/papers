@@ -23,6 +23,8 @@ __all__ = [
     "Discriminator",
     "DiscriminatorMultiLayerEncoder",
     "TransformerBlock",
+    "prediction_module",
+    "get_prediction_modules",
 ]
 
 
@@ -389,9 +391,9 @@ def prediction_module(
 
 def get_prediction_modules() -> Dict[str, nn.Module]:
     return {
-        "lrelu0": prediction_module(128, 5),
-        "lrelu1": prediction_module(128, 10),
-        "lrelu3": prediction_module(512, 10),
-        "lrelu5": prediction_module(1024, 6),
-        "lrelu6": prediction_module(1024, 3),
+        "0": prediction_module(128, 5),
+        "1": prediction_module(128, 10),
+        "3": prediction_module(512, 10),
+        "5": prediction_module(1024, 6),
+        "6": prediction_module(1024, 3),
     }

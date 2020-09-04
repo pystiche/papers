@@ -250,14 +250,35 @@ def test_TransformerBlock(subtests, input_image):
                 assert output_image.size() == input_image.size()
 
 
+def test_prediction_module(subtests):
+    in_channels = 3
+    kernel_size = 3
+
+    prediction_module = paper.prediction_module(in_channels, kernel_size)
+
+    assert isinstance(prediction_module, nn.Conv2d)
+
+    with subtests.test("in_channels"):
+        assert prediction_module.in_channels == in_channels
+    with subtests.test("out_channels"):
+        assert prediction_module.out_channels == 1
+
+    with subtests.test("kernel_size"):
+        assert prediction_module.kernel_size == misc.to_2d_arg(kernel_size)
+
+    with subtests.test("stride"):
+        assert prediction_module.stride == misc.to_2d_arg(1)
+
+    with subtests.test("padding"):
+        assert prediction_module.padding == misc.to_2d_arg(
+            same_size_padding(kernel_size)
+        )
+
+
 def test_get_prediction_modules(subtests):
     channel_config = [(128, 1), (128, 1), (512, 1), (1024, 1), (1024, 1)]
-    names = ["lrelu0", "lrelu1", "lrelu3", "lrelu5", "lrelu6"]
 
     modules = paper.get_prediction_modules()
-
-    with subtests.test("names"):
-        assert list(modules.keys()) == names
 
     in_out_channels = []
     for module in modules.values():

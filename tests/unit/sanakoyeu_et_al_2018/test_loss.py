@@ -53,7 +53,7 @@ def test_DiscriminatorEncodingOperator_call(subtests):
                 ptu.assert_allclose(actual, desired)
 
             with subtests.test("accuracy"):
-                actual = op.get_current_acc
+                actual = op.get_current_acc()
                 desired = (
                     torch.mean(
                         torch.masked_fill(
@@ -63,10 +63,14 @@ def test_DiscriminatorEncodingOperator_call(subtests):
                         )
                     )
                     if real
-                    else torch.masked_fill(
-                        torch.zeros_like(prediction),
-                        prediction < torch.zeros_like(prediction),
-                        1,
+                    else (
+                        torch.mean(
+                            torch.masked_fill(
+                                torch.zeros_like(prediction),
+                                prediction < torch.zeros_like(prediction),
+                                1,
+                            )
+                        )
                     )
                 )
                 ptu.assert_allclose(actual, desired)
