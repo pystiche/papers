@@ -9,6 +9,7 @@ __all__ = [
     "Identity",
     "ResidualBlock",
     "SequentialWithOutChannels",
+    "PaddedConv2D"
 ]
 
 
@@ -85,7 +86,7 @@ class PaddedConv2D(nn.Conv2d):
                 sum(
                     tuple(
                         (0, 1) if self.is_any_even(size) else (0, 0)
-                        for size in kernel_size
+                        for size in reversed(kernel_size)
                     ),
                     (),
                 )

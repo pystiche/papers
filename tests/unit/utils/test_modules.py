@@ -1,11 +1,12 @@
 from collections import OrderedDict
-
+import itertools
 import pytest
 
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
+from pystiche.misc import to_2d_arg
 from pystiche_papers import utils
 
 
@@ -65,3 +66,25 @@ def test_SequentialWithOutChannels_forward_behaviour(input_image):
     for module in sequential_modules:
         desired = module(desired)
     ptu.assert_allclose(actual, desired)
+
+
+def test_PaddedConv2D(subtests, input_image):
+    in_channels = out_channels = 3
+
+    for kernel_size, padding in itertools.product((3, 4, (3, 3), (3, 4), (4, 3), (4, 4)), ("same", "valid", "full")):
+        with subtests.test(kernel_size=kernel_size, padding=padding):
+            padded_conv = utils.PaddedConv2D(in_channels, out_channels, kernel_size, padding=padding)
+
+            with subtests.test("padding"):
+                assert padded_conv.padding == to_2d_arg(utils.get_padding(padding, kernel_size))
+
+            with subtests.test("forward_size"):
+                output_image = padded_conv(input_image)
+                if padding == "same":
+                    desired_image_size = input_image.size()
+                else:
+                    conv = nn.Conv2d(in_channels, out_channels, kernel_size, padding=utils.get_padding(padding, kernel_size))
+                    desired_image_size = conv(input_image).size()
+
+                assert desired_image_size == output_image.size()
+
