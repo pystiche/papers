@@ -9,7 +9,7 @@ from torch import nn
 import pystiche
 from pystiche_papers.utils import load_state_dict_from_url
 
-from ..utils import ResidualBlock, same_size_output_padding, same_size_padding
+from ..utils import ResidualBlock, SameSizeConv2d, SameSizeConvTranspose2d
 
 __all__ = [
     "conv",
@@ -65,25 +65,14 @@ def conv(
     stride: Union[Tuple[int, int], int] = 1,
     padding: Optional[Union[Tuple[int, int], int]] = None,
     upsample: bool = False,
-) -> Union[nn.Conv2d, nn.ConvTranspose2d]:
+) -> Union[SameSizeConv2d, nn.Conv2d, SameSizeConvTranspose2d, nn.ConvTranspose2d]:
     if padding is None:
-        padding = cast(Union[Tuple[int, int], int], same_size_padding(kernel_size))
-    if not upsample:
-        return nn.Conv2d(
-            in_channels, out_channels, kernel_size, stride=stride, padding=padding,
-        )
+        cls = SameSizeConvTranspose2d if upsample else SameSizeConv2d
+        kwargs = {}
     else:
-        output_padding = cast(
-            Union[Tuple[int, int], int], same_size_output_padding(stride)
-        )
-        return nn.ConvTranspose2d(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride=stride,
-            padding=padding,
-            output_padding=output_padding,
-        )
+        cls = nn.ConvTranspose2d if upsample else nn.Conv2d
+        kwargs = dict(padding=padding)
+    return cls(in_channels, out_channels, kernel_size, stride=stride, **kwargs)
 
 
 def norm(
@@ -268,11 +257,10 @@ def decoder(
             upsample=True,
             instance_norm=instance_norm,
         ),
-        nn.Conv2d(
+        SameSizeConv2d(
             in_channels=maybe_fix_num_channels(32, instance_norm),
             out_channels=3,
             kernel_size=9,
-            padding=same_size_padding(kernel_size=9),
         ),
         get_value_range_delimiter(),
     )
