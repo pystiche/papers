@@ -87,7 +87,7 @@ class _SameSizeConvNd(pystiche.Module):
         )
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self._conv(F.pad(input, self._pad, mode=self._mode))
+        return cast(torch.Tensor, self._conv(F.pad(input, self._pad, mode=self._mode)))
 
     def __getattr__(self, name: str) -> Any:
         if name == "_conv":
