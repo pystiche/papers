@@ -1,4 +1,3 @@
-import itertools
 from collections import OrderedDict
 
 import pytest
@@ -10,6 +9,8 @@ from torch import nn
 from pystiche.image import extract_image_size, extract_num_channels
 from pystiche.misc import to_2d_arg
 from pystiche_papers import utils
+
+from tests.utils import generate_param_combinations
 
 
 def test_Identity():
@@ -72,13 +73,11 @@ def test_SequentialWithOutChannels_forward_behaviour(input_image):
 
 @pytest.fixture
 def same_size_conv_params():
-    kernel_sizes = (3, 4, (3, 4), (4, 3))
-    strides = (1, 2, (1, 2), (2, 1))
-    dilations = (1, 2, (1, 2), (2, 1))
     return tuple(
-        dict(kernel_size=kernel_size, stride=stride, dilation=dilation)
-        for kernel_size, stride, dilation in itertools.product(
-            kernel_sizes, strides, dilations
+        generate_param_combinations(
+            kernel_size=(3, 4, (3, 4), (4, 3)),
+            stride=(1, 2, (1, 2), (2, 1)),
+            dilation=(1, 2, (1, 2), (2, 1)),
         )
     )
 
@@ -88,20 +87,17 @@ def test_SameSizeConv2d(subtests, same_size_conv_params, input_image):
     image_size = extract_image_size(input_image)
 
     for params in same_size_conv_params:
-        conv = utils.SameSizeConv2d(in_channels, out_channels, **params)
-        output_image = conv(input_image)
+        with subtests.test(**params):
+            conv = utils.SameSizeConv2d(in_channels, out_channels, **params)
+            output_image = conv(input_image)
 
-        actual = extract_image_size(output_image)
-        expected = tuple(
-            side_length // stride
-            for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
-        )
+            actual = extract_image_size(output_image)
+            expected = tuple(
+                side_length // stride
+                for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+            )
 
-        msg = (
-            f"{', '.join((f'{key}={val}' for key, val in params.items()))}: "
-            f"{actual} != {expected}"
-        )
-        assert actual == expected, msg
+            assert actual == expected
 
 
 def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
@@ -109,20 +105,16 @@ def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
     image_size = extract_image_size(input_image)
 
     for params in same_size_conv_params:
-        conv = utils.SameSizeConvTranspose2d(in_channels, out_channels, **params)
-        output_image = conv(input_image)
+        with subtests.test(**params):
+            conv = utils.SameSizeConvTranspose2d(in_channels, out_channels, **params)
+            output_image = conv(input_image)
 
-        actual = extract_image_size(output_image)
-        expected = tuple(
-            side_length * stride
-            for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
-        )
-
-        msg = (
-            f"{', '.join((f'{key}={val}' for key, val in params.items()))}: "
-            f"{actual} != {expected}"
-        )
-        assert actual == expected, msg
+            actual = extract_image_size(output_image)
+            expected = tuple(
+                side_length * stride
+                for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+            )
+            assert actual == expected
 
 
 def test_SameSizeConv2d_padding():
