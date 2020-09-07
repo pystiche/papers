@@ -65,13 +65,8 @@ def conv(
     stride: Union[Tuple[int, int], int] = 1,
     padding: Optional[Union[Tuple[int, int], int]] = None,
     upsample: bool = False,
-) -> Union[SameSizeConv2d, nn.Conv2d, SameSizeConvTranspose2d, nn.ConvTranspose2d]:
-    cls: Union[
-        Type[SameSizeConv2d],
-        Type[nn.Conv2d],
-        Type[SameSizeConvTranspose2d],
-        Type[nn.ConvTranspose2d],
-    ]
+) -> Union[nn.Conv2d, nn.ConvTranspose2d]:
+    cls: Union[Type[nn.Conv2d], Type[nn.ConvTranspose2d]]
     kwargs: Dict[str, Any]
     if padding is None:
         cls = SameSizeConvTranspose2d if upsample else SameSizeConv2d

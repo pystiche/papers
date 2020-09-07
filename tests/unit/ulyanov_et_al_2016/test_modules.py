@@ -9,7 +9,6 @@ from torch import nn
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
-from pystiche_papers import utils
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
@@ -136,7 +135,7 @@ def test_ConvBlock(subtests):
 
     with subtests.test("conv"):
         conv = conv_block[0]
-        assert isinstance(conv, utils.SameSizeConv2d)
+        assert isinstance(conv, nn.Conv2d)
         assert conv.in_channels == in_channels
         assert conv.out_channels == out_channels
         assert conv.kernel_size == misc.to_2d_arg(kernel_size)

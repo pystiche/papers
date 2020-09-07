@@ -11,11 +11,7 @@ import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import misc
 from pystiche_papers import utils
 from pystiche_papers.johnson_alahi_li_2016._modules import select_url
-from pystiche_papers.utils import (
-    SameSizeConv2d,
-    SameSizeConvTranspose2d,
-    load_state_dict_from_url,
-)
+from pystiche_papers.utils import load_state_dict_from_url
 
 from tests.asserts import assert_downloads_correctly, assert_is_downloadable
 from tests.utils import generate_param_combinations
@@ -101,17 +97,9 @@ def test_get_conv(subtests):
                 in_channels, out_channels, kernel_size, stride=stride, **params
             )
 
-            if params["padding"] is None:
-                assert isinstance(
-                    conv,
-                    SameSizeConvTranspose2d if params["upsample"] else SameSizeConv2d,
-                )
-            else:
-                assert isinstance(
-                    conv, nn.ConvTranspose2d if params["upsample"] else nn.Conv2d
-                )
-                with subtests.test("padding"):
-                    assert conv.padding == misc.to_2d_arg(params["padding"])
+            assert isinstance(
+                conv, nn.ConvTranspose2d if params["upsample"] else nn.Conv2d
+            )
 
             with subtests.test("in_channels"):
                 assert conv.in_channels == in_channels
@@ -124,6 +112,10 @@ def test_get_conv(subtests):
 
             with subtests.test("stride"):
                 assert conv.stride == misc.to_2d_arg(stride)
+
+            if params["padding"] is not None:
+                with subtests.test("padding"):
+                    assert conv.padding == misc.to_2d_arg(params["padding"])
 
 
 def test_get_norm(subtests):
@@ -273,7 +265,7 @@ def test_transformer_decoder(subtests):
                         )
                 if i == 2:
                     with subtests.test("output_conv"):
-                        assert isinstance(module, SameSizeConv2d)
+                        assert isinstance(module, nn.Conv2d)
                         in_out_channels.append(
                             (module.in_channels, module.out_channels)
                         )
