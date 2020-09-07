@@ -7,6 +7,7 @@ import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
+from pystiche.image import extract_image_size, extract_num_channels
 from pystiche.misc import to_2d_arg
 from pystiche_papers import utils
 
@@ -69,33 +70,80 @@ def test_SequentialWithOutChannels_forward_behaviour(input_image):
     ptu.assert_allclose(actual, desired)
 
 
-def test_PaddedConv2D(subtests, input_image):
-    in_channels = out_channels = 3
+@pytest.fixture
+def same_size_conv_params():
+    kernel_sizes = (3, 4, (3, 4), (4, 3))
+    strides = (1, 2, (1, 2), (2, 1))
+    dilations = (1, 2, (1, 2), (2, 1))
+    return tuple(
+        dict(kernel_size=kernel_size, stride=stride, dilation=dilation)
+        for kernel_size, stride, dilation in itertools.product(
+            kernel_sizes, strides, dilations
+        )
+    )
 
-    for kernel_size, padding in itertools.product(
-        (3, 4, (3, 3), (3, 4), (4, 3), (4, 4)), ("same", "valid", "full")
-    ):
-        with subtests.test(kernel_size=kernel_size, padding=padding):
-            padded_conv = utils.PaddedConv2D(
-                in_channels, out_channels, kernel_size, padding=padding
-            )
 
-            with subtests.test("padding"):
-                assert padded_conv.padding == to_2d_arg(
-                    utils.get_padding(padding, kernel_size)
-                )
+def test_SameSizeConv2d(subtests, same_size_conv_params, input_image):
+    in_channels = out_channels = extract_num_channels(input_image)
+    image_size = extract_image_size(input_image)
 
-            with subtests.test("forward_size"):
-                output_image = padded_conv(input_image)
-                if padding == "same":
-                    desired_image_size = input_image.size()
-                else:
-                    conv = nn.Conv2d(
-                        in_channels,
-                        out_channels,
-                        kernel_size,
-                        padding=utils.get_padding(padding, kernel_size),
-                    )
-                    desired_image_size = conv(input_image).size()
+    for params in same_size_conv_params:
+        conv = utils.SameSizeConv2d(in_channels, out_channels, **params)
+        output_image = conv(input_image)
 
-                assert desired_image_size == output_image.size()
+        actual = extract_image_size(output_image)
+        expected = tuple(
+            side_length // stride
+            for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+        )
+
+        msg = (
+            f"{', '.join((f'{key}={val}' for key, val in params.items()))}: "
+            f"{actual} != {expected}"
+        )
+        assert actual == expected, msg
+
+
+def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
+    in_channels = out_channels = extract_num_channels(input_image)
+    image_size = extract_image_size(input_image)
+
+    for params in same_size_conv_params:
+        conv = utils.SameSizeConvTranspose2d(in_channels, out_channels, **params)
+        output_image = conv(input_image)
+
+        actual = extract_image_size(output_image)
+        expected = tuple(
+            side_length * stride
+            for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+        )
+
+        msg = (
+            f"{', '.join((f'{key}={val}' for key, val in params.items()))}: "
+            f"{actual} != {expected}"
+        )
+        assert actual == expected, msg
+
+
+def test_SameSizeConv2d_padding():
+    with pytest.raises(RuntimeError):
+        utils.SameSizeConv2d(1, 1, 3, padding=1)
+
+
+def test_SameSizeConv2d_repr_smoke():
+    same_size_conv = utils.SameSizeConv2d(
+        in_channels=2,
+        out_channels=2,
+        kernel_size=1,
+        stride=1,
+        dilation=2,
+        groups=2,
+        bias=True,
+        padding_mode="reflect",
+    )
+    assert isinstance(repr(same_size_conv), str)
+
+
+def test_SameSizeConvTranspose2d_output_padding():
+    with pytest.raises(RuntimeError):
+        utils.SameSizeConvTranspose2d(1, 1, 3, output_padding=1)
