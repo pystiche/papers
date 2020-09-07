@@ -136,6 +136,26 @@ def test_SameSizeConv2d_repr_smoke():
     assert isinstance(repr(same_size_conv), str)
 
 
+def test_SameSizeConv2d_state_dict():
+    kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
+    conv = nn.Conv2d(**kwargs)
+    same_size_conv = utils.SameSizeConv2d(**kwargs)
+
+    state_dict = conv.state_dict()
+    same_size_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
+
+
 def test_SameSizeConvTranspose2d_output_padding():
     with pytest.raises(RuntimeError):
         utils.SameSizeConvTranspose2d(1, 1, 3, output_padding=1)
+
+
+def test_SameSizeConvTranspose2d_state_dict():
+    kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
+    conv = nn.ConvTranspose2d(**kwargs)
+    same_size_conv = utils.SameSizeConvTranspose2d(**kwargs)
+
+    state_dict = conv.state_dict()
+    same_size_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)

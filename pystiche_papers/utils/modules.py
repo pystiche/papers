@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.nn.modules.conv import _ConvNd
+from torch.nn.modules.conv import _ConvNd, _ConvTransposeNd
 
 import pystiche
 
@@ -49,15 +49,14 @@ class SequentialWithOutChannels(nn.Sequential):
         ].out_channels
 
 
-class _SameSizeConvNd(pystiche.Module):
-    def __init__(self, conv_module: _ConvNd):
-        if any(conv_module.padding):
+class _SameSizeConvNdMixin(pystiche.ComplexObject, _ConvNd):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if "padding" in kwargs:
             raise RuntimeError
-        if any(conv_module.output_padding):
+        if "output_padding" in kwargs:
             raise RuntimeError
+        super().__init__(*args, **kwargs)
 
-        super().__init__()
-        self._conv = conv_module
         self._pad = self._compute_pad()
         self._mode = "constant" if self.padding_mode == "zeros" else self.padding_mode
 
@@ -67,12 +66,12 @@ class _SameSizeConvNd(pystiche.Module):
         dilation = torch.tensor(self.dilation)
         effective_kernel_size = dilation * (kernel_size - 1)
 
-        if self._is_transpose_conv(self._conv):
+        if isinstance(self, _ConvTransposeNd):
             output_pad = torch.fmod(effective_kernel_size - 1, stride)
             pad_total = (effective_kernel_size - 1 - output_pad) // stride + 1
 
-            self._conv.padding = tuple(effective_kernel_size.tolist())
-            self._conv.output_padding = tuple(output_pad.tolist())
+            self.padding = tuple(effective_kernel_size.tolist())
+            self.output_padding = tuple(output_pad.tolist())
         else:
             pad_total = effective_kernel_size + 1 - stride
 
@@ -80,19 +79,12 @@ class _SameSizeConvNd(pystiche.Module):
         pad_post = pad_total - pad_pre
         return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
 
-    @staticmethod
-    def _is_transpose_conv(conv_module: _ConvNd) -> bool:
-        return isinstance(
-            conv_module, (nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d)
-        )
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self._conv(F.pad(input, self._pad, mode=self._mode)))
-
-    def __getattr__(self, name: str) -> Any:
-        if name == "_conv":
-            return self._modules["_conv"]
-        return getattr(self._conv, name)
+    def forward(
+        self, input: torch.Tensor, output_size: Optional[List[int]] = None
+    ) -> torch.Tensor:
+        if output_size is not None:
+            raise RuntimeError
+        return cast(torch.Tensor, super().forward(F.pad(input, self._pad, self._mode)))
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
@@ -110,28 +102,10 @@ class _SameSizeConvNd(pystiche.Module):
             dct["padding_mode"] = self.padding_mode
         return dct
 
-    def _build_repr(
-        self,
-        name: Optional[str] = None,
-        properties: Optional[Dict[str, str]] = None,
-        named_children: Optional[Sequence[Tuple[str, Any]]] = None,
-    ) -> str:
-        if named_children is None:
-            named_children = tuple(
-                (name, child)
-                for name, child in self.named_children()
-                if child is not self._conv
-            )
-        return super()._build_repr(
-            name, properties=properties, named_children=named_children
-        )
+
+class SameSizeConv2d(_SameSizeConvNdMixin, nn.Conv2d):
+    pass
 
 
-class SameSizeConv2d(_SameSizeConvNd):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(nn.Conv2d(*args, **kwargs))
-
-
-class SameSizeConvTranspose2d(_SameSizeConvNd):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(nn.ConvTranspose2d(*args, **kwargs))
+class SameSizeConvTranspose2d(_SameSizeConvNdMixin, nn.ConvTranspose2d):
+    pass
