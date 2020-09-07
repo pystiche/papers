@@ -9,6 +9,7 @@ from torch import nn
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
+from pystiche_papers import utils
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
@@ -128,48 +129,35 @@ def test_ConvBlock(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
-    padding = (1, 1, 1, 1)
     conv_block = paper.ConvBlock(in_channels, out_channels, kernel_size, stride=stride)
 
     assert isinstance(conv_block, paper.SequentialWithOutChannels)
+    assert len(conv_block) == 3
 
-    with subtests.test("modules"):
-        assert len(conv_block) == 4
-        assert isinstance(conv_block[0], nn.ReflectionPad2d)
-        with subtests.test("conv_module"):
-            assert isinstance(conv_block[1], nn.Conv2d)
-            assert conv_block[1].stride == misc.to_2d_arg(stride)
-            assert conv_block[1].padding == misc.to_2d_arg(0)
-        assert isinstance(conv_block[2], nn.InstanceNorm2d)
-        assert isinstance(conv_block[3], nn.ReLU)
+    with subtests.test("conv"):
+        conv = conv_block[0]
+        assert isinstance(conv, utils.SameSizeConv2d)
+        assert conv.in_channels == in_channels
+        assert conv.out_channels == out_channels
+        assert conv.kernel_size == misc.to_2d_arg(kernel_size)
+        assert conv.stride == misc.to_2d_arg(stride)
 
-    with subtests.test("padding"):
-        assert conv_block[0].padding == padding
+    with subtests.test("norm"):
+        norm = conv_block[1]
+        assert isinstance(norm, nn.InstanceNorm2d)
+
+    with subtests.test("activation"):
+        act = conv_block[2]
+        assert isinstance(act, nn.ReLU)
 
 
 def test_ConvSequence(subtests):
-    in_channels = 3
-    out_channels = 6
-    kernel_size = 3
+    in_channels = out_channels = 1
     conv_sequence = paper.ConvSequence(in_channels, out_channels)
 
     assert isinstance(conv_sequence, paper.SequentialWithOutChannels)
-
-    with subtests.test("modules"):
-        assert len(conv_sequence) == 3
-        for i in range(len(conv_sequence)):
-            assert isinstance(conv_sequence[i], paper.ConvBlock)
-            assert (
-                conv_sequence[i][1].in_channels == in_channels
-                if i == 0
-                else out_channels
-            )
-            assert conv_sequence[i].out_channels == out_channels
-            assert (
-                conv_sequence[i][1].kernel_size == misc.to_2d_arg(kernel_size)
-                if i < len(conv_sequence) - 1
-                else misc.to_2d_arg(1)
-            )
+    assert len(conv_sequence) == 3
+    assert all(isinstance(child, paper.ConvBlock) for child in conv_sequence.children())
 
 
 def test_JoinBlock(subtests, input_image):
@@ -276,7 +264,7 @@ def test_level_conv_sequence(subtests):
             with subtests.test("input"):
                 first_module = module[0]
                 if impl_params:
-                    assert first_module[1].in_channels == 3
+                    assert first_module[0].in_channels == 3
                 else:
                     assert first_module.out_channels == 6
 
