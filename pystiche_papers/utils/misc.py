@@ -4,11 +4,8 @@ import random
 import shutil
 import tempfile
 from collections import OrderedDict
-from collections.abc import Sequence
 from os import path
-from typing import Any, Callable, Dict, Iterator, Optional
-from typing import Sequence as SequenceType
-from typing import Tuple, TypeVar, Union, cast, overload
+from typing import Any, Dict, Iterator, Optional, Union, cast
 
 import numpy as np
 
@@ -18,15 +15,9 @@ from torch.hub import _get_torch_home
 from torch.utils.data.dataloader import DataLoader
 
 from pystiche.image import extract_batch_size, is_single_image, make_batched_image
-from pystiche.misc import verify_str_arg
 from pystiche.optim import OptimLogger
 
 __all__ = [
-    "same_size_padding",
-    "full_padding",
-    "same_size_output_padding",
-    "is_valid_padding",
-    "get_padding",
     "batch_up_image",
     "paper_replication",
     "make_reproducible",
@@ -35,97 +26,6 @@ __all__ = [
     "save_state_dict",
     "load_state_dict_from_url",
 ]
-
-In = TypeVar("In")
-Out = TypeVar("Out")
-
-
-@overload
-def elementwise(fn: Callable[[In], Out], inputs: In) -> Out:  # type: ignore[misc]
-    ...
-
-
-@overload
-def elementwise(fn: Callable[[In], Out], inputs: SequenceType[In]) -> Tuple[Out, ...]:
-    ...
-
-
-def elementwise(
-    fn: Callable[[In], Out], inputs: Union[In, SequenceType[In]]
-) -> Union[Out, Tuple[Out, ...]]:
-    if isinstance(inputs, Sequence):
-        return tuple(fn(input) for input in inputs)
-    return fn(inputs)
-
-
-@overload
-def same_size_padding(kernel_size: int) -> int:
-    ...
-
-
-@overload
-def same_size_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
-    ...
-
-
-def same_size_padding(
-    kernel_size: Union[int, SequenceType[int]]
-) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: (x - 1) // 2, kernel_size)  # type: ignore[no-any-return]
-
-
-@overload
-def full_padding(kernel_size: int) -> int:
-    ...
-
-
-@overload
-def full_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
-    ...
-
-
-def full_padding(
-    kernel_size: Union[int, SequenceType[int]]
-) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: x - 1, kernel_size)  # type: ignore[no-any-return]
-
-
-@overload
-def same_size_output_padding(stride: int) -> int:
-    ...
-
-
-@overload
-def same_size_output_padding(stride: SequenceType[int]) -> Tuple[int, ...]:
-    ...
-
-
-def same_size_output_padding(
-    stride: Union[int, SequenceType[int]]
-) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: x - 1, stride)  # type: ignore[no-any-return]
-
-
-def is_valid_padding(padding: Union[int, SequenceType[int]]) -> bool:
-    def is_valid(x: int) -> bool:
-        return x > 0
-
-    if isinstance(padding, int):
-        return is_valid(padding)
-    else:
-        return all(elementwise(is_valid, padding))
-
-
-def get_padding(
-    padding: str, kernel_size: Union[Tuple[int, int], int]
-) -> Union[Tuple[int, int], int]:
-    padding = verify_str_arg(padding, valid_args=["same", "valid", "full"])
-    if padding == "same":
-        return cast(Tuple[int, int], same_size_padding(kernel_size))
-    elif padding == "full":
-        return cast(Tuple[int, int], full_padding(kernel_size))
-    else:  # padding == "valid"
-        return 0
 
 
 def batch_up_image(

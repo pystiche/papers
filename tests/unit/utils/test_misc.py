@@ -17,45 +17,6 @@ from tests import assets
 from tests import utils as utils_
 
 
-def test_same_size_padding():
-    assert utils.same_size_padding(kernel_size=1) == 0
-    assert utils.same_size_padding(kernel_size=3) == 1
-    assert utils.same_size_padding(kernel_size=(1, 3)) == (0, 1)
-
-
-def test_full_padding():
-    assert utils.full_padding(kernel_size=1) == 0
-    assert utils.full_padding(kernel_size=3) == 2
-    assert utils.full_padding(kernel_size=(1, 3)) == (0, 2)
-
-
-def test_same_size_output_padding():
-    assert utils.same_size_output_padding(stride=1) == 0
-    assert utils.same_size_output_padding(stride=3) == 2
-    assert utils.same_size_output_padding(stride=(1, 3)) == (0, 2)
-
-
-def test_is_valid_padding():
-    assert utils.is_valid_padding(1)
-    assert not utils.is_valid_padding(0)
-    assert not utils.is_valid_padding(-1)
-
-    assert utils.is_valid_padding((1, 2))
-    assert not utils.is_valid_padding((1, 0, -1))
-
-
-def test_get_padding(subtests):
-    kernel_size = 3
-    for str_padding, desired in (
-        ("same", utils.same_size_padding(kernel_size)),
-        ("full", utils.full_padding(kernel_size)),
-        ("valid", 0),
-    ):
-        with subtests.test(str_padding):
-            actual = utils.get_padding(str_padding, kernel_size)
-            assert actual == desired
-
-
 def test_paper_replication(subtests, caplog):
     optim_logger = OptimLogger()
     starting_offset = optim_logger._environ_level_offset
