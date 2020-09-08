@@ -8,7 +8,7 @@ from torch import nn
 from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import SameSizeConv2d, SequentialWithOutChannels
+from ..utils import AutoPadConv2d, SequentialWithOutChannels
 
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
@@ -161,7 +161,7 @@ class ConvBlock(SequentialWithOutChannels):
         modules = (
             (
                 "conv",
-                SameSizeConv2d(
+                AutoPadConv2d(
                     in_channels,
                     out_channels,
                     kernel_size,
