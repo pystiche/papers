@@ -40,9 +40,10 @@ import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
 import pystiche
-import pystiche_papers.sanakoyeu_et_al_2018._modules as _modules
 from pystiche import ops
 from pystiche.enc import Encoder, MultiLayerEncoder
+
+from ._modules import DiscriminatorMultiLayerEncoder, get_prediction_modules
 
 __all__ = [
     "DiscriminatorEncodingOperator",
@@ -233,7 +234,7 @@ def discriminator_operator(
             ``impl_params is True`` otherwise ``1e-3``.
     """
     if encoder is None:
-        encoder = _modules.DiscriminatorMultiLayerEncoder(in_channels=in_channels)
+        encoder = DiscriminatorMultiLayerEncoder(in_channels=in_channels)
 
     if score_weight is None:
         if impl_params:
@@ -246,7 +247,7 @@ def discriminator_operator(
         layers = ("0", "1", "3", "5", "6")
 
     if prediction_modules is None:
-        prediction_modules = _modules.get_prediction_modules()
+        prediction_modules = get_prediction_modules()
 
     assert tuple(prediction_modules.keys()) == layers, (
         "The keys in prediction_modules should match "
