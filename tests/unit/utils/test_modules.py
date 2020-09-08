@@ -159,3 +159,34 @@ def test_SameSizeConvTranspose2d_state_dict():
     state_dict = conv.state_dict()
     same_size_conv.load_state_dict(state_dict)
     ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
+
+
+@pytest.fixture
+def same_size_avg_pool_params():
+    return tuple(
+        generate_param_combinations(
+            kernel_size=(3, 4, (3, 4), (4, 3)), stride=(1, 2, (1, 2), (2, 1)),
+        )
+    )
+
+
+def test_SameSizeAvgPool2d(subtests, same_size_avg_pool_params, input_image):
+    image_size = extract_image_size(input_image)
+
+    for params in same_size_avg_pool_params:
+        with subtests.test(**params):
+            conv = utils.SameSizeAvgPool2d(**params)
+            output_image = conv(input_image)
+
+            actual = extract_image_size(output_image)
+            expected = tuple(
+                side_length // stride
+                for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+            )
+
+            assert actual == expected
+
+
+def test_SameSizeAvgPool2d_repr_smoke():
+    same_size_conv = utils.SameSizeAvgPool2d(kernel_size=1, stride=1,)
+    assert isinstance(repr(same_size_conv), str)

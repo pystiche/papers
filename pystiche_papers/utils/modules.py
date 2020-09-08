@@ -1,11 +1,14 @@
-from typing import Any, Dict, List, Optional, Union, cast
+from abc import abstractmethod
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.nn.modules.conv import _ConvNd, _ConvTransposeNd
+from torch.nn.modules.conv import _ConvNd
+from torch.nn.modules.pooling import _AvgPoolNd
 
 import pystiche
+from pystiche.misc import to_2d_arg
 
 __all__ = [
     "Identity",
@@ -13,6 +16,7 @@ __all__ = [
     "SequentialWithOutChannels",
     "SameSizeConv2d",
     "SameSizeConvTranspose2d",
+    "SameSizeAvgPool2d",
 ]
 
 
@@ -49,42 +53,47 @@ class SequentialWithOutChannels(nn.Sequential):
         ].out_channels
 
 
-class _SameSizeConvNdMixin(pystiche.ComplexObject, _ConvNd):
+class _SameSizeNdMixin(pystiche.ComplexObject):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if "padding" in kwargs:
             raise RuntimeError
-        if "output_padding" in kwargs:
-            raise RuntimeError
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[call-arg]
 
-        self._pad = self._compute_pad()
-        self._mode = "constant" if self.padding_mode == "zeros" else self.padding_mode
+        self._pad = self._pad_size_to_pad(self._compute_pad_size())
 
-    def _compute_pad(self) -> List[int]:
+    @abstractmethod
+    def _compute_pad_size(self) -> torch.Tensor:
+        pass
+
+    @property
+    @abstractmethod
+    def _mode(self) -> str:
+        pass
+
+    @staticmethod
+    def _pad_size_to_pad(size: torch.Tensor) -> List[int]:
+        pad_post = size // 2
+        pad_pre = size - pad_post
+        return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return cast(
+            torch.Tensor,
+            super().forward(F.pad(input, self._pad, self._mode)),  # type: ignore[misc]
+        )
+
+
+class _SameSizeConvNdMixin(_SameSizeNdMixin, _ConvNd):
+    def _compute_pad_size(self) -> torch.Tensor:
         kernel_size = torch.tensor(self.kernel_size)
         stride = torch.tensor(self.stride)
         dilation = torch.tensor(self.dilation)
         effective_kernel_size = dilation * (kernel_size - 1)
+        return effective_kernel_size + 1 - stride
 
-        if isinstance(self, _ConvTransposeNd):
-            output_pad = torch.fmod(effective_kernel_size - 1, stride)
-            pad_total = (effective_kernel_size - 1 - output_pad) // stride + 1
-
-            self.padding = tuple(effective_kernel_size.tolist())
-            self.output_padding = tuple(output_pad.tolist())
-        else:
-            pad_total = effective_kernel_size + 1 - stride
-
-        pad_pre = pad_total // 2
-        pad_post = pad_total - pad_pre
-        return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
-
-    def forward(
-        self, input: torch.Tensor, output_size: Optional[List[int]] = None
-    ) -> torch.Tensor:
-        if output_size is not None:
-            raise RuntimeError
-        return cast(torch.Tensor, super().forward(F.pad(input, self._pad, self._mode)))
+    @property
+    def _mode(self) -> str:
+        return "constant" if self.padding_mode == "zeros" else self.padding_mode
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
@@ -107,5 +116,65 @@ class SameSizeConv2d(_SameSizeConvNdMixin, nn.Conv2d):
     pass
 
 
-class SameSizeConvTranspose2d(_SameSizeConvNdMixin, nn.ConvTranspose2d):
+class _SameSizeConvTransposeNdMixin(_SameSizeConvNdMixin):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if "output_padding" in kwargs:
+            raise RuntimeError
+        super().__init__(*args, **kwargs)
+
+    def forward(
+        self, input: torch.Tensor, output_size: Optional[List[int]] = None
+    ) -> torch.Tensor:
+        if output_size is not None:
+            raise RuntimeError
+        return super().forward(input)
+
+    def _compute_pad_size(self) -> torch.Tensor:
+        kernel_size = torch.tensor(self.kernel_size)
+        stride = torch.tensor(self.stride)
+        dilation = torch.tensor(self.dilation)
+        effective_kernel_size = dilation * (kernel_size - 1)
+
+        self.padding = tuple(effective_kernel_size.tolist())
+
+        output_pad = torch.fmod(effective_kernel_size - 1, stride)
+        self.output_padding = tuple(output_pad.tolist())
+
+        pad_size = (effective_kernel_size - 1 - output_pad) // stride + 1
+
+        return cast(torch.Tensor, pad_size)
+
+
+class SameSizeConvTranspose2d(  # type: ignore[misc]
+    _SameSizeConvTransposeNdMixin, nn.ConvTranspose2d,
+):
     pass
+
+
+class _SameSizeAvgPoolNdMixin(_SameSizeNdMixin, _AvgPoolNd):
+    def _compute_pad_size(self) -> torch.Tensor:
+        kernel_size = torch.tensor(self.kernel_size)
+        stride = torch.tensor(self.stride)
+        return torch.max(kernel_size - stride, torch.zeros_like(kernel_size))
+
+    @property
+    def _mode(self) -> str:
+        return "constant"
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["kernel_size"] = self.kernel_size
+        dct["stride"] = self.stride
+        return dct
+
+
+class SameSizeAvgPool2d(_SameSizeAvgPoolNdMixin, nn.AvgPool2d):
+    def __init__(
+        self,
+        kernel_size: Union[Tuple[int, int], int],
+        stride: Optional[Union[Tuple[int, int], int]] = None,
+        **kwargs: Any,
+    ) -> None:
+        kernel_size = to_2d_arg(kernel_size)
+        stride = kernel_size if stride is None else to_2d_arg(stride)
+        super().__init__(kernel_size, stride=stride, **kwargs)
