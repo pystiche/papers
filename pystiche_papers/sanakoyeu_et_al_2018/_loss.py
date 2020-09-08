@@ -1,8 +1,9 @@
 from typing import Optional
 
-import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.enc.encoder import SequentialEncoder
 from pystiche.ops.comparison import FeatureReconstructionOperator
+
+from ._modules import TransformerBlock
 
 __all__ = ["transformed_image_loss"]
 
@@ -28,6 +29,6 @@ def transformed_image_loss(
         score_weight = 1e2 if impl_params else 1e0
 
     if transformer_block is None:
-        transformer_block = paper.TransformerBlock()
+        transformer_block = TransformerBlock()
 
     return FeatureReconstructionOperator(transformer_block, score_weight=score_weight)

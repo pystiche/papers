@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -8,6 +10,7 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
+
 from pystiche_papers.utils import AutoPadConv2d, ResidualBlock
 
 
@@ -51,6 +54,7 @@ def test_conv(subtests):
                 assert conv.kernel_size == misc.to_2d_arg(kernel_size)
             with subtests.test("stride"):
                 assert conv.stride == misc.to_2d_arg(stride)
+
 
 
 def test_ConvBlock(subtests):

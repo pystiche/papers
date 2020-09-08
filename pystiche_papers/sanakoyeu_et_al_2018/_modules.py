@@ -58,6 +58,7 @@ def conv(
     )
 
 
+
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
@@ -69,10 +70,17 @@ class ConvBlock(nn.Sequential):
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
         stride: Stride of the convolution. Defaults to ``1``.
+<<<<<<< sanakoyeu-2018
         padding: Optional Padding of the input. If ``None``, padding is done so that the
             output have the same spatial dimensions as the input. Defaults to ``0``.
         padding_mode: ``'zeros'``, ``'reflect'``, ``'replicate'`` or ``'circular'``.
             Default: ``'zeros'``
+=======
+        padding: Padding of the input. It can be either ``"valid"`` for no padding or
+            ``"same"`` for padding to preserve the size. Defaults to ``"valid"``.
+        padding_mode: ``'zeros'``, ``'reflect'``, ``'replicate'`` or ``'circular'``.
+            Defaults to ``'zeros'``
+>>>>>>> use SameSizeConv2D
         act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
             ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
             ``None`` for no activation. Defaults to ``"relu"``.
@@ -372,16 +380,18 @@ class TransformerBlock(enc.SequentialEncoder):
         kwargs = {
             "kernel_size": kernel_size,
             "stride": stride,
-            "padding": get_padding(padding, kernel_size),
+            "padding": padding,
         }
         module = (
             nn.AvgPool2d(**kwargs)  # type: ignore[arg-type]
             if impl_params
-            else nn.utils.weight_norm(nn.Conv2d(in_channels, in_channels, **kwargs))  # type: ignore[arg-type]
+            else nn.utils.weight_norm(conv(in_channels, in_channels, **kwargs))  # type: ignore[arg-type]
         )
+        self.impl_params = impl_params
         super().__init__((module,))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        input = nn.functional.pad(input, [0, 1, 0, 1])
+        if self.impl_params:
+            input = nn.functional.pad(input, [0, 1, 0, 1])
 
         return super().forward(input)
