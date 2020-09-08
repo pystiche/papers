@@ -1,4 +1,5 @@
 import contextlib
+import itertools
 import os
 import shutil
 import tempfile
@@ -18,6 +19,7 @@ __all__ = [
     "is_callable",
     "create_guides",
     "call_args_list_to_dict",
+    "generate_param_combinations",
 ]
 
 
@@ -123,3 +125,10 @@ def call_args_list_to_dict(call_args_list, map, args_idx=None, kwargs_key=None):
         raise pytest.UsageError
 
     return call_args_dict
+
+
+def generate_param_combinations(**kwargs):
+    names = tuple(kwargs.keys())
+    iterables = tuple(kwargs.values())
+    for params in itertools.product(*iterables):
+        yield dict(zip(names, params))

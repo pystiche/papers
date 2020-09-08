@@ -8,7 +8,7 @@ from torch import nn
 from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import SequentialWithOutChannels, is_valid_padding, same_size_padding
+from ..utils import SameSizeConv2d, SequentialWithOutChannels
 
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
@@ -96,26 +96,20 @@ class ConvBlock(SequentialWithOutChannels):
         instance_norm: bool = True,
         inplace: bool = True,
     ) -> None:
-        padding = cast(
-            Union[Tuple[int, int, int, int], int], same_size_padding(kernel_size)
-        )
-
-        modules: List[Tuple[str, nn.Module]] = []
-
-        if is_valid_padding(padding):
-            modules.append(("pad", nn.ReflectionPad2d(padding)))
-
-        modules.append(
+        modules = (
             (
                 "conv",
-                nn.Conv2d(
-                    in_channels, out_channels, kernel_size, stride=stride, padding=0
+                SameSizeConv2d(
+                    in_channels,
+                    out_channels,
+                    kernel_size,
+                    stride=stride,
+                    padding_mode="reflect",
                 ),
-            )
+            ),
+            ("norm", norm(out_channels, instance_norm)),
+            ("act", activation(impl_params, instance_norm, inplace=inplace)),
         )
-        modules.append(("norm", norm(out_channels, instance_norm)))
-        modules.append(("act", activation(impl_params, instance_norm, inplace=inplace)))
-
         super().__init__(OrderedDict(modules), out_channel_name="conv")
 
 

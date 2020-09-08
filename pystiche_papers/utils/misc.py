@@ -5,10 +5,18 @@ import shutil
 import tempfile
 from collections import OrderedDict
 from os import path
-from typing import Any, Callable, Dict, Iterator, List, Optional
-from typing import Sequence
-from typing import Sequence as SequenceType
-from typing import Tuple, TypeVar, Union, cast, overload
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import more_itertools
 import numpy as np
@@ -22,9 +30,6 @@ from pystiche.image import extract_batch_size, is_single_image, make_batched_ima
 from pystiche.optim import OptimLogger
 
 __all__ = [
-    "same_size_padding",
-    "same_size_output_padding",
-    "is_valid_padding",
     "batch_up_image",
     "paper_replication",
     "make_reproducible",
@@ -34,69 +39,6 @@ __all__ = [
     "load_state_dict_from_url",
     "channel_progression",
 ]
-
-In = TypeVar("In")
-Out = TypeVar("Out")
-
-
-@overload
-def elementwise(fn: Callable[[In], Out], inputs: In) -> Out:  # type: ignore[misc]
-    ...
-
-
-@overload
-def elementwise(fn: Callable[[In], Out], inputs: SequenceType[In]) -> Tuple[Out, ...]:
-    ...
-
-
-def elementwise(
-    fn: Callable[[In], Out], inputs: Union[In, SequenceType[In]]
-) -> Union[Out, Tuple[Out, ...]]:
-    if isinstance(inputs, Sequence):
-        return tuple(fn(input) for input in inputs)
-    return fn(inputs)
-
-
-@overload
-def same_size_padding(kernel_size: int) -> int:
-    ...
-
-
-@overload
-def same_size_padding(kernel_size: SequenceType[int]) -> Tuple[int, ...]:
-    ...
-
-
-def same_size_padding(
-    kernel_size: Union[int, SequenceType[int]]
-) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: (x - 1) // 2, kernel_size)  # type: ignore[no-any-return]
-
-
-@overload
-def same_size_output_padding(stride: int) -> int:
-    ...
-
-
-@overload
-def same_size_output_padding(stride: SequenceType[int]) -> Tuple[int, ...]:
-    ...
-
-
-def same_size_output_padding(
-    stride: Union[int, SequenceType[int]]
-) -> Union[int, Tuple[int, ...]]:
-    return elementwise(lambda x: x - 1, stride)  # type: ignore[no-any-return]
-
-
-def is_valid_padding(padding: Union[int, SequenceType[int]]) -> bool:
-    def is_valid(x: int) -> bool:
-        return x > 0
-
-    if isinstance(padding, int):
-        return is_valid(padding)
-    else:
-        return all(elementwise(is_valid, padding))
 
 
 def batch_up_image(

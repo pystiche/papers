@@ -14,6 +14,7 @@ from pystiche_papers.johnson_alahi_li_2016._modules import select_url
 from pystiche_papers.utils import load_state_dict_from_url
 
 from tests.asserts import assert_downloads_correctly, assert_is_downloadable
+from tests.utils import generate_param_combinations
 
 
 @pytest.fixture(scope="module")
@@ -88,36 +89,33 @@ def test_get_conv(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
-    for padding, upsample in itertools.product((None, 1, (1, 1)), (True, False)):
-        conv = paper.conv(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride=stride,
-            padding=padding,
-            upsample=upsample,
-        )
+    for params in generate_param_combinations(
+        padding=(None, 1), upsample=(True, False)
+    ):
+        with subtests.test(**params):
+            conv = paper.conv(
+                in_channels, out_channels, kernel_size, stride=stride, **params
+            )
 
-        assert isinstance(conv, nn.ConvTranspose2d if upsample else nn.Conv2d)
+            assert isinstance(
+                conv, nn.ConvTranspose2d if params["upsample"] else nn.Conv2d
+            )
 
-        with subtests.test("in_channels"):
-            assert conv.in_channels == in_channels
+            with subtests.test("in_channels"):
+                assert conv.in_channels == in_channels
 
-        with subtests.test("out_channels"):
-            assert conv.out_channels == out_channels
+            with subtests.test("out_channels"):
+                assert conv.out_channels == out_channels
 
-        with subtests.test("kernel_size"):
-            assert conv.kernel_size == misc.to_2d_arg(kernel_size)
+            with subtests.test("kernel_size"):
+                assert conv.kernel_size == misc.to_2d_arg(kernel_size)
 
-        with subtests.test("stride"):
-            assert conv.stride == misc.to_2d_arg(stride)
+            with subtests.test("stride"):
+                assert conv.stride == misc.to_2d_arg(stride)
 
-        with subtests.test("padding"):
-            assert conv.padding == (1, 1)
-
-        if upsample:
-            with subtests.test("output_padding"):
-                assert conv.output_padding == misc.to_2d_arg(0)
+            if params["padding"] is not None:
+                with subtests.test("padding"):
+                    assert conv.padding == misc.to_2d_arg(params["padding"])
 
 
 def test_get_norm(subtests):
@@ -150,27 +148,38 @@ def test_conv_block(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 1
-    for relu, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(relu=relu):
-            conv_block = paper.conv_block(
-                in_channels,
-                out_channels,
-                kernel_size,
-                stride=stride,
-                relu=relu,
-                instance_norm=instance_norm,
-            )
+    for params in generate_param_combinations(
+        padding=(None, 1),
+        upsample=(True, False),
+        relu=(True, False),
+        inplace=(True, False),
+        instance_norm=(True, False),
+    ):
+        conv_block = paper.conv_block(
+            in_channels, out_channels, kernel_size, stride=stride, **params
+        )
+        assert isinstance(conv_block, nn.Sequential)
+        assert len(conv_block) == 3 if params["relu"] else 2
 
-            assert isinstance(conv_block, nn.Sequential)
-
-            assert len(conv_block) == 3 if relu else 2
-            assert isinstance(conv_block[0], nn.Conv2d)
+        with subtests.test("conv"):
             assert isinstance(
-                conv_block[1], nn.InstanceNorm2d if instance_norm else nn.BatchNorm2d
+                conv_block[0],
+                type(
+                    paper.conv(
+                        1, 1, 1, padding=params["padding"], upsample=params["upsample"]
+                    )
+                ),
             )
-            if relu:
+
+        with subtests.test("norm"):
+            assert isinstance(
+                conv_block[1], type(paper.norm(1, params["instance_norm"]))
+            )
+
+        if params["relu"]:
+            with subtests.test("relu"):
                 assert isinstance(conv_block[2], nn.ReLU)
-                assert conv_block[2].inplace
+                assert conv_block[2].inplace is params["inplace"]
 
 
 def test_residual_block(subtests, input_image):
@@ -224,7 +233,7 @@ def test_transformer_encoder(subtests):
                         (module[0].in_channels, module[0].out_channels)
                     )
             if i in range(4, 9):
-                with subtests.test("residualblocks"):
+                with subtests.test("residual_blocks"):
                     assert isinstance(module, utils.ResidualBlock)
                     in_out_channels.append(
                         (
