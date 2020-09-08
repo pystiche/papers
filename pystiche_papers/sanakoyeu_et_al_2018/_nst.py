@@ -1,4 +1,3 @@
-import itertools
 from typing import Callable, Optional, cast
 
 import torch
@@ -9,12 +8,13 @@ from torch.utils.data import DataLoader
 
 from pystiche import misc
 
+from ._loss import DiscriminatorLoss, TransformerLoss
 from ._utils import ExponentialMovingAverageMeter, optimizer
 from ._utils import preprocessor as _preprocessor
 
 __all__ = [
     "gan_optim_loop",
-    "epoch_gan_optim_loop",
+    "gan_epoch_optim_loop",
 ]
 
 
@@ -22,21 +22,19 @@ def gan_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
     transformer: nn.Module,
-    discriminator_criterion: nn.Module,
-    transformer_criterion: nn.Module,
+    discriminator_criterion: DiscriminatorLoss,
+    transformer_criterion: TransformerLoss,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
     discriminator_optimizer: Optional[Optimizer] = None,
     transformer_optimizer: Optional[Optimizer] = None,
     target_win_rate: float = 0.8,
     impl_params: bool = True,
 ) -> nn.Module:
-    r"""Perform a GAN optimization for a single epoch with integrated logging.
+    r"""Perform a GAN optimization for a single epoch.
 
     Args:
         content_image_loader: Content images used as input for the ``transformer``.
-            Drawing from this should yield a single item.
         style_image_loader: Style images used as input for the ``discriminator``.
-            Drawing from this should yield a single item.
         transformer: Transformer to be optimized.
         discriminator_criterion: Optimization criterion for the ``discriminator``.
         transformer_criterion: Optimization criterion for the ``transformer``.
@@ -56,10 +54,13 @@ def gan_optim_loop(
             implementation of the original authors rather than what is described in
             the paper.
 
+    If ``impl_params is True``, then in addition to the stylized images and the style
+    images, the content images used are also included in the loss and accuracy
+    calculation.
+
     """
     device = misc.get_device()
-    if isinstance(style_image_loader, DataLoader):
-        style_image_loader = itertools.cycle(style_image_loader)
+    style_image_loader = iter(style_image_loader)
 
     if discriminator_optimizer is None:
         discriminator_optimizer = optimizer(
@@ -96,9 +97,8 @@ def gan_optim_loop(
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
-        discriminator_success.update(
-            (1.0 - transformer_criterion.style_loss.get_discriminator_acc())
-        )
+        accuracy = transformer_criterion.style_loss.get_discriminator_acc()
+        discriminator_success.update(1.0 - accuracy)
 
     for content_image in content_image_loader:
         input_image = content_image.to(device)
@@ -121,12 +121,12 @@ def gan_optim_loop(
     return transformer
 
 
-def epoch_gan_optim_loop(
+def gan_epoch_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
     transformer: nn.Module,
     epochs: int,
-    discriminator_criterion: nn.Module,
+    discriminator_criterion: DiscriminatorLoss,
     transformer_criterion: nn.Module,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
     discriminator_optimizer: Optional[Optimizer] = None,
@@ -136,13 +136,11 @@ def epoch_gan_optim_loop(
     target_win_rate: float = 0.8,
     impl_params: bool = True,
 ) -> nn.Module:
-    r"""Perform a GAN optimization for multiple epochs with integrated logging.
+    r"""Perform a GAN optimization for multiple epochs.
 
     Args:
         content_image_loader: Content images used as input for the ``transformer``.
-            Drawing from this should yield a single item.
         style_image_loader: Style images used as input for the ``discriminator``.
-            Drawing from this should yield a single item.
         transformer: Transformer to be optimized.
         epochs: Number of epochs.
         discriminator_criterion: Optimization criterion for the ``discriminator``.
@@ -168,13 +166,12 @@ def epoch_gan_optim_loop(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-    """
-    style_image_loader = itertools.cycle(style_image_loader)
 
+    """
     if discriminator_optimizer is None:
         if discriminator_lr_scheduler is None:
             discriminator_optimizer = optimizer(
-                discriminator_criterion.discriminator.get_parameters()
+                discriminator_criterion.get_parameters()
             )
         else:
             discriminator_optimizer = discriminator_lr_scheduler.optimizer  # type: ignore[attr-defined]
