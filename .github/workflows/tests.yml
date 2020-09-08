@@ -63,7 +63,7 @@ jobs:
         run: tox -e tests-unit -- tests/unit --skip-large-download
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v1.0.7
+        uses: codecov/codecov-action@v1.0.13
         with:
           env_vars: OS,PYTHON
 

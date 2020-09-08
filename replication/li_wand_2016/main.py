@@ -5,6 +5,7 @@ from os import path
 import pystiche_papers.li_wand_2016 as paper
 from pystiche.image import write_image
 from pystiche.misc import get_device
+from pystiche.ops import MRFOperator
 from pystiche.optim import OptimLogger
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
 
@@ -27,11 +28,25 @@ def figure_6(args):
         header = (
             f"Replicating the {position} half of figure 6 " f"with {params} parameters"
         )
+
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L65-L70
+        style_loss_kwargs = {
+            "target_transforms": MRFOperator.scale_and_rotate_transforms(
+                num_scale_steps=1,
+                scale_step_width=5e-2,
+                num_rotate_steps=1,
+                rotate_step_width=7.5,
+            )
+        }
+        criterion = paper.perceptual_loss(
+            impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
+        )
         with args.logger.environment(header):
             output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
+                criterion=criterion,
                 quiet=args.quiet,
                 logger=args.logger,
             )

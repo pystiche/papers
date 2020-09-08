@@ -108,7 +108,7 @@ def test_style_loss(subtests):
 
 
 def test_style_loss_pyramid(subtests, mocker):
-    configs = ((True, 1, 1), (False, 3, 2))
+    configs = ((True, 0, 0), (False, 3, 2))
     for impl_params, num_scale_steps, num_rotate_steps in configs:
         mock = mocker.patch(
             "pystiche.ops.comparison.MRFOperator.scale_and_rotate_transforms"

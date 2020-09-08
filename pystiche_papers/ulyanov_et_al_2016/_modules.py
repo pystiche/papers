@@ -8,7 +8,7 @@ from torch import nn
 from pystiche import meta as meta_
 from pystiche import misc
 
-from ..utils import SameSizeConv2d, SequentialWithOutChannels
+from ..utils import AutoPadConv2d, SequentialWithOutChannels
 
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
@@ -16,6 +16,13 @@ def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tenso
 
 
 class AddNoiseChannels(nn.Module):
+    r"""Adds white noise channels to the input.
+
+    Args:
+        in_channels: Number of input channels.
+        num_noise_channels: Number of additional noise channels. Defaults to ``3``.
+    """
+
     def __init__(
         self, in_channels: int, num_noise_channels: int = 3,
     ):
@@ -41,14 +48,36 @@ def noise(in_channels: int = 3, num_noise_channels: int = 3,) -> AddNoiseChannel
 
 
 def downsample(kernel_size: int = 2, stride: int = 2, padding: int = 0) -> nn.AvgPool2d:
+    r"""Downsample the input to half the size using an :class:`~torch.nn.AvgPool2d`.
+
+    Args:
+        kernel_size: Size of the kernel. Defaults to ``2``.
+        stride: Stride of the kernel. Defaults to ``2``.
+        padding: Padding to be added on both sides. Defaults to ``0``.
+
+    """
     return nn.AvgPool2d(kernel_size, stride=stride, padding=padding)
 
 
 def upsample() -> nn.Upsample:
+    r"""Upsample the input to twice the size using an :class:`~torch.nn.Upsample`."""
     return nn.Upsample(scale_factor=2.0, mode="nearest")
 
 
 class HourGlassBlock(SequentialWithOutChannels):
+    r"""HourGlassBlock from :cite:`ULVL2016`.
+
+    This block embeds an ``intermediate`` module between a :func:`downsample` and
+    :func:`upsample` operation.
+
+    Args:
+        intermediate: Module in between the down- and upsampling.
+
+    Attributes:
+        out_channels: ``ìntermediate.out_channels``
+
+    """
+
     def __init__(self, intermediate: nn.Module):
         modules = (
             ("down", downsample()),
@@ -86,6 +115,39 @@ def activation(
 
 
 class ConvBlock(SequentialWithOutChannels):
+    r"""ConvBlock from :cite:`ULVL2016`.
+
+    This block comprises a convolution followed by normalization and activation. The
+    input is reflection-padded to preserve the size.
+
+    Args:
+        in_channels: Number of channels in the input.
+        out_channels:  Number of channels produced by the convolution.
+        kernel_size: Size of the convolving kernel.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        stride: Stride of the convolution. Defaults to ``1``.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        inplace: If ``True`` perform the activation in-place.
+
+    If ``impl_params and instance_norm is True`` the activation function is a
+    :class:`~torch.nn.ReLU` otherwise a :class:`~torch.nn.LeakyReLU` with
+    ``slope=0.01``.
+
+    The parameters ``kernel_size`` and ``stride`` can either be:
+
+    * a single :class:`int` – in which case the same value is used for the height and
+      width dimension
+    * a tuple of two :class:`int` s – in which case, the first int is used for the
+      vertical dimension, and the second int for the horizontal dimension
+
+    """
+
     def __init__(
         self,
         in_channels: int,
@@ -99,7 +161,7 @@ class ConvBlock(SequentialWithOutChannels):
         modules = (
             (
                 "conv",
-                SameSizeConv2d(
+                AutoPadConv2d(
                     in_channels,
                     out_channels,
                     kernel_size,
@@ -114,6 +176,27 @@ class ConvBlock(SequentialWithOutChannels):
 
 
 class ConvSequence(SequentialWithOutChannels):
+    r"""Sequence of convolutional blocks that occurs repeatedly in :cite:`ULVL2016`.
+
+    Each sequence contains three
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` s. The
+    first two use ``kernel_size == 3`` and the third one uses ``kernel_size == 1``.
+
+    Args:
+        in_channels: Number of channels in the input.
+        out_channels: Number of channels produced by the convolution
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        inplace: If ``True`` perform the activation in-place.
+
+    """
+
     def __init__(
         self,
         in_channels: int,
@@ -144,6 +227,24 @@ class ConvSequence(SequentialWithOutChannels):
 
 
 class JoinBlock(nn.Module):
+    r"""JoinBlock from :cite:`ULVL2016` without upsampling.
+
+    This block concatenates an arbitrary number of inputs along the ``channel _dim``
+    with prefixed normalization modules.
+
+    Args:
+        branch_in_channels: Number of channels in the branch input.
+        names: Optional names for the normalization modules. If omitted, the modules
+            will be numbered.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        channel_dim: The dimension over which the tensors are concatenated. Defaults to
+            ``1``.
+
+    """
+
     def __init__(
         self,
         branch_in_channels: Sequence[int],
@@ -182,6 +283,20 @@ class JoinBlock(nn.Module):
 
 
 class BranchBlock(nn.Module):
+    r"""BranchBlock from :cite:`ULVL2016`.
+
+    Joins the branch from the previous pyramid level with the current using a
+    :class:`~pystiche_paper.ulyanov_et_al_2016._modules.JoinBlock`.
+
+    Args:
+        deep_branch: Previous pyramid level.
+        shallow_branch: Current pyramid level.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+    """
+
     def __init__(
         self,
         deep_branch: nn.Module,
@@ -218,6 +333,31 @@ def level(
     num_noise_channels: int = 3,
     inplace: bool = True,
 ) -> SequentialWithOutChannels:
+    r"""Defines one level of the transformer from :cite:`ULVL2016`.
+
+    The basic building block of a level is a :class:`ConvSequence` . If a previous
+    level exists, i. e. the current level is not the first one, the previous level is
+    incorporated by embedding it in an :class:`HourGlassBlock`. The outputs of both
+    levels are joined with a :class:`BranchBlock` and finally fed through another
+    :class:`ConvSequence`.
+
+    Args:
+        prev_level_block: Previous pyramid level. If given, it is incorporated in the
+            current level.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        in_channels: Number of channels in the input image. Defaults to ``3``.
+        num_noise_channels: Number of additional noise channels. Defaults to ``3``.
+        inplace: If ``True`` perform the activation in-place.
+
+    """
+
     def conv_sequence(
         in_channels: int, out_channels: int, use_noise: bool = False
     ) -> SequentialWithOutChannels:
@@ -334,4 +474,21 @@ def transformer(
     instance_norm: bool = True,
     levels: int = 6,
 ) -> Transformer:
+    r"""Transformer from :cite:`ULVL2016`.
+
+    Args:
+        style: Style the transformer was trained on. Can be one of styles given by
+            :func:`~pystiche_papers.ulyanov_et_al_2016.images`. If omitted, the
+            transformer is initialized with random weights.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see
+            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        levels: Number of levels in the transformer. Defaults to ``6``.
+
+    """
     return Transformer(levels, impl_params=impl_params, instance_norm=instance_norm)
