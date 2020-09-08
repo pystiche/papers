@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 from torch import nn
@@ -6,12 +6,11 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import channel_progression
+from pystiche_papers.utils import SameSizeConv2d, channel_progression
 
-from ..utils import ResidualBlock, same_size_padding
+from ..utils import ResidualBlock
 
 __all__ = [
-    "get_padding",
     "get_activation",
     "conv",
     "ConvBlock",
@@ -26,16 +25,6 @@ __all__ = [
 ]
 
 
-def get_padding(
-    padding: str, kernel_size: Union[Tuple[int, int], int]
-) -> Union[Tuple[int, int], int]:
-    padding = verify_str_arg(padding, valid_args=["same", "valid"])
-    if padding == "same":
-        return cast(Tuple[int, int], same_size_padding(kernel_size))
-    else:  # padding == "valid"
-        return 0
-
-
 def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
     act = verify_str_arg(act, valid_args=["relu", "lrelu"])
     if act == "relu":
@@ -48,12 +37,22 @@ def conv(
     in_channels: int,
     out_channels: int,
     kernel_size: Union[Tuple[int, int], int],
-    stride: Union[Tuple[int, int], int] = 2,
-    padding: str = "valid",
+    stride: Union[Tuple[int, int], int] = 1,
+    padding: Optional[int] = 0,
+    padding_mode: str = "zeros",
 ) -> nn.Conv2d:
-    padding = get_padding(padding, kernel_size)
-    return nn.Conv2d(
-        in_channels, out_channels, kernel_size, stride=stride, padding=padding
+    cls: Type[nn.Conv2d]
+    kwargs: Dict[str, Any]
+    cls, kwargs = (
+        (SameSizeConv2d, {}) if padding is None else (nn.Conv2d, dict(padding=padding))
+    )
+    return cls(
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=stride,
+        padding_mode=padding_mode,
+        **kwargs,
     )
 
 
@@ -88,8 +87,9 @@ class ConvBlock(nn.Sequential):
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
         stride: Union[Tuple[int, int], int] = 1,
-        padding: str = "valid",
-        act: Union[str, None] = "relu",
+        padding: Optional[int] = 0,
+        padding_mode: str = "zeros",
+        act: Optional[str] = "relu",
         inplace: bool = True,
     ) -> None:
         self.in_channels = in_channels
@@ -97,7 +97,14 @@ class ConvBlock(nn.Sequential):
 
         modules: List[nn.Module] = []
         modules.append(
-            conv(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
+            conv(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride=stride,
+                padding=padding,
+                padding_mode=padding_mode,
+            )
         )
 
         modules.append(nn.InstanceNorm2d(out_channels))
@@ -137,8 +144,9 @@ class UpsampleConvBlock(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
+        stride: Union[Tuple[int, int], int] = 1,
         scale_factor: Union[Tuple[float, float], float] = 2.0,
-        padding: str = "same",
+        padding: Optional[int] = None,
         act: Union[str, None] = "relu",
         inplace: bool = True,
     ) -> None:
@@ -148,7 +156,7 @@ class UpsampleConvBlock(nn.Module):
             in_channels,
             out_channels,
             kernel_size,
-            stride=1,
+            stride=stride,
             padding=padding,
             act=act,
             inplace=inplace,
@@ -177,22 +185,22 @@ def residual_block(channels: int) -> ResidualBlock:
         channels: Number of channels in the input.
 
     """
-    in_channels = out_channels = channels
-    kernel_size = 3
-    padding = same_size_padding(kernel_size)
-
-    residual = nn.Sequential(
-        nn.ReflectionPad2d(padding),
-        ConvBlock(
-            in_channels, out_channels, kernel_size, stride=1, padding="valid", act=None,
-        ),
-        nn.ReflectionPad2d(padding),
-        ConvBlock(
-            in_channels, out_channels, kernel_size, stride=1, padding="valid", act=None,
-        ),
+    return ResidualBlock(
+        nn.Sequential(
+            *[
+                ConvBlock(
+                    channels,
+                    channels,
+                    kernel_size=3,
+                    stride=1,
+                    padding=None,
+                    padding_mode="reflect",
+                    act=None,
+                )
+                for _ in range(2)
+            ]
+        )
     )
-
-    return ResidualBlock(residual)
 
 
 def encoder(in_channels: int = 3,) -> enc.SequentialEncoder:
@@ -243,13 +251,13 @@ def decoder(
     return pystiche.SequentialModule(
         *residual_blocks,
         *upsample_conv_blocks,
-        nn.ReflectionPad2d(3),
         conv(
             in_channels=32,
             out_channels=out_channels,
             kernel_size=7,
             stride=1,
-            padding="valid",
+            padding=None,
+            padding_mode="reflect",
         ),
         ValueRangeDelimiter(),
     )
@@ -292,7 +300,7 @@ class Discriminator(pystiche.Module):
                     out_channels,
                     kernel_size=5,
                     stride=2,
-                    padding="same",
+                    padding=None,
                     act="lrelu",
                 ),
                 channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
