@@ -17,27 +17,6 @@ from tests import assets
 from tests import utils as utils_
 
 
-def test_same_size_padding():
-    assert utils.same_size_padding(kernel_size=1) == 0
-    assert utils.same_size_padding(kernel_size=3) == 1
-    assert utils.same_size_padding(kernel_size=(1, 3)) == (0, 1)
-
-
-def test_same_size_output_padding():
-    assert utils.same_size_output_padding(stride=1) == 0
-    assert utils.same_size_output_padding(stride=2) == 1
-    assert utils.same_size_output_padding(stride=(1, 2)) == (0, 1)
-
-
-def test_is_valid_padding():
-    assert utils.is_valid_padding(1)
-    assert not utils.is_valid_padding(0)
-    assert not utils.is_valid_padding(-1)
-
-    assert utils.is_valid_padding((1, 2))
-    assert not utils.is_valid_padding((1, 0, -1))
-
-
 def test_paper_replication(subtests, caplog):
     optim_logger = OptimLogger()
     starting_offset = optim_logger._environ_level_offset
