@@ -1,6 +1,30 @@
 ``pystiche_papers.johnson_alahi_li_2016``
 =========================================
 
++--------------------------+----------------------------------------------------------+
+| Title                    | |title|                                                  |
++--------------------------+----------------------------------------------------------+
+| Authors                  | Justin Johnson, Alexandre Alahi, and Fei-Fei Li          |
++--------------------------+----------------------------------------------------------+
+| Citation                 | :cite:`JAL2016`                                          |
++--------------------------+----------------------------------------------------------+
+| Reference implementation | |repo|_ / |archive|_                                     |
++--------------------------+----------------------------------------------------------+
+| Variant                  | Model optimization                                       |
++--------------------------+----------------------------------------------------------+
+| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`     |
++--------------------------+----------------------------------------------------------+
+| Style loss               | :class:`~pystiche.ops.GramOperator`                      |
++--------------------------+----------------------------------------------------------+
+
+.. |title| replace:: Perceptual Losses for Real-Time Style Transfer and Super-Resolution
+
+.. |repo| replace:: Repository
+.. _repo: https://github.com/jcjohnson/fast-neural-style
+
+.. |archive| replace:: Archive
+.. _archive: https://github.com/pmeier/fast-neural-style/tree/813c83441953ead2adb3f65f4cc2d5599d735fa7
+
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
 implementation are used instead of the parameters from the paper. The following
