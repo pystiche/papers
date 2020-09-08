@@ -6,7 +6,11 @@ import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 
+from pystiche.image import extract_image_size, extract_num_channels
+from pystiche.misc import to_2d_arg
 from pystiche_papers import utils
+
+from tests.utils import generate_param_combinations
 
 
 def test_Identity():
@@ -65,3 +69,93 @@ def test_SequentialWithOutChannels_forward_behaviour(input_image):
     for module in sequential_modules:
         desired = module(desired)
     ptu.assert_allclose(actual, desired)
+
+
+@pytest.fixture
+def same_size_conv_params():
+    return tuple(
+        generate_param_combinations(
+            kernel_size=(3, 4, (3, 4), (4, 3)),
+            stride=(1, 2, (1, 2), (2, 1)),
+            dilation=(1, 2, (1, 2), (2, 1)),
+        )
+    )
+
+
+def test_SameSizeConv2d(subtests, same_size_conv_params, input_image):
+    in_channels = out_channels = extract_num_channels(input_image)
+    image_size = extract_image_size(input_image)
+
+    for params in same_size_conv_params:
+        with subtests.test(**params):
+            conv = utils.SameSizeConv2d(in_channels, out_channels, **params)
+            output_image = conv(input_image)
+
+            actual = extract_image_size(output_image)
+            expected = tuple(
+                side_length // stride
+                for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+            )
+
+            assert actual == expected
+
+
+def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
+    in_channels = out_channels = extract_num_channels(input_image)
+    image_size = extract_image_size(input_image)
+
+    for params in same_size_conv_params:
+        with subtests.test(**params):
+            conv = utils.SameSizeConvTranspose2d(in_channels, out_channels, **params)
+            output_image = conv(input_image)
+
+            actual = extract_image_size(output_image)
+            expected = tuple(
+                side_length * stride
+                for side_length, stride in zip(image_size, to_2d_arg(params["stride"]))
+            )
+            assert actual == expected
+
+
+def test_SameSizeConv2d_padding():
+    with pytest.raises(RuntimeError):
+        utils.SameSizeConv2d(1, 1, 3, padding=1)
+
+
+def test_SameSizeConv2d_repr_smoke():
+    same_size_conv = utils.SameSizeConv2d(
+        in_channels=2,
+        out_channels=2,
+        kernel_size=1,
+        stride=1,
+        dilation=2,
+        groups=2,
+        bias=True,
+        padding_mode="reflect",
+    )
+    assert isinstance(repr(same_size_conv), str)
+
+
+def test_SameSizeConv2d_state_dict():
+    kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
+    conv = nn.Conv2d(**kwargs)
+    same_size_conv = utils.SameSizeConv2d(**kwargs)
+
+    state_dict = conv.state_dict()
+    same_size_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
+
+
+def test_SameSizeConvTranspose2d_output_padding():
+    with pytest.raises(RuntimeError):
+        utils.SameSizeConvTranspose2d(1, 1, 3, output_padding=1)
+
+
+def test_SameSizeConvTranspose2d_state_dict():
+    kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
+    conv = nn.ConvTranspose2d(**kwargs)
+    same_size_conv = utils.SameSizeConvTranspose2d(**kwargs)
+
+    state_dict = conv.state_dict()
+    same_size_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
