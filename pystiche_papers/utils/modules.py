@@ -14,9 +14,9 @@ __all__ = [
     "Identity",
     "ResidualBlock",
     "SequentialWithOutChannels",
-    "SameSizeConv2d",
-    "SameSizeConvTranspose2d",
-    "SameSizeAvgPool2d",
+    "AutoPadConv2d",
+    "AutoPadConvTranspose2d",
+    "AutoPadAvgPool2d",
 ]
 
 
@@ -53,7 +53,7 @@ class SequentialWithOutChannels(nn.Sequential):
         ].out_channels
 
 
-class _SameSizeNdMixin(pystiche.ComplexObject):
+class _AutoPadNdMixin(pystiche.ComplexObject):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if "padding" in kwargs:
             raise RuntimeError
@@ -83,7 +83,7 @@ class _SameSizeNdMixin(pystiche.ComplexObject):
         )
 
 
-class _SameSizeConvNdMixin(_SameSizeNdMixin, _ConvNd):
+class _AutoPadConvNdMixin(_AutoPadNdMixin, _ConvNd):
     def _compute_pad_size(self) -> torch.Tensor:
         kernel_size = torch.tensor(self.kernel_size)
         stride = torch.tensor(self.stride)
@@ -112,11 +112,11 @@ class _SameSizeConvNdMixin(_SameSizeNdMixin, _ConvNd):
         return dct
 
 
-class SameSizeConv2d(_SameSizeConvNdMixin, nn.Conv2d):
+class AutoPadConv2d(_AutoPadConvNdMixin, nn.Conv2d):
     pass
 
 
-class _SameSizeConvTransposeNdMixin(_SameSizeConvNdMixin):
+class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if "output_padding" in kwargs:
             raise RuntimeError
@@ -145,13 +145,13 @@ class _SameSizeConvTransposeNdMixin(_SameSizeConvNdMixin):
         return cast(torch.Tensor, pad_size)
 
 
-class SameSizeConvTranspose2d(  # type: ignore[misc]
-    _SameSizeConvTransposeNdMixin, nn.ConvTranspose2d,
+class AutoPadConvTranspose2d(  # type: ignore[misc]
+    _AutoPadConvTransposeNdMixin, nn.ConvTranspose2d,
 ):
     pass
 
 
-class _SameSizeAvgPoolNdMixin(_SameSizeNdMixin, _AvgPoolNd):
+class _AutoPadAvgPoolNdMixin(_AutoPadNdMixin, _AvgPoolNd):
     def _compute_pad_size(self) -> torch.Tensor:
         kernel_size = torch.tensor(self.kernel_size)
         stride = torch.tensor(self.stride)
@@ -168,7 +168,7 @@ class _SameSizeAvgPoolNdMixin(_SameSizeNdMixin, _AvgPoolNd):
         return dct
 
 
-class SameSizeAvgPool2d(_SameSizeAvgPoolNdMixin, nn.AvgPool2d):
+class AutoPadAvgPool2d(_AutoPadAvgPoolNdMixin, nn.AvgPool2d):
     def __init__(
         self,
         kernel_size: Union[Tuple[int, int], int],

@@ -72,7 +72,7 @@ def test_SequentialWithOutChannels_forward_behaviour(input_image):
 
 
 @pytest.fixture
-def same_size_conv_params():
+def auto_pad_conv_params():
     return tuple(
         generate_param_combinations(
             kernel_size=(3, 4, (3, 4), (4, 3)),
@@ -82,13 +82,13 @@ def same_size_conv_params():
     )
 
 
-def test_SameSizeConv2d(subtests, same_size_conv_params, input_image):
+def test_AutoPadConv2d(subtests, auto_pad_conv_params, input_image):
     in_channels = out_channels = extract_num_channels(input_image)
     image_size = extract_image_size(input_image)
 
-    for params in same_size_conv_params:
+    for params in auto_pad_conv_params:
         with subtests.test(**params):
-            conv = utils.SameSizeConv2d(in_channels, out_channels, **params)
+            conv = utils.AutoPadConv2d(in_channels, out_channels, **params)
             output_image = conv(input_image)
 
             actual = extract_image_size(output_image)
@@ -100,13 +100,13 @@ def test_SameSizeConv2d(subtests, same_size_conv_params, input_image):
             assert actual == expected
 
 
-def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
+def test_AutoPadConvTranspose2d(subtests, auto_pad_conv_params, input_image):
     in_channels = out_channels = extract_num_channels(input_image)
     image_size = extract_image_size(input_image)
 
-    for params in same_size_conv_params:
+    for params in auto_pad_conv_params:
         with subtests.test(**params):
-            conv = utils.SameSizeConvTranspose2d(in_channels, out_channels, **params)
+            conv = utils.AutoPadConvTranspose2d(in_channels, out_channels, **params)
             output_image = conv(input_image)
 
             actual = extract_image_size(output_image)
@@ -117,13 +117,13 @@ def test_SameSizeConvTranspose2d(subtests, same_size_conv_params, input_image):
             assert actual == expected
 
 
-def test_SameSizeConv2d_padding():
+def test_AutoPadConv2d_padding():
     with pytest.raises(RuntimeError):
-        utils.SameSizeConv2d(1, 1, 3, padding=1)
+        utils.AutoPadConv2d(1, 1, 3, padding=1)
 
 
-def test_SameSizeConv2d_repr_smoke():
-    same_size_conv = utils.SameSizeConv2d(
+def test_AutoPadConv2d_repr_smoke():
+    auto_pad_conv = utils.AutoPadConv2d(
         in_channels=2,
         out_channels=2,
         kernel_size=1,
@@ -133,36 +133,36 @@ def test_SameSizeConv2d_repr_smoke():
         bias=True,
         padding_mode="reflect",
     )
-    assert isinstance(repr(same_size_conv), str)
+    assert isinstance(repr(auto_pad_conv), str)
 
 
-def test_SameSizeConv2d_state_dict():
+def test_AutoPadConv2d_state_dict():
     kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
     conv = nn.Conv2d(**kwargs)
-    same_size_conv = utils.SameSizeConv2d(**kwargs)
+    auto_pad_conv = utils.AutoPadConv2d(**kwargs)
 
     state_dict = conv.state_dict()
-    same_size_conv.load_state_dict(state_dict)
-    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
+    auto_pad_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(auto_pad_conv.state_dict(), state_dict)
 
 
-def test_SameSizeConvTranspose2d_output_padding():
+def test_AutoPadConvTranspose2d_output_padding():
     with pytest.raises(RuntimeError):
-        utils.SameSizeConvTranspose2d(1, 1, 3, output_padding=1)
+        utils.AutoPadConvTranspose2d(1, 1, 3, output_padding=1)
 
 
-def test_SameSizeConvTranspose2d_state_dict():
+def test_AutoPadConvTranspose2d_state_dict():
     kwargs = dict(in_channels=1, out_channels=2, kernel_size=3, bias=True)
     conv = nn.ConvTranspose2d(**kwargs)
-    same_size_conv = utils.SameSizeConvTranspose2d(**kwargs)
+    auto_pad_conv = utils.AutoPadConvTranspose2d(**kwargs)
 
     state_dict = conv.state_dict()
-    same_size_conv.load_state_dict(state_dict)
-    ptu.assert_allclose(same_size_conv.state_dict(), state_dict)
+    auto_pad_conv.load_state_dict(state_dict)
+    ptu.assert_allclose(auto_pad_conv.state_dict(), state_dict)
 
 
 @pytest.fixture
-def same_size_avg_pool_params():
+def auto_pad_pool_params():
     return tuple(
         generate_param_combinations(
             kernel_size=(3, 4, (3, 4), (4, 3)), stride=(1, 2, (1, 2), (2, 1)),
@@ -170,12 +170,12 @@ def same_size_avg_pool_params():
     )
 
 
-def test_SameSizeAvgPool2d(subtests, same_size_avg_pool_params, input_image):
+def test_AutoPadAvgPool2d(subtests, auto_pad_pool_params, input_image):
     image_size = extract_image_size(input_image)
 
-    for params in same_size_avg_pool_params:
+    for params in auto_pad_pool_params:
         with subtests.test(**params):
-            conv = utils.SameSizeAvgPool2d(**params)
+            conv = utils.AutoPadAvgPool2d(**params)
             output_image = conv(input_image)
 
             actual = extract_image_size(output_image)
@@ -187,6 +187,6 @@ def test_SameSizeAvgPool2d(subtests, same_size_avg_pool_params, input_image):
             assert actual == expected
 
 
-def test_SameSizeAvgPool2d_repr_smoke():
-    same_size_conv = utils.SameSizeAvgPool2d(kernel_size=1, stride=1,)
-    assert isinstance(repr(same_size_conv), str)
+def test_AutoPadAvgPool2d_repr_smoke():
+    auto_pad_conv = utils.AutoPadAvgPool2d(kernel_size=1, stride=1,)
+    assert isinstance(repr(auto_pad_conv), str)

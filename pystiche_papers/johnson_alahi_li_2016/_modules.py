@@ -9,7 +9,7 @@ from torch import nn
 import pystiche
 from pystiche_papers.utils import load_state_dict_from_url
 
-from ..utils import ResidualBlock, SameSizeConv2d, SameSizeConvTranspose2d
+from ..utils import AutoPadConv2d, AutoPadConvTranspose2d, ResidualBlock
 
 __all__ = [
     "conv",
@@ -69,7 +69,7 @@ def conv(
     cls: Union[Type[nn.Conv2d], Type[nn.ConvTranspose2d]]
     kwargs: Dict[str, Any]
     if padding is None:
-        cls = SameSizeConvTranspose2d if upsample else SameSizeConv2d
+        cls = AutoPadConvTranspose2d if upsample else AutoPadConv2d
         kwargs = {}
     else:
         cls = nn.ConvTranspose2d if upsample else nn.Conv2d
@@ -259,7 +259,7 @@ def decoder(
             upsample=True,
             instance_norm=instance_norm,
         ),
-        SameSizeConv2d(
+        AutoPadConv2d(
             in_channels=maybe_fix_num_channels(32, instance_norm),
             out_channels=3,
             kernel_size=9,
