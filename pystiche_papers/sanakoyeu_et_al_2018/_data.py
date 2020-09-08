@@ -84,26 +84,6 @@ class ClampSize(transforms.Transform):
 
 
 def image_transform(edge_size: int = 768,) -> transforms.ComposedTransform:
-    # TODO: Add image augmentator with random affine transform hsv transformation and
-    #  random flip of the image. For the following enumeration applies:
-    #  prob = probability that the transformation is carried out
-    #  range = range in which the transformation is to be carried out.
-    #  Scaling: default prob=0.5 and range=-0.2 (low and high same value)
-    #  Reflection padding [rows // 4, rows // 4], [cols // 4, cols // 4]
-    #  Rotation: default prob=0.5 and range=+-0.15 *90 uniform
-    #  Affine: default prob=0.5 and range=0.05
-    #  Remove padding [(rows // 4):-(rows // 4), (cols // 4):-(cols // 4), :]
-    #  Crop: crop size default=(256, 256) but set to (768, 768)
-    #  hsv: default prob=1.0,
-    #       hue shift range=0.05
-    #       saturation shift range=0.05
-    #       saturation scale range=0.05
-    #       value shift range=0.05
-    #       value scale range=0.05
-    #  horizontal_flip: default prob=0.5
-    #  vertical_flip: default prob=0.5 set to 0.0
-    #
-    #  https://github.com/CompVis/adaptive-style-transfer/blob/master/img_augm.py
     return transforms.ComposedTransform(
         ClampSize(),
         transforms.ValidRandomCrop((edge_size, edge_size)),
