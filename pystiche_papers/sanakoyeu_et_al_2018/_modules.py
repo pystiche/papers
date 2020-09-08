@@ -392,6 +392,8 @@ class TransformerBlock(enc.SequentialEncoder):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if self.impl_params:
-            input = nn.functional.pad(input, [0, 1, 0, 1])
+            input = nn.functional.pad(
+                input, [0, 1, 0, 1]
+            )  # TODO: sam_size_padding for nn.AvgPool2d needed
 
         return super().forward(input)
