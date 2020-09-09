@@ -1,25 +1,25 @@
 ``pystiche_papers.ulyanov_et_al_2016``
 ======================================
 
-+--------------------------+----------------------------------------------------------+
-| Title                    | |title|                                                  |
-+--------------------------+----------------------------------------------------------+
-| Authors                  | |authors|                                                |
-+--------------------------+----------------------------------------------------------+
-| Citation                 | :cite:`ULVL2016`                                         |
-+--------------------------+----------------------------------------------------------+
-| Reference implementation | |repo|_ / |archive|_                                     |
-+--------------------------+----------------------------------------------------------+
-| Variant                  | Model optimization                                       |
-+--------------------------+----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`     |
-+--------------------------+----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramOperator`                      |
-+--------------------------+----------------------------------------------------------+
-
-.. |title| replace:: Texture Networks: Feed-forward Synthesis of Textures and Stylized Images
-
-.. |authors| replace:: Dmitry Ulyanov, Vadim Lebedev, Andrea Vedaldi, and Viktor S. Lempitsky
++--------------------------+-----------------------------------------------------------+
+| Title                    | Texture Networks: Feed-forward Synthesis of Textures and  |
+|                          |                                                           |
+|                          | Stylized Images                                           |
++--------------------------+-----------------------------------------------------------+
+| Authors                  | Dmitry Ulyanov, Vadim Lebedev, Andrea Vedaldi, and        |
+|                          |                                                           |
+|                          | Viktor S. Lempitsky                                       |
++--------------------------+-----------------------------------------------------------+
+| Citation                 | :cite:`ULVL2016`                                          |
++--------------------------+-----------------------------------------------------------+
+| Reference implementation | |repo|_ / |archive|_                                      |
++--------------------------+-----------------------------------------------------------+
+| Variant                  | Model optimization                                        |
++--------------------------+-----------------------------------------------------------+
+| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
++--------------------------+-----------------------------------------------------------+
+| Style loss               | :class:`~pystiche.ops.GramOperator`                       |
++--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
 .. _repo: https://github.com/DmitryUlyanov/texture_nets
