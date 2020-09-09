@@ -92,6 +92,7 @@ def compute_layer_weights(
 
 
 def hyper_parameters() -> HyperParameters:
+    r"""Hyper parameters from :cite:`GEB2016`."""
     style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
     return HyperParameters(

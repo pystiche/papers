@@ -14,6 +14,7 @@ are affected:
 .. automodule:: pystiche_papers.gatys_ecker_bethge_2016
 
 .. autofunction:: content_loss
+.. autofunction:: hyper_parameters
 .. autofunction:: images
 .. autofunction:: multi_layer_encoder
 .. autofunction:: nst
