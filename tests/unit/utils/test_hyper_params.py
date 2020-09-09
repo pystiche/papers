@@ -15,11 +15,30 @@ def test_HyperParameters_getattr(params):
         assert getattr(hyper_parameters, name) == val
 
 
-def test_HyperParameters_getattr_no_attribute():
+def test_HyperParameters_getattr_unknown_attribute():
     hyper_parameters = HyperParameters()
 
     with pytest.raises(AttributeError):
-        hyper_parameters.unknown_attribute
+        getattr(hyper_parameters, "unknown_attribute")
+
+
+def test_HyperParameters_delattr(params):
+    hyper_parameters = HyperParameters(**params)
+
+    for name in params.keys():
+        getattr(hyper_parameters, name)
+
+        delattr(hyper_parameters, name)
+
+        with pytest.raises(AttributeError):
+            getattr(hyper_parameters, name)
+
+
+def test_HyperParameters_delattr_unknown_attr(params):
+    hyper_parameters = HyperParameters()
+
+    with pytest.raises(AttributeError):
+        delattr(hyper_parameters, "unknown_attribute")
 
 
 def test_HyperParameters_contains(params):
