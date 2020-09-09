@@ -3,9 +3,11 @@ from typing import Callable, Optional, Union
 import torch
 
 import pystiche
-from pystiche import loss, misc, optim
+from pystiche import misc, optim
+from pystiche_papers.utils import HyperParameters
 
 from ._loss import perceptual_loss
+from ._utils import hyper_parameters as _hyper_parameters
 from ._utils import optimizer
 from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
@@ -18,9 +20,8 @@ __all__ = [
 def nst(
     content_image: torch.Tensor,
     style_image: torch.Tensor,
-    num_steps: int = 500,
     impl_params: bool = True,
-    criterion: Optional[loss.PerceptualLoss] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
     quiet: bool = False,
     logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
@@ -50,10 +51,14 @@ def nst(
     If ``impl_params is True`` the content_image is set as the starting point instead of
     a random initialized image.
     """
-    if criterion is None:
-        criterion = perceptual_loss(impl_params=impl_params)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     device = content_image.device
+
+    criterion = perceptual_loss(
+        impl_params=impl_params, hyper_parameters=hyper_parameters
+    )
     criterion = criterion.to(device)
 
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
@@ -73,7 +78,7 @@ def nst(
         input_image,
         criterion,
         get_optimizer=optimizer,
-        num_steps=num_steps,
+        num_steps=hyper_parameters.nst.num_steps,
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,

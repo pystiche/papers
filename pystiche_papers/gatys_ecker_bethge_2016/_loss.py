@@ -1,13 +1,13 @@
-import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, Optional, Sequence, Union
 
 import torch
-from torch import nn
 from torch.nn.functional import mse_loss
 
 import pystiche
 from pystiche import enc, loss, ops
+from pystiche_papers.utils import HyperParameters
 
+from ._utils import hyper_parameters as _hyper_parameters
 from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
@@ -49,8 +49,7 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
 def content_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    layer: str = "relu4_2",
-    score_weight: float = 1e0,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
     r"""Content_loss from :cite:`GEB2016`.
 
@@ -74,10 +73,16 @@ def content_loss(
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
-    encoder = multi_layer_encoder.extract_encoder(layer)
+
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
+        )
 
     return FeatureReconstructionOperator(
-        encoder, impl_params=impl_params, score_weight=score_weight
+        multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
+        impl_params=impl_params,
+        score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
@@ -109,35 +114,10 @@ class StyleLoss(ops.MultiLayerEncodingOperator):
         return score * self.score_correction_factor
 
 
-def get_layer_weights(
-    layers: Sequence[str],
-    impl_params: bool = True,
-    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-) -> List[float]:
-    if multi_layer_encoder is None:
-        multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
-
-    nums_channels = []
-    for layer in layers:
-        if layer not in multi_layer_encoder:
-            raise RuntimeError
-
-        layer = layer.replace("relu", "conv")
-        if not layer.startswith("conv"):
-            raise RuntimeError
-
-        module = cast(nn.Conv2d, multi_layer_encoder._modules[layer])
-        nums_channels.append(module.out_channels)
-
-    return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
-
-
 def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    layers: Optional[Sequence[str]] = None,
-    layer_weights: Optional[Union[str, Sequence[float]]] = None,
-    score_weight: float = 1e3,
+    hyper_parameters: Optional[HyperParameters] = None,
     **gram_loss_kwargs: Any,
 ) -> StyleLoss:
     r"""Style_loss from :cite:`GEB2016`.
@@ -168,36 +148,28 @@ def style_loss(
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
-    if layers is None:
-        layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
-
-    if layer_weights is None:
-        try:
-            layer_weights = get_layer_weights(
-                layers, multi_layer_encoder=multi_layer_encoder
-            )
-        except RuntimeError:
-            layer_weights = "mean"
-            warnings.warn("ADDME", RuntimeWarning)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
+        )
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
         return ops.GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
 
     return StyleLoss(
         multi_layer_encoder,
-        layers,
+        hyper_parameters.style_loss.layers,
         get_encoding_op,
         impl_params=impl_params,
-        layer_weights=layer_weights,
-        score_weight=score_weight,
+        layer_weights=hyper_parameters.style_loss.layer_weights,
+        score_weight=hyper_parameters.style_loss.score_weight,
     )
 
 
 def perceptual_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    content_loss_kwargs: Optional[Dict[str, Any]] = None,
-    style_loss_kwargs: Optional[Dict[str, Any]] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> loss.PerceptualLoss:
     r"""Perceptual loss from :cite:`GEB2016`.
 
@@ -216,20 +188,20 @@ def perceptual_loss(
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
-    if content_loss_kwargs is None:
-        content_loss_kwargs = {}
-    content_loss_ = content_loss(
-        impl_params=impl_params,
-        multi_layer_encoder=multi_layer_encoder,
-        **content_loss_kwargs,
-    )
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
+        )
 
-    if style_loss_kwargs is None:
-        style_loss_kwargs = {}
-    style_loss_ = style_loss(
-        impl_params=impl_params,
-        multi_layer_encoder=multi_layer_encoder,
-        **style_loss_kwargs,
+    return loss.PerceptualLoss(
+        content_loss(
+            impl_params=impl_params,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
+        ),
+        style_loss(
+            impl_params=impl_params,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
+        ),
     )
-
-    return loss.PerceptualLoss(content_loss_, style_loss_)
