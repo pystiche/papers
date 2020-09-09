@@ -19,14 +19,14 @@ class HyperParameters(pystiche.ComplexObject):
             if name in dct:
                 return dct[name]
         else:
-            raise AttributeError
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name in ("__params__", "__sub_params__"):
             super().__setattr__(name, value)
             return
-        elif not all(dct in self.__dict__ for dct in ("__params__", "__sub_params__")):
-            raise AttributeError
 
         new_dct, old_dct = (
             (self.__sub_params__, self.__params__)
