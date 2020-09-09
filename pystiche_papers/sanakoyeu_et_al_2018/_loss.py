@@ -59,6 +59,12 @@ __all__ = [
 
 
 class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
+    r"""Abstract base class for all discriminator operators working in an encoded space.
+
+    Args:
+        encoder: Encoder that is used to encode the target and input images.
+        score_weight: Score weight of the operator. Defaults to ``1.0``.
+    """
     def __init__(self, encoder: Encoder, score_weight: float = 1.0):
         super().__init__(encoder, score_weight=score_weight)
         self._real = True
@@ -83,6 +89,18 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
 
 
 class PredictionOperator(EncodingDiscriminatorOperator):
+    r"""The prediction loss is a discriminator loss based on the prediction.
+
+    It measures the cross-entropy loss between true labels and predicted labels. The
+    true labels are set depending on the currently set discriminator mode, which can be
+    either ``real`` or ``fake``. In addition, it is calculated how accurate the operator
+    was on the last input.
+
+    Args:
+        encoder: Encoder that is used to encode the target and input images.
+        predictor: Auxiliary classifier used to process the encodings into a prediction.
+        score_weight: Score weight of the operator. Defaults to ``1.0``.
+    """
     def __init__(
         self, encoder: Encoder, predictor: nn.Module, score_weight: float = 1e0,
     ) -> None:
@@ -104,6 +122,21 @@ class PredictionOperator(EncodingDiscriminatorOperator):
 
 
 class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
+    r"""Convenience container for multiple :class:`PredictionOperator` s.
+
+    Args:
+        multi_layer_encoder: Multi-layer encoder.
+        layers: Layers of the ``multi_layer_encoder`` that the children operators
+            operate on.
+        get_encoding_op: Callable that returns a children operator given a
+            :class:`pystiche.enc.SingleLayerEncoder` extracted from the
+            ``multi_layer_encoder`` and its corresponding layer weight.
+        layer_weights: Weights of the children operators passed to ``get_encoding_op``.
+            If ``"sum"``, each layer weight is set to ``1.0``. If ``"mean"``, each
+            layer weight is set to ``1.0 / len(layers)``. If sequence of ``float``s its
+            length has to match ``layers``. Defaults to ``"mean"``.
+        score_weight: Score weight of the operator. Defaults to ``1.0``.
+    """
     def discriminator_operators(self):
         for op in self.operators():
             if isinstance(op, EncodingDiscriminatorOperator):
@@ -128,6 +161,25 @@ def prediction_loss(
     scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ):
+    r"""Discriminator loss from :cite:`SKL+2018`.
+
+    Capture image details at different scales with the ``predictors`` and sum up
+    all losses and accuracies on the different ``scales``.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        discriminator_multi_layer_encoder: Trainable
+            :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the default
+            :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
+            is used.
+        scale_weights: Scale weights of the operator. Defaults to ``sum``.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``1e0`` if
+            ``impl_params is True`` otherwise ``1e-3``.
+
+    """
     if discriminator_multi_layer_encoder is None:
         discriminator_multi_layer_encoder = DiscriminatorMultiLayerEncoder()
 
@@ -203,6 +255,18 @@ def discriminator_loss(
     impl_params: bool = True,
     prediction_loss: Optional[MultiLayerPredictionOperator] = None,
 ) -> DiscriminatorLoss:
+    r"""Discriminator loss from :cite:`SKL+2018`.
+
+    Calculates the loss and accuracy of the current discriminator on all real and fake
+    input images.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        prediction_loss: Trainable :class:`MultiLayerPredictionOperator`.
+
+    """
     if prediction_loss is None:
         prediction_loss = prediction_loss_(impl_params=impl_params)
     return DiscriminatorLoss(prediction_loss)
