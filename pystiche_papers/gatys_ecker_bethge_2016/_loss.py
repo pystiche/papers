@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
 import torch
 from torch.nn.functional import mse_loss
@@ -57,13 +57,11 @@ def content_loss(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
+        multi_layer_encoder: If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
             used.
-        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to ``"relu4_2"``.
-        score_weight: Score weight of the operator. Defaults to ``1e0``.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
 
     If ``impl_params is True``,
 
@@ -116,7 +114,6 @@ def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-    **gram_loss_kwargs: Any,
 ) -> StyleLoss:
     r"""Style_loss from :cite:`GEB2016`.
 
@@ -124,20 +121,11 @@ def style_loss(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
+        multi_layer_encoder: If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
             used.
-        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
-            taken. If omitted, the defaults is used. Defaults to
-            ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
-        layer_weights: Layer weights of the operator. If omitted, the layer weights are
-            calculated with ``1.0 / num_channels ** 2.0`` as described in the paper.
-            Here the ``num_channels`` are the number of channels in the respective
-            layer.
-        score_weight: Score weight of the operator. Defaults to ``1e3``.
-        **gram_loss_kwargs: Optional parameters for the
-            :class:`~pystiche.ops.GramOperator`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
 
     If ``impl_params is True`` , no additional score correction factor of ``1.0 / 4.0``
     is used.
@@ -150,7 +138,7 @@ def style_loss(
         hyper_parameters = _hyper_parameters()
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
-        return ops.GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
+        return ops.GramOperator(encoder, score_weight=layer_weight)
 
     return StyleLoss(
         multi_layer_encoder,
@@ -173,13 +161,11 @@ def perceptual_loss(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
+        multi_layer_encoder: If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
             used.
-        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
-        style_loss_kwargs: Optional parameters for the :func:`style_loss`.
-
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
