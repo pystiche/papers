@@ -47,11 +47,11 @@ def _load_multi_layer_encoder(loader, *args, **kwargs):
 
 
 def patch_multi_layer_encoder_loader(
-    target,
+    targets,
     loader,
     patch_load_weights=True,
     clear_cache=False,
-    setup=None,
+    setups=None,
     mocker=DEFAULT_MOCKER,
 ):
     if patch_load_weights:
@@ -65,13 +65,19 @@ def patch_multi_layer_encoder_loader(
         multi_layer_encoder.empty_storage()
         return multi_layer_encoder
 
-    patch = mocker.patch(target, new)
+    if not isinstance(targets, list):
+        targets = [targets]
 
-    if setup is not None:
-        args, kwargs = setup
-        new(*args, **kwargs)
+    patches = tuple(mocker.patch(target, new) for target in targets)
 
-    return patch
+    if setups is not None:
+        if not isinstance(setups, list):
+            setups = [setups]
+        for setup in setups:
+            args, kwargs = setup
+            new(*args, **kwargs)
+
+    return patches
 
 
 def _make_image_mock(image=None, mocker=DEFAULT_MOCKER):
