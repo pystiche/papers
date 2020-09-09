@@ -1,3 +1,4 @@
+
 from typing import Optional
 
 from pystiche.enc.encoder import SequentialEncoder
@@ -34,291 +35,142 @@ def transformed_image_loss(
     return FeatureReconstructionOperator(transformer_block, score_weight=score_weight)
 
 from typing import Callable, Dict, Optional, Sequence, Tuple, Union, cast
+from abc import abstractmethod
+from collections import OrderedDict
+from typing import Optional, Sequence, Union, cast
 
 import torch
 import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
-import pystiche
-from pystiche import ops
+from pystiche import enc, ops
 from pystiche.enc import Encoder, MultiLayerEncoder
 
-from ._modules import DiscriminatorMultiLayerEncoder, get_prediction_modules
+from ._modules import DiscriminatorMultiLayerEncoder, prediction_module
 
 __all__ = [
-    "DiscriminatorEncodingOperator",
-    "MultiLayerDicriminatorEncodingOperator",
-    "discriminator_operator",
+    "EncodingDiscriminatorOperator",
+    "PredictionOperator",
+    "MultiLayerPredictionOperator",
+    "prediction_loss",
     "DiscriminatorLoss",
+    "discriminator_loss",
 ]
 
 
-class DiscriminatorEncodingOperator(ops.EncodingRegularizationOperator):
-    r"""Discriminator encoding operator working in an encoded space.
+class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
+    def __init__(self, encoder: Encoder, score_weight: float = 1.0):
+        super().__init__(encoder, score_weight=score_weight)
+        self._real = True
+        self.accuracy: torch.Tensor
+        self.register_buffer("accuracy", torch.zeros(1))
 
-    In addition to the ``loss``, this operator also determines the current accuracy of
-    the discriminator depending on the parameter ``real``.
+    def real(self, mode: bool = True) -> "EncodingDiscriminatorOperator":
+        self._real = mode
+        return self
 
-    Args:
-        encoder: Encoder that is used to encode the target and input images.
-        prediction_module: Auxiliary classifier used to process the encodings into a
-            prediction.
-        score_weight: Score weight of the operator. Defaults to ``1.0``.
-    """
+    def fake(self) -> "EncodingDiscriminatorOperator":
+        return self.real(False)
 
+    def process_input_image(self, image: torch.Tensor) -> torch.Tensor:
+        input_repr = self.input_image_to_repr(image)
+        self.accuracy = self.calculate_accuracy(input_repr)
+        return self.calculate_score(input_repr)
+
+    @abstractmethod
+    def calculate_accuracy(self, input_repr):
+        pass
+
+
+class PredictionOperator(EncodingDiscriminatorOperator):
     def __init__(
-        self, encoder: Encoder, prediction_module: nn.Module, score_weight: float = 1e0,
+        self, encoder: Encoder, predictor: nn.Module, score_weight: float = 1e0,
     ) -> None:
         super().__init__(encoder, score_weight=score_weight)
-        self.prediction_module = prediction_module
-        self.acc = torch.empty(1)
+        self.predictor = predictor
 
     def input_enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self.prediction_module(enc))
+        return cast(torch.Tensor, self.predictor(enc))
 
-    def process_input_image(
-        self, image: torch.Tensor, real: bool = True
-    ) -> torch.Tensor:
-        return self.calculate_score(self.input_image_to_repr(image), real=real)
-
-    def _loss(self, prediction: torch.Tensor, real: bool) -> torch.Tensor:
-        r"""Calculation of the loss.
-
-        The loss calculation is performed using a
-        :func:`~torch.nn.functional.binary_cross_entropy_with_logits` on the prediction
-        of the operator. The target ``logits`` are ``1`` if it is ``real`` and ``0``
-        otherwise.
-
-        Args:
-            prediction: Prediction of the input.
-            real: If ``True``, the ``prediction`` should be classified as ``real``,
-                otherwise as a fake.
-
-        """
+    def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
         return binary_cross_entropy_with_logits(
-            prediction,
-            torch.ones_like(prediction) if real else torch.zeros_like(prediction),
+            input_repr,
+            torch.ones_like(input_repr) if self._real else torch.zeros_like(input_repr),
         )
 
-    def _acc(self, prediction: torch.Tensor, real: bool) -> torch.Tensor:
-        r"""Calculation of the accuracy.
-
-        The accuracy calculation corresponds to the proportion of entries in the
-        ``prediction`` that are greater than ``0`` if it is ``real`` otherwise less than
-        ``0``.
-
-        Args:
-            prediction: Prediction of the input.
-            real: If ``True``, the ``prediction`` should be classified as ``real``,
-                otherwise as a fake.
-
-        """
-
-        def get_acc_mask(prediction: torch.Tensor, real: bool) -> torch.Tensor:
-            if real:
-                return torch.masked_fill(
-                    torch.zeros_like(prediction),
-                    prediction > torch.zeros_like(prediction),
-                    1,
-                )
-            else:
-                return torch.masked_fill(
-                    torch.zeros_like(prediction),
-                    prediction < torch.zeros_like(prediction),
-                    1,
-                )
-
-        return torch.mean(get_acc_mask(prediction, real))
-
-    def get_current_acc(self) -> torch.Tensor:
-        return self.acc
-
-    def calculate_score(
-        self, prediction: torch.Tensor, real: bool = True
-    ) -> torch.Tensor:
-        self.acc = self._acc(prediction, real)
-        return self._loss(prediction, real=real)
-
-    def forward(
-        self, input_image: torch.Tensor, real: bool = True
-    ) -> Union[torch.Tensor, pystiche.LossDict]:
-        return self.process_input_image(input_image, real=real) * self.score_weight
+    def calculate_accuracy(self, input_repr):
+        comparator = torch.ge if self._real else torch.lt
+        return torch.mean(comparator(input_repr, 0.0).float())
 
 
-class MultiLayerDicriminatorEncodingOperator(ops.MultiLayerEncodingOperator):
-    r"""Convenience container for multiple :class:`DiscriminatorEncodingOperator` s.
+class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
+    def discriminator_operators(self):
+        for op in self.operators():
+            if isinstance(op, EncodingDiscriminatorOperator):
+                yield op
 
-    Args:
-        encoder: :class:`~pystiche.enc.MultiLayerEncoder`.
-        layers: Layers of the ``encoder`` that the children operators operate on.
-        get_encoding_op: Callable that returns a children operator given a
-            :class:`pystiche.enc.SingleLayerEncoder` extracted from the
-            ``encoder`` and its corresponding layer weight.
-        layer_weights: Weights of the children operators passed to ``get_encoding_op``.
-            If ``"sum"``, each layer weight is set to ``1.0``. If ``"mean"``, each
-            layer weight is set to ``1.0 / len(layers)``. If sequence of ``float``s its
-            length has to match ``layers``. Defaults to ``"sum"``.
-        score_weight: Score weight of the operator. Defaults to ``1.0``.
-    """
+    def real(self, mode: bool = True) -> "MultiLayerPredictionOperator":
+        for op in self.discriminator_operators():
+            op.real(mode)
+        return self
 
-    def __init__(
-        self,
-        encoder: MultiLayerEncoder,
-        layers: Sequence[str],
-        get_encoding_op: Callable[[Encoder, float], ops.EncodingOperator],
-        layer_weights: Union[str, Sequence[float]] = "sum",
-        score_weight: float = 1e0,
-    ):
-        super().__init__(
-            encoder,
-            layers,
-            get_encoding_op,
-            layer_weights=layer_weights,
-            score_weight=score_weight,
-        )
-        self.encoder_parameters = encoder.parameters()
+    def fake(self) -> "MultiLayerPredictionOperator":
+        return self.real(False)
 
-    def get_discriminator_acc(self) -> torch.Tensor:
-        acc = []
-        for op in self._modules.values():
-            if isinstance(op, DiscriminatorEncodingOperator):
-                acc.append(op.get_current_acc())
-        return torch.mean(torch.stack(acc))
-
-    def process_input_image(
-        self, input_image: torch.Tensor, real: Optional[bool] = None
-    ) -> pystiche.LossDict:
-        return pystiche.LossDict(
-            [(name, op(input_image, real)) for name, op in self.named_children()]
-        )
-
-    def forward(
-        self, input_image: torch.Tensor, real: Optional[bool] = None
-    ) -> Union[torch.Tensor, pystiche.LossDict]:
-        return self.process_input_image(input_image, real) * self.score_weight
+    def get_accuracy(self) -> torch.Tensor:
+        accuracies = torch.cat([op.accuracy for op in self.discriminator_operators()])
+        return torch.mean(accuracies)
 
 
-def discriminator_operator(
-    in_channels: int = 3,
+def prediction_loss(
     impl_params: bool = True,
-    encoder: Optional[MultiLayerEncoder] = None,
-    layers: Optional[Sequence[str]] = None,
-    prediction_modules: Union[Dict[str, nn.Module], None] = None,
-    layer_weights: Union[str, Sequence[float]] = "sum",
+    discriminator_multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
-) -> MultiLayerDicriminatorEncodingOperator:
-    r"""Discriminator prediction from :cite:`SKL+2018`.
-
-    Capture image details at different scales with the ``prediction_modules`` and sum up
-    all losses and accuracies on the different ``layers``.
-
-    Args:
-        in_channels: Number of channels in the input.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        encoder: Trainable :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the
-            default
-            :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
-            is used.
-        layers: Layers from which the encodings of the ``encoder`` should be
-            taken. If omitted, the defaults is used. Defaults to
-            ``("0", "1", "3", "5", "6")``.
-        prediction_modules: Auxiliary classifier used to process the encodings into a
-            prediction. If omitted, the default
-            :func:`~pystiche_papers.sanakoyeu_et_al_2018.get_prediction_modules` are
-            used.
-        layer_weights: Layer weights of the operator. Defaults to ``sum``.
-        score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``impl_params``. Defaults to ``1e0`` if
-            ``impl_params is True`` otherwise ``1e-3``.
-    """
-    if encoder is None:
-        encoder = DiscriminatorMultiLayerEncoder(in_channels=in_channels)
+):
+    if discriminator_multi_layer_encoder is None:
+        discriminator_multi_layer_encoder = DiscriminatorMultiLayerEncoder()
 
     if score_weight is None:
-        if impl_params:
-            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L98
-            score_weight = 1e0
-        else:
-            score_weight = 1e-3
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L98
+        score_weight = 1e0 if impl_params else 1e-3
 
-    if layers is None:
-        layers = ("0", "1", "3", "5", "6")
-
-    if prediction_modules is None:
-        prediction_modules = get_prediction_modules()
-
-    assert tuple(prediction_modules.keys()) == layers, (
-        "The keys in prediction_modules should match "
-        "the entries in layers. However layers "
-        + str(layers)
-        + " and keys: "
-        + str(tuple(prediction_modules.keys()))
-        + " are given. "
+    predictors = OrderedDict(
+        (
+            ("0", prediction_module(128, 5)),
+            ("1", prediction_module(128, 10)),
+            ("3", prediction_module(512, 10)),
+            ("5", prediction_module(1024, 6)),
+            ("6", prediction_module(1024, 3)),
+        )
     )
 
     def get_encoding_op(
-        encoder: Encoder, layer_weight: float
-    ) -> DiscriminatorEncodingOperator:
-        prediction_module = prediction_modules[cast(str, encoder.layer)]  # type: ignore[index]
-        return DiscriminatorEncodingOperator(
-            encoder, prediction_module, score_weight=layer_weight,
+        encoder: enc.SingleLayerEncoder, layer_weight: float
+    ) -> PredictionOperator:
+        return PredictionOperator(
+            encoder, predictors[encoder.layer], score_weight=layer_weight,
         )
 
-    return MultiLayerDicriminatorEncodingOperator(
-        encoder,
-        layers,
+    return MultiLayerPredictionOperator(
+        discriminator_multi_layer_encoder,
+        tuple(predictors.keys()),
         get_encoding_op,
-        layer_weights=layer_weights,
+        layer_weights=scale_weights,
         score_weight=score_weight,
     )
 
 
+prediction_loss_ = prediction_loss
+
+
 class DiscriminatorLoss(nn.Module):
-    r"""Discriminator loss from :cite:`SKL+2018`.
-
-    Calculates the loss and accuracy of the current discriminator on all real and fake
-    input images.
-
-    Args:
-        discriminator: Trainable :class:`MultiLayerDicriminatorEncodingOperator`.
-    """
-
-    def __init__(self, discriminator: MultiLayerDicriminatorEncodingOperator) -> None:
+    def __init__(self, prediction_loss: MultiLayerPredictionOperator) -> None:
         super().__init__()
-        self.discriminator = discriminator
-        self.acc = torch.empty(1)
+        self.prediction_loss = prediction_loss
 
-    @property
-    def get_current_acc(self) -> torch.Tensor:
-        return self.acc
-
-    def calculate_loss(
-        self,
-        discriminator: MultiLayerDicriminatorEncodingOperator,
-        output_photo: torch.Tensor,
-        input_painting: torch.Tensor,
-        input_photo: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
-        loss = discriminator(input_painting, real=True)
-        acc = discriminator.get_discriminator_acc()
-        for key, value in zip(
-            loss.keys(), discriminator(output_photo, real=False).values()
-        ):
-            loss[key] = loss[key] + value
-
-        acc += discriminator.get_discriminator_acc()
-        if input_photo is not None:
-            for key, value in zip(
-                loss.keys(), discriminator(input_photo, real=False).values()
-            ):
-                loss[key] = loss[key] + value
-            acc += discriminator.get_discriminator_acc()
-            self.acc = acc / 3
-            return cast(torch.Tensor, loss)
-        self.acc = acc / 2
-        return cast(torch.Tensor, loss)
+        self.accuracy: torch.Tensor
+        self.register_buffer("accuracy", torch.zeros(1))
 
     def forward(
         self,
@@ -326,6 +178,31 @@ class DiscriminatorLoss(nn.Module):
         input_painting: torch.Tensor,
         input_photo: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
+        accuracies = []
+
+        self.prediction_loss.real()
+        loss = self.prediction_loss(input_painting).aggregate(0)
+        accuracies.append(self.prediction_loss.get_accuracy())
+
+        self.prediction_loss.fake()
+        loss += self.prediction_loss(output_photo).aggregate(0)
+        accuracies.append(self.prediction_loss.get_accuracy())
+
+        if input_photo is not None:
+            loss += self.prediction_loss(input_photo).aggregate(0)
+            accuracies.append(self.prediction_loss.get_accuracy())
+
+        self.accuracy = torch.mean(torch.cat(accuracies))
+
         return self.calculate_loss(
             self.discriminator, output_photo, input_painting, input_photo
         )
+
+
+def discriminator_loss(
+    impl_params: bool = True,
+    prediction_loss: Optional[MultiLayerPredictionOperator] = None,
+) -> DiscriminatorLoss:
+    if prediction_loss is None:
+        prediction_loss = prediction_loss_(impl_params=impl_params)
+    return DiscriminatorLoss(prediction_loss)
