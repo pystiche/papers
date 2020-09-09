@@ -12,6 +12,7 @@ __all__ = [
     "postprocessor",
     "optimizer",
     "multi_layer_encoder",
+    "compute_layer_weights",
     "hyper_parameters",
 ]
 
@@ -59,19 +60,29 @@ def optimizer(input_image: torch.Tensor) -> optim.LBFGS:
 def compute_layer_weights(
     multi_layer_encoder: enc.MultiLayerEncoder, layers: Sequence[str],
 ) -> Tuple[float, ...]:
-    nums_channels = []
+    def find_out_channels(multi_layer_encoder: nn.Module, layer: str) -> int:
+        modules = multi_layer_encoder._modules
+        layers = list(modules.keys())
+        layers = reversed(layers[: layers.index(layer) + 1])
+        for layer_ in layers:
+            try:
+                return cast(int, modules[layer_].out_channels)
+            except AttributeError:
+                pass
+
+        raise RuntimeError(
+            f"Neither '{layer}' nor any previous layer has an 'out_channels' "
+            f"attribute."
+        )
+
+    num_channels = []
     for layer in layers:
         if layer not in multi_layer_encoder:
-            raise RuntimeError
+            raise ValueError(f"Layer {layer} is not part of the multi_layer_encoder.")
 
-        layer = layer.replace("relu", "conv")
-        if not layer.startswith("conv"):
-            raise RuntimeError
+        num_channels.append(find_out_channels(multi_layer_encoder, layer))
 
-        module = cast(nn.Conv2d, multi_layer_encoder._modules[layer])
-        nums_channels.append(module.out_channels)
-
-    return tuple(1.0 / num_channels ** 2.0 for num_channels in nums_channels)
+    return tuple(1.0 / n ** 2.0 for n in num_channels)
 
 
 multi_layer_encoder_ = multi_layer_encoder

@@ -68,6 +68,33 @@ def test_optimizer(subtests, input_image):
         assert param_group["max_iter"] == 1
 
 
+def test_compute_layer_weights():
+    out_channels = (3, 6, 6)
+
+    modules = (
+        ("conv1", nn.Conv2d(1, out_channels[0], 3)),
+        ("conv2", nn.Conv2d(out_channels[0], out_channels[1], 3)),
+        ("pool", nn.MaxPool2d(2)),
+    )
+    multi_layer_encoder = enc.MultiLayerEncoder(modules)
+    layers, _ = zip(*modules)
+
+    layer_weights = paper.compute_layer_weights(multi_layer_encoder, layers)
+    assert layer_weights == pytest.approx([1 / n ** 2 for n in out_channels])
+
+
+def test_get_layer_weights_wrong_layers(subtests):
+    multi_layer_encoder = enc.MultiLayerEncoder((("relu", nn.ReLU()),))
+
+    with subtests.test("layer not in multi_layer_encoder"):
+        with pytest.raises(ValueError):
+            paper.compute_layer_weights(multi_layer_encoder, ("not_included",))
+
+    with subtests.test("no out_channels"):
+        with pytest.raises(RuntimeError):
+            paper.compute_layer_weights(multi_layer_encoder, ("relu",))
+
+
 def test_hyper_parameters_content_loss(subtests):
     hyper_parameters = paper.hyper_parameters()
 
@@ -118,41 +145,3 @@ def test_hyper_parameters_nst(subtests):
 
     with subtests.test("num_steps"):
         assert hyper_parameters.num_steps == 500
-
-
-# def test_get_layer_weights():
-#     layers, nums_channels = zip(
-#         ("relu1_1", 64),
-#         ("relu2_1", 128),
-#         ("relu3_1", 256),
-#         ("relu4_1", 512),
-#         ("relu5_1", 512),
-#     )
-#
-#     actual = get_layer_weights(layers)
-#     desired = tuple(1.0 / num_channels ** 2.0 for num_channels in nums_channels)
-#     assert actual == pytest.approx(desired)
-#
-#
-# def test_get_layer_weights_wrong_layers(subtests):
-#     with subtests.test("layer not in multi_layer_encoder"):
-#         not_included_layers = ("not_included",)
-#
-#         with pytest.raises(RuntimeError):
-#             get_layer_weights(not_included_layers)
-#
-#     with subtests.test("no conv or relu layer"):
-#         no_conv_or_relu_layers = ("pool1",)
-#
-#         with pytest.raises(RuntimeError):
-#             get_layer_weights(no_conv_or_relu_layers)
-#
-# def test_style_loss_wrong_layers(mocker):
-#     mock = mocker.patch("pystiche_papers.gatys_ecker_bethge_2016._loss.StyleLoss")
-#
-#     layers = ("not_included", "not_conv_or_relu")
-#
-#     with pytest.warns(RuntimeWarning):
-#         paper.style_loss(layers=layers)
-#
-#     assert mock.call_args[1]["layer_weights"] == "mean"
