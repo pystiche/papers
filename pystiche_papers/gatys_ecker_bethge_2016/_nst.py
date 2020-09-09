@@ -52,7 +52,7 @@ def nst(
     a random initialized image.
     """
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters(impl_params=impl_params)
+        hyper_parameters = _hyper_parameters()
 
     device = content_image.device
 

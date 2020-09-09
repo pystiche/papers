@@ -75,9 +75,7 @@ def content_loss(
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters(
-            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
-        )
+        hyper_parameters = _hyper_parameters()
 
     return FeatureReconstructionOperator(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
@@ -149,9 +147,7 @@ def style_loss(
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters(
-            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
-        )
+        hyper_parameters = _hyper_parameters()
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
         return ops.GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
@@ -189,9 +185,7 @@ def perceptual_loss(
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
 
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters(
-            impl_params=impl_params, multi_layer_encoder=multi_layer_encoder
-        )
+        hyper_parameters = _hyper_parameters()
 
     return loss.PerceptualLoss(
         content_loss(

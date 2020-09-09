@@ -7,22 +7,24 @@ import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import image, misc, optim
 from pystiche_papers import utils
 
-# FIXME: These values are guessed
-NUM_STEPS = 500
-SIZE = 500
-
 
 @utils.abort_if_cuda_memory_exausts
 def figure_2(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    content_image = images["neckarfront"].read(size=SIZE, device=args.device)
+    hyper_parameters = paper.hyper_parameters()
+
+    content_image = images["neckarfront"].read(
+        size=hyper_parameters.image_size, device=args.device
+    )
 
     class StyleImage:
         def __init__(self, label, image, score_weight):
             self.label = label
-            self.image = image.read(size=SIZE, device=args.device)
+            self.image = image.read(
+                size=hyper_parameters.image_size, device=args.device
+            )
             self.score_weight = score_weight
 
     style_images = (
@@ -37,18 +39,13 @@ def figure_2(args):
     for style_image in style_images:
         header = f"Replicating Figure 2 {style_image.label} with {params} parameters"
         with args.logger.environment(header):
-
-            style_loss_kwargs = {"score_weight": style_image.score_weight}
-            criterion = paper.perceptual_loss(
-                impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
-            )
+            hyper_parameters.style_loss.score_weight = style_image.score_weight
 
             output_image = paper.nst(
                 content_image,
                 style_image.image,
-                NUM_STEPS,
                 impl_params=args.impl_params,
-                criterion=criterion,
+                hyper_parameters=hyper_parameters,
                 quiet=args.quiet,
                 logger=args.logger,
             )
@@ -65,8 +62,14 @@ def figure_3(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    content_image = images["neckarfront"].read(size=SIZE, device=args.device)
-    style_image = images["composition_vii"].read(size=SIZE, device=args.device)
+    hyper_parameters = paper.hyper_parameters()
+
+    content_image = images["neckarfront"].read(
+        size=hyper_parameters.image_size, device=args.device
+    )
+    style_image = images["composition_vii"].read(
+        size=hyper_parameters.image_size, device=args.device
+    )
 
     style_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
     layer_configs = [style_layers[: idx + 1] for idx in range(len(style_layers))]
@@ -80,18 +83,17 @@ def figure_3(args):
             f"Replicating Figure 3 image in row {row_label} and column {column_label}"
         )
         with args.logger.environment(header):
-
-            style_loss_kwargs = {"layers": layers, "score_weight": score_weight}
-            criterion = paper.perceptual_loss(
-                impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
+            hyper_parameters.style_loss.layers = style_layers
+            hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
+                style_layers
             )
+            hyper_parameters.style_loss.score_weight = score_weight
 
             output_image = paper.nst(
                 content_image,
                 style_image,
-                NUM_STEPS,
                 impl_params=args.impl_params,
-                criterion=criterion,
+                hyper_parameters=hyper_parameters,
                 quiet=args.quiet,
                 logger=args.logger,
             )

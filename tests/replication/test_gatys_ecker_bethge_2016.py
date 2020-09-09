@@ -9,6 +9,7 @@ import torch
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import misc, optim
+from pystiche_papers.utils import HyperParameters
 
 from . import utils
 from .asserts import assert_dir_exists
@@ -100,28 +101,21 @@ def test_figure_2_smoke(subtests, images, nst, main, args):
     with subtests.test("content_image"):
         for call_args in nst.call_args_list:
             args, _ = call_args
-            content_image, _, _ = args
+            content_image, _ = args
             ptu.assert_allclose(content_image, images["neckarfront"].read())
 
     with subtests.test("style_image"):
         # TODO: make this more precise and also check score weight
         for call_args in nst.call_args_list:
             args, _ = call_args
-            _, style_image, _ = args
+            _, style_image = args
             assert isinstance(style_image, torch.Tensor)
 
-    with subtests.test("num_steps"):
-        for call_args in nst.call_args_list:
-            args, _ = call_args
-            _, _, num_steps = args
-            assert num_steps == 500
-
-    with subtests.test("perceptual_loss"):
-        criterion_type = type(paper.perceptual_loss())
+    with subtests.test("hyper_parameters"):
         for call_args in nst.call_args_list:
             _, kwargs = call_args
-            criterion = kwargs["criterion"]
-            assert isinstance(criterion, criterion_type)
+            hyper_parameters = kwargs["hyper_parameters"]
+            assert isinstance(hyper_parameters, HyperParameters)
 
 
 def test_figure_3_smoke(subtests, images, nst, main, args):
@@ -132,24 +126,17 @@ def test_figure_3_smoke(subtests, images, nst, main, args):
     with subtests.test("content_image"):
         for call_args in nst.call_args_list:
             args, _ = call_args
-            content_image, _, _ = args
+            content_image, _ = args
             ptu.assert_allclose(content_image, images["neckarfront"].read())
 
     with subtests.test("style_image"):
         for call_args in nst.call_args_list:
             args, _ = call_args
-            _, style_image, _ = args
+            _, style_image = args
             ptu.assert_allclose(style_image, images["composition_vii"].read())
 
-    with subtests.test("num_steps"):
-        for call_args in nst.call_args_list:
-            args, _ = call_args
-            _, _, num_steps = args
-            assert num_steps == 500
-
-    with subtests.test("perceptual_loss"):
-        criterion_type = type(paper.perceptual_loss())
+    with subtests.test("hyper_parameters"):
         for call_args in nst.call_args_list:
             _, kwargs = call_args
-            criterion = kwargs["criterion"]
-            assert isinstance(criterion, criterion_type)
+            hyper_parameters = kwargs["hyper_parameters"]
+            assert isinstance(hyper_parameters, HyperParameters)

@@ -57,8 +57,11 @@ def optimizer(input_image: torch.Tensor) -> optim.LBFGS:
     return optim.LBFGS([input_image.requires_grad_(True)], lr=1.0, max_iter=1)
 
 
+multi_layer_encoder_ = multi_layer_encoder
+
+
 def compute_layer_weights(
-    multi_layer_encoder: enc.MultiLayerEncoder, layers: Sequence[str],
+    layers: Sequence[str], multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
 ) -> Tuple[float, ...]:
     def find_out_channels(multi_layer_encoder: nn.Module, layer: str) -> int:
         modules = multi_layer_encoder._modules
@@ -75,6 +78,9 @@ def compute_layer_weights(
             f"attribute."
         )
 
+    if multi_layer_encoder is None:
+        multi_layer_encoder = multi_layer_encoder_()
+
     num_channels = []
     for layer in layers:
         if layer not in multi_layer_encoder:
@@ -85,24 +91,16 @@ def compute_layer_weights(
     return tuple(1.0 / n ** 2.0 for n in num_channels)
 
 
-multi_layer_encoder_ = multi_layer_encoder
-
-
-def hyper_parameters(
-    impl_params: bool = True,
-    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-) -> HyperParameters:
-    if multi_layer_encoder is None:
-        multi_layer_encoder = multi_layer_encoder_(impl_params=impl_params)
-
+def hyper_parameters() -> HyperParameters:
     style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
     return HyperParameters(
         content_loss=HyperParameters(layer="relu4_2", score_weight=1e0),
         style_loss=HyperParameters(
             layers=style_loss_layers,
-            layer_weights=compute_layer_weights(multi_layer_encoder, style_loss_layers),
+            layer_weights=compute_layer_weights(style_loss_layers),
             score_weight=1e3,
         ),
         nst=HyperParameters(num_steps=500),
+        image_size=500,
     )
