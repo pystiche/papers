@@ -41,7 +41,7 @@ def test_HyperParameters_named_children(params):
     named_children = tuple(hyper_parameters.named_children())
     assert not named_children
 
-    name = "nested_hyper_parameters"
+    name = tuple(params.keys())[0]
     val = HyperParameters()
     setattr(hyper_parameters, name, val)
 
