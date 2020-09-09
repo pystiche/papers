@@ -37,7 +37,7 @@ def transformed_image_loss(
 from typing import Callable, Dict, Optional, Sequence, Tuple, Union, cast
 from abc import abstractmethod
 from collections import OrderedDict
-from typing import Optional, Sequence, Union, cast
+from typing import Iterator, Optional, Sequence, Union, cast
 
 import torch
 import torch.nn as nn
@@ -65,6 +65,7 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
         encoder: Encoder that is used to encode the target and input images.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """
+
     def __init__(self, encoder: Encoder, score_weight: float = 1.0):
         super().__init__(encoder, score_weight=score_weight)
         self._real = True
@@ -84,7 +85,7 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
         return self.calculate_score(input_repr)
 
     @abstractmethod
-    def calculate_accuracy(self, input_repr):
+    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
         pass
 
 
@@ -101,6 +102,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
         predictor: Auxiliary classifier used to process the encodings into a prediction.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """
+
     def __init__(
         self, encoder: Encoder, predictor: nn.Module, score_weight: float = 1e0,
     ) -> None:
@@ -116,7 +118,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
             torch.ones_like(input_repr) if self._real else torch.zeros_like(input_repr),
         )
 
-    def calculate_accuracy(self, input_repr):
+    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
         comparator = torch.ge if self._real else torch.lt
         return torch.mean(comparator(input_repr, 0.0).float())
 
@@ -137,7 +139,8 @@ class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
             length has to match ``layers``. Defaults to ``"mean"``.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """
-    def discriminator_operators(self):
+
+    def discriminator_operators(self) -> Iterator["EncodingDiscriminatorOperator"]:
         for op in self.operators():
             if isinstance(op, EncodingDiscriminatorOperator):
                 yield op
@@ -160,7 +163,7 @@ def prediction_loss(
     discriminator_multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
-):
+) -> MultiLayerPredictionOperator:
     r"""Discriminator loss from :cite:`SKL+2018`.
 
     Capture image details at different scales with the ``predictors`` and sum up
@@ -246,9 +249,7 @@ class DiscriminatorLoss(nn.Module):
 
         self.accuracy = torch.mean(torch.cat(accuracies))
 
-        return self.calculate_loss(
-            self.discriminator, output_photo, input_painting, input_photo
-        )
+        return cast(torch.Tensor, loss)
 
 
 def discriminator_loss(
