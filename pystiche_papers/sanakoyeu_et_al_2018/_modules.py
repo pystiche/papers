@@ -22,7 +22,6 @@ __all__ = [
     "transformer",
     "Discriminator",
     "DiscriminatorMultiLayerEncoder",
-    "get_transformation_block",
     "TransformerBlock",
 ]
 
@@ -332,24 +331,6 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
         super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
 
 
-def get_transformation_block(
-    in_channels: int,
-    kernel_size: Union[Tuple[int, int], int],
-    stride: Union[Tuple[int, int], int],
-    padding: Union[Tuple[int, int], int],
-    impl_params: bool = True,
-) -> nn.Module:
-    if impl_params:
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
-        return nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
-    return cast(
-        nn.Module,
-        nn.utils.weight_norm(
-            nn.Conv2d(in_channels, 3, kernel_size, stride=stride, padding=padding)
-        ),
-    )
-
-
 class TransformerBlock(enc.SequentialEncoder):
     r"""TransformerBlock from :cite:`SKL+2018`.
 
@@ -382,6 +363,7 @@ class TransformerBlock(enc.SequentialEncoder):
             "stride": stride,
             "padding": padding,
         }
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
         module = (
             nn.AvgPool2d(**kwargs)  # type: ignore[arg-type]
             if impl_params
