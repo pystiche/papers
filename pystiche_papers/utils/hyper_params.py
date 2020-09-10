@@ -1,5 +1,6 @@
+import copy
 from collections import OrderedDict
-from typing import Any, Dict, Iterator, Tuple
+from typing import Any, Dict, Iterator, Optional, Tuple
 
 import pystiche
 
@@ -9,7 +10,7 @@ __all__ = ["HyperParameters"]
 class HyperParameters(pystiche.ComplexObject):
     def __init__(self, **kwargs: Any) -> None:
         self.__params__: Dict[str, Any] = OrderedDict()
-        self.__sub_params__: Dict[str, Any] = OrderedDict()
+        self.__sub_params__: Dict[str, "HyperParameters"] = OrderedDict()
 
         for name, value in kwargs.items():
             setattr(self, name, value)
@@ -48,6 +49,32 @@ class HyperParameters(pystiche.ComplexObject):
 
     def __contains__(self, name: str) -> bool:
         return name in self.__params__ or name in self.__sub_params__
+
+    def __copy__(self) -> "HyperParameters":
+        params = copy.copy(self.__params__)
+        params.update(
+            {
+                name: copy.copy(sub_param)
+                for name, sub_param in self.__sub_params__.items()
+            }
+        )
+        return type(self)(**params)
+
+    def __deepcopy__(self, memo: Optional[Dict[int, Any]] = None,) -> "HyperParameters":
+        params = copy.deepcopy(self.__params__, memo=memo)
+        params.update(
+            {
+                name: copy.deepcopy(sub_param, memo=memo)
+                for name, sub_param in self.__sub_params__.items()
+            }
+        )
+        return type(self)(**params)
+
+    def new_similar(self, deepcopy: bool = False, **kwargs: Any) -> "HyperParameters":
+        hyper_parameters = copy.deepcopy(self) if deepcopy else copy.copy(self)
+        for name, value in kwargs.items():
+            setattr(hyper_parameters, name, value)
+        return hyper_parameters
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
