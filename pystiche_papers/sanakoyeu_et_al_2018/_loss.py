@@ -113,12 +113,14 @@ class PredictionOperator(EncodingDiscriminatorOperator):
         return cast(torch.Tensor, self.predictor(enc))
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
-        return torch.mean(binary_cross_entropy_with_logits(
-            input_repr,
-            torch.ones_like(input_repr)
-            if self._target_distribution
-            else torch.zeros_like(input_repr),
-        ))
+        return torch.mean(
+            binary_cross_entropy_with_logits(
+                input_repr,
+                torch.ones_like(input_repr)
+                if self._target_distribution
+                else torch.zeros_like(input_repr),
+            )
+        )
 
     def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
         comparator = torch.ge if self._target_distribution else torch.lt
@@ -156,7 +158,7 @@ class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
         return self.real(False)
 
     def get_accuracy(self) -> torch.Tensor:
-        accuracies = torch.cat([op.accuracy for op in self.discriminator_operators()])
+        accuracies = torch.stack([op.accuracy for op in self.discriminator_operators()])
         return torch.mean(accuracies)
 
 

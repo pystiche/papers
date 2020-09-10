@@ -39,6 +39,7 @@ def test_EncodingDiscriminatorOperator_call(subtests, input_image):
             return image * 2.0
 
         def calculate_score(self, input_repr):
+            self.accuracy = self.calculate_accuracy(input_repr)
             return torch.mean(input_repr)
 
         def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
@@ -76,12 +77,14 @@ def test_PredictionOperator_call(subtests, input_image):
             actual = op(input_image)
             prediction = predictor(encoder(input_image))
             with subtests.test("loss"):
-                desired = torch.mean(binary_cross_entropy_with_logits(
-                    prediction,
-                    torch.ones_like(prediction)
-                    if mode
-                    else torch.zeros_like(prediction),
-                ))
+                desired = torch.mean(
+                    binary_cross_entropy_with_logits(
+                        prediction,
+                        torch.ones_like(prediction)
+                        if mode
+                        else torch.zeros_like(prediction),
+                    )
+                )
                 ptu.assert_allclose(actual, desired)
             with subtests.test("accuracy"):
                 desired_accuracy = torch.mean(comparator(prediction, 0.0).float())
@@ -94,10 +97,12 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
             return image * 2.0
 
         def calculate_score(self, input_repr):
+            self.accuracy = self.calculate_accuracy(input_repr)
             return torch.mean(input_repr)
 
         def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-            return torch.mean(input_repr)
+            comparator = torch.ge if self._target_distribution else torch.lt
+            return torch.mean(comparator(input_repr, 0.0).float())
 
     def get_encoding_op(encoder, score_weight):
         return TestOperator(encoder, score_weight)
@@ -119,7 +124,14 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
                     assert op._target_distribution == mode
 
             with subtests.test("accuracy"):
-                desired = torch.cat([op.accuracy for op in multi_layer_prediction_op.discriminator_operators()])
+                desired = torch.mean(
+                    torch.stack(
+                        [
+                            op.accuracy
+                            for op in multi_layer_prediction_op.discriminator_operators()
+                        ]
+                    )
+                )
                 ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
 
 
