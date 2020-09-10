@@ -18,6 +18,8 @@ on:
       - "requirements-dev.txt"
       - "setup.cfg"
       - "tox.ini"
+    paths-ignore:
+      - "tests/download/**"
 
   schedule:
     - cron: "0 4 * * *"
