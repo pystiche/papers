@@ -22,10 +22,10 @@ def styles():
 @pytest.fixture(scope="package", autouse=True)
 def multi_layer_encoder(package_mocker):
     return mocks.patch_multi_layer_encoder_loader(
-        target=mocks.make_mock_target(
+        targets=mocks.make_mock_target(
             "johnson_alahi_li_2016", "_loss", "_multi_layer_encoder"
         ),
         loader=paper.multi_layer_encoder,
-        setup=((), {"impl_params": True}),
+        setups=((), {"impl_params": True}),
         mocker=package_mocker,
     )
