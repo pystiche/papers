@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, Dict, Optional, Sized, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Sized, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -14,6 +14,7 @@ from pystiche.image.utils import extract_image_size
 from pystiche.misc import verify_str_arg
 
 from ..utils import OptionalGrayscaleToFakegrayscale
+from ._augmentation import augmentation
 
 __all__ = [
     "ClampSize",
@@ -84,22 +85,25 @@ class ClampSize(transforms.Transform):
         return dct
 
 
-def style_image_transform(edge_size: int = 768) -> transforms.ComposedTransform:
-    return transforms.ComposedTransform(
+def style_image_transform(edge_size: int = 768, train: bool = False) -> nn.Sequential:
+    transforms_: List[nn.Module] = [
         ClampSize(),
         transforms.ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
-    )
+    ]
+    if train:
+        transforms_.append(augmentation(size=edge_size))
+    return nn.Sequential(*transforms_)
 
 
 def content_image_transform(
-    impl_params: bool = True, edge_size: int = 768
-) -> transforms.ComposedTransform:
-    transform = style_image_transform(edge_size)
+    impl_params: bool = True, edge_size: int = 768, train: bool = False,
+) -> nn.Sequential:
+    transform = style_image_transform(edge_size=edge_size, train=train)
     if not impl_params:
         return transform
 
-    return transforms.ComposedTransform(transforms.Rescale(2.0), transform)
+    return nn.Sequential(transforms.Rescale(2.0), *transform.children())
 
 
 class WikiArt(ImageFolderDataset):
@@ -183,9 +187,7 @@ def style_dataset(
 # TODO: replace this with torchvision.datasets.Places365 as soon as
 #  https://github.com/pytorch/vision/pull/2610 is part of a release
 def content_dataset(
-    root: str,
-    impl_params: bool = True,
-    transform: Optional[transforms.Transform] = None,
+    root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
         transform = content_image_transform(impl_params=impl_params)
