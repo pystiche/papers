@@ -8,7 +8,7 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
-from pystiche_papers.utils import ResidualBlock, SameSizeConv2d
+from pystiche_papers.utils import AutoPadConv2d, ResidualBlock
 
 
 def test_get_activation(subtests):
@@ -37,7 +37,7 @@ def test_conv(subtests):
             )
 
             if padding is None:
-                assert isinstance(conv, SameSizeConv2d)
+                assert isinstance(conv, AutoPadConv2d)
             else:
                 assert isinstance(conv, nn.Conv2d)
                 with subtests.test("padding"):
@@ -173,7 +173,7 @@ def test_decoder(subtests, input_image):
 
     module = next(children)
     with subtests.test("last_conv"):
-        assert isinstance(module, SameSizeConv2d)
+        assert isinstance(module, AutoPadConv2d)
         with subtests.test("kernel_size"):
             assert module.kernel_size == misc.to_2d_arg(7)
         with subtests.test("stride"):

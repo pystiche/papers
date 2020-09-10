@@ -6,7 +6,7 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import SameSizeConv2d, channel_progression
+from pystiche_papers.utils import AutoPadConv2d, channel_progression
 
 from ..utils import ResidualBlock
 
@@ -44,7 +44,7 @@ def conv(
     cls: Type[nn.Conv2d]
     kwargs: Dict[str, Any]
     cls, kwargs = (
-        (SameSizeConv2d, {}) if padding is None else (nn.Conv2d, dict(padding=padding))
+        (AutoPadConv2d, {}) if padding is None else (nn.Conv2d, dict(padding=padding))
     )
     return cls(
         in_channels,
