@@ -210,7 +210,7 @@ def test_style_dataset_smoke(subtests, wiki_art_style, patch_collect_images, tmp
         assert dataset.style == wiki_art_style
 
     with subtests.test("transform"):
-        assert isinstance(dataset.transform, type(paper.image_transform()))
+        assert isinstance(dataset.transform, type(paper.style_image_transform()))
 
 
 def test_content_dataset(subtests, patch_collect_images):
@@ -219,7 +219,7 @@ def test_content_dataset(subtests, patch_collect_images):
     assert isinstance(dataset, ImageFolderDataset)
 
     with subtests.test("transform"):
-        assert isinstance(dataset.transform, type(paper.image_transform()))
+        assert isinstance(dataset.transform, type(paper.content_image_transform()))
 
 
 def test_batch_sampler(subtests):
