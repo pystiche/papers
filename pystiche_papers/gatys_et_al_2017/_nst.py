@@ -35,10 +35,8 @@ def nst(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        criterion: Optimization criterion. If omitted, the default
-            :func:`~pystiche_papers.gatys_et_al_2017.perceptual_loss` is used.
-        image_pyramid: Image Pyramid. If omitted, the default
-            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
@@ -111,10 +109,8 @@ def guided_nst(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        criterion: Optimization criterion. If omitted, the default
-            :func:`~pystiche_papers.gatys_et_al_2017.guided_perceptual_loss` is used.
-        image_pyramid: Image Pyramid. If omitted, the default
-            :func:`~pystiche_papers.gatys_et_al_2017.image_pyramid` is used.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,

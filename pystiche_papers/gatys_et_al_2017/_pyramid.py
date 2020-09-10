@@ -15,11 +15,9 @@ def image_pyramid(
     r"""Image pyramid from :cite:`GEB+2017`.
 
     Args:
-        edge_sizes: Edge sizes for each level. Defaults to ``(500, 800)``.
-        num_steps: Number of steps for each level. Defaults to  ``(500, 200)``.
-        **image_pyramid_kwargs: Optional parameters for the
-            :class:`~pystiche.pyramid.ImagePyramid`.
-
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+        resize_targets: Targets for resizing of set images and guides during iteration.
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
