@@ -40,12 +40,12 @@ jobs:
         run: tox -e tests-download -- tests/download
 
       - uses: JasonEtco/create-an-issue@v2.4.0
-          if: ${{ failure() }}
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            REPO: ${{ github.repository }}
-            WORKFLOW: ${{ github.workflow }}
-            JOB: ${{ github.job }}
-            ID: ${{ github.run_id }}
-          with:
-            filename: .github/failed_schedule_issue_template.md
+        if: ${{ failure() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          JOB: ${{ github.job }}
+          ID: ${{ github.run_id }}
+        with:
+          filename: .github/failed_schedule_issue_template.md
