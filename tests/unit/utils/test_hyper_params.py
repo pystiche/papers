@@ -1,3 +1,5 @@
+from copy import copy, deepcopy
+
 import pytest
 
 from pystiche_papers.utils import HyperParameters
@@ -46,6 +48,44 @@ def test_HyperParameters_contains(params):
 
     for name, val in params.items():
         assert name in hyper_parameters
+
+
+def test_HyperParameters_copy():
+    x = HyperParameters(param=object(), sub_param=HyperParameters(param=object()))
+    y = copy(x)
+
+    assert isinstance(y, HyperParameters)
+    assert y is not x
+    assert y.param is x.param
+    assert y.sub_param is not x.sub_param
+    assert y.sub_param.param is x.sub_param.param
+
+
+def test_HyperParameters_deepcopy():
+    x = HyperParameters(param=object(), sub_param=HyperParameters(param=object()))
+    y = deepcopy(x)
+
+    assert isinstance(y, HyperParameters)
+    assert y is not x
+    assert y.param is not x.param
+    assert y.sub_param is not x.sub_param
+    assert y.sub_param.param is not x.sub_param.param
+
+
+def test_HyperParameters_new_similar(subtests, params):
+    x = HyperParameters(**params)
+    new = -1
+    y = x.new_similar(a=new)
+
+    assert isinstance(y, HyperParameters)
+
+    with subtests.test("old"):
+        del params["a"]
+        for name, value in params.items():
+            assert getattr(y, name) == value
+
+    with subtests.test("new"):
+        assert y.a == new
 
 
 def test_HyperParameters_properties(params):
