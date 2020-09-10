@@ -15,6 +15,7 @@ are affected:
 .. autofunction:: guided_nst
 .. autofunction:: guided_perceptual_loss
 .. autofunction:: guided_style_loss
+.. autofunction:: hyper_parameters
 .. autofunction:: images
 .. autofunction:: image_pyramid
 .. autofunction:: multi_layer_encoder
