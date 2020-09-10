@@ -17,7 +17,8 @@ from ..utils import OptionalGrayscaleToFakegrayscale
 
 __all__ = [
     "ClampSize",
-    "image_transform",
+    "style_image_transform",
+    "content_image_transform",
     "WikiArt",
     "style_dataset",
     "content_dataset",
@@ -83,12 +84,22 @@ class ClampSize(transforms.Transform):
         return dct
 
 
-def image_transform(edge_size: int = 768,) -> transforms.ComposedTransform:
+def style_image_transform(edge_size: int = 768) -> transforms.ComposedTransform:
     return transforms.ComposedTransform(
         ClampSize(),
         transforms.ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     )
+
+
+def content_image_transform(
+    impl_params: bool = True, edge_size: int = 768
+) -> transforms.ComposedTransform:
+    transform = style_image_transform(edge_size)
+    if not impl_params:
+        return transform
+
+    return transforms.ComposedTransform(transforms.Rescale(2.0), transform)
 
 
 class WikiArt(ImageFolderDataset):
@@ -165,17 +176,19 @@ def style_dataset(
     download: bool = False,
 ) -> WikiArt:
     if transform is None:
-        transform = image_transform()
+        transform = style_image_transform()
     return WikiArt(root, style, transform=transform, download=download)
 
 
 # TODO: replace this with torchvision.datasets.Places365 as soon as
 #  https://github.com/pytorch/vision/pull/2610 is part of a release
 def content_dataset(
-    root: str, transform: Optional[transforms.Transform] = None,
+    root: str,
+    impl_params: bool = True,
+    transform: Optional[transforms.Transform] = None,
 ) -> ImageFolderDataset:
     if transform is None:
-        transform = image_transform()
+        transform = content_image_transform(impl_params=impl_params)
     return ImageFolderDataset(root, transform=transform)
 
 

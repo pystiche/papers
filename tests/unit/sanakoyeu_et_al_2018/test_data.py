@@ -36,22 +36,6 @@ def patch_collect_images(mocker):
     )
 
 
-def test_image_transform():
-    edge_size = 16
-    make_reproducible()
-    image = torch.rand(1, 1, 800, 800)
-
-    make_reproducible()
-    image_transform = paper.image_transform(edge_size=edge_size)
-    actual = image_transform(image)
-
-    transform = transforms.ValidRandomCrop(edge_size)
-    make_reproducible()
-    desired = F.grayscale_to_fakegrayscale(transform(image))
-
-    ptu.assert_allclose(actual, desired)
-
-
 def test_ClampSize_invalid_sizes():
     with pytest.raises(ValueError):
         paper.ClampSize(min_edge_size=2, max_edge_size=1)
@@ -119,6 +103,39 @@ def test_ClampSize_repr(subtests):
     for name, value in kwargs.items():
         with subtests.test(name):
             assert_property_in_repr(name, value)
+
+
+def test_style_image_transform():
+    edge_size = 16
+    make_reproducible()
+    image = torch.rand(1, 1, 800, 800)
+
+    make_reproducible()
+    image_transform = paper.style_image_transform(edge_size=edge_size)
+    actual = image_transform(image)
+
+    transform = transforms.ValidRandomCrop(edge_size)
+    make_reproducible()
+    expected = F.grayscale_to_fakegrayscale(transform(image))
+
+    ptu.assert_allclose(actual, expected)
+
+
+def test_content_image_transform_no_impl_params(subtests, content_image):
+    style_transform = paper.style_image_transform()
+
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            content_transform = paper.content_image_transform(impl_params=impl_params)
+            make_reproducible()
+            actual = content_transform(content_image)
+
+            make_reproducible()
+            expected = style_transform(
+                F.rescale(content_image, 2.0) if impl_params else content_image
+            )
+
+            ptu.assert_allclose(actual, expected)
 
 
 def test_WikiArt_unknown_style(tmpdir):
