@@ -18,6 +18,8 @@
 +--------------------------+-----------------------------------------------------------+
 | Style loss               | :class:`~pystiche.ops.GramOperator`                       |
 +--------------------------+-----------------------------------------------------------+
+| Regularization           | :class:`~pystiche.ops.TotalVariationOperator`             |
++--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
 .. _repo: https://github.com/jcjohnson/fast-neural-style

@@ -18,6 +18,8 @@
 +--------------------------+-----------------------------------------------------------+
 | Style loss               | :class:`~pystiche.ops.MRFOperator`                        |
 +--------------------------+-----------------------------------------------------------+
+| Regularization           | :class:`~pystiche.ops.TotalVariationOperator`             |
++--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
 .. _repo: https://github.com/chuanli11/CNNMRF/
