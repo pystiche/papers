@@ -10,6 +10,7 @@ on:
     paths:
       - "pystiche_papers/**"
       - "tests/**"
+      - "!tests/download/**"
       - "codecov.yml"
       - ".coveragerc"
       - ".github/workflows/tests.yml"
@@ -18,8 +19,6 @@ on:
       - "requirements-dev.txt"
       - "setup.cfg"
       - "tox.ini"
-    paths-ignore:
-      - "tests/download/**"
 
   schedule:
     - cron: "0 4 * * *"
