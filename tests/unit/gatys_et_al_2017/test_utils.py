@@ -116,10 +116,10 @@ def test_hyper_parameters_style_loss(subtests):
         assert hyper_parameters.guided_style_loss.region_weights == "sum"
 
 
-def test_hyper_parameters_pyramid(subtests):
+def test_hyper_parameters_image_pyramid(subtests):
     hyper_parameters = paper.hyper_parameters()
 
-    sub_params = "pyramid"
+    sub_params = "image_pyramid"
     assert sub_params in hyper_parameters
     hyper_parameters = getattr(hyper_parameters, sub_params)
 

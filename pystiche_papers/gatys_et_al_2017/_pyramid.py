@@ -1,14 +1,16 @@
-from typing import Any, Sequence, Union
+from typing import Collection, Optional, Union
 
-from pystiche import pyramid
+from pystiche import loss, ops, pyramid
+from pystiche_papers.utils import HyperParameters
+
+from ._utils import hyper_parameters as _hyper_parameters
 
 __all__ = ["image_pyramid"]
 
 
 def image_pyramid(
-    edge_sizes: Sequence[int] = (500, 800),
-    num_steps: Union[int, Sequence[int]] = (500, 200),
-    **image_pyramid_kwargs: Any,
+    hyper_parameters: Optional[HyperParameters] = None,
+    resize_targets: Collection[Union[ops.Operator, loss.MultiOperatorLoss]] = (),
 ) -> pyramid.ImagePyramid:
     r"""Image pyramid from :cite:`GEB+2017`.
 
@@ -19,4 +21,10 @@ def image_pyramid(
             :class:`~pystiche.pyramid.ImagePyramid`.
 
     """
-    return pyramid.ImagePyramid(edge_sizes, num_steps, **image_pyramid_kwargs)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
+    return pyramid.ImagePyramid(
+        hyper_parameters.image_pyramid.edge_sizes,
+        hyper_parameters.image_pyramid.num_steps,
+        resize_targets=resize_targets,
+    )

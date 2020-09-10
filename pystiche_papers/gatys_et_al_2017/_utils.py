@@ -59,7 +59,7 @@ def compute_layer_weights(
 def hyper_parameters() -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB+2017`."""
     style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
-    style_loss_params = dict(
+    style_loss = HyperParameters(
         layers=style_loss_layers,
         layer_weights=compute_layer_weights(style_loss_layers),
         score_weight=1e3,
@@ -67,7 +67,7 @@ def hyper_parameters() -> HyperParameters:
 
     return HyperParameters(
         content_loss=HyperParameters(layer="relu4_2", score_weight=1e0),
-        style_loss=HyperParameters(**style_loss_params),
-        guided_style_loss=HyperParameters(region_weights="sum", **style_loss_params),
-        pyramid=HyperParameters(edge_sizes=(500, 800), num_steps=(500, 200)),
+        style_loss=style_loss,
+        guided_style_loss=style_loss.new_similar(region_weights="sum"),
+        image_pyramid=HyperParameters(edge_sizes=(500, 800), num_steps=(500, 200)),
     )

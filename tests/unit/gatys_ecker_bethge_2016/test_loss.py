@@ -87,7 +87,7 @@ def test_style_loss(subtests):
         assert layer_weights == pytest.approx(hyper_parameters.layer_weights)
 
     with subtests.test("score_weight"):
-        assert style_loss.score_weight == pytest.approx(1e3)
+        assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_perceptual_loss(subtests):
