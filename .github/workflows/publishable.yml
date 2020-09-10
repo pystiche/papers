@@ -10,7 +10,7 @@ on:
     paths:
       - "pystiche_papers/**"
       - "CONTRIBUTING.rst"
-      - ".github/workflows/publishable.yml"
+#      - ".github/workflows/publishable.yml"
       - ".gitignore"
       - "LICENSE"
       - "MANIFEST.in"
@@ -18,7 +18,7 @@ on:
       - "requirements-dev.txt"
       - "README.rst"
       - "setup.cfg"
-      - "tox.ini"
+#      - "tox.ini"
 
 jobs:
   pypi:

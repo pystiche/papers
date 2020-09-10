@@ -10,12 +10,12 @@ on:
     paths:
       - "**.py"
       - ".flake8"
-      - ".github/workflows/lint.yml"
+#      - ".github/workflows/lint.yml"
       - "mypy.ini"
       - "pyproject.toml"
       - "requirements-dev.txt"
       - "setup.cfg"
-      - "tox.ini"
+#      - "tox.ini"
       - ".pre-commit-config.yaml"
 
   schedule:

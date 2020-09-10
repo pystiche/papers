@@ -13,12 +13,12 @@ on:
       - "!tests/download/**"
       - "codecov.yml"
       - ".coveragerc"
-      - ".github/workflows/tests.yml"
+#      - ".github/workflows/tests.yml"
       - "pyproject.toml"
       - "pytest.ini"
       - "requirements-dev.txt"
       - "setup.cfg"
-      - "tox.ini"
+#      - "tox.ini"
 
   schedule:
     - cron: "0 4 * * *"
