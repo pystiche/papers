@@ -8,18 +8,7 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
-from pystiche_papers.utils import ResidualBlock, same_size_padding
-
-
-def test_get_padding(subtests):
-    kernel_size = 3
-    for str_padding, desired in (
-        ("same", same_size_padding(kernel_size)),
-        ("valid", 0),
-    ):
-        with subtests.test(str_padding):
-            actual = paper.get_padding(str_padding, kernel_size)
-            assert actual == desired
+from pystiche_papers.utils import ResidualBlock, SameSizeConv2d
 
 
 def test_get_activation(subtests):
@@ -41,22 +30,27 @@ def test_conv(subtests):
     in_channels = out_channels = 3
     kernel_size = 3
     stride = 2
-    padding = "valid"
-    conv = paper.conv(
-        in_channels, out_channels, kernel_size, stride=stride, padding=padding
-    )
+    for padding in (None, 0):
+        with subtests.test(padding=padding):
+            conv = paper.conv(
+                in_channels, out_channels, kernel_size, stride=stride, padding=padding
+            )
 
-    assert isinstance(conv, nn.Conv2d)
-    with subtests.test("in_channels"):
-        assert conv.in_channels == in_channels
-    with subtests.test("out_channels"):
-        assert conv.out_channels == out_channels
-    with subtests.test("kernel_size"):
-        assert conv.kernel_size == misc.to_2d_arg(kernel_size)
-    with subtests.test("stride"):
-        assert conv.stride == misc.to_2d_arg(stride)
-    with subtests.test("padding"):
-        assert conv.padding == misc.to_2d_arg(0)
+            if padding is None:
+                assert isinstance(conv, SameSizeConv2d)
+            else:
+                assert isinstance(conv, nn.Conv2d)
+                with subtests.test("padding"):
+                    assert conv.padding == misc.to_2d_arg(padding)
+
+            with subtests.test("in_channels"):
+                assert conv.in_channels == in_channels
+            with subtests.test("out_channels"):
+                assert conv.out_channels == out_channels
+            with subtests.test("kernel_size"):
+                assert conv.kernel_size == misc.to_2d_arg(kernel_size)
+            with subtests.test("stride"):
+                assert conv.stride == misc.to_2d_arg(stride)
 
 
 def test_ConvBlock(subtests):
@@ -112,7 +106,7 @@ def test_residual_block(subtests, input_image):
 
     with subtests.test("residual"):
         assert isinstance(residual_block.residual, nn.Sequential)
-        assert len(residual_block.residual) == 4
+        assert len(residual_block.residual) == 2
 
     with subtests.test("forward size"):
         output_image = residual_block(input_image)
@@ -178,18 +172,12 @@ def test_decoder(subtests, input_image):
             )
 
     module = next(children)
-    with subtests.test("padding_module"):
-        assert isinstance(module, nn.ReflectionPad2d)
-
-    module = next(children)
     with subtests.test("last_conv"):
-        assert isinstance(module, nn.Conv2d)
+        assert isinstance(module, SameSizeConv2d)
         with subtests.test("kernel_size"):
             assert module.kernel_size == misc.to_2d_arg(7)
         with subtests.test("stride"):
             assert module.stride == misc.to_2d_arg(1)
-        with subtests.test("padding"):
-            assert module.padding == misc.to_2d_arg(0)
         in_out_channels.append((module.in_channels, module.out_channels))
 
     module = next(children)
