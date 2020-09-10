@@ -68,12 +68,12 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
 
     def __init__(self, encoder: Encoder, score_weight: float = 1.0):
         super().__init__(encoder, score_weight=score_weight)
-        self._real = True
+        self._target_distribution = True
         self.accuracy: torch.Tensor
         self.register_buffer("accuracy", torch.zeros(1))
 
     def real(self, mode: bool = True) -> "EncodingDiscriminatorOperator":
-        self._real = mode
+        self._target_distribution = mode
         return self
 
     def fake(self) -> "EncodingDiscriminatorOperator":
@@ -113,13 +113,15 @@ class PredictionOperator(EncodingDiscriminatorOperator):
         return cast(torch.Tensor, self.predictor(enc))
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
-        return binary_cross_entropy_with_logits(
+        return torch.mean(binary_cross_entropy_with_logits(
             input_repr,
-            torch.ones_like(input_repr) if self._real else torch.zeros_like(input_repr),
-        )
+            torch.ones_like(input_repr)
+            if self._target_distribution
+            else torch.zeros_like(input_repr),
+        ))
 
     def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-        comparator = torch.ge if self._real else torch.lt
+        comparator = torch.ge if self._target_distribution else torch.lt
         return torch.mean(comparator(input_repr, 0.0).float())
 
 
