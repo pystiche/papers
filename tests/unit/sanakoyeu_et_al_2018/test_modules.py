@@ -8,7 +8,7 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
-from pystiche_papers.utils import AutoPadConv2d, ResidualBlock
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
 
 
 def test_get_activation(subtests):
@@ -232,3 +232,19 @@ def test_discriminator_modules(subtests):
 
     with subtests.test("channel_config"):
         assert in_out_channels == channel_config
+
+
+def test_TransformerBlock(subtests, input_image):
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            transformer_block = paper.TransformerBlock(impl_params=impl_params)
+
+            with subtests.test("module"):
+                for module in transformer_block.children():
+                    assert isinstance(
+                        module, AutoPadAvgPool2d if impl_params else AutoPadConv2d
+                    )
+
+            with subtests.test("forward_size"):
+                output_image = transformer_block(input_image)
+                assert output_image.size() == input_image.size()

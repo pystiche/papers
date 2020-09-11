@@ -6,7 +6,7 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import AutoPadConv2d, channel_progression
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, channel_progression
 
 from ..utils import ResidualBlock
 
@@ -22,6 +22,7 @@ __all__ = [
     "transformer",
     "Discriminator",
     "DiscriminatorMultiLayerEncoder",
+    "TransformerBlock",
 ]
 
 
@@ -320,3 +321,44 @@ class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
 
     def __init__(self, in_channels: int = 3) -> None:
         super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
+
+
+class TransformerBlock(enc.SequentialEncoder):
+    r"""TransformerBlock from :cite:`SKL+2018`.
+
+    This block takes an image as input and produce a transformed image of the same size.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+        kernel_size: Size of the convolving kernel. Defaults to ``10``.
+        stride: Stride of the convolution. Defaults to ``1``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+
+    If ``impl_params is True``, an :class:`~torch.nn.AvgPool2d` is used instead of a
+    :class:`~torch.nn.Conv2d` with :func:`~torch.nn.utils.weight_norm`.
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 3,
+        kernel_size: Union[Tuple[int, int], int] = 10,
+        stride: Union[Tuple[int, int], int] = 1,
+        impl_params: bool = True,
+    ):
+        kwargs = {
+            "kernel_size": kernel_size,
+            "stride": stride,
+        }
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
+        module = (
+            AutoPadAvgPool2d(**kwargs)
+            if impl_params
+            else nn.utils.weight_norm(AutoPadConv2d(in_channels, in_channels, **kwargs))
+        )
+        self.impl_params = impl_params
+        super().__init__((module,))
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return super().forward(input)
