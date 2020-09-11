@@ -345,11 +345,8 @@ def style_aware_content_loss(
     distance instead of a normalized squared euclidean distance.
     """
     if score_weight is None:
-        if impl_params:
             # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
-            score_weight = 1e2
-        else:
-            score_weight = 1e0
+            score_weight = 1e2 if impl_params else 1e0
 
     return FeatureReconstructionOperator(
         encoder, score_weight=score_weight, impl_params=impl_params
@@ -361,7 +358,7 @@ def transformer_loss(
     impl_params: bool = True,
     style_aware_content_operator: Optional[FeatureReconstructionOperator] = None,
     transformed_image_operator: Optional[FeatureReconstructionOperator] = None,
-    style_loss: Optional[MultiLayerDicriminatorEncodingOperator] = None,
+    style_loss: Optional[MultiLayerPredictionOperator] = None,
 ) -> PerceptualLoss:
     r"""Transformer_loss from from :cite:`SKL+2018`.
 
@@ -393,6 +390,6 @@ def transformer_loss(
     )
 
     if style_loss is None:
-        style_loss = discriminator_operator()
+        style_loss = prediction_loss()
 
     return PerceptualLoss(content_loss, style_loss)

@@ -266,5 +266,5 @@ def test_transformer_loss(subtests):
 
     with subtests.test("style_loss"):
         assert isinstance(
-            perceptual_loss.style_loss, paper.MultiLayerDicriminatorEncodingOperator
+            perceptual_loss.style_loss, paper.MultiLayerPredictionOperator
         )
