@@ -6,6 +6,11 @@ on:
       - "tests/download/**"
       - "hubconf.py"
       - ".github/workflows/tests-download.yml"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "requirements-dev.txt"
+      - "setup.cfg"
+      - "tox.ini"
 
   schedule:
     - cron: "0 4 * * *"

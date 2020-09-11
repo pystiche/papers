@@ -1,4 +1,4 @@
-import pystiche_papers.gatys_ecker_bethge_2016 as paper
+import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche.data import DownloadableImageCollection
 
 
