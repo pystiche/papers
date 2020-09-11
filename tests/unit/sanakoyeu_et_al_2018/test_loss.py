@@ -93,7 +93,6 @@ def test_PredictionOperator_call(subtests, input_image):
 
 
 def test_MultiLayerPredictionOperator(subtests, input_image):
-
     def get_encoding_op(encoder, score_weight):
         return TestOperator(encoder, score_weight)
 
@@ -109,15 +108,15 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
         multi_layer_prediction_op.real() if mode else multi_layer_prediction_op.fake()
         _ = multi_layer_prediction_op(input_image)
         with subtests.test(mode=mode):
-                desired = torch.mean(
-                    torch.stack(
-                        [
-                            op.accuracy
-                            for op in multi_layer_prediction_op.discriminator_operators()
-                        ]
-                    )
+            desired = torch.mean(
+                torch.stack(
+                    [
+                        op.accuracy
+                        for op in multi_layer_prediction_op.discriminator_operators()
+                    ]
                 )
-                ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
+            )
+            ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
 
 
 def test_prediction_loss(subtests):
