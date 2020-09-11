@@ -269,11 +269,6 @@ def test_prediction_module(subtests):
     with subtests.test("stride"):
         assert prediction_module.stride == misc.to_2d_arg(1)
 
-    with subtests.test("padding"):
-        assert prediction_module.padding == misc.to_2d_arg(
-            same_size_padding(kernel_size)
-        )
-
 
 def test_get_prediction_modules(subtests):
     channel_config = [(128, 1), (128, 1), (512, 1), (1024, 1), (1024, 1)]
@@ -288,4 +283,3 @@ def test_get_prediction_modules(subtests):
 
         with subtests.test("channel_config"):
             assert in_out_channels == channel_config
-

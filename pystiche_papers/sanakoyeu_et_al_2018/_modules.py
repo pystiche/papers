@@ -365,7 +365,7 @@ class TransformerBlock(enc.SequentialEncoder):
         return super().forward(input)
 
 def prediction_module(
-    in_channels: int, kernel_size: Union[Tuple[int, int], int], padding: str = "same"
+    in_channels: int, kernel_size: Union[Tuple[int, int], int],
 ) -> nn.Module:
     r"""Prediction module from :cite:`SKL+2018`.
 
@@ -375,8 +375,6 @@ def prediction_module(
     Args:
         in_channels: Number of channels in the input.
         kernel_size: Size of the convolving kernel.
-        padding: Padding of the input. It can be either be``"valid"`` for no padding or
-            ``"same"`` to keep the size. Defaults to ``"same"``.
 
     """
     return conv(
@@ -384,5 +382,5 @@ def prediction_module(
         out_channels=1,
         kernel_size=kernel_size,
         stride=1,
-        padding=padding,
+        padding=None,
     )
