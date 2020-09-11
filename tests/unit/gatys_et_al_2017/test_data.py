@@ -1,20 +1,6 @@
-import pytest
-
-from pystiche_papers import gatys_et_al_2017 as paper
-
-from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
+import pystiche_papers.gatys_ecker_bethge_2016 as paper
+from pystiche.data import DownloadableImageCollection
 
 
-@pytest.mark.slow
-def test_images_smoke(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_is_downloadable(image)
-
-
-@pytest.mark.large_download
-@pytest.mark.slow
-def test_images(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_downloads_correctly(image)
+def test_images_smoke():
+    assert isinstance(paper.images(), DownloadableImageCollection)
