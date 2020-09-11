@@ -1,19 +1,15 @@
 import itertools
 
-import pytest
-
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
 
 import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche.data import ImageFolderDataset
+from pystiche.data import DownloadableImageCollection, ImageFolderDataset
 from pystiche.image import transforms
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
-
-from tests.asserts import assert_image_downloads_correctly, assert_image_is_downloadable
 
 
 def test_content_transform():
@@ -81,19 +77,8 @@ def test_style_transform_edge_size_luatorch(subtests):
             assert style_transform.size == edge_size
 
 
-@pytest.mark.slow
-def test_images_smoke(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_is_downloadable(image)
-
-
-@pytest.mark.large_download
-@pytest.mark.slow
-def test_images(subtests):
-    for name, image in paper.images():
-        with subtests.test(name=name):
-            assert_image_downloads_correctly(image)
+def test_images_smoke():
+    assert isinstance(paper.images(), DownloadableImageCollection)
 
 
 def test_dataset(subtests, mocker):

@@ -1,5 +1,31 @@
 ``pystiche_papers.ulyanov_et_al_2016``
-=========================================
+======================================
+
++--------------------------+-----------------------------------------------------------+
+| Title                    | Texture Networks: Feed-forward Synthesis of Textures and  |
+|                          |                                                           |
+|                          | Stylized Images                                           |
++--------------------------+-----------------------------------------------------------+
+| Authors                  | Dmitry Ulyanov, Vadim Lebedev, Andrea Vedaldi, and        |
+|                          |                                                           |
+|                          | Viktor S. Lempitsky                                       |
++--------------------------+-----------------------------------------------------------+
+| Citation                 | :cite:`ULVL2016`                                          |
++--------------------------+-----------------------------------------------------------+
+| Reference implementation | |repo|_ / |archive|_                                      |
++--------------------------+-----------------------------------------------------------+
+| Variant                  | Model optimization                                        |
++--------------------------+-----------------------------------------------------------+
+| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
++--------------------------+-----------------------------------------------------------+
+| Style loss               | :class:`~pystiche.ops.GramOperator`                       |
++--------------------------+-----------------------------------------------------------+
+
+.. |repo| replace:: Repository
+.. _repo: https://github.com/DmitryUlyanov/texture_nets
+
+.. |archive| replace:: Archive
+.. _archive: https://github.com/pmeier/texture_nets
 
 Unfortunately, the parameters in the reference implementation differ from the parameters
 described in the paper. If ``impl_params is True``, the parameters from the reference
