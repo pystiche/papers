@@ -6,7 +6,7 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import AutoPadConv2d, channel_progression
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, channel_progression
 
 from ..utils import ResidualBlock
 
@@ -55,7 +55,6 @@ def conv(
         padding_mode=padding_mode,
         **kwargs,
     )
-
 
 
 class ConvBlock(nn.Sequential):
@@ -340,8 +339,6 @@ class TransformerBlock(enc.SequentialEncoder):
         in_channels: Number of channels in the input. Defaults to ``3``.
         kernel_size: Size of the convolving kernel. Defaults to ``10``.
         stride: Stride of the convolution. Defaults to ``1``.
-        padding: Padding of the input. It can be either ``"valid"`` for no padding or
-            ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
         impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
@@ -355,27 +352,20 @@ class TransformerBlock(enc.SequentialEncoder):
         in_channels: int = 3,
         kernel_size: Union[Tuple[int, int], int] = 10,
         stride: Union[Tuple[int, int], int] = 1,
-        padding: str = "same",
         impl_params: bool = True,
     ):
         kwargs = {
             "kernel_size": kernel_size,
             "stride": stride,
-            "padding": padding,
         }
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
         module = (
-            nn.AvgPool2d(**kwargs)  # type: ignore[arg-type]
+            AutoPadAvgPool2d(**kwargs)
             if impl_params
-            else nn.utils.weight_norm(conv(in_channels, in_channels, **kwargs))  # type: ignore[arg-type]
+            else nn.utils.weight_norm(AutoPadConv2d(in_channels, in_channels, **kwargs))
         )
         self.impl_params = impl_params
         super().__init__((module,))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if self.impl_params:
-            input = nn.functional.pad(
-                input, [0, 1, 0, 1]
-            )  # TODO: sam_size_padding for nn.AvgPool2d needed
-
         return super().forward(input)

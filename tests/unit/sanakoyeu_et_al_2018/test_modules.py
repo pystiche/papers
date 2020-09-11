@@ -1,5 +1,3 @@
-import itertools
-
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -10,8 +8,7 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
-
-from pystiche_papers.utils import AutoPadConv2d, ResidualBlock
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
 
 
 def test_get_activation(subtests):
@@ -54,7 +51,6 @@ def test_conv(subtests):
                 assert conv.kernel_size == misc.to_2d_arg(kernel_size)
             with subtests.test("stride"):
                 assert conv.stride == misc.to_2d_arg(stride)
-
 
 
 def test_ConvBlock(subtests):
@@ -246,7 +242,7 @@ def test_TransformerBlock(subtests, input_image):
             with subtests.test("module"):
                 for module in transformer_block.children():
                     assert isinstance(
-                        module, nn.AvgPool2d if impl_params else nn.Conv2d
+                        module, AutoPadAvgPool2d if impl_params else AutoPadConv2d
                     )
 
             with subtests.test("forward_size"):
