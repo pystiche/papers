@@ -1,4 +1,5 @@
-import itertools
+import contextlib
+import unittest.mock
 
 import pytest
 
@@ -11,23 +12,19 @@ import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import misc
 from pystiche_papers import utils
 from pystiche_papers.johnson_alahi_li_2016._modules import select_url
-from pystiche_papers.utils import load_state_dict_from_url
 
-from tests.asserts import assert_downloads_correctly, assert_is_downloadable
-from tests.utils import generate_param_combinations
+from tests.mocks import make_mock_target
+from tests.utils import call_args_to_kwargs_only, generate_param_combinations
 
 
 @pytest.fixture(scope="module")
 def model_url_configs(styles):
-    return (
-        {
-            "framework": framework,
-            "style": style,
-            "impl_params": impl_params,
-            "instance_norm": instance_norm,
-        }
-        for framework, style, impl_params, instance_norm in itertools.product(
-            ("pystiche", "luatorch"), styles, (True, False), (True, False)
+    return tuple(
+        generate_param_combinations(
+            framework=("pystiche", "luatorch"),
+            style=styles,
+            impl_params=(True, False),
+            instance_norm=(True, False),
         )
     )
 
@@ -51,15 +48,6 @@ def model_url_should_be_available(framework, style, impl_params, instance_norm):
     return True
 
 
-@pytest.fixture(scope="module")
-def model_urls(model_url_configs):
-    return tuple(
-        select_url(**config)
-        for config in model_url_configs
-        if model_url_should_be_available(**config)
-    )
-
-
 def test_select_url(subtests, model_url_configs):
     for config in model_url_configs:
         with subtests.test(**config):
@@ -68,21 +56,6 @@ def test_select_url(subtests, model_url_configs):
             else:
                 with pytest.raises(RuntimeError):
                     select_url(**config)
-
-
-@pytest.mark.slow
-def test_weights_downloadable(subtests, model_urls):
-    for url in model_urls:
-        with subtests.test(url):
-            assert_is_downloadable(url)
-
-
-@pytest.mark.large_download
-@pytest.mark.slow
-def test_weights_download_correctly(subtests, model_urls):
-    for url in model_urls:
-        with subtests.test(url):
-            assert_downloads_correctly(url)
 
 
 def test_get_conv(subtests):
@@ -308,22 +281,46 @@ def test_transformer_smoke(subtests, image_medium):
         assert image_medium.size() == output_image.size()
 
 
-@pytest.mark.large_download
-@pytest.mark.slow
-def test_transformer_load_state_dict_from_url(
-    subtests, mocker, tmpdir, model_url_configs
-):
-    for config in model_url_configs:
-        if not model_url_should_be_available(**config):
-            continue
+def test_transformer_pretrained(subtests):
+    @contextlib.contextmanager
+    def patch(target, **kwargs):
+        target = make_mock_target("johnson_alahi_li_2016", "_modules", target)
+        with unittest.mock.patch(target, **kwargs) as mock:
+            yield mock
 
-        with subtests.test(**config):
-            url = select_url(**config)
-            state_dict = load_state_dict_from_url(url, model_dir=tmpdir)
-            mocker.patch(
-                "pystiche_papers.johnson_alahi_li_2016._modules.load_state_dict_from_url",
-                return_value=state_dict,
-            )
+    @contextlib.contextmanager
+    def patch_select_url(url):
+        with patch("select_url", return_value=url) as mock:
+            yield mock
 
-            transformer = paper.transformer(**config)
+    @contextlib.contextmanager
+    def patch_load_state_dict_from_url(state_dict):
+        with patch("load_state_dict_from_url", return_value=state_dict) as mock:
+            yield mock
+
+    framework = "framework"
+    style = "style"
+    url = "url"
+    for config in generate_param_combinations(
+        impl_params=(True, False), instance_norm=(True, False)
+    ):
+        state_dict = paper.Transformer(**config).state_dict()
+        with subtests.test(**config), patch_select_url(
+            url
+        ) as select_url, patch_load_state_dict_from_url(state_dict):
+            transformer = paper.transformer(framework=framework, style=style, **config)
+
+            with subtests.test("select_url"):
+                kwargs = call_args_to_kwargs_only(
+                    select_url.call_args,
+                    "framework",
+                    "style",
+                    "impl_params",
+                    "instance_norm",
+                )
+                assert kwargs["framework"] == framework
+                assert kwargs["style"] == style
+                assert kwargs["impl_params"] is config["impl_params"]
+                assert kwargs["instance_norm"] is config["instance_norm"]
+
             ptu.assert_allclose(transformer.state_dict(), state_dict)

@@ -1,4 +1,5 @@
 import contextlib
+import copy
 import itertools
 import os
 import shutil
@@ -22,6 +23,7 @@ __all__ = [
     "call_args_list_to_dict",
     "generate_param_combinations",
     "make_tar",
+    "call_args_to_kwargs_only",
 ]
 
 
@@ -143,3 +145,13 @@ def make_tar(file, dir, name=None, compress=None):
         compress = file.endswith(".gz")
     with tarfile.open(file, "w:gz" if compress else "w") as fh:
         fh.add(dir, arcname=name)
+
+
+def call_args_to_kwargs_only(call_args, *arg_names):
+    if call_args is None:
+        raise pytest.UsageError
+    args, kwargs = call_args
+
+    kwargs_only = copy.copy(kwargs)
+    kwargs_only.update(dict(zip(arg_names, args)))
+    return kwargs_only

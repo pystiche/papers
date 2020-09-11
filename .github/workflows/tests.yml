@@ -11,6 +11,7 @@ on:
     paths:
       - "pystiche_papers/**"
       - "tests/**"
+      - "!tests/download/**"
       - "codecov.yml"
       - ".coveragerc"
       - ".github/workflows/tests.yml"
@@ -66,43 +67,6 @@ jobs:
         uses: codecov/codecov-action@v1.0.13
         with:
           env_vars: OS,PYTHON
-
-  hub:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set up python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
-
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
-
-      - name: Upgrade and install additional system packages
-        run: pip install --upgrade setuptools virtualenv wheel
-
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Install dev requirements
-        run: pip install -r requirements-dev.txt
-
-      - name: Create environment
-        run: tox -e tests-hub --notest
-
-      - name: Load torch.hub checkpoints from cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/torch/hub/checkpoints
-          key: torch-hub-checkpoints-${{ hashFiles('hubconf.py') }}
-
-      - name: Run tests
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: tox -e tests-hub
 
   replication:
     runs-on: ubuntu-latest
