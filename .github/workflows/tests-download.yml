@@ -53,6 +53,8 @@ jobs:
           restore-keys: torch-hub-checkpoints-
 
       - name: Run tests
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           if [ {{ github.event == 'schedule' }} ]; then
             tox -e tests-download
