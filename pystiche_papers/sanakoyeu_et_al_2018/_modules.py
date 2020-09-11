@@ -24,7 +24,6 @@ __all__ = [
     "DiscriminatorMultiLayerEncoder",
     "TransformerBlock",
     "prediction_module",
-    "get_prediction_modules",
 ]
 
 
@@ -387,13 +386,3 @@ def prediction_module(
         stride=1,
         padding=padding,
     )
-
-
-def get_prediction_modules() -> Dict[str, nn.Module]:
-    return {
-        "0": prediction_module(128, 5),
-        "1": prediction_module(128, 10),
-        "3": prediction_module(512, 10),
-        "5": prediction_module(1024, 6),
-        "6": prediction_module(1024, 3),
-    }
