@@ -67,8 +67,10 @@ class ConvBlock(nn.Sequential):
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
         stride: Stride of the convolution. Defaults to ``1``.
-        padding: Padding of the input. It can be either ``"valid"`` for no padding or
-            ``"same"`` for padding to preserve the size. Defaults to ``"valid"``.
+        padding: Optional Padding of the input. If ``None``, padding is done so that the
+            output have the same spatial dimensions as the input. Defaults to ``0``.
+        padding_mode: ``'zeros'``, ``'reflect'``, ``'replicate'`` or ``'circular'``.
+            Default: ``'zeros'``
         act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
             ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
             ``None`` for no activation. Defaults to ``"relu"``.
@@ -124,9 +126,10 @@ class UpsampleConvBlock(nn.Module):
         in_channels: Number of channels in the input.
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
+        stride: Stride of the convolution. Defaults to ``1``.
         scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2.0``.
-        padding: Padding of the input. It can be either ``"valid"`` for no padding or
-            ``"same"`` for padding to preserve the size. Defaults to ``"same"``.
+        padding: Optional Padding of the input. If ``None``, padding is done so that the
+            output have the same spatial dimensions as the input. Defaults to ``None``.
         act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
             ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
             ``None`` for no activation. Defaults to ``"relu"``.
