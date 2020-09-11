@@ -54,7 +54,7 @@ def test_EncodingDiscriminatorOperator_call(subtests, input_image):
         comparator = torch.ge if mode else torch.lt
 
         with subtests.test(mode=mode):
-            test_op.real() if mode else test_op.fake()
+            test_op.real(mode)
             actual = test_op(input_image)
             prediction = encoder(input_image) * 2.0
             desired = torch.mean(prediction)
@@ -73,7 +73,7 @@ def test_PredictionOperator_call(subtests, input_image):
         comparator = torch.ge if mode else torch.lt
 
         with subtests.test(mode=mode):
-            op.real() if mode else op.fake()
+            op.real(mode)
             actual = op(input_image)
             prediction = predictor(encoder(input_image))
             with subtests.test("loss"):
@@ -119,11 +119,6 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
         multi_layer_prediction_op.real() if mode else multi_layer_prediction_op.fake()
         _ = multi_layer_prediction_op(input_image)
         with subtests.test(mode=mode):
-            with subtests.test("operator mode"):
-                for op in multi_layer_prediction_op.discriminator_operators():
-                    assert op._target_distribution == mode
-
-            with subtests.test("accuracy"):
                 desired = torch.mean(
                     torch.stack(
                         [
@@ -171,6 +166,6 @@ def test_prediction_loss(subtests):
             assert prediction_loss.score_weight == pytest.approx(score_weight)
 
 
-def test_discriminator_loss():
+def test_discriminator_loss_smoke():
     discriminator_loss = paper.discriminator_loss()
     assert isinstance(discriminator_loss, paper.DiscriminatorLoss)
