@@ -24,7 +24,6 @@ from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
 from tests import asserts
-from tests.asserts import assert_is_downloadable
 from tests.utils import make_tar
 
 
@@ -142,14 +141,6 @@ def test_WikiArt_unknown_style(tmpdir):
     style = "unknown"
     with pytest.raises(ValueError):
         paper.style_dataset(tmpdir, style)
-
-
-@pytest.mark.slow
-def test_WikiArt_downloadable(subtests, patch_collect_images, tmpdir):
-    for style in paper.WikiArt.STYLES:
-        with subtests.test(style):
-            dataset = paper.WikiArt(tmpdir, style, download=False)
-            assert_is_downloadable(dataset.url)
 
 
 @pytest.fixture
