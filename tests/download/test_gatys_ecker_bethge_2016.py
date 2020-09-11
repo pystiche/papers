@@ -2,10 +2,9 @@ import pytest
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
 
-from tests.asserts import assert_image_downloads_correctly
+from .asserts import assert_image_downloads_correctly
 
 
-@pytest.mark.large_download
 @pytest.mark.slow
 def test_images(subtests):
     for name, image in paper.images():
