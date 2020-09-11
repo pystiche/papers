@@ -33,19 +33,20 @@ import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import enc, misc
 
 
+class TestOperator(paper.EncodingDiscriminatorOperator):
+    def input_enc_to_repr(self, image):
+        return image * 2.0
+
+    def calculate_score(self, input_repr):
+        self.accuracy = self.calculate_accuracy(input_repr)
+        return torch.mean(input_repr)
+
+    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
+        comparator = torch.ge if self._target_distribution else torch.lt
+        return torch.mean(comparator(input_repr, 0.0).float())
+
+
 def test_EncodingDiscriminatorOperator_call(subtests, input_image):
-    class TestOperator(paper.EncodingDiscriminatorOperator):
-        def input_enc_to_repr(self, image):
-            return image * 2.0
-
-        def calculate_score(self, input_repr):
-            self.accuracy = self.calculate_accuracy(input_repr)
-            return torch.mean(input_repr)
-
-        def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-            comparator = torch.ge if self._target_distribution else torch.lt
-            return torch.mean(comparator(input_repr, 0.0).float())
-
     encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
 
     test_op = TestOperator(encoder)
@@ -92,17 +93,6 @@ def test_PredictionOperator_call(subtests, input_image):
 
 
 def test_MultiLayerPredictionOperator(subtests, input_image):
-    class TestOperator(paper.EncodingDiscriminatorOperator):
-        def input_enc_to_repr(self, image):
-            return image * 2.0
-
-        def calculate_score(self, input_repr):
-            self.accuracy = self.calculate_accuracy(input_repr)
-            return torch.mean(input_repr)
-
-        def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-            comparator = torch.ge if self._target_distribution else torch.lt
-            return torch.mean(comparator(input_repr, 0.0).float())
 
     def get_encoding_op(encoder, score_weight):
         return TestOperator(encoder, score_weight)
