@@ -1,4 +1,5 @@
 
+import unittest.mock
 
 import pytest
 
@@ -29,6 +30,7 @@ import torch
 from torch import nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
+import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import enc, misc
 
@@ -153,6 +155,48 @@ def test_prediction_loss(subtests):
         with subtests.test("score_weight"):
             score_weight = 1e0 if impl_params else 1e-3
             assert prediction_loss.score_weight == pytest.approx(score_weight)
+
+
+def attach_method_mock(mock, method, **attrs):
+    if "name" not in attrs:
+        attrs["name"] = f"{mock.name}.{method}()"
+
+    method_mock = unittest.mock.Mock(**attrs)
+    mock.attach_mock(method_mock, method)
+
+
+@pytest.fixture
+def prediction_loss_mocks(mocker):
+    attrs = {}
+    attrs["side_effect"] = lambda image: pystiche.LossDict([("0", torch.mean(image))])
+
+    mock = mocker.Mock(**attrs)
+    attach_method_mock(mock, "get_accuracy", return_value=torch.Tensor([0.5]))
+    attach_method_mock(mock, "real", return_value=None)
+    attach_method_mock(mock, "fake", return_value=None)
+    patch = mocker.patch(
+        "pystiche_papers.sanakoyeu_et_al_2018._loss.MultiLayerPredictionOperator",
+        return_value=mock,
+    )
+    return patch, mock
+
+
+def test_DiscriminatorLoss(
+    subtests, prediction_loss_mocks, input_image, style_image, content_image
+):
+    patch, mock = prediction_loss_mocks
+    discriminator_loss = paper.DiscriminatorLoss(mock)
+
+    for input_photo in (None, content_image):
+        with subtests.test(input_photo=input_photo):
+            with subtests.test("loss"):
+                actual = discriminator_loss(input_image, style_image, input_photo)
+                desired = torch.mean(input_image) + torch.mean(style_image)
+                if input_photo is not None:
+                    desired += torch.mean(input_photo)
+                ptu.assert_allclose(actual, desired)
+            with subtests.test("accuracy"):
+                ptu.assert_allclose(discriminator_loss.accuracy, mock.get_accuracy())
 
 
 def test_discriminator_loss_smoke():
