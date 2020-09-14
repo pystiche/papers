@@ -60,6 +60,9 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
 class PredictionOperator(EncodingDiscriminatorOperator):
     r"""The prediction loss is a discriminator loss based on the prediction.
 
+    The prediction consists of the output of an ``predictor`` which processes the
+    output of the ``encoder``.
+
     It measures the cross-entropy loss between true labels and predicted labels. The
     true labels are set depending on the currently set discriminator mode, which can be
     either ``real`` or ``fake``. In addition, it is calculated how accurate the operator
