@@ -364,6 +364,7 @@ class TransformerBlock(enc.SequentialEncoder):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return super().forward(input)
 
+
 def prediction_module(
     in_channels: int, kernel_size: Union[Tuple[int, int], int],
 ) -> nn.Module:

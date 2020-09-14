@@ -1,30 +1,7 @@
-
 import unittest.mock
 
 import pytest
 
-import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import ops
-
-
-def test_transformed_image_loss(subtests):
-
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            transformed_image_loss = paper.transformed_image_loss(
-                impl_params=impl_params
-            )
-            assert isinstance(transformed_image_loss, ops.FeatureReconstructionOperator)
-
-            with subtests.test("score_weight"):
-                assert (
-                    transformed_image_loss.score_weight == pytest.approx(1e2)
-                    if impl_params
-                    else pytest.approx(1.0)
-                )
-
-
-import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
@@ -32,7 +9,7 @@ from torch.nn.functional import binary_cross_entropy_with_logits
 
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import enc, misc
+from pystiche import enc, misc, ops
 
 
 class TestOperator(paper.EncodingDiscriminatorOperator):
@@ -202,3 +179,20 @@ def test_DiscriminatorLoss(
 def test_discriminator_loss_smoke():
     discriminator_loss = paper.discriminator_loss()
     assert isinstance(discriminator_loss, paper.DiscriminatorLoss)
+
+
+def test_transformed_image_loss(subtests):
+
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            transformed_image_loss = paper.transformed_image_loss(
+                impl_params=impl_params
+            )
+            assert isinstance(transformed_image_loss, ops.FeatureReconstructionOperator)
+
+            with subtests.test("score_weight"):
+                assert (
+                    transformed_image_loss.score_weight == pytest.approx(1e2)
+                    if impl_params
+                    else pytest.approx(1.0)
+                )

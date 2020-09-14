@@ -1,40 +1,3 @@
-
-from typing import Optional
-
-from pystiche.enc.encoder import SequentialEncoder
-from pystiche.ops.comparison import FeatureReconstructionOperator
-
-from ._modules import TransformerBlock
-
-__all__ = ["transformed_image_loss"]
-
-
-def transformed_image_loss(
-    transformer_block: Optional[SequentialEncoder] = None,
-    impl_params: bool = True,
-    score_weight: Optional[float] = None,
-) -> FeatureReconstructionOperator:
-    r"""Transformed_image_loss from from :cite:`SKL+2018`.
-
-    Args:
-        transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
-            which is used to transform the image.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``impl_params``. Defaults to ``1e2`` if
-            ``impl_params is True`` otherwise ``1e0``.
-    """
-    if score_weight is None:
-        score_weight = 1e2 if impl_params else 1e0
-
-    if transformer_block is None:
-        transformer_block = TransformerBlock()
-
-    return FeatureReconstructionOperator(transformer_block, score_weight=score_weight)
-
-from typing import Callable, Dict, Optional, Sequence, Tuple, Union, cast
 from abc import abstractmethod
 from collections import OrderedDict
 from typing import Iterator, Optional, Sequence, Union, cast
@@ -44,9 +7,13 @@ import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
 from pystiche import enc, ops
-from pystiche.enc import Encoder, MultiLayerEncoder
+from pystiche.enc import Encoder, MultiLayerEncoder, SequentialEncoder
 
-from ._modules import DiscriminatorMultiLayerEncoder, prediction_module
+from ._modules import (
+    DiscriminatorMultiLayerEncoder,
+    TransformerBlock,
+    prediction_module,
+)
 
 __all__ = [
     "EncodingDiscriminatorOperator",
@@ -55,6 +22,7 @@ __all__ = [
     "prediction_loss",
     "DiscriminatorLoss",
     "discriminator_loss",
+    "transformed_image_loss",
 ]
 
 
@@ -275,3 +243,31 @@ def discriminator_loss(
     if prediction_loss is None:
         prediction_loss = prediction_loss_(impl_params=impl_params)
     return DiscriminatorLoss(prediction_loss)
+
+
+def transformed_image_loss(
+    transformer_block: Optional[SequentialEncoder] = None,
+    impl_params: bool = True,
+    score_weight: Optional[float] = None,
+) -> ops.FeatureReconstructionOperator:
+    r"""Transformed_image_loss from from :cite:`SKL+2018`.
+
+    Args:
+        transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
+            which is used to transform the image.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``1e2`` if
+            ``impl_params is True`` otherwise ``1e0``.
+    """
+    if score_weight is None:
+        score_weight = 1e2 if impl_params else 1e0
+
+    if transformer_block is None:
+        transformer_block = TransformerBlock()
+
+    return ops.FeatureReconstructionOperator(
+        transformer_block, score_weight=score_weight
+    )

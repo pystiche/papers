@@ -268,18 +268,3 @@ def test_prediction_module(subtests):
 
     with subtests.test("stride"):
         assert prediction_module.stride == misc.to_2d_arg(1)
-
-
-def test_get_prediction_modules(subtests):
-    channel_config = [(128, 1), (128, 1), (512, 1), (1024, 1), (1024, 1)]
-
-    modules = paper.get_prediction_modules()
-
-    in_out_channels = []
-    for module in modules.values():
-        with subtests.test("modules"):
-            assert isinstance(module, nn.Module)
-            in_out_channels.append((module.in_channels, module.out_channels))
-
-        with subtests.test("channel_config"):
-            assert in_out_channels == channel_config
