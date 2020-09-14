@@ -22,8 +22,6 @@ from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
     RemoveDynamicSizePadding,
 )
 
-from tests import mocks
-
 
 def assert_is_size_and_value_range_preserving(input_image, transform):
     output_image = transform(input_image)
@@ -56,21 +54,6 @@ def assert_is_noop(input_image, transform, **kwargs):
 @pytest.fixture(autouse=True)
 def make_reproducible():
     utils.make_reproducible(0)
-
-
-@pytest.fixture
-def patch_random_prob_generator(mocker):
-    def patch_random_prob_generator(outputs, batch_size=None):
-        if isinstance(outputs, bool):
-            outputs = [outputs] * (batch_size or 1)
-        return mocker.patch(
-            mocks.make_mock_target(
-                "sanakoyeu_et_al_2018", "_augmentation", "random_prob_generator"
-            ),
-            return_value=dict(batch_prob=torch.tensor(outputs)),
-        )
-
-    return patch_random_prob_generator
 
 
 def test_RandomRescale(input_image):
