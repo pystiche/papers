@@ -137,21 +137,22 @@ class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
 
 def prediction_loss(
     impl_params: bool = True,
-    discriminator_multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ) -> MultiLayerPredictionOperator:
     r"""Prediction loss indicates whether the input is real or fake.
 
     Capture image details at different scales with an auxiliary classifier and sum up
-    all losses and accuracies on the different scales.
+    all losses and accuracies on different layers of the
+    :class:`~pystiche.enc.MultiLayerEncoder`.
 
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        discriminator_multi_layer_encoder: :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
+        multi_layer_encoder: :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the
+            default
             :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
             is used.
         scale_weights: Scale weights of the operator. Defaults to ``sum``.
@@ -160,8 +161,8 @@ def prediction_loss(
             ``impl_params is True`` otherwise ``1e-3``.
 
     """
-    if discriminator_multi_layer_encoder is None:
-        discriminator_multi_layer_encoder = DiscriminatorMultiLayerEncoder()
+    if multi_layer_encoder is None:
+        multi_layer_encoder = DiscriminatorMultiLayerEncoder()
 
     if score_weight is None:
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L98
@@ -185,7 +186,7 @@ def prediction_loss(
         )
 
     return MultiLayerPredictionOperator(
-        discriminator_multi_layer_encoder,
+        multi_layer_encoder,
         tuple(predictors.keys()),
         get_encoding_op,
         layer_weights=scale_weights,
