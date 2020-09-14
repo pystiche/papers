@@ -136,17 +136,17 @@ def prediction_loss(
     scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ) -> MultiLayerPredictionOperator:
-    r"""Discriminator loss from :cite:`SKL+2018`.
+    r"""Prediction loss indicates whether the input is real or fake.
 
-    Capture image details at different scales with the ``predictors`` and sum up
-    all losses and accuracies on the different ``scales``.
+    Capture image details at different scales with an auxiliary classifier and sum up
+    all losses and accuracies on the different scales.
 
     Args:
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        discriminator_multi_layer_encoder: Trainable
-            :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the default
+        discriminator_multi_layer_encoder: :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, the default
             :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
             is used.
         scale_weights: Scale weights of the operator. Defaults to ``sum``.
