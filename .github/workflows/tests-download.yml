@@ -58,17 +58,15 @@ jobs:
           restore-keys: torch-hub-checkpoints-
 
       - name: Run tests
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
-          if [ {{ github.event == 'schedule' }} ]; then
+          if [ {{ github.event_name == 'schedule' }} ]; then
             tox -e tests-download
           else
             tox -e tests-download -- tests/download --skip-large-download
           fi
 
       - uses: JasonEtco/create-an-issue@v2.4.0
-        if: failure() && github.event == 'schedule'
+        if: failure() && github.event_name == 'schedule'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
