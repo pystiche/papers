@@ -29,6 +29,10 @@ __all__ = [
 class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
     r"""Abstract base class for all discriminator operators working in an encoded space.
 
+    In this operator a discriminator mode can be set, in whose dependence the output can
+    be influenced. This can be either ``real`` or ``fake``. In addition, it is
+    calculated how accurate the operator was on the last input.
+
     Args:
         encoder: Encoder that is used to encode the target and input images.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
@@ -64,9 +68,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
     output of the ``encoder``.
 
     It measures the cross-entropy loss between true labels and predicted labels. The
-    true labels are set depending on the currently set discriminator mode, which can be
-    either ``real`` or ``fake``. In addition, it is calculated how accurate the operator
-    was on the last input.
+    true labels are set depending on the currently set discriminator mode.
 
     Args:
         encoder: Encoder that is used to encode the target and input images.
