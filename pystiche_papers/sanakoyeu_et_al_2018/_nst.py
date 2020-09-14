@@ -6,9 +6,9 @@ from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
-from pystiche import misc
+from pystiche import misc, loss
 
-from ._loss import DiscriminatorLoss, TransformerLoss
+from ._loss import DiscriminatorLoss
 from ._utils import ExponentialMovingAverageMeter, optimizer
 from ._utils import preprocessor as _preprocessor
 
@@ -23,7 +23,7 @@ def gan_optim_loop(
     style_image_loader: DataLoader,
     transformer: nn.Module,
     discriminator_criterion: DiscriminatorLoss,
-    transformer_criterion: TransformerLoss,
+    transformer_criterion: loss.PerceptualLoss,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
     discriminator_optimizer: Optional[Optimizer] = None,
     transformer_optimizer: Optional[Optimizer] = None,
