@@ -2,10 +2,10 @@ from typing import Any, Dict, List, Tuple, Union, cast
 
 import kornia
 import kornia.augmentation.functional as F
-from kornia.augmentation.random_generator import _adapted_uniform, random_prob_generator
+from kornia.augmentation.random_generator import random_prob_generator
 
 import torch
-from torch import nn
+from torch import distributions, nn
 from torch.nn.functional import pad
 
 import pystiche
@@ -13,6 +13,28 @@ from pystiche.image import extract_image_size
 from pystiche.misc import to_2d_arg
 
 __all__ = ["augmentation"]
+
+
+# FIXME: replace this with an import from kornia.augmentation.utils when
+#  https://github.com/kornia/kornia/pull/677 is included in a release
+def _adapted_uniform(
+    shape: Union[Tuple, torch.Size],
+    low: Union[float, torch.Tensor],
+    high: Union[float, torch.Tensor],
+    same_on_batch: bool = False,
+) -> torch.Tensor:
+    if not isinstance(low, torch.Tensor):
+        low = torch.tensor(low).float()
+    if not isinstance(high, torch.Tensor):
+        high = torch.tensor(high).float()
+    dist = distributions.Uniform(low, high)
+    if same_on_batch:
+        samples = dist.rsample((1, *shape[1:])).repeat(
+            shape[0], *[1] * (len(shape) - 1)
+        )
+    else:
+        samples = dist.rsample(shape)
+    return cast(torch.Tensor, samples)
 
 
 class AugmentationBase(pystiche.ComplexObject, kornia.augmentation.AugmentationBase):
@@ -47,11 +69,6 @@ class RandomRescale(AugmentationBase):
             random_prob_generator(1, self.probability, self.same_on_batch),
         )
 
-    def compute_transformation(
-        self, input: torch.Tensor, params: Dict[str, torch.Tensor]
-    ) -> torch.Tensor:
-        raise RuntimeError
-
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
@@ -60,7 +77,7 @@ class RandomRescale(AugmentationBase):
 
         height, width = extract_image_size(input)
         factor_vert, factor_horz = self.factor
-        size = (int(height * factor_vert), width * factor_horz)
+        size = (int(height * factor_vert), int(width * factor_horz))
         return cast(
             torch.Tensor,
             kornia.resize(
@@ -101,7 +118,7 @@ class RandomRotation(pystiche.ComplexObject, kornia.augmentation.RandomRotation)
             random_prob_generator(batch_shape[0], self.probability, self.same_on_batch),
         )
         params = cast(Dict[str, torch.Tensor], super().generate_parameters(batch_shape))
-        params["degrees"][batch_params["batch_prob"]] = 0.0
+        params["degrees"][~batch_params["batch_prob"]] = 0.0
         return params
 
     def _properties(self) -> Dict[str, Any]:
@@ -121,7 +138,7 @@ def affine_matrix_from_three_points(
     points: torch.Tensor, transformed_points: torch.Tensor
 ) -> torch.Tensor:
     mat1 = transformed_points
-    mat2 = torch.inverse(torch.cat((points, torch.ones(points.size()[0], 1, 3))))
+    mat2 = torch.inverse(torch.cat((points, torch.ones(points.size()[0], 1, 3)), dim=1))
     return torch.bmm(mat1, mat2)
 
 
@@ -191,9 +208,7 @@ def _adapted_uniform_int(
     high: Union[float, torch.Tensor],
     same_on_batch: bool = False,
 ) -> torch.Tensor:
-    return cast(
-        torch.Tensor, _adapted_uniform(shape, low, high + 1 - 1e-6, same_on_batch).int()
-    )
+    return _adapted_uniform(shape, low, high + 1 - 1e-6, same_on_batch).int()
 
 
 class RandomCrop(AugmentationBase):
@@ -334,11 +349,8 @@ def random_hsv_jitter_generator(
         if not shift:
             low = 1.0 / (1.0 - low)
             high = 1.0 + high
-        value = cast(
-            torch.Tensor,
-            _adapted_uniform((batch_size,), low, high, same_on_batch=same_on_batch),
-        )
-        return value.view(-1, 1, 1, 1)
+        sample = _adapted_uniform((batch_size,), low, high, same_on_batch=same_on_batch)
+        return sample.view(-1, 1, 1, 1)
 
     parameters = {}
     for parameter in ("hue", "saturation", "value"):
@@ -417,9 +429,20 @@ class DynamicSizeReflectionPad2d(nn.Module):
         self.factor = cast(Tuple[int, int], to_2d_arg(factor))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        vert_pad, horz_pad = compute_relative_pad_size(input, self.factor)
-        pad_ = [horz_pad, horz_pad, vert_pad, vert_pad]
-        return pad(input, pad_, mode="reflect")
+        pad_size = compute_relative_pad_size(input, self.factor)
+        return pad(input, self._compute_pad(pad_size), mode="reflect")
+
+    @staticmethod
+    def _compute_pad(pad_size: Tuple[int, int]) -> List[int]:
+        def split(total: int) -> Tuple[int, int]:
+            pre = total // 2
+            post = total - pre
+            return pre, post
+
+        vert_pad, horz_pad = pad_size
+        top_pad, bottom_pad = split(vert_pad)
+        left_pad, right_pad = split(horz_pad)
+        return [left_pad, right_pad, top_pad, bottom_pad]
 
 
 class RemoveDynamicSizePadding(nn.Module):
