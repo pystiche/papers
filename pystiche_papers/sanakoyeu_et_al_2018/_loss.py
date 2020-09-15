@@ -34,13 +34,18 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
         score_weight: Score weight of the operator. Defaults to ``1.0``.
 
     Attributes:
-        accuracy: ADDME
+        real_images: Discriminator mode in whose dependence the output of the functions
+            :func:`calculate_score` and :func:`calculate_accuracy` can be influenced.
+            This can be either real or fake. The discriminator mode should not
+            be set manually, but with the help of functions :func:`real` and
+            :func:`fake`.
+        accuracy: The accuracy of the discriminator at the last input.
 
     """
 
     def __init__(self, encoder: Encoder, score_weight: float = 1.0):
         super().__init__(encoder, score_weight=score_weight)
-        self._target_distribution = True
+        self.real_images = True
         self.accuracy: torch.Tensor
         self.register_buffer("accuracy", torch.zeros(1))
 
@@ -48,9 +53,10 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
         r"""Sets the discriminator mode to real images.
 
         Args:
-            mode: Whether to set the discriminator mode to real (``True``, default) or fake (``False``) images.
+            mode: Whether to set the discriminator mode to real (``True``, default) or
+                fake (``False``) images.
         """
-        self._target_distribution = mode
+        self.real_images = mode
         return self
 
     def fake(self) -> "EncodingDiscriminatorOperator":
