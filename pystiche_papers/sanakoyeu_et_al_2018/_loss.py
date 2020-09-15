@@ -142,6 +142,7 @@ class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
         return self.real(False)
 
     def get_accuracy(self) -> torch.Tensor:
+        r"""Returns the average accuracy of all operators."""
         accuracies = torch.stack([op.accuracy for op in self.discriminator_operators()])
         return torch.mean(accuracies)
 
