@@ -1,5 +1,3 @@
-import unittest.mock
-
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -10,6 +8,7 @@ from torch.nn.functional import binary_cross_entropy_with_logits
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import enc, misc, ops
+
 from tests.mocks import attach_method_mock
 
 
@@ -88,7 +87,10 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
         multi_layer_prediction_op.real(mode)
         multi_layer_prediction_op(input_image)
         with subtests.test(mode=mode):
-            accuracies = [op.accuracy for op in multi_layer_prediction_op.discriminator_operators()]
+            accuracies = [
+                op.accuracy
+                for op in multi_layer_prediction_op.discriminator_operators()
+            ]
             desired = torch.mean(torch.stack(accuracies))
             ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
 
@@ -131,7 +133,9 @@ def test_prediction_loss(subtests):
 
 @pytest.fixture
 def prediction_loss_mocks(mocker):
-    mock = mocker.Mock(side_effect=lambda image: pystiche.LossDict([("0", torch.mean(image))]))
+    mock = mocker.Mock(
+        side_effect=lambda image: pystiche.LossDict([("0", torch.mean(image))])
+    )
     attach_method_mock(mock, "get_accuracy", return_value=torch.Tensor([0.5]))
     attach_method_mock(mock, "real", return_value=None)
     attach_method_mock(mock, "fake", return_value=None)
