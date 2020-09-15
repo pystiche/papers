@@ -129,7 +129,6 @@ def test_prediction_loss(subtests):
             assert prediction_loss.score_weight == pytest.approx(score_weight)
 
 
-
 @pytest.fixture
 def prediction_loss_mocks(mocker):
     mock = mocker.Mock(side_effect=lambda image: pystiche.LossDict([("0", torch.mean(image))]))

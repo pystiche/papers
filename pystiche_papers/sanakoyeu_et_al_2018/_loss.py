@@ -74,7 +74,8 @@ class PredictionOperator(EncodingDiscriminatorOperator):
 
     Args:
         encoder: Encoder that is used to encode the input images.
-        predictor: Auxiliary classifier used to predict real or fake from the encodings of the ``encoder``.
+        predictor: Auxiliary classifier used to predict real or fake from the encodings
+            of the ``encoder``.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """
 
@@ -143,7 +144,7 @@ def prediction_loss(
     scale_weights: Union[str, Sequence[float]] = "sum",
     score_weight: Optional[float] = None,
 ) -> MultiLayerPredictionOperator:
-    r"""Prediction loss indicates whether the input is real or fake.
+    r"""Partial discriminator loss from :cite:`SKL+2018` for a single image.
 
     Capture image details at different scales with an auxiliary classifier and sum up
     all losses and accuracies on different layers of the
