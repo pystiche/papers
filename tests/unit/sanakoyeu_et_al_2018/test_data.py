@@ -122,7 +122,7 @@ def test_style_image_transform():
     ptu.assert_allclose(actual, expected)
 
 
-def test_style_image_transform_train():
+def test_style_image_transform_augmentation():
     edge_size = 16
     make_reproducible()
     image = torch.rand(1, 1, 800, 800)

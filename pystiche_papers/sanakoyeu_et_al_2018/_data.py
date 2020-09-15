@@ -85,13 +85,15 @@ class ClampSize(transforms.Transform):
         return dct
 
 
-def style_image_transform(edge_size: int = 768, train: bool = False) -> nn.Sequential:
+def style_image_transform(
+    impl_params: bool = True, edge_size: int = 768, train: bool = False
+) -> nn.Sequential:
     transforms_: List[nn.Module] = [
         ClampSize(),
         transforms.ValidRandomCrop((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     ]
-    if train:
+    if impl_params and train:
         transforms_.append(augmentation(size=edge_size))
     return nn.Sequential(*transforms_)
 
@@ -99,11 +101,13 @@ def style_image_transform(edge_size: int = 768, train: bool = False) -> nn.Seque
 def content_image_transform(
     impl_params: bool = True, edge_size: int = 768, train: bool = False,
 ) -> nn.Sequential:
-    transform = style_image_transform(edge_size=edge_size, train=train)
+    transform = style_image_transform(
+        impl_params=impl_params, edge_size=edge_size, train=train
+    )
     if not impl_params:
         return transform
 
-    return nn.Sequential(transforms.Rescale(2.0), *transform.children())
+    return nn.Sequential(transforms.Rescale(2.0), transform)
 
 
 class WikiArt(ImageFolderDataset):
