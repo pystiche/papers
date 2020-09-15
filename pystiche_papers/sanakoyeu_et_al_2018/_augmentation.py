@@ -425,22 +425,31 @@ class RandomHSVJitter(AugmentationBase):
         return apply_hsv_jitter(input, params)
 
 
-def compute_relative_pad_size(
-    image: torch.Tensor, factor: Tuple[float, float]
-) -> Tuple[int, int]:
-    height, width = extract_image_size(image)
-    vert_factor, horz_factor = factor
-    return int(height * vert_factor), int(height * horz_factor)
-
-
-class DynamicSizeReflectionPad2d(nn.Module):
-    def __init__(self, factor: Union[Tuple[float, float], float]):
+class DynamicSizePad2d(pystiche.Module):
+    def __init__(
+        self,
+        transform: nn.Module,
+        factor: Union[Tuple[float, float], float],
+        mode: str = "constant",
+        value: float = 0,
+    ) -> None:
         super().__init__()
+        self.transform = transform
         self.factor = cast(Tuple[int, int], to_2d_arg(factor))
+        self.mode = mode
+        self.value = value
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        pad_size = compute_relative_pad_size(input, self.factor)
-        return pad(input, self._compute_pad(pad_size), mode="reflect")
+        input_size = extract_image_size(input)
+        input = self.add_padding(input, input_size)
+        output = self.transform(input)
+        return self.remove_padding(output, input_size)
+
+    def add_padding(self, input: torch.Tensor, size: Tuple[int, int]) -> torch.Tensor:
+        height, width = size
+        vert_factor, horz_factor = self.factor
+        pad_size = int(height * vert_factor), int(height * horz_factor)
+        return pad(input, self._compute_pad(pad_size), mode=self.mode, value=self.value)
 
     @staticmethod
     def _compute_pad(pad_size: Tuple[int, int]) -> List[int]:
@@ -454,23 +463,20 @@ class DynamicSizeReflectionPad2d(nn.Module):
         left_pad, right_pad = split(horz_pad)
         return [left_pad, right_pad, top_pad, bottom_pad]
 
+    def remove_padding(
+        self, input: torch.Tensor, size: Tuple[int, int]
+    ) -> torch.Tensor:
+        return cast(torch.Tensor, kornia.center_crop(input, size))
 
-class RemoveDynamicSizePadding(nn.Module):
-    def __init__(self, factor: Union[Tuple[float, float], float]):
-        super().__init__()
-        self.factor = to_2d_arg(factor)
-
-    @property
-    def inverse_factor(self) -> Tuple[float, float]:
-        return cast(
-            Tuple[float, float], tuple(factor / (1 + factor) for factor in self.factor)
-        )
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        height, width = extract_image_size(input)
-        vert_pad, horz_pad = compute_relative_pad_size(input, self.inverse_factor)
-        crop_size = (height - vert_pad, width - horz_pad)
-        return cast(torch.Tensor, kornia.center_crop(input, crop_size))
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["factor"] = self.factor
+        if self.mode != "constant":
+            dct["mode"] = self.mode
+        elif self.value != 0:
+            dct["mode"] = "constant"
+            dct["value"] = self.value
+        return dct
 
 
 def augmentation(
@@ -489,15 +495,23 @@ def augmentation(
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27
         RandomRescale(factor=80e-2, probability=probability, interpolation="bicubic"),
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L71
-        DynamicSizeReflectionPad2d(factor=50e-2),
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L28
-        RandomRotation(
-            degrees=0.15 * 90, probability=probability, same_on_batch=same_on_batch
-        ),
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L33
-        RandomAffine(5e-2, probability=probability, same_on_batch=same_on_batch),
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L82
-        RemoveDynamicSizePadding(factor=50e-2),
+        DynamicSizePad2d(
+            nn.Sequential(
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L28
+                RandomRotation(
+                    degrees=0.15 * 90,
+                    probability=probability,
+                    same_on_batch=same_on_batch,
+                ),
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L33
+                RandomAffine(
+                    5e-2, probability=probability, same_on_batch=same_on_batch
+                ),
+            ),
+            factor=50e-2,
+            mode="reflect",
+        ),
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L45
         RandomCrop(image_size, same_on_batch=same_on_batch),

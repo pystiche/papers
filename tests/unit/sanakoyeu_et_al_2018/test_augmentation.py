@@ -13,13 +13,12 @@ from pystiche.image import (
 from pystiche.image.transforms.functional import rescale
 from pystiche_papers import utils
 from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
-    DynamicSizeReflectionPad2d,
+    DynamicSizePad2d,
     RandomAffine,
     RandomCrop,
     RandomHSVJitter,
     RandomRescale,
     RandomRotation,
-    RemoveDynamicSizePadding,
 )
 
 
@@ -125,17 +124,14 @@ def test_RandomHSVJitter_smoke(input_image):
     assert_is_size_and_value_range_preserving(input_image, transform)
 
 
-def test_DynamicSizePadding_noop(input_image):
+def test_DynamicSizePad2d(input_image):
     factor = 0.5
-    transform = DynamicSizeReflectionPad2d(factor)
-    inverse_transform = RemoveDynamicSizePadding(factor)
-    assert_is_noop(
-        input_image, lambda image: inverse_transform(transform(image)), atol=1e-3
-    )
+    transform = DynamicSizePad2d(utils.Identity(), factor)
+    assert_is_noop(input_image, transform, atol=1e-3)
 
 
 def test_augmentation_smoke(subtests, input_image):
-    size = extract_image_size(input_image)
+    image_size = extract_image_size(input_image)
     probability = 100e-2
     same_on_batch = True
 
@@ -143,7 +139,7 @@ def test_augmentation_smoke(subtests, input_image):
 
     utils.make_reproducible()
     transform = paper.augmentation(
-        size=size, probability=probability, same_on_batch=same_on_batch
+        image_size=image_size, probability=probability, same_on_batch=same_on_batch
     )
 
     output_image = transform(input_image)
