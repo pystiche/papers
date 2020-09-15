@@ -84,8 +84,8 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
     )
 
     for mode in (True, False):
-        multi_layer_prediction_op.real() if mode else multi_layer_prediction_op.fake()
-        _ = multi_layer_prediction_op(input_image)
+        multi_layer_prediction_op.real(mode)
+        multi_layer_prediction_op(input_image)
         with subtests.test(mode=mode):
             desired = torch.mean(
                 torch.stack(
@@ -144,10 +144,7 @@ def attach_method_mock(mock, method, **attrs):
 
 @pytest.fixture
 def prediction_loss_mocks(mocker):
-    attrs = {}
-    attrs["side_effect"] = lambda image: pystiche.LossDict([("0", torch.mean(image))])
-
-    mock = mocker.Mock(**attrs)
+    mock = mocker.Mock(side_effect=lambda image: pystiche.LossDict([("0", torch.mean(image))]))
     attach_method_mock(mock, "get_accuracy", return_value=torch.Tensor([0.5]))
     attach_method_mock(mock, "real", return_value=None)
     attach_method_mock(mock, "fake", return_value=None)

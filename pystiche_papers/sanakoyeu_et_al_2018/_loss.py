@@ -36,6 +36,9 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
     Args:
         encoder: Encoder that is used to encode the target and input images.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
+        
+    Attributes:
+        accuracy: ADDME
     """
 
     def __init__(self, encoder: Encoder, score_weight: float = 1.0):
@@ -67,12 +70,11 @@ class PredictionOperator(EncodingDiscriminatorOperator):
     The prediction consists of the output of an ``predictor`` which processes the
     output of the ``encoder``.
 
-    It measures the cross-entropy loss between true labels and predicted labels. The
-    true labels are set depending on the currently set discriminator mode.
+    It measures the cross-entropy loss between true labels and predicted labels. 
 
     Args:
         encoder: Encoder that is used to encode the target and input images.
-        predictor: Auxiliary classifier used to process the encodings into a prediction.
+        predictor: Auxiliary classifier used to predict real or fake from the encodings of the ``encoder``.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """
 
