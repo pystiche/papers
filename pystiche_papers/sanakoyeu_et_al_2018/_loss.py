@@ -73,7 +73,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
     It measures the cross-entropy loss between true labels and predicted labels. 
 
     Args:
-        encoder: Encoder that is used to encode the target and input images.
+        encoder: Encoder that is used to encode the input images.
         predictor: Auxiliary classifier used to predict real or fake from the encodings of the ``encoder``.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
     """

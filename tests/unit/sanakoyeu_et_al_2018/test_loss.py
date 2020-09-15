@@ -87,14 +87,8 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
         multi_layer_prediction_op.real(mode)
         multi_layer_prediction_op(input_image)
         with subtests.test(mode=mode):
-            desired = torch.mean(
-                torch.stack(
-                    [
-                        op.accuracy
-                        for op in multi_layer_prediction_op.discriminator_operators()
-                    ]
-                )
-            )
+            accuracies = [op.accuracy for op in multi_layer_prediction_op.discriminator_operators()]
+            desired = torch.mean(torch.stack(accuracies))
             ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
 
 
