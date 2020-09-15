@@ -11,6 +11,7 @@ from torch.nn.functional import pad
 import pystiche
 from pystiche.image import extract_image_size
 from pystiche.misc import to_2d_arg
+from pystiche_papers.utils import pad_size_to_pad
 
 __all__ = ["augmentation"]
 
@@ -449,7 +450,7 @@ class DynamicSizePad2d(pystiche.Module):
         height, width = size
         vert_factor, horz_factor = self.factor
         pad_size = int(height * vert_factor), int(height * horz_factor)
-        return pad(input, self._compute_pad(pad_size), mode=self.mode, value=self.value)
+        return pad(input, pad_size_to_pad(pad_size), mode=self.mode, value=self.value)
 
     @staticmethod
     def _compute_pad(pad_size: Tuple[int, int]) -> List[int]:
