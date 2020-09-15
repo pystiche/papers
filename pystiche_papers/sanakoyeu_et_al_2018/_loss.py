@@ -29,12 +29,8 @@ __all__ = [
 class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
     r"""Abstract base class for all discriminator operators working in an encoded space.
 
-    In this operator a discriminator mode can be set, in whose dependence the output can
-    be influenced. This can be either ``real`` or ``fake``. In addition, it is
-    calculated how accurate the operator was on the last input.
-
     Args:
-        encoder: Encoder that is used to encode the target and input images.
+        encoder: Encoder that is used to encode the input images.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
         
     Attributes:
@@ -48,10 +44,21 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
         self.register_buffer("accuracy", torch.zeros(1))
 
     def real(self, mode: bool = True) -> "EncodingDiscriminatorOperator":
+        r"""Sets the current discriminator mode.
+
+        In this operator a discriminator mode can be set, in whose dependence the output
+        can be influenced. This can be either ``real`` or ``fake``.
+
+        Args:
+            mode: If this is ``True``, the current discriminator mode is set to ``real``
+                and ``fake`` otherwise.
+
+        """
         self._target_distribution = mode
         return self
 
     def fake(self) -> "EncodingDiscriminatorOperator":
+        r"""Sets the current discriminator mode to ``fake``."""
         return self.real(False)
 
     def process_input_image(self, image: torch.Tensor) -> torch.Tensor:
@@ -67,7 +74,7 @@ class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
 class PredictionOperator(EncodingDiscriminatorOperator):
     r"""The prediction loss is a discriminator loss based on the prediction.
 
-    The prediction consists of the output of an ``predictor`` which processes the
+    The prediction consists of the output of the ``predictor`` which processes the
     output of the ``encoder``.
 
     It measures the cross-entropy loss between true labels and predicted labels. 
