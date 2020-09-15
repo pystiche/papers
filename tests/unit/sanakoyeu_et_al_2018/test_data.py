@@ -7,6 +7,7 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler
 
@@ -105,17 +106,36 @@ def test_ClampSize_repr(subtests):
 
 
 def test_style_image_transform():
-    edge_size = 16
+    image_size = (16, 16)
     make_reproducible()
     image = torch.rand(1, 1, 800, 800)
 
     make_reproducible()
-    image_transform = paper.style_image_transform(edge_size=edge_size)
+    image_transform = paper.style_image_transform(image_size=image_size)
     actual = image_transform(image)
 
-    transform = transforms.ValidRandomCrop(edge_size)
+    transform = transforms.ValidRandomCrop(image_size)
     make_reproducible()
     expected = F.grayscale_to_fakegrayscale(transform(image))
+
+    ptu.assert_allclose(actual, expected)
+
+
+def test_style_image_transform_augmentation():
+    image_size = (16, 16)
+    make_reproducible()
+    image = torch.rand(1, 1, 800, 800)
+
+    make_reproducible()
+    image_transform = paper.style_image_transform(image_size=image_size, train=True)
+    actual = image_transform(image)
+
+    make_reproducible()
+    transform = nn.Sequential(
+        paper.style_image_transform(image_size=image_size, train=False),
+        paper.augmentation(image_size=image_size),
+    )
+    expected = transform(image)
 
     ptu.assert_allclose(actual, expected)
 

@@ -10,6 +10,8 @@ from torch.nn.modules.pooling import _AvgPoolNd
 import pystiche
 from pystiche.misc import to_2d_arg
 
+from .misc import pad_size_to_pad
+
 __all__ = [
     "Identity",
     "ResidualBlock",
@@ -59,7 +61,7 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
             raise RuntimeError
         super().__init__(*args, **kwargs)  # type: ignore[call-arg]
 
-        self._pad = self._pad_size_to_pad(self._compute_pad_size())
+        self._pad = pad_size_to_pad(self._compute_pad_size())
 
     @abstractmethod
     def _compute_pad_size(self) -> torch.Tensor:
@@ -69,12 +71,6 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
     @abstractmethod
     def _mode(self) -> str:
         pass
-
-    @staticmethod
-    def _pad_size_to_pad(size: torch.Tensor) -> List[int]:
-        pad_post = size // 2
-        pad_pre = size - pad_post
-        return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(

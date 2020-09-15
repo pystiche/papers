@@ -38,6 +38,7 @@ __all__ = [
     "save_state_dict",
     "load_state_dict_from_url",
     "channel_progression",
+    "pad_size_to_pad",
 ]
 
 
@@ -208,3 +209,11 @@ def channel_progression(
     return [
         module_fn(*channels_pair) for channels_pair in more_itertools.pairwise(channels)
     ]
+
+
+def pad_size_to_pad(pad_size: Union[Sequence[int], torch.Tensor]) -> List[int]:
+    if not isinstance(pad_size, torch.Tensor):
+        pad_size = torch.tensor(pad_size)
+    pad_post = pad_size // 2
+    pad_pre = pad_size - pad_post
+    return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()

@@ -270,3 +270,14 @@ def test_channel_progression(subtests):
             assert actual.in_channels == desired.in_channels
         with subtests.test("out_channels"):
             assert actual.out_channels == desired.out_channels
+
+
+def test_pad_size_to_pad(subtests):
+    for pad_size, pad in (
+        ((1,), [0, 1]),
+        ((2,), [1, 1]),
+        ((1, 2), [1, 1, 0, 1]),
+        ((1, 2, 3), [1, 2, 1, 1, 0, 1]),
+    ):
+        with subtests.test(pad_size):
+            assert utils.pad_size_to_pad(pad_size) == pad
