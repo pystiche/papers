@@ -10,6 +10,7 @@ from torch.nn.functional import binary_cross_entropy_with_logits
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import enc, misc, ops
+from tests.mocks import attach_method_mock
 
 
 class TestOperator(paper.EncodingDiscriminatorOperator):
@@ -127,13 +128,6 @@ def test_prediction_loss(subtests):
             score_weight = 1e0 if impl_params else 1e-3
             assert prediction_loss.score_weight == pytest.approx(score_weight)
 
-
-def attach_method_mock(mock, method, **attrs):
-    if "name" not in attrs:
-        attrs["name"] = f"{mock.name}.{method}()"
-
-    method_mock = unittest.mock.Mock(**attrs)
-    mock.attach_mock(method_mock, method)
 
 
 @pytest.fixture
