@@ -46,6 +46,8 @@ class AugmentationBase(pystiche.ComplexObject, kornia.augmentation.AugmentationB
 
 
 class RandomRescale(AugmentationBase):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L63-L67
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L105-L114
     def __init__(
         self,
         factor: Union[Tuple[float, float], float],
@@ -54,9 +56,9 @@ class RandomRescale(AugmentationBase):
         align_corners: bool = False,
     ):
         super().__init__(return_transform=False)
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L65-L66 # noqa: W505
-        # due to a bug we don't need to randomly chose the factor but only if a
-        # scaling is happening
+        # Due to a bug in the implementation (low == high) the factor has not to be
+        # chosen randomly
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L65-L66
         self.factor = to_2d_arg(factor)
         self.probability = probability
         self.interpolation = interpolation
@@ -102,6 +104,8 @@ class RandomRescale(AugmentationBase):
 
 
 class RandomRotation(pystiche.ComplexObject, kornia.augmentation.RandomRotation):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L72-L76
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L116-L127
     def __init__(
         self,
         degrees: Union[torch.Tensor, float, Tuple[float, float], List[float]],
@@ -143,6 +147,8 @@ def affine_matrix_from_three_points(
 
 
 class RandomAffine(AugmentationBase):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L78-L81
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L170-L180
     def __init__(
         self,
         shift: float,
@@ -212,6 +218,8 @@ def _adapted_uniform_int(
 
 
 class RandomCrop(AugmentationBase):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L85-L87
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L129-L139
     def __init__(
         self,
         size: Union[Tuple[int, int], int],
@@ -378,6 +386,8 @@ def apply_hsv_jitter(
 
 
 class RandomHSVJitter(AugmentationBase):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L89-L95
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L141-L167
     def __init__(
         self,
         hue_scale: Range,
@@ -464,19 +474,35 @@ class RemoveDynamicSizePadding(nn.Module):
 
 
 def augmentation(
-    size: Union[Tuple[int, int], int] = (768, 768),
+    image_size: Tuple[int, int] = (768, 768),
     probability: float = 50e-2,
     same_on_batch: bool = True,
 ) -> nn.Sequential:
+    # The same probability is used for all individual transforms
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27-L35
+    # Exceptions to this are the probabilities for the HSV jitter (100%)
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L273
+    # and a vertical flip (0%)
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L272
+    # which is reflected directly in the implementation.
     return nn.Sequential(
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27
         RandomRescale(factor=80e-2, probability=probability, interpolation="bicubic"),
-        DynamicSizeReflectionPad2d(factor=25e-2),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L71
+        DynamicSizeReflectionPad2d(factor=50e-2),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L28
         RandomRotation(
             degrees=0.15 * 90, probability=probability, same_on_batch=same_on_batch
         ),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L33
         RandomAffine(5e-2, probability=probability, same_on_batch=same_on_batch),
-        RemoveDynamicSizePadding(factor=25e-2),
-        RandomCrop(size, same_on_batch=same_on_batch),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L82
+        RemoveDynamicSizePadding(factor=50e-2),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L45
+        RandomCrop(image_size, same_on_batch=same_on_batch),
+        # Hue scaling is not implemented and thus we set it to 0
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L274-L276
         RandomHSVJitter(
             hue_scale=0e-2,
             hue_shift=5e-2,
@@ -486,6 +512,7 @@ def augmentation(
             value_shift=5e-2,
             same_on_batch=same_on_batch,
         ),
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L34
         kornia.augmentation.RandomHorizontalFlip(
             p=probability, same_on_batch=same_on_batch
         ),

@@ -86,24 +86,22 @@ class ClampSize(transforms.Transform):
 
 
 def style_image_transform(
-    impl_params: bool = True, edge_size: int = 768, train: bool = False
+    impl_params: bool = True,
+    image_size: Tuple[int, int] = (768, 768),
+    train: bool = False,
 ) -> nn.Sequential:
     transforms_: List[nn.Module] = [
         ClampSize(),
-        transforms.ValidRandomCrop((edge_size, edge_size)),
+        transforms.ValidRandomCrop(image_size),
         OptionalGrayscaleToFakegrayscale(),
     ]
     if impl_params and train:
-        transforms_.append(augmentation(size=edge_size))
+        transforms_.append(augmentation(image_size=image_size))
     return nn.Sequential(*transforms_)
 
 
-def content_image_transform(
-    impl_params: bool = True, edge_size: int = 768, train: bool = False,
-) -> nn.Sequential:
-    transform = style_image_transform(
-        impl_params=impl_params, edge_size=edge_size, train=train
-    )
+def content_image_transform(impl_params: bool = True, **kwargs: Any) -> nn.Sequential:
+    transform = style_image_transform(impl_params=impl_params, **kwargs)
     if not impl_params:
         return transform
 
