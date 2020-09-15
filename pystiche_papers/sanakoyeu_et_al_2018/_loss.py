@@ -101,13 +101,13 @@ class PredictionOperator(EncodingDiscriminatorOperator):
             binary_cross_entropy_with_logits(
                 input_repr,
                 torch.ones_like(input_repr)
-                if self._target_distribution
+                if self.real_images
                 else torch.zeros_like(input_repr),
             )
         )
 
     def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-        comparator = torch.ge if self._target_distribution else torch.lt
+        comparator = torch.ge if self.real_images else torch.lt
         return torch.mean(comparator(input_repr, 0.0).float())
 
 

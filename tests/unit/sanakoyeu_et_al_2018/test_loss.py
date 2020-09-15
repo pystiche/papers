@@ -21,7 +21,7 @@ class TestOperator(paper.EncodingDiscriminatorOperator):
         return torch.mean(input_repr)
 
     def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-        comparator = torch.ge if self._target_distribution else torch.lt
+        comparator = torch.ge if self.real_images else torch.lt
         return torch.mean(comparator(input_repr, 0.0).float())
 
 
@@ -41,6 +41,18 @@ def test_EncodingDiscriminatorOperator_call(subtests, input_image):
             ptu.assert_allclose(actual, desired)
             desired_accuracy = torch.mean(comparator(prediction, 0.0).float())
             ptu.assert_allclose(test_op.accuracy, desired_accuracy)
+
+
+def test_EncodingDiscriminatorOperator_mode(subtests):
+    encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
+
+    test_op = TestOperator(encoder)
+    with subtests.test("real"):
+        test_op.real()
+        assert test_op.real_images
+    with subtests.test("fake"):
+        test_op.fake()
+        assert not test_op.real_images
 
 
 def test_PredictionOperator_call(subtests, input_image):
