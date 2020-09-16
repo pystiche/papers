@@ -8,15 +8,21 @@ import pystiche_papers.sanakoyeu_et_al_2018 as paper
 
 
 def test_preprocessor(input_image):
-    actual = paper.preprocessor(input_image)
-    desired = input_image * 2 - 1
-    ptu.assert_allclose(actual, desired)
+    preprocessor = paper.preprocessor()
+    assert isinstance(preprocessor, nn.Module)
+
+    actual = preprocessor(input_image)
+    expected = input_image * 2 - 1
+    ptu.assert_allclose(actual, expected)
 
 
 def test_postprocessor(input_image):
-    actual = paper.postprocessor(input_image)
-    desired = (input_image + 1) / 2
-    ptu.assert_allclose(actual, desired)
+    postprocessor = paper.postprocessor()
+    assert isinstance(postprocessor, nn.Module)
+
+    actual = postprocessor(input_image)
+    expected = (input_image + 1) / 2
+    ptu.assert_allclose(actual, expected)
 
 
 def test_optimizer_modules(subtests):
