@@ -269,7 +269,7 @@ def decoder(
     ]
     upsample_conv_blocks = channel_progression(
         lambda in_channels, out_channels: UpsampleConvBlock(
-            in_channels, out_channels, kernel_size=3
+            in_channels, out_channels, kernel_size=3, padding=None,
         ),
         channels=(256, 256, 128, 64, 32),
     )

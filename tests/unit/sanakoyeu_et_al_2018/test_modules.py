@@ -206,9 +206,9 @@ def test_decoder(subtests, input_image):
         assert in_out_channels == channel_config
 
 
-def test_Transformer_smoke(subtests, input_image):
+def test_Transformer_smoke(subtests, image_large):
     transformer = paper.Transformer()
-    output_image = transformer(input_image)
+    output_image = transformer(image_large)
 
     with subtests.test("encoder"):
         assert isinstance(transformer.encoder, SequentialEncoder)
@@ -217,7 +217,7 @@ def test_Transformer_smoke(subtests, input_image):
         assert isinstance(transformer.decoder, pystiche.SequentialModule)
 
     with subtests.test("forward size"):
-        assert input_image.size() == output_image.size()
+        assert image_large.size() == output_image.size()
 
 
 @pytest.fixture(scope="module")
