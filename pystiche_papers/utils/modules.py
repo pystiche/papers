@@ -106,7 +106,7 @@ class _AutoPadConvNdMixin(_AutoPadNdMixin, _ConvNd):
         if self.groups != 1:
             dct["groups"] = self.groups
         if self.bias is None:
-            dct["bias"] = True
+            dct["bias"] = False
         if self.padding_mode != "zeros":
             dct["padding_mode"] = self.padding_mode
         return dct
