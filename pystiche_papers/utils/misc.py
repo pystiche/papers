@@ -206,10 +206,10 @@ def load_urls_from_csv(
     with open(file, "r") as fh:
         reader = csv.DictReader(fh)
         if reader.fieldnames is None:
-            raise RuntimeError
+            raise RuntimeError(f"The file {file} is empty")
         fieldnames = list(copy(reader.fieldnames))
         if "url" not in fieldnames:
-            raise RuntimeError
+            raise RuntimeError(f"The file {file} does not contain an 'url' field")
         fieldnames.remove("url")
 
         for fieldname in fieldnames:
