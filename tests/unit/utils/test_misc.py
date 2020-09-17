@@ -1,3 +1,4 @@
+import csv
 import logging
 import re
 from os import path
@@ -250,3 +251,85 @@ def test_load_state_dict_from_url_torch_1_6_0(subtests, tmpdir):
         ptu.assert_allclose(
             utils.load_state_dict_from_url(url, model_dir=tmpdir), state_dict
         )
+
+
+def test_str_to_bool(subtests):
+    for val in ("y", "yes", "t", "true", "on", "1"):
+        with subtests.test(val):
+            assert utils.str_to_bool(val) is True
+
+    for val in ("n", "no", "f", "false", "off", "0"):
+        with subtests.test(val):
+            assert utils.str_to_bool(val) is False
+
+
+@pytest.fixture
+def urls_csv(tmpdir):
+    file = path.join(tmpdir, "urls.csv")
+    fieldnames = ["str_param", "bool_param", "url"]
+    config = ("str", "True")
+    url = "url"
+    with open(file, "w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames)
+        writer.writeheader()
+        writer.writerow(dict(zip(fieldnames, (*config, url))))
+    return file, fieldnames[:-1], config, url
+
+
+def test_load_urls_from_csv(urls_csv):
+    file, _, config, url = urls_csv
+
+    urls = utils.load_urls_from_csv(file)
+    assert urls[config] == url
+
+
+def test_load_urls_from_csv_no_url(tmpdir):
+    file = path.join(tmpdir, "urls.csv")
+    with open(file, "w", newline="") as fh:
+        writer = csv.DictWriter(fh, ("str_param", "bool_param", "no_url"))
+        writer.writeheader()
+
+    with pytest.raises(RuntimeError):
+        utils.load_urls_from_csv(file)
+
+
+def test_load_urls_from_csv_converter(urls_csv):
+    file, fieldnames, config, url = urls_csv
+    fieldname = fieldnames[-1]
+    config = (*config[:-1], utils.str_to_bool(config[-1]))
+
+    urls = utils.load_urls_from_csv(file, converters={fieldname: utils.str_to_bool})
+    assert urls[config] == url
+
+
+def test_load_urls_from_csv_return_fieldnames(urls_csv):
+    file, expected_fieldnames, *_ = urls_csv
+
+    _, actual_fieldnames = utils.load_urls_from_csv(file, return_fieldnames=True)
+    assert actual_fieldnames == expected_fieldnames
+
+
+def test_select_url_from_csv(urls_csv):
+    file, _, config, expected_url = urls_csv
+
+    actual_url = utils.select_url_from_csv(file, config)
+    assert actual_url == expected_url
+
+
+def test_select_url_from_csv_no_url_available(urls_csv):
+    file, _, config, _ = urls_csv
+    config = (*config[:-1], None)
+
+    with pytest.raises(RuntimeError):
+        utils.select_url_from_csv(file, config)
+
+
+def test_select_url_from_csv_converter(urls_csv):
+    file, fieldnames, config, expected_url = urls_csv
+    fieldname = fieldnames[-1]
+    config = (*config[:-1], utils.str_to_bool(config[-1]))
+
+    actual_url = utils.select_url_from_csv(
+        file, config, converters={fieldname: utils.str_to_bool}
+    )
+    assert actual_url == expected_url
