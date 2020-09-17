@@ -1,3 +1,5 @@
+import functools
+from os import path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
@@ -6,7 +8,14 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, channel_progression
+from pystiche_papers.utils import (
+    AutoPadAvgPool2d,
+    AutoPadConv2d,
+    channel_progression,
+    load_state_dict_from_url,
+    select_url_from_csv,
+    str_to_bool,
+)
 
 from ..utils import ResidualBlock
 
@@ -41,6 +50,7 @@ def conv(
     stride: Union[Tuple[int, int], int] = 1,
     padding: Optional[int] = 0,
     padding_mode: str = "zeros",
+    bias: bool = False,
 ) -> nn.Conv2d:
     cls: Type[nn.Conv2d]
     kwargs: Dict[str, Any]
@@ -53,7 +63,24 @@ def conv(
         kernel_size,
         stride=stride,
         padding_mode=padding_mode,
+        bias=bias,
         **kwargs,
+    )
+
+
+def norm(
+    channels: int,
+    eps: float = 1e-5,
+    affine: bool = True,
+    track_running_stats: bool = False,
+    momentum: float = 0.1,
+) -> nn.InstanceNorm2d:
+    return nn.InstanceNorm2d(
+        channels,
+        eps=eps,
+        affine=affine,
+        track_running_stats=track_running_stats,
+        momentum=momentum,
     )
 
 
@@ -98,8 +125,7 @@ class ConvBlock(nn.Sequential):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-        modules: List[nn.Module] = []
-        modules.append(
+        modules: List[nn.Module] = [
             conv(
                 in_channels,
                 out_channels,
@@ -107,10 +133,9 @@ class ConvBlock(nn.Sequential):
                 stride=stride,
                 padding=padding,
                 padding_mode=padding_mode,
-            )
-        )
-
-        modules.append(nn.InstanceNorm2d(out_channels))
+            ),
+            norm(out_channels),
+        ]
 
         if act is not None:
             modules.append(get_activation(act=act, inplace=inplace))
@@ -118,7 +143,7 @@ class ConvBlock(nn.Sequential):
         super().__init__(*modules)
 
 
-class UpsampleConvBlock(nn.Module):
+class UpsampleConvBlock(ConvBlock):
     r"""UpsampleConvBlock from :cite:`SKL+2018`.
 
     This block upsamples the input followed by a :class:`ConvBlock`.
@@ -127,20 +152,8 @@ class UpsampleConvBlock(nn.Module):
         in_channels: Number of channels in the input.
         out_channels: Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
-        stride: Stride of the convolution. Defaults to ``1``.
         scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2.0``.
-        padding: Optional Padding of the input. If ``None``, padding is done so that the
-            output have the same spatial dimensions as the input. Defaults to ``None``.
-        act: The activation is either ``"relu"`` for a :class:`~torch.nn.ReLU`,
-            ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
-            ``None`` for no activation. Defaults to ``"relu"``.
-        inplace: If ``True`` perform the activation in-place.
-
-    The parameters ``kernel_size`` and ``stride`` can either be:
-    * a single :class:`int` – in which case the same value is used for the height and
-      width dimension
-    * a tuple of two :class:`int` s – in which case, the first int is used for the
-      vertical dimension, and the second int for the horizontal dimension
+        kwargs: Other optional arguments of :class:`ConvBlock`
     """
 
     def __init__(
@@ -148,36 +161,20 @@ class UpsampleConvBlock(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
-        stride: Union[Tuple[int, int], int] = 1,
         scale_factor: Union[Tuple[float, float], float] = 2.0,
-        padding: Optional[int] = None,
-        act: Union[str, None] = "relu",
-        inplace: bool = True,
+        **kwargs: Any,
     ) -> None:
-        super().__init__()
+        super().__init__(in_channels, out_channels, kernel_size, **kwargs)
         self.scale_factor = scale_factor
-        self.conv = ConvBlock(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride=stride,
-            padding=padding,
-            act=act,
-            inplace=inplace,
-        )
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return cast(
-            torch.Tensor,
-            self.conv(
-                nn.functional.interpolate(
-                    input, scale_factor=self.scale_factor, mode="nearest"
-                )
-            ),
+        interpolated_input = nn.functional.interpolate(
+            input, scale_factor=self.scale_factor, mode="nearest"
         )
+        return cast(torch.Tensor, super().forward(interpolated_input))
 
 
-def residual_block(channels: int) -> ResidualBlock:
+def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:
     r"""Residual block from :cite:`SKL+2018`.
 
     This block comprises two
@@ -187,37 +184,58 @@ def residual_block(channels: int) -> ResidualBlock:
 
     Args:
         channels: Number of channels in the input.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
 
+
+    If ``impl_params is True``, the first :class:`ConvBlock` uses a
+    :class:`torch.nn.ReLU` activation.
     """
+    conv_block = functools.partial(
+        ConvBlock,
+        channels,
+        channels,
+        kernel_size=3,
+        stride=1,
+        padding=None,
+        padding_mode="reflect",
+    )
     return ResidualBlock(
         nn.Sequential(
-            *[
-                ConvBlock(
-                    channels,
-                    channels,
-                    kernel_size=3,
-                    stride=1,
-                    padding=None,
-                    padding_mode="reflect",
-                    act=None,
-                )
-                for _ in range(2)
-            ]
+            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L81
+            conv_block(act="relu" if impl_params else None),
+            conv_block(act=None),
         )
     )
 
 
-def encoder(in_channels: int = 3,) -> enc.SequentialEncoder:
+def encoder(impl_params: bool = True, in_channels: int = 3,) -> enc.SequentialEncoder:
     r"""Encoder part of the :class:`Transformer` from :cite:`SKL+2018`.
 
     Args:
         in_channels: Number of channels in the input. Defaults to ``3``.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
 
+
+    If ``impl_params is True``, an additional :class:`~torch.nn.InstanceNorm2d` layer
+    is prefixed to the encoder.
     """
-    modules = [
-        nn.ReflectionPad2d(15),
-        ConvBlock(in_channels=in_channels, out_channels=32, kernel_size=3, stride=1),
-    ]
+    modules: List[nn.Module] = []
+
+    if impl_params:
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L38-L40
+        modules.append(norm(in_channels))
+    modules.extend(
+        (
+            nn.ReflectionPad2d(15),
+            ConvBlock(
+                in_channels=in_channels, out_channels=32, kernel_size=3, stride=1
+            ),
+        )
+    )
     modules.extend(
         channel_progression(
             lambda in_channels, out_channels: ConvBlock(
@@ -242,13 +260,15 @@ class ValueRangeDelimiter(pystiche.Module):
 
 
 def decoder(
-    out_channels: int = 3, num_residual_blocks: int = 9,
+    impl_params: bool = True, out_channels: int = 3, num_residual_blocks: int = 9,
 ) -> pystiche.SequentialModule:
     r"""Decoder part of the :class:`Transformer` from :cite:`SKL+2018`."""
-    residual_blocks = [residual_block(256) for _ in range(num_residual_blocks)]
+    residual_blocks = [
+        residual_block(256, impl_params=impl_params) for _ in range(num_residual_blocks)
+    ]
     upsample_conv_blocks = channel_progression(
         lambda in_channels, out_channels: UpsampleConvBlock(
-            in_channels, out_channels, kernel_size=3
+            in_channels, out_channels, kernel_size=3, padding=None,
         ),
         channels=(256, 256, 128, 64, 32),
     )
@@ -268,25 +288,59 @@ def decoder(
 
 
 class Transformer(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, impl_params: bool = True, init_weights: bool = True) -> None:
         super().__init__()
-        self.encoder = encoder()
-        self.decoder = decoder()
+        self.encoder = encoder(impl_params=impl_params)
+        self.decoder = decoder(impl_params=impl_params)
+        if init_weights:
+            self.init_weights()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
 
+    def init_weights(self) -> None:
+        # TODO
+        pass
 
-def transformer(style: Optional[str] = None,) -> Transformer:
-    r"""Transformer from :cite:`SKL+2018`.
+
+# The Tensorflow weights were created by Artsiom Sanakoyeu, Dmytro Kotovenko,
+# Sabine Lang, and Björn Ommer. See https://download.pystiche.org/models/LICENSE.md for
+# details.
+def select_url(framework: str, style: str, impl_params: bool) -> str:
+    return select_url_from_csv(
+        path.join(path.dirname(__file__), "model_urls.csv"),
+        (framework, style, impl_params),
+        converters=dict(impl_params=str_to_bool),
+    )
+
+
+def transformer(
+    style: Optional[str] = None, impl_params: bool = True, framework: str = "pystiche",
+) -> Transformer:
+    r"""Pretrained transformer from :cite:`SKL+2018` .
 
     Args:
         style: Style the transformer was trained on. Can be one of styles given by
-            :func:`~pystiche_papers.sanakoyeu_et_al_2018.images`. If omitted, the
-            transformer is initialized with random weights.
-
+            :func:`~pystiche_papers.johnson_alahi_li_2016.images`. If omitted, the
+            transformer is initialized with random weights according to the procedure
+            used by the original authors.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        framework: Framework that was used to train the the transformer. Can be one of
+            ``"pystiche"`` (default) and ``"tensorflow"``.
     """
-    return Transformer()
+    init_weights = style is None
+    transformer_ = Transformer(impl_params=impl_params, init_weights=init_weights)
+    if init_weights:
+        return transformer_
+
+    url = select_url(
+        framework=framework, style=cast(str, style), impl_params=impl_params,
+    )
+    state_dict = load_state_dict_from_url(url)
+    transformer_.load_state_dict(state_dict)
+    return transformer_
 
 
 class Discriminator(pystiche.Module):

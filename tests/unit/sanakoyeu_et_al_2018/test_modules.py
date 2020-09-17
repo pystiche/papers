@@ -1,3 +1,6 @@
+import contextlib
+import unittest.mock
+
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -7,8 +10,12 @@ from torch import nn
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
-from pystiche.enc import SequentialEncoder
+from pystiche.enc import Encoder, SequentialEncoder
+from pystiche_papers.sanakoyeu_et_al_2018._modules import select_url
 from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
+
+from tests.mocks import make_mock_target
+from tests.utils import call_args_to_kwargs_only, generate_param_combinations
 
 
 def test_get_activation(subtests):
@@ -81,57 +88,68 @@ def test_UpsampleConvBlock(subtests, input_image):
     kernel_size = 3
     scale_factor = 2
 
+    conv_block = paper.ConvBlock(in_channels, out_channels, kernel_size)
     upsample_conv_block = paper.UpsampleConvBlock(
         in_channels, out_channels, kernel_size, scale_factor=scale_factor
     )
+    upsample_conv_block.load_state_dict(conv_block.state_dict())
 
-    output_image = upsample_conv_block(input_image)
-    assert isinstance(output_image, torch.Tensor)
-
-    with subtests.test("conv_module"):
-        assert isinstance(upsample_conv_block.conv, paper.ConvBlock)
-
-    with subtests.test("interpolate"):
-        desired_image = nn.functional.interpolate(
-            input_image, scale_factor=scale_factor, mode="nearest"
-        )
-        assert output_image.size() == desired_image.size()
+    output = upsample_conv_block(input_image)
+    ptu.assert_allclose(
+        output,
+        conv_block(
+            nn.functional.interpolate(
+                input_image, scale_factor=scale_factor, mode="nearest"
+            )
+        ),
+    )
 
 
 def test_residual_block(subtests, input_image):
     channels = 3
-    residual_block = paper.residual_block(channels)
 
-    assert isinstance(residual_block, ResidualBlock)
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            residual_block = paper.residual_block(channels, impl_params=impl_params)
 
-    with subtests.test("residual"):
-        assert isinstance(residual_block.residual, nn.Sequential)
-        assert len(residual_block.residual) == 2
+            assert isinstance(residual_block, ResidualBlock)
 
-    with subtests.test("forward size"):
-        output_image = residual_block(input_image)
-        assert output_image.size() == input_image.size()
+            with subtests.test("residual"):
+                residual = residual_block.residual
+                assert isinstance(residual, nn.Sequential)
+                assert len(residual) == 2
+
+                if impl_params:
+                    assert len(residual[0]) == 3
+                    assert isinstance(residual[0][-1], nn.ReLU)
+
+            with subtests.test("forward size"):
+                output_image = residual_block(input_image)
+                assert output_image.size() == input_image.size()
 
 
 def test_encoder(subtests):
     channel_config = [(3, 32), (32, 32), (32, 64), (64, 128), (128, 256)]
 
-    encoder = paper.encoder()
+    for impl_params in (True, False):
+        with subtests.test(impl_params):
+            encoder = paper.encoder(impl_params=impl_params)
+            assert isinstance(encoder, Encoder)
 
-    assert isinstance(encoder, SequentialEncoder)
+            modules = encoder.children()
 
-    in_out_channels = []
-    for i, module in enumerate(encoder.children()):
-        with subtests.test("modules"):
-            if i == 0:
-                with subtests.test("padding_module"):
-                    assert isinstance(module, nn.ReflectionPad2d)
-            else:
+            if impl_params:
+                assert isinstance(next(modules), nn.InstanceNorm2d)
+
+            assert isinstance(next(modules), nn.ReflectionPad2d)
+
+            in_out_channels = []
+            for module in modules:
                 assert isinstance(module, paper.ConvBlock)
                 in_out_channels.append((module[0].in_channels, module[0].out_channels))
 
-    with subtests.test("channel_config"):
-        assert in_out_channels == channel_config
+            with subtests.test("channel_config"):
+                assert in_out_channels == channel_config
 
 
 def test_decoder(subtests, input_image):
@@ -167,9 +185,7 @@ def test_decoder(subtests, input_image):
         for _ in range(4):
             module = next(children)
             assert isinstance(module, paper.UpsampleConvBlock)
-            in_out_channels.append(
-                (module.conv[0].in_channels, module.conv[0].out_channels)
-            )
+            in_out_channels.append((module.in_channels, module.out_channels))
 
     module = next(children)
     with subtests.test("last_conv"):
@@ -190,9 +206,9 @@ def test_decoder(subtests, input_image):
         assert in_out_channels == channel_config
 
 
-def test_Transformer_smoke(subtests, input_image):
+def test_Transformer_smoke(subtests, image_large):
     transformer = paper.Transformer()
-    output_image = transformer(input_image)
+    output_image = transformer(image_large)
 
     with subtests.test("encoder"):
         assert isinstance(transformer.encoder, SequentialEncoder)
@@ -201,12 +217,80 @@ def test_Transformer_smoke(subtests, input_image):
         assert isinstance(transformer.decoder, pystiche.SequentialModule)
 
     with subtests.test("forward size"):
-        assert input_image.size() == output_image.size()
+        assert image_large.size() == output_image.size()
+
+
+@pytest.fixture(scope="module")
+def model_url_configs(styles):
+    return tuple(
+        generate_param_combinations(
+            framework=("pystiche", "tensorflow"),
+            style=styles,
+            impl_params=(True, False),
+        )
+    )
+
+
+def model_url_should_be_available(style, impl_params, framework):
+    if framework == "pystiche":
+        return False
+
+    return impl_params
+
+
+def test_select_url(subtests, model_url_configs):
+    for config in model_url_configs:
+        with subtests.test(**config):
+            if model_url_should_be_available(**config):
+                assert isinstance(select_url(**config), str)
+            else:
+                with pytest.raises(RuntimeError):
+                    select_url(**config)
 
 
 def test_transformer():
     transformer = paper.transformer()
     assert isinstance(transformer, paper.Transformer)
+
+
+def test_transformer_pretrained(subtests):
+    @contextlib.contextmanager
+    def patch(target, **kwargs):
+        target = make_mock_target("sanakoyeu_et_al_2018", "_modules", target)
+        with unittest.mock.patch(target, **kwargs) as mock:
+            yield mock
+
+    @contextlib.contextmanager
+    def patch_select_url(url):
+        with patch("select_url", return_value=url) as mock:
+            yield mock
+
+    @contextlib.contextmanager
+    def patch_load_state_dict_from_url(state_dict):
+        with patch("load_state_dict_from_url", return_value=state_dict) as mock:
+            yield mock
+
+    style = "style"
+    framework = "framework"
+    url = "url"
+    for impl_params in (True, False):
+        state_dict = paper.Transformer(impl_params=impl_params).state_dict()
+        with subtests.test(impl_params=impl_params), patch_select_url(
+            url
+        ) as select_url, patch_load_state_dict_from_url(state_dict):
+            transformer = paper.transformer(
+                style=style, impl_params=impl_params, framework=framework
+            )
+
+            with subtests.test("select_url"):
+                kwargs = call_args_to_kwargs_only(
+                    select_url.call_args, "style", "framework", "impl_params",
+                )
+                assert kwargs["framework"] == framework
+                assert kwargs["style"] == style
+                assert kwargs["impl_params"] is impl_params
+
+            ptu.assert_allclose(transformer.state_dict(), state_dict)
 
 
 def test_discriminator_modules(subtests):
