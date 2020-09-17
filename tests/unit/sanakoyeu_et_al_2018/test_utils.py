@@ -5,6 +5,7 @@ import torch
 from torch import nn, optim
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
+from pystiche_papers.data.utils import DelayedExponentialLR
 
 
 def test_preprocessor(input_image):
@@ -52,7 +53,7 @@ def test_lr_scheduler():
     optimizer = paper.optimizer(transformer)
     lr_scheduler = paper.lr_scheduler(optimizer)
 
-    assert isinstance(lr_scheduler, paper.DelayedExponentialLR)
+    assert isinstance(lr_scheduler, DelayedExponentialLR)
 
 
 def test_ExponentialMovingAverageMeter(subtests):
