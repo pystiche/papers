@@ -293,14 +293,28 @@ class Transformer(nn.Module):
         self.encoder = encoder(impl_params=impl_params)
         self.decoder = decoder(impl_params=impl_params)
         if init_weights:
-            self.init_weights()
+            self.init_weights(impl_params=impl_params)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
 
-    def init_weights(self) -> None:
-        # TODO
-        pass
+    def init_weights(self, impl_params: bool = True) -> None:
+        if not impl_params:
+            return
+
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L54
+                # https://www.tensorflow.org/versions/r1.12/api_docs/python/tf/initializers/truncated_normal
+                std = 0.02
+                nn.init.trunc_normal_(
+                    module.weight, mean=0.0, std=std, a=-2 * std, b=2 * std
+                )
+            if isinstance(module, nn.InstanceNorm2d):
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L42-L43
+                # https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/random_normal_initializer
+                nn.init.normal_(module.weight, mean=1.0, std=0.02)
+                nn.init.zeros_(module.bias)
 
 
 # The Tensorflow weights were created by Artsiom Sanakoyeu, Dmytro Kotovenko,
