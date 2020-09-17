@@ -1,4 +1,3 @@
-import csv
 from math import sqrt
 from os import path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
@@ -9,7 +8,13 @@ from torch import nn
 import pystiche
 from pystiche_papers.utils import load_state_dict_from_url
 
-from ..utils import AutoPadConv2d, AutoPadConvTranspose2d, ResidualBlock
+from ..utils import (
+    AutoPadConv2d,
+    AutoPadConvTranspose2d,
+    ResidualBlock,
+    select_url_from_csv,
+    str_to_bool,
+)
 
 __all__ = [
     "conv",
@@ -23,39 +28,16 @@ __all__ = [
 ]
 
 
-def _load_model_urls() -> Dict[Tuple[str, str, bool, bool], str]:
-    def str_to_bool(string: str) -> bool:
-        return string.lower() == "true"
-
-    with open(path.join(path.dirname(__file__), "model_urls.csv"), "r") as fh:
-        return {
-            (
-                row["framework"],
-                row["style"],
-                str_to_bool(row["impl_params"]),
-                str_to_bool(row["instance_norm"]),
-            ): row["url"]
-            for row in csv.DictReader(fh)
-        }
-
-
 # The LuaTorch weights were created by Justin Johnson, Alexandre Alahi, and Fei-Fei Li.
 # See https://download.pystiche.org/models/LICENSE for details.
-MODEL_URLS = _load_model_urls()
-
-
 def select_url(
     framework: str, style: str, impl_params: bool, instance_norm: bool
 ) -> str:
-    try:
-        return MODEL_URLS[(framework, style, impl_params, instance_norm)]
-    except KeyError:
-        msg = (
-            f"No pre-trained weights available for the parameter configuration\n\n"
-            f"framework: {framework}\nstyle: {style}\nimpl_params: {impl_params}\n"
-            f"instance_norm: {instance_norm}"
-        )
-        raise RuntimeError(msg)
+    return select_url_from_csv(
+        path.join(path.dirname(__file__), "model_urls.csv"),
+        (framework, style, impl_params, instance_norm),
+        converters=dict(impl_params=str_to_bool, instance_norm=str_to_bool),
+    )
 
 
 def conv(

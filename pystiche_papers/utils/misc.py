@@ -1,9 +1,12 @@
 import contextlib
+import csv
 import hashlib
 import random
 import shutil
 import tempfile
 from collections import OrderedDict
+from copy import copy
+from distutils.util import strtobool
 from os import path
 from typing import (
     Any,
@@ -13,6 +16,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
     cast,
@@ -39,6 +43,9 @@ __all__ = [
     "load_state_dict_from_url",
     "channel_progression",
     "pad_size_to_pad",
+    "str_to_bool",
+    "load_urls_from_csv",
+    "select_url_from_csv",
 ]
 
 
@@ -217,3 +224,59 @@ def pad_size_to_pad(pad_size: Union[Sequence[int], torch.Tensor]) -> List[int]:
     pad_post = pad_size // 2
     pad_pre = pad_size - pad_post
     return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
+
+
+def str_to_bool(val: str) -> bool:
+    return bool(strtobool(val))
+
+
+def load_urls_from_csv(
+    file: str,
+    converters: Optional[Dict[str, Callable[[str], Any]]] = None,
+    return_fieldnames: bool = False,
+) -> Union[Dict[Tuple[Any, ...], str], Tuple[Dict[Tuple[Any, ...], str], List[str]]]:
+    if converters is None:
+        converters = {}
+    with open(file, "r") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames is None:
+            raise RuntimeError(f"The file {file} is empty")
+        fieldnames = list(copy(reader.fieldnames))
+        if "url" not in fieldnames:
+            raise RuntimeError(f"The file {file} does not contain an 'url' field")
+        fieldnames.remove("url")
+
+        for fieldname in fieldnames:
+            if fieldname not in converters:
+                converters[fieldname] = lambda x: x
+
+        urls = {
+            tuple(
+                converters[field_name](row[field_name]) for field_name in fieldnames
+            ): row["url"]
+            for row in reader
+        }
+
+        if not return_fieldnames:
+            return urls
+
+        return urls, fieldnames
+
+
+def select_url_from_csv(
+    file: str,
+    config: Tuple[Any, ...],
+    converters: Optional[Dict[str, Callable[[str], Any]]] = None,
+) -> str:
+    urls, fieldnames = cast(
+        Tuple[Dict[Tuple[Any, ...], str], List[str]],
+        load_urls_from_csv(file, converters=converters, return_fieldnames=True),
+    )
+    try:
+        return urls[config]
+    except KeyError as error:
+        msg = "No URL is available for the configuration:\n\n"
+        msg += "\n".join(
+            f"{fieldname}: {value}" for fieldname, value in zip(fieldnames, config)
+        )
+        raise RuntimeError(msg) from error
