@@ -5,18 +5,25 @@ import torch
 from torch import nn, optim
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
+from pystiche_papers.data.utils import DelayedExponentialLR
 
 
 def test_preprocessor(input_image):
-    actual = paper.preprocessor(input_image)
-    desired = input_image * 2 - 1
-    ptu.assert_allclose(actual, desired)
+    preprocessor = paper.preprocessor()
+    assert isinstance(preprocessor, nn.Module)
+
+    actual = preprocessor(input_image)
+    expected = input_image * 2 - 1
+    ptu.assert_allclose(actual, expected)
 
 
 def test_postprocessor(input_image):
-    actual = paper.postprocessor(input_image)
-    desired = (input_image + 1) / 2
-    ptu.assert_allclose(actual, desired)
+    postprocessor = paper.postprocessor()
+    assert isinstance(postprocessor, nn.Module)
+
+    actual = postprocessor(input_image)
+    expected = (input_image + 1) / 2
+    ptu.assert_allclose(actual, expected)
 
 
 def test_optimizer_modules(subtests):
@@ -46,7 +53,7 @@ def test_lr_scheduler():
     optimizer = paper.optimizer(transformer)
     lr_scheduler = paper.lr_scheduler(optimizer)
 
-    assert isinstance(lr_scheduler, paper.DelayedExponentialLR)
+    assert isinstance(lr_scheduler, DelayedExponentialLR)
 
 
 def test_ExponentialMovingAverageMeter(subtests):

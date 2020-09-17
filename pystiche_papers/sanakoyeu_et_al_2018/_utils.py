@@ -9,13 +9,31 @@ from pystiche.optim.meter import FloatMeter
 
 from ..data.utils import DelayedExponentialLR
 
+__all__ = [
+    "preprocessor",
+    "postprocessor",
+    "optimizer",
+    "lr_scheduler",
+    "ExponentialMovingAverageMeter",
+]
 
-def preprocessor(x: torch.Tensor) -> torch.Tensor:
-    return x * 2 - 1
+
+class Preprocessor(nn.Module):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return input * 2 - 1
 
 
-def postprocessor(x: torch.Tensor) -> torch.Tensor:
-    return (x + 1) / 2
+def preprocessor() -> Preprocessor:
+    return Preprocessor()
+
+
+class Postprocessor(nn.Module):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return (input + 1) / 2
+
+
+def postprocessor() -> Postprocessor:
+    return Postprocessor()
 
 
 def optimizer(
