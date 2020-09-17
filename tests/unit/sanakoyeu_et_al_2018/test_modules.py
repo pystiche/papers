@@ -1,3 +1,6 @@
+import contextlib
+import unittest.mock
+
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -8,7 +11,11 @@ import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
 from pystiche.enc import SequentialEncoder
+from pystiche_papers.sanakoyeu_et_al_2018._modules import select_url
 from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
+
+from tests.mocks import make_mock_target
+from tests.utils import call_args_to_kwargs_only, generate_param_combinations
 
 
 def test_get_activation(subtests):
@@ -204,9 +211,77 @@ def test_Transformer_smoke(subtests, input_image):
         assert input_image.size() == output_image.size()
 
 
+@pytest.fixture(scope="module")
+def model_url_configs(styles):
+    return tuple(
+        generate_param_combinations(
+            framework=("pystiche", "tensorflow"),
+            style=styles,
+            impl_params=(True, False),
+        )
+    )
+
+
+def model_url_should_be_available(style, impl_params, framework):
+    if framework == "pystiche":
+        return False
+
+    return impl_params
+
+
+def test_select_url(subtests, model_url_configs):
+    for config in model_url_configs:
+        with subtests.test(**config):
+            if model_url_should_be_available(**config):
+                assert isinstance(select_url(**config), str)
+            else:
+                with pytest.raises(RuntimeError):
+                    select_url(**config)
+
+
 def test_transformer():
     transformer = paper.transformer()
     assert isinstance(transformer, paper.Transformer)
+
+
+def test_transformer_pretrained(subtests):
+    @contextlib.contextmanager
+    def patch(target, **kwargs):
+        target = make_mock_target("sanakoyeu_et_al_2018", "_modules", target)
+        with unittest.mock.patch(target, **kwargs) as mock:
+            yield mock
+
+    @contextlib.contextmanager
+    def patch_select_url(url):
+        with patch("select_url", return_value=url) as mock:
+            yield mock
+
+    @contextlib.contextmanager
+    def patch_load_state_dict_from_url(state_dict):
+        with patch("load_state_dict_from_url", return_value=state_dict) as mock:
+            yield mock
+
+    style = "style"
+    framework = "framework"
+    url = "url"
+    for impl_params in (True, False):
+        state_dict = paper.Transformer(impl_params=impl_params).state_dict()
+        with subtests.test(impl_params=impl_params), patch_select_url(
+            url
+        ) as select_url, patch_load_state_dict_from_url(state_dict):
+            transformer = paper.transformer(
+                style=style, impl_params=impl_params, framework=framework
+            )
+
+            with subtests.test("select_url"):
+                kwargs = call_args_to_kwargs_only(
+                    select_url.call_args, "style", "framework", "impl_params",
+                )
+                assert kwargs["framework"] == framework
+                assert kwargs["style"] == style
+                assert kwargs["impl_params"] is impl_params
+
+            ptu.assert_allclose(transformer.state_dict(), state_dict)
 
 
 def test_discriminator_modules(subtests):

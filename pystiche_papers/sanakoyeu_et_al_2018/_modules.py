@@ -1,4 +1,5 @@
 import functools
+from os import path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
@@ -7,7 +8,14 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, channel_progression
+from pystiche_papers.utils import (
+    AutoPadAvgPool2d,
+    AutoPadConv2d,
+    channel_progression,
+    load_state_dict_from_url,
+    select_url_from_csv,
+    str_to_bool,
+)
 
 from ..utils import ResidualBlock
 
@@ -281,28 +289,59 @@ def decoder(
 
 
 class Transformer(nn.Module):
-    def __init__(self, impl_params: bool = True) -> None:
+    def __init__(self, impl_params: bool = True, init_weights: bool = True) -> None:
         super().__init__()
         self.encoder = encoder(impl_params=impl_params)
         self.decoder = decoder(impl_params=impl_params)
+        if init_weights:
+            self.init_weights()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
 
+    def init_weights(self):
+        # TODO
+        pass
 
-def transformer(style: Optional[str] = None, impl_params: bool = True) -> Transformer:
-    r"""Transformer from :cite:`SKL+2018`.
+
+# The Tensorflow weights were created by Artsiom Sanakoyeu, Dmytro Kotovenko,
+# Sabine Lang, and Björn Ommer. See https://download.pystiche.org/models/LICENSE for
+# details.
+def select_url(framework: str, style: str, impl_params: bool) -> str:
+    return select_url_from_csv(
+        path.join(path.dirname(__file__), "model_urls.csv"),
+        (framework, style, impl_params),
+        converters=dict(impl_params=str_to_bool),
+    )
+
+
+def transformer(
+    style: Optional[str] = None, impl_params: bool = True, framework: str = "pystiche",
+) -> Transformer:
+    r"""Pretrained transformer from :cite:`SKL+2018` .
 
     Args:
         style: Style the transformer was trained on. Can be one of styles given by
-            :func:`~pystiche_papers.sanakoyeu_et_al_2018.images`. If omitted, the
-            transformer is initialized with random weights.
-        impl_params: If ``True``, uses the parameters used in the reference
+            :func:`~pystiche_papers.johnson_alahi_li_2016.images`. If omitted, the
+            transformer is initialized with random weights according to the procedure
+            used by the original authors.
+        impl_params: If ``True``, use the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-
+        framework: Framework that was used to train the the transformer. Can be one of
+            ``"pystiche"`` (default) and ``"tensorflow"``.
     """
-    return Transformer(impl_params=impl_params)
+    init_weights = style is None
+    transformer_ = Transformer(impl_params=impl_params, init_weights=init_weights)
+    if init_weights:
+        return transformer_
+
+    url = select_url(
+        framework=framework, style=cast(str, style), impl_params=impl_params,
+    )
+    state_dict = load_state_dict_from_url(url)
+    transformer_.load_state_dict(state_dict)
+    return transformer_
 
 
 class Discriminator(pystiche.Module):

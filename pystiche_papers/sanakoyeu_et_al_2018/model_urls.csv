@@ -1,0 +1,14 @@
+framework,style,impl_params,url
+tensorflow,cezanne,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__cezanne__impl_params-b097a141.pth
+tensorflow,el-greco,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__el-greco__impl_params-2a9ebccf.pth
+tensorflow,gauguin,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__gauguin__impl_params-39318dea.pth
+tensorflow,kandinsky,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__kandinsky__impl_params-8afc0c35.pth
+tensorflow,kirchner,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__kirchner__impl_params-a0b5100c.pth
+tensorflow,monet,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__monet__impl_params-61cd9500.pth
+tensorflow,morisot,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__morisot__impl_params-ed2535dd.pth
+tensorflow,munch,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__munch__impl_params-d466cbeb.pth
+tensorflow,peploe,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__peploe__impl_params-533361da.pth
+tensorflow,picasso,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__picasso__impl_params-65ee7c2f.pth
+tensorflow,pollock,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__pollock__impl_params-565bca4a.pth
+tensorflow,roerich,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__roerich__impl_params-1f4ad1c7.pth
+tensorflow,van-gogh,True,https://download.pystiche.org/models/sanakoyeu_et_al_2018_transformer__van-gogh__impl_params-c0ec6b5e.pth
