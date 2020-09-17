@@ -29,7 +29,7 @@ __all__ = [
 
 
 # The LuaTorch weights were created by Justin Johnson, Alexandre Alahi, and Fei-Fei Li.
-# See https://download.pystiche.org/models/LICENSE for details.
+# See https://download.pystiche.org/models/LICENSE.md for details.
 def select_url(
     framework: str, style: str, impl_params: bool, instance_norm: bool
 ) -> str:

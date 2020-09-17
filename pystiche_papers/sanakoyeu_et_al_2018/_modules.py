@@ -305,7 +305,7 @@ class Transformer(nn.Module):
 
 
 # The Tensorflow weights were created by Artsiom Sanakoyeu, Dmytro Kotovenko,
-# Sabine Lang, and Björn Ommer. See https://download.pystiche.org/models/LICENSE for
+# Sabine Lang, and Björn Ommer. See https://download.pystiche.org/models/LICENSE.md for
 # details.
 def select_url(framework: str, style: str, impl_params: bool) -> str:
     return select_url_from_csv(
