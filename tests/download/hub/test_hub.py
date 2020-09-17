@@ -5,7 +5,7 @@ from torch import hub, nn
 
 @pytest.fixture(scope="module")
 def entry_points():
-    return ("johnson_alahi_li_2016_transformer",)
+    return ("johnson_alahi_li_2016_transformer", "sanakoyeu_et_al_2018_transformer")
 
 
 def test_hub_entrypoints(github, entry_points):
