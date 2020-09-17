@@ -168,11 +168,10 @@ class UpsampleConvBlock(ConvBlock):
         self.scale_factor = scale_factor
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return super().forward(
-            nn.functional.interpolate(
-                input, scale_factor=self.scale_factor, mode="nearest"
-            )
+        interpolated_input = nn.functional.interpolate(
+            input, scale_factor=self.scale_factor, mode="nearest"
         )
+        return cast(torch.Tensor, super().forward(interpolated_input))
 
 
 def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:
@@ -299,7 +298,7 @@ class Transformer(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, self.decoder(self.encoder(input)))
 
-    def init_weights(self):
+    def init_weights(self) -> None:
         # TODO
         pass
 
