@@ -10,7 +10,7 @@ from torch import nn
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
-from pystiche.enc import SequentialEncoder
+from pystiche.enc import Encoder, SequentialEncoder
 from pystiche_papers.sanakoyeu_et_al_2018._modules import select_url
 from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
 
@@ -88,57 +88,68 @@ def test_UpsampleConvBlock(subtests, input_image):
     kernel_size = 3
     scale_factor = 2
 
+    conv_block = paper.ConvBlock(in_channels, out_channels, kernel_size)
     upsample_conv_block = paper.UpsampleConvBlock(
         in_channels, out_channels, kernel_size, scale_factor=scale_factor
     )
+    upsample_conv_block.load_state_dict(conv_block.state_dict())
 
-    output_image = upsample_conv_block(input_image)
-    assert isinstance(output_image, torch.Tensor)
-
-    with subtests.test("conv_module"):
-        assert isinstance(upsample_conv_block.conv, paper.ConvBlock)
-
-    with subtests.test("interpolate"):
-        desired_image = nn.functional.interpolate(
-            input_image, scale_factor=scale_factor, mode="nearest"
-        )
-        assert output_image.size() == desired_image.size()
+    output = upsample_conv_block(input_image)
+    ptu.assert_allclose(
+        output,
+        conv_block(
+            nn.functional.interpolate(
+                input_image, scale_factor=scale_factor, mode="nearest"
+            )
+        ),
+    )
 
 
 def test_residual_block(subtests, input_image):
     channels = 3
-    residual_block = paper.residual_block(channels)
 
-    assert isinstance(residual_block, ResidualBlock)
+    for impl_params in (True, False):
+        with subtests.test(impl_params=impl_params):
+            residual_block = paper.residual_block(channels, impl_params=impl_params)
 
-    with subtests.test("residual"):
-        assert isinstance(residual_block.residual, nn.Sequential)
-        assert len(residual_block.residual) == 2
+            assert isinstance(residual_block, ResidualBlock)
 
-    with subtests.test("forward size"):
-        output_image = residual_block(input_image)
-        assert output_image.size() == input_image.size()
+            with subtests.test("residual"):
+                residual = residual_block.residual
+                assert isinstance(residual, nn.Sequential)
+                assert len(residual) == 2
+
+                if impl_params:
+                    assert len(residual[0]) == 3
+                    assert isinstance(residual[0][-1], nn.ReLU)
+
+            with subtests.test("forward size"):
+                output_image = residual_block(input_image)
+                assert output_image.size() == input_image.size()
 
 
 def test_encoder(subtests):
     channel_config = [(3, 32), (32, 32), (32, 64), (64, 128), (128, 256)]
 
-    encoder = paper.encoder()
+    for impl_params in (True, False):
+        with subtests.test(impl_params):
+            encoder = paper.encoder(impl_params=impl_params)
+            assert isinstance(encoder, Encoder)
 
-    assert isinstance(encoder, SequentialEncoder)
+            modules = encoder.children()
 
-    in_out_channels = []
-    for i, module in enumerate(encoder.children()):
-        with subtests.test("modules"):
-            if i == 0:
-                with subtests.test("padding_module"):
-                    assert isinstance(module, nn.ReflectionPad2d)
-            else:
+            if impl_params:
+                assert isinstance(next(modules), nn.InstanceNorm2d)
+
+            assert isinstance(next(modules), nn.ReflectionPad2d)
+
+            in_out_channels = []
+            for module in modules:
                 assert isinstance(module, paper.ConvBlock)
                 in_out_channels.append((module[0].in_channels, module[0].out_channels))
 
-    with subtests.test("channel_config"):
-        assert in_out_channels == channel_config
+            with subtests.test("channel_config"):
+                assert in_out_channels == channel_config
 
 
 def test_decoder(subtests, input_image):
@@ -174,9 +185,7 @@ def test_decoder(subtests, input_image):
         for _ in range(4):
             module = next(children)
             assert isinstance(module, paper.UpsampleConvBlock)
-            in_out_channels.append(
-                (module.conv[0].in_channels, module.conv[0].out_channels)
-            )
+            in_out_channels.append((module.in_channels, module.out_channels))
 
     module = next(children)
     with subtests.test("last_conv"):
