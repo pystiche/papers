@@ -283,6 +283,14 @@ def test_load_urls_from_csv(urls_csv):
     assert urls[config] == url
 
 
+def test_load_urls_from_csv_empty(tmpdir):
+    file = path.join(tmpdir, "urls.csv")
+    open(file, "w").close()
+
+    with pytest.raises(RuntimeError):
+        utils.load_urls_from_csv(file)
+
+
 def test_load_urls_from_csv_no_url(tmpdir):
     file = path.join(tmpdir, "urls.csv")
     with open(file, "w", newline="") as fh:
