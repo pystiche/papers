@@ -13,7 +13,7 @@ from pystiche.image import extract_image_size
 from pystiche.misc import to_2d_arg
 from pystiche_papers.utils import pad_size_to_pad
 
-__all__ = ["augmentation"]
+__all__ = ["pre_crop_augmentation", "post_crop_augmentation"]
 
 
 # FIXME: replace this with an import from kornia.augmentation.utils when
@@ -209,117 +209,6 @@ class RandomAffine(AugmentationBase):
         return dct
 
 
-def _adapted_uniform_int(
-    shape: Union[Tuple, torch.Size],
-    low: Union[float, torch.Tensor],
-    high: Union[float, torch.Tensor],
-    same_on_batch: bool = False,
-) -> torch.Tensor:
-    return _adapted_uniform(shape, low, high + 1 - 1e-6, same_on_batch).int()
-
-
-class RandomCrop(AugmentationBase):
-    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L85-L87
-    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L129-L139
-    def __init__(
-        self,
-        size: Union[Tuple[int, int], int],
-        interpolation: str = "bilinear",
-        return_transform: bool = False,
-        same_on_batch: bool = False,
-        align_corners: bool = False,
-    ) -> None:
-        super().__init__(return_transform=return_transform)
-        self.size = cast(Tuple[int, int], to_2d_arg(size))
-        self.interpolation = interpolation
-        self.same_on_batch = same_on_batch
-        self.align_corners = align_corners
-
-    def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
-        batch_size = input_shape[0]
-        image_size = cast(Tuple[int, int], input_shape[-2:])
-        anchors = self.generate_anchors(
-            batch_size, image_size, self.size, self.same_on_batch
-        )
-        dst = self.generate_vertices_from_size(batch_size, self.size)
-        src = self.clamp_vertices_to_size(anchors + dst, image_size)
-        return dict(
-            src=src,
-            dst=dst,
-            interpolation=torch.tensor(kornia.Resample.get(self.interpolation).value),
-            align_corners=torch.tensor(self.align_corners),
-        )
-
-    def compute_transformation(
-        self, input: torch.Tensor, params: Dict[str, torch.Tensor]
-    ) -> torch.Tensor:
-        return cast(torch.Tensor, F.compute_crop_transformation(input, params))
-
-    def apply_transform(
-        self, input: torch.Tensor, params: Dict[str, torch.Tensor]
-    ) -> torch.Tensor:
-        return cast(torch.Tensor, F.apply_crop(input, params))
-
-    @staticmethod
-    def generate_anchors(
-        batch_size: int,
-        image_size: Tuple[int, int],
-        crop_size: Tuple[int, int],
-        same_on_batch: bool,
-    ) -> torch.Tensor:
-        def generate_single_dim_anchor(
-            batch_size: int, image_length: int, crop_length: int, same_on_batch: bool
-        ) -> torch.Tensor:
-            diff = image_length - crop_length
-            if diff <= 0:
-                return torch.zeros((batch_size,), dtype=torch.int)
-            else:
-                return _adapted_uniform_int((batch_size,), 0, diff, same_on_batch)
-
-        single_dim_anchors = [
-            generate_single_dim_anchor(
-                batch_size, image_length, crop_length, same_on_batch
-            )
-            for image_length, crop_length in zip(image_size, crop_size)
-        ]
-        return torch.stack(single_dim_anchors, dim=1,).unsqueeze(1).repeat(1, 4, 1)
-
-    @staticmethod
-    def generate_vertices_from_size(
-        batch_size: int, size: Tuple[int, int]
-    ) -> torch.Tensor:
-        height, width = size
-        return (
-            torch.tensor(
-                ((0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1),),
-                dtype=torch.int,
-            )
-            .unsqueeze(0)
-            .repeat(batch_size, 1, 1)
-        )
-
-    @staticmethod
-    def clamp_vertices_to_size(
-        vertices: torch.Tensor, size: Tuple[int, int]
-    ) -> torch.Tensor:
-        horz, vert = vertices.split(1, dim=2)
-        height, width = size
-        return torch.cat(
-            (torch.clamp(horz, 0, width - 1), torch.clamp(vert, 0, height - 1),), dim=2,
-        )
-
-    def _properties(self) -> Dict[str, Any]:
-        dct = super()._properties()
-        dct["size"] = self.size
-        if self.interpolation != "bilinear":
-            dct["interpolation"] = self.interpolation
-        if self.same_on_batch:
-            dct["same_on_batch"] = True
-        if self.align_corners:
-            dct["align_corners"] = True
-        return dct
-
-
 Range = Union[torch.Tensor, float, Tuple[float, float], List[float]]
 
 
@@ -480,18 +369,9 @@ class DynamicSizePad2d(pystiche.Module):
         return dct
 
 
-def augmentation(
-    image_size: Tuple[int, int] = (768, 768),
-    probability: float = 50e-2,
-    same_on_batch: bool = True,
+def pre_crop_augmentation(
+    probability: float = 50e-2, same_on_batch: bool = True,
 ) -> nn.Sequential:
-    # The same probability is used for all individual transforms
-    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27-L35
-    # Exceptions to this are the probabilities for the HSV jitter (100%)
-    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L273
-    # and a vertical flip (0%)
-    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L272
-    # which is reflected directly in the implementation.
     return nn.Sequential(
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27
         RandomRescale(factor=80e-2, probability=probability, interpolation="bicubic"),
@@ -513,9 +393,15 @@ def augmentation(
             factor=50e-2,
             mode="reflect",
         ),
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L45
-        RandomCrop(image_size, same_on_batch=same_on_batch),
+    )
+
+
+def post_crop_augmentation(
+    probability: float = 50e-2, same_on_batch: bool = True
+) -> nn.Sequential:
+    return nn.Sequential(
+        # The HSV jitter is used with a probability of 100%
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L273
         # Hue scaling is not implemented and thus we set it to 0
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L274-L276
         RandomHSVJitter(
@@ -531,4 +417,6 @@ def augmentation(
         kornia.augmentation.RandomHorizontalFlip(
             p=probability, same_on_batch=same_on_batch
         ),
+        # The vertical flip is used with a probability of 0% and thus left out
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L272
     )

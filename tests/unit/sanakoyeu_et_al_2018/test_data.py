@@ -16,11 +16,13 @@ import pystiche.image.transforms.functional as F
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.data import ImageFolderDataset
 from pystiche.image import (
+    extract_edge_size,
     extract_image_size,
     make_single_image,
     transforms,
     write_image,
 )
+from pystiche.misc import to_2d_arg
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
@@ -105,56 +107,106 @@ def test_ClampSize_repr(subtests):
             assert_property_in_repr(name, value)
 
 
-def test_style_image_transform():
-    image_size = (16, 16)
-    make_reproducible()
-    image = torch.rand(1, 1, 800, 800)
+def test_OptionalUpsample_normal_image(image):
+    short_edge_size = extract_edge_size(image, edge="short")
+    min_edge_size = short_edge_size // 2
+    transform = paper.OptionalUpsample(min_edge_size=min_edge_size,)
 
-    make_reproducible()
-    image_transform = paper.style_image_transform(image_size=image_size)
-    actual = image_transform(image)
+    assert transform(image) is image
 
-    transform = transforms.ValidRandomCrop(image_size)
-    make_reproducible()
-    expected = F.grayscale_to_fakegrayscale(transform(image))
 
+def test_OptionalUpsample_too_small(image):
+    short_edge_size = extract_edge_size(image, edge="short")
+    min_edge_size = short_edge_size * 2
+    transform = paper.OptionalUpsample(min_edge_size=min_edge_size)
+
+    actual = transform(image)
+    expected = F.resize(image, min_edge_size, edge="short")
     ptu.assert_allclose(actual, expected)
 
 
-def test_style_image_transform_augmentation():
-    image_size = (16, 16)
-    make_reproducible()
-    image = torch.rand(1, 1, 800, 800)
+def test_OptionalUpsample_repr(subtests):
+    kwargs = {"min_edge_size": 1, "interpolation_mode": "bicubic"}
+    transform = paper.OptionalUpsample(**kwargs)
 
-    make_reproducible()
-    image_transform = paper.style_image_transform(image_size=image_size, train=True)
-    actual = image_transform(image)
+    assert isinstance(repr(transform), str)
 
-    make_reproducible()
-    transform = nn.Sequential(
-        paper.style_image_transform(image_size=image_size, train=False),
-        paper.augmentation(image_size=image_size),
+    assert_property_in_repr = functools.partial(
+        asserts.assert_property_in_repr, repr(transform)
     )
-    expected = transform(image)
+    for name, value in kwargs.items():
+        with subtests.test(name):
+            assert_property_in_repr(name, value)
 
-    ptu.assert_allclose(actual, expected)
+
+def test_RandomCrop_size(image):
+    edge_size = extract_edge_size(image) // 2
+    transform = paper.RandomCrop(edge_size)
+
+    output_image = transform(image)
+    assert extract_image_size(output_image) == to_2d_arg(edge_size)
 
 
-def test_content_image_transform_no_impl_params(subtests, content_image):
-    style_transform = paper.style_image_transform()
+def test_RandomCrop_repr(subtests):
+    kwargs = dict(
+        size=(1, 1), interpolation="bicubic", same_on_batch=True, align_corners=True
+    )
+    transform = paper.RandomCrop(**kwargs)
+
+    assert isinstance(repr(transform), str)
+
+    assert_property_in_repr = functools.partial(
+        asserts.assert_property_in_repr, repr(transform)
+    )
+    for name, value in kwargs.items():
+        with subtests.test(name):
+            assert_property_in_repr(name, value)
+
+
+def test_image_transform(subtests):
+    edge_size = 768
+    make_reproducible()
+    image = torch.rand(1, 3, 800, 800)
 
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
-            content_transform = paper.content_image_transform(impl_params=impl_params)
-            make_reproducible()
-            actual = content_transform(content_image)
-
-            make_reproducible()
-            expected = style_transform(
-                F.rescale(content_image, 2.0) if impl_params else content_image
+            transform = paper.image_transform(
+                impl_params=impl_params, edge_size=edge_size
             )
+            make_reproducible()
+            actual = transform(image)
+
+            transform = nn.Sequential(
+                paper.ClampSize() if impl_params else paper.OptionalUpsample(edge_size),
+                paper.RandomCrop(edge_size)
+                if impl_params
+                else transforms.ValidRandomCrop(edge_size),
+            )
+            make_reproducible()
+            expected = transform(image)
 
             ptu.assert_allclose(actual, expected)
+
+
+def test_image_transform_augmentation(subtests):
+    edge_size = 768
+    make_reproducible()
+    image = torch.rand(1, 3, 800, 800)
+
+    transform = paper.image_transform(impl_params=True, edge_size=edge_size, train=True)
+    make_reproducible()
+    actual = transform(image)
+
+    transform = nn.Sequential(
+        paper.ClampSize(),
+        paper.pre_crop_augmentation(),
+        paper.RandomCrop(edge_size),
+        paper.post_crop_augmentation(),
+    )
+    make_reproducible()
+    expected = transform(image)
+
+    ptu.assert_allclose(actual, expected)
 
 
 def test_WikiArt_unknown_style(tmpdir):
@@ -208,7 +260,9 @@ def test_WikiArt_download_existing_sub_dir(wiki_art_style, tmpdir):
         paper.WikiArt(tmpdir, wiki_art_style, download=True)
 
 
-def test_style_dataset_smoke(subtests, wiki_art_style, patch_collect_images, tmpdir):
+def test_style_dataset_smoke(
+    subtests, wiki_art_style, patch_collect_images, tmpdir, style_image
+):
     root = tmpdir
 
     dataset = paper.style_dataset(root, wiki_art_style, download=False)
@@ -221,16 +275,30 @@ def test_style_dataset_smoke(subtests, wiki_art_style, patch_collect_images, tmp
         assert dataset.style == wiki_art_style
 
     with subtests.test("transform"):
-        assert isinstance(dataset.transform, type(paper.style_image_transform()))
+        make_reproducible()
+        actual = dataset.transform(style_image)
+
+        transform = paper.image_transform()
+        make_reproducible()
+        expected = transform(style_image)
+        ptu.assert_allclose(actual, expected)
 
 
-def test_content_dataset(subtests, patch_collect_images):
+def test_content_dataset_transform_impl_params(
+    subtests, patch_collect_images, content_image
+):
     dataset = paper.content_dataset("root")
 
     assert isinstance(dataset, ImageFolderDataset)
 
     with subtests.test("transform"):
-        assert isinstance(dataset.transform, type(paper.content_image_transform()))
+        make_reproducible()
+        actual = dataset.transform(content_image)
+
+        transform = nn.Sequential(transforms.Rescale(2.0), paper.image_transform())
+        make_reproducible()
+        expected = transform(content_image)
+        ptu.assert_allclose(actual, expected)
 
 
 def test_batch_sampler(subtests):

@@ -4,18 +4,12 @@ import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche.image import (
-    extract_batch_size,
-    extract_edge_size,
-    extract_image_size,
-    extract_num_channels,
-)
+from pystiche.image import extract_batch_size, extract_image_size, extract_num_channels
 from pystiche.image.transforms.functional import rescale
 from pystiche_papers import utils
 from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
     DynamicSizePad2d,
     RandomAffine,
-    RandomCrop,
     RandomHSVJitter,
     RandomRescale,
     RandomRotation,
@@ -44,10 +38,13 @@ def assert_is_size_and_value_range_preserving(input_image, transform):
         (output_image >= 0.0) & (output_image <= 1.0)
     ), "The output image contains values outside of the interval [0.0, 1.0]"
 
+    return output_image
+
 
 def assert_is_noop(input_image, transform, **kwargs):
     output_image = transform(input_image)
     ptu.assert_allclose(output_image, input_image, **kwargs)
+    return output_image
 
 
 @pytest.fixture(autouse=True)
@@ -97,20 +94,6 @@ def test_RandomAffine_noop(subtests, input_image):
             assert_is_noop(input_image, transform)
 
 
-def test_RandomCrop_smoke(input_image):
-    size = extract_image_size(input_image)
-    transform = RandomCrop(size)
-    assert_is_size_and_value_range_preserving(input_image, transform)
-
-
-def test_RandomCrop_size(input_image):
-    size = extract_edge_size(input_image) // 2
-    transform = RandomCrop(size)
-
-    output_image = transform(input_image)
-    assert extract_edge_size(output_image) == size
-
-
 def test_RandomHSVJitter_smoke(input_image):
     scale = shift = 0.2
     transform = RandomHSVJitter(
@@ -130,22 +113,22 @@ def test_DynamicSizePad2d(input_image):
     assert_is_noop(input_image, transform, atol=1e-3)
 
 
-def test_augmentation_smoke(subtests, input_image):
+def test_pre_crop_augmentation_smoke(subtests, input_image):
     image_size = extract_image_size(input_image)
     probability = 100e-2
     same_on_batch = True
 
     input_image = utils.batch_up_image(input_image, 2)
-
-    utils.make_reproducible()
-    transform = paper.augmentation(
-        image_size=image_size, probability=probability, same_on_batch=same_on_batch
+    transform = paper.pre_crop_augmentation(
+        probability=probability, same_on_batch=same_on_batch
     )
 
     output_image = transform(input_image)
 
     with subtests.test("size"):
-        assert output_image.size() == input_image.size()
+        actual = extract_image_size(output_image)
+        expected = tuple(int(edge_size * 0.8) for edge_size in image_size)
+        assert actual == expected
 
     with subtests.test("same_on_batch"):
         samples = torch.split(output_image, 1)
@@ -156,5 +139,26 @@ def test_augmentation_smoke(subtests, input_image):
         assert torch.all((output_image >= 0.0) & (output_image <= 1.0))
 
 
-def test_augmentation_repr_smoke():
-    assert isinstance(repr(paper.augmentation()), str)
+def test_pre_crop_augmentation_repr_smoke():
+    assert isinstance(repr(paper.pre_crop_augmentation()), str)
+
+
+def test_post_crop_augmentation_smoke(subtests, input_image):
+    probability = 100e-2
+    same_on_batch = True
+
+    input_image = utils.batch_up_image(input_image, 2)
+    transform = paper.post_crop_augmentation(
+        probability=probability, same_on_batch=same_on_batch
+    )
+
+    output_image = assert_is_size_and_value_range_preserving(input_image, transform)
+
+    with subtests.test("same_on_batch"):
+        samples = torch.split(output_image, 1)
+        for sample in samples[1:]:
+            ptu.assert_allclose(sample, samples[0])
+
+
+def test_post_crop_augmentation_repr_smoke():
+    assert isinstance(repr(paper.post_crop_augmentation()), str)
