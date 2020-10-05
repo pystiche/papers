@@ -107,6 +107,26 @@ def test_MultiLayerPredictionOperator(subtests, input_image):
             ptu.assert_allclose(multi_layer_prediction_op.get_accuracy(), desired)
 
 
+def test_MultiLayerPredictionOperator_mode(subtests):
+    def get_encoding_op(encoder, score_weight):
+        return TestOperator(encoder, score_weight)
+
+    layers = [str(index) for index in range(3)]
+    modules = [(layer, nn.Conv2d(3, 3, 1)) for layer in layers]
+    multi_layer_encoder = enc.MultiLayerEncoder(modules)
+
+    test_op = paper.MultiLayerPredictionOperator(
+        multi_layer_encoder, layers, get_encoding_op
+    )
+
+    with subtests.test("real"):
+        test_op.real()
+        assert all(op.real_images for op in test_op.discriminator_operators())
+    with subtests.test("fake"):
+        test_op.fake()
+        assert all(not op.real_images for op in test_op.discriminator_operators())
+
+
 def test_prediction_loss(subtests):
     for impl_params in (True, False):
         prediction_loss = paper.prediction_loss(impl_params=impl_params,)
