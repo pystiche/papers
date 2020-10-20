@@ -1,5 +1,8 @@
+import time
+from datetime import datetime
 from os import path
 from time import sleep
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from torchvision.datasets.utils import calculate_md5
@@ -7,13 +10,42 @@ from torchvision.datasets.utils import calculate_md5
 from tests.utils import get_tempdir
 
 __all__ = [
+    "retry",
     "assert_is_downloadable",
     "assert_downloads_correctly",
-    "assert_image_is_downloadable",
-    "assert_image_downloads_correctly",
 ]
 
 USER_AGENT = "pystiche_papers/test_suite"
+
+
+def limit_requests_per_time(min_secs_between_requests=2.0):
+    last_requests = {}
+
+    def outer_wrapper(fn):
+        def inner_wrapper(request, *args, **kwargs):
+            url = request.full_url if isinstance(request, Request) else request
+
+            netloc = urlparse(url).netloc
+            last_request = last_requests.get(netloc)
+            if last_request is not None:
+                now = datetime.now()
+
+                elapsed_secs = (now - last_request).total_seconds()
+                delta = min_secs_between_requests - elapsed_secs
+                if delta > 0:
+                    time.sleep(delta)
+
+            response = fn(request, *args, **kwargs)
+            last_requests[netloc] = datetime.now()
+
+            return response
+
+        return inner_wrapper
+
+    return outer_wrapper
+
+
+urlopen = limit_requests_per_time()(urlopen)
 
 
 def retry(fn, times=1, wait=5.0):
@@ -64,15 +96,3 @@ def assert_downloads_correctly(
     with get_tempdir() as root:
         file = retry(lambda: downloader(url, root), times=times - 1, wait=wait)
         assert calculate_md5(file) == md5, "The MD5 checksums mismatch"
-
-
-def assert_image_is_downloadable(image, **kwargs):
-    assert_is_downloadable(image.url, **kwargs)
-
-
-def assert_image_downloads_correctly(image, **kwargs):
-    def downloader(url, root):
-        image.download(root=root)
-        return path.join(root, image.file)
-
-    assert_downloads_correctly(None, image.md5, downloader=downloader, **kwargs)
