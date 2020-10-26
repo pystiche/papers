@@ -91,7 +91,7 @@ def images() -> DownloadableImageCollection:
             author="Alberto Korda",
             date="1960",
             license=ExpiredCopyrightLicense(1960),
-            md5="cffc0768090c5a705cbb30fdc24c3e64",
+            md5="62af957a89fdfcb9618570b6d836d054",
             file="CheHigh.jpg",
         ),
         "tower_of_babel": DownloadableImage(
