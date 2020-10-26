@@ -17,8 +17,9 @@ from pystiche.image.utils import extract_edge_size, extract_image_size
 from pystiche.misc import to_2d_arg, verify_str_arg
 
 from ._augmentation import (
-    AugmentationBase,
+    AugmentationBase2d,
     _adapted_uniform,
+    generate_vertices_from_size,
     post_crop_augmentation,
     pre_crop_augmentation,
 )
@@ -133,22 +134,27 @@ def _adapted_uniform_int(
     return _adapted_uniform(shape, low, high + 1 - 1e-6, same_on_batch).int()
 
 
-class RandomCrop(AugmentationBase):
+class RandomCrop(AugmentationBase2d):
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L85-L87
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L129-L139
     def __init__(
         self,
         size: Union[Tuple[int, int], int],
+        p=0.5,
         interpolation: str = "bilinear",
         return_transform: bool = False,
         same_on_batch: bool = False,
         align_corners: bool = False,
     ) -> None:
-        super().__init__(return_transform=return_transform)
+        super().__init__(p=p, return_transform=return_transform)
         self.size = cast(Tuple[int, int], to_2d_arg(size))
         self.interpolation = interpolation
         self.same_on_batch = same_on_batch
         self.align_corners = align_corners
+        self._flags = dict(
+            interpolation=torch.tensor(kornia.Resample.get(interpolation).value),
+            align_corners=torch.tensor(align_corners),
+        )
 
     def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
         batch_size = input_shape[0]
@@ -156,14 +162,9 @@ class RandomCrop(AugmentationBase):
         anchors = self.generate_anchors(
             batch_size, image_size, self.size, self.same_on_batch
         )
-        dst = self.generate_vertices_from_size(batch_size, self.size)
+        dst = generate_vertices_from_size(batch_size, self.size)
         src = self.clamp_vertices_to_size(anchors + dst, image_size)
-        return dict(
-            src=src,
-            dst=dst,
-            interpolation=torch.tensor(kornia.Resample.get(self.interpolation).value),
-            align_corners=torch.tensor(self.align_corners),
-        )
+        return dict(src=src, dst=dst)
 
     @staticmethod
     def generate_anchors(
@@ -190,20 +191,6 @@ class RandomCrop(AugmentationBase):
         return torch.stack(single_dim_anchors, dim=1,).unsqueeze(1).repeat(1, 4, 1)
 
     @staticmethod
-    def generate_vertices_from_size(
-        batch_size: int, size: Tuple[int, int]
-    ) -> torch.Tensor:
-        height, width = size
-        return (
-            torch.tensor(
-                ((0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1),),
-                dtype=torch.int,
-            )
-            .unsqueeze(0)
-            .repeat(batch_size, 1, 1)
-        )
-
-    @staticmethod
     def clamp_vertices_to_size(
         vertices: torch.Tensor, size: Tuple[int, int]
     ) -> torch.Tensor:
@@ -216,12 +203,14 @@ class RandomCrop(AugmentationBase):
     def compute_transformation(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
-        return cast(torch.Tensor, compute_crop_transformation(input, params))
+        return cast(
+            torch.Tensor, compute_crop_transformation(input, params, self._flags)
+        )
 
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
-        return cast(torch.Tensor, apply_crop(input, params))
+        return cast(torch.Tensor, apply_crop(input, params, self._flags))
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
@@ -235,9 +224,7 @@ class RandomCrop(AugmentationBase):
         return dct
 
 
-def image_transform(
-    impl_params: bool = True, edge_size: int = 768, train: bool = False
-) -> nn.Sequential:
+def image_transform(impl_params: bool = True, edge_size: int = 768) -> nn.Sequential:
     transforms_: List[nn.Module] = [
         ClampSize() if impl_params else OptionalUpsample(edge_size),
     ]
@@ -245,15 +232,14 @@ def image_transform(
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L291-L292
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271-L276
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L24
-    augmentation = impl_params and train
-    if augmentation:
+    if impl_params:
         transforms_.append(pre_crop_augmentation())
     transforms_.append(
-        RandomCrop(edge_size)  # type: ignore[arg-type]
+        RandomCrop(edge_size, p=1.0)  # type: ignore[arg-type]
         if impl_params
         else transforms.ValidRandomCrop(edge_size)
     )
-    if augmentation:
+    if impl_params:
         transforms_.append(post_crop_augmentation())
     return nn.Sequential(*transforms_)
 

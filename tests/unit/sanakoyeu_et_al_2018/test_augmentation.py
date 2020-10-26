@@ -54,7 +54,7 @@ def make_reproducible():
 
 def test_RandomRescale(input_image):
     factor = 0.5
-    transform = RandomRescale(factor, probability=100e-2)
+    transform = RandomRescale(factor, p=100e-2)
 
     actual = transform(input_image)
     expected = rescale(input_image, factor)
@@ -64,7 +64,7 @@ def test_RandomRescale(input_image):
 def test_RandomRescale_noop(subtests, input_image):
     for factor, probability in ((1.0, 100e-2), (0.5, 0e-2)):
         with subtests.test(factor=factor, probability=probability):
-            transform = RandomRescale(factor, probability=probability)
+            transform = RandomRescale(factor, p=probability)
             assert_is_noop(input_image, transform)
 
 
@@ -83,14 +83,14 @@ def test_RandomRotation_noop(subtests, input_image):
 
 def test_RandomAffine_smoke(input_image):
     shift = 0.2
-    transform = RandomAffine(shift, probability=100e-2)
+    transform = RandomAffine(shift, p=100e-2)
     assert_is_size_and_value_range_preserving(input_image, transform)
 
 
 def test_RandomAffine_noop(subtests, input_image):
     for shift, probability in ((0.0, 100e-2), (0.2, 0e-2)):
         with subtests.test(degrees=shift, probability=probability):
-            transform = RandomAffine(shift, probability=probability)
+            transform = RandomAffine(shift, p=probability)
             assert_is_noop(input_image, transform)
 
 
@@ -119,9 +119,7 @@ def test_pre_crop_augmentation_smoke(subtests, input_image):
     same_on_batch = True
 
     input_image = utils.batch_up_image(input_image, 2)
-    transform = paper.pre_crop_augmentation(
-        probability=probability, same_on_batch=same_on_batch
-    )
+    transform = paper.pre_crop_augmentation(p=probability, same_on_batch=same_on_batch)
 
     output_image = transform(input_image)
 
@@ -148,9 +146,7 @@ def test_post_crop_augmentation_smoke(subtests, input_image):
     same_on_batch = True
 
     input_image = utils.batch_up_image(input_image, 2)
-    transform = paper.post_crop_augmentation(
-        probability=probability, same_on_batch=same_on_batch
-    )
+    transform = paper.post_crop_augmentation(p=probability, same_on_batch=same_on_batch)
 
     output_image = assert_is_size_and_value_range_preserving(input_image, transform)
 
