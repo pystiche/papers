@@ -332,3 +332,23 @@ def test_TransformerBlock(subtests, input_image):
             with subtests.test("forward_size"):
                 output_image = transformer_block(input_image)
                 assert output_image.size() == input_image.size()
+
+
+def test_prediction_module(subtests):
+    in_channels = 3
+    kernel_size = 3
+
+    prediction_module = paper.prediction_module(in_channels, kernel_size)
+
+    assert isinstance(prediction_module, nn.Conv2d)
+
+    with subtests.test("in_channels"):
+        assert prediction_module.in_channels == in_channels
+    with subtests.test("out_channels"):
+        assert prediction_module.out_channels == 1
+
+    with subtests.test("kernel_size"):
+        assert prediction_module.kernel_size == misc.to_2d_arg(kernel_size)
+
+    with subtests.test("stride"):
+        assert prediction_module.stride == misc.to_2d_arg(1)
