@@ -12,8 +12,17 @@ from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
     RandomAffine,
     RandomHSVJitter,
     RandomRescale,
-    RandomRotation,
 )
+
+
+def parametrize(argnames, argvalues, ids=None, **kwargs):
+    if ids is None:
+        ids = [
+            ", ".join(f"{name}={value}" for name, value in zip(argnames, values))
+            for values in argvalues
+        ]
+
+    return pytest.mark.parametrize(argnames, argvalues, ids=ids, **kwargs)
 
 
 def assert_is_size_and_value_range_preserving(input_image, transform):
@@ -52,6 +61,10 @@ def make_reproducible():
     utils.make_reproducible(0)
 
 
+@pytest.mark.skip(
+    "kornia.geometry.warp_perspective is not working as expected "
+    "(https://github.com/kornia/kornia/issues/747)"
+)
 def test_RandomRescale(input_image):
     factor = 0.5
     transform = RandomRescale(factor, p=100e-2)
@@ -61,24 +74,14 @@ def test_RandomRescale(input_image):
     ptu.assert_allclose(actual, expected)
 
 
-def test_RandomRescale_noop(subtests, input_image):
-    for factor, probability in ((1.0, 100e-2), (0.5, 0e-2)):
-        with subtests.test(factor=factor, probability=probability):
-            transform = RandomRescale(factor, p=probability)
-            assert_is_noop(input_image, transform)
-
-
-def test_RandomRotation_smoke(input_image):
-    degrees = 30.0
-    transform = RandomRotation(degrees, probability=100e-2)
-    assert_is_size_and_value_range_preserving(input_image, transform)
-
-
-def test_RandomRotation_noop(subtests, input_image):
-    for degrees, probability in ((0.0, 100e-2), (30.0, 0e-2)):
-        with subtests.test(degrees=degrees, probability=probability):
-            transform = RandomRotation(degrees, probability=probability)
-            assert_is_noop(input_image, transform)
+@pytest.mark.skip(
+    "kornia.geometry.warp_perspective is not working as expected "
+    "(https://github.com/kornia/kornia/issues/747)"
+)
+@parametrize(("factor", "p"), ((1.0, 100e-2), (0.5, 0e-2)))
+def test_RandomRescale_noop(input_image, factor, p):
+    transform = RandomRescale(factor, p=p)
+    assert_is_noop(input_image, transform)
 
 
 def test_RandomAffine_smoke(input_image):
@@ -87,11 +90,10 @@ def test_RandomAffine_smoke(input_image):
     assert_is_size_and_value_range_preserving(input_image, transform)
 
 
-def test_RandomAffine_noop(subtests, input_image):
-    for shift, probability in ((0.0, 100e-2), (0.2, 0e-2)):
-        with subtests.test(degrees=shift, probability=probability):
-            transform = RandomAffine(shift, p=probability)
-            assert_is_noop(input_image, transform)
+@parametrize(("shift", "p"), ((0.0, 100e-2), (1.0, 0e-2)))
+def test_RandomAffine_noop(input_image, shift, p):
+    transform = RandomAffine(shift, p=p)
+    assert_is_noop(input_image, transform)
 
 
 def test_RandomHSVJitter_smoke(input_image):
@@ -115,11 +117,11 @@ def test_DynamicSizePad2d(input_image):
 
 def test_pre_crop_augmentation_smoke(subtests, input_image):
     image_size = extract_image_size(input_image)
-    probability = 100e-2
+    p = 100e-2
     same_on_batch = True
 
     input_image = utils.batch_up_image(input_image, 2)
-    transform = paper.pre_crop_augmentation(p=probability, same_on_batch=same_on_batch)
+    transform = paper.pre_crop_augmentation(p=p, same_on_batch=same_on_batch)
 
     output_image = transform(input_image)
 
@@ -142,11 +144,11 @@ def test_pre_crop_augmentation_repr_smoke():
 
 
 def test_post_crop_augmentation_smoke(subtests, input_image):
-    probability = 100e-2
+    p = 100e-2
     same_on_batch = True
 
     input_image = utils.batch_up_image(input_image, 2)
-    transform = paper.post_crop_augmentation(p=probability, same_on_batch=same_on_batch)
+    transform = paper.post_crop_augmentation(p=p, same_on_batch=same_on_batch)
 
     output_image = assert_is_size_and_value_range_preserving(input_image, transform)
 
