@@ -3,11 +3,11 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
-from torch.nn.functional import binary_cross_entropy_with_logits
+from torch.nn.functional import binary_cross_entropy_with_logits, mse_loss
 
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import enc, misc, ops
+from pystiche import enc, image, loss, misc, ops
 
 from tests.mocks import attach_method_mock
 
@@ -216,10 +216,6 @@ def test_transformed_image_loss(subtests):
                     if impl_params
                     else pytest.approx(1.0)
                 )
-from torch.nn.functional import mse_loss
-
-import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import image, loss, ops
 
 
 def test_FeatureReconstructionOperator(

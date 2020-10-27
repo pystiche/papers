@@ -8,6 +8,7 @@ from torch.nn.functional import binary_cross_entropy_with_logits
 
 from pystiche import enc, ops
 from pystiche.enc import Encoder, MultiLayerEncoder, SequentialEncoder
+from pystiche.loss.perceptual import PerceptualLoss
 
 from ._modules import (
     DiscriminatorMultiLayerEncoder,
@@ -23,6 +24,9 @@ __all__ = [
     "DiscriminatorLoss",
     "discriminator_loss",
     "transformed_image_loss",
+    "FeatureReconstructionOperator",
+    "style_aware_content_loss",
+    "transformer_loss",
 ]
 
 
@@ -289,19 +293,6 @@ def transformed_image_loss(
     return ops.FeatureReconstructionOperator(
         transformer_block, score_weight=score_weight
     )
-from typing import Optional
-
-import torch
-
-from pystiche import ops
-from pystiche.enc import SequentialEncoder
-from pystiche.loss.perceptual import PerceptualLoss
-
-__all__ = [
-    "FeatureReconstructionOperator",
-    "style_aware_content_loss",
-    "transformer_loss",
-]
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
@@ -333,7 +324,7 @@ def style_aware_content_loss(
     r"""Style_aware_content_loss from from :cite:`SKL+2018`.
 
     Args:
-        encoder: Trainable :class:`~pystiche.enc.SequentialEncoder`.
+        encoder: :class:`~pystiche.enc.SequentialEncoder`.
         impl_params:  If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
@@ -345,8 +336,8 @@ def style_aware_content_loss(
     distance instead of a normalized squared euclidean distance.
     """
     if score_weight is None:
-            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
-            score_weight = 1e2 if impl_params else 1e0
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
+        score_weight = 1e2 if impl_params else 1e0
 
     return FeatureReconstructionOperator(
         encoder, score_weight=score_weight, impl_params=impl_params
@@ -356,14 +347,14 @@ def style_aware_content_loss(
 def transformer_loss(
     encoder: SequentialEncoder,
     impl_params: bool = True,
-    style_aware_content_operator: Optional[FeatureReconstructionOperator] = None,
-    transformed_image_operator: Optional[FeatureReconstructionOperator] = None,
+    style_aware_content_operator: Optional[ops.FeatureReconstructionOperator] = None,
+    transformed_image_operator: Optional[ops.FeatureReconstructionOperator] = None,
     style_loss: Optional[MultiLayerPredictionOperator] = None,
 ) -> PerceptualLoss:
     r"""Transformer_loss from from :cite:`SKL+2018`.
 
     Args:
-        encoder: Trainable :class:`~pystiche.enc.SequentialEncoder`.
+        encoder: :class:`~pystiche.enc.SequentialEncoder`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
