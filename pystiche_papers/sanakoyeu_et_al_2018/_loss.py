@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
-from torch.nn.functional import binary_cross_entropy_with_logits
+import torch.nn.functional as F
 
 from pystiche import enc, loss, ops
 from pystiche.enc import Encoder, MultiLayerEncoder, SequentialEncoder
@@ -101,7 +101,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
         return torch.mean(
-            binary_cross_entropy_with_logits(
+            F.binary_cross_entropy_with_logits(
                 input_repr,
                 torch.ones_like(input_repr)
                 if self.real_images
@@ -328,7 +328,7 @@ class MAEReconstructionOperator(ops.EncodingComparisonOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        return torch.mean(torch.abs(input_repr - target_repr))
+        return F.l1_loss(input_repr, target_repr)
 
 
 def style_aware_content_loss(

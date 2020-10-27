@@ -3,7 +3,7 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
-from torch.nn.functional import binary_cross_entropy_with_logits
+from torch.nn.functional import binary_cross_entropy_with_logits, l1_loss
 
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
@@ -228,7 +228,7 @@ def test_MAEReconstructionOperator_call():
     op.set_target_image(target_image)
 
     actual = op(input_image)
-    desired = torch.mean(torch.abs(encoder(input_image) - encoder(target_image)))
+    desired = l1_loss(encoder(input_image), encoder(target_image))
     ptu.assert_allclose(actual, desired)
 
 
