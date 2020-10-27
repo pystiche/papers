@@ -80,7 +80,7 @@ class RandomRescale(AugmentationBase2d):
     ) -> torch.Tensor:
         transform = self.compute_transformation(input, params)
         vertex = params["end_points"][0, 2, :]
-        size = tuple((vertex + 1).int().tolist()[::-1])
+        size = cast(Tuple[int, int], tuple((vertex + 1).int().tolist()[::-1]))
         return warp_perspective(
             input,
             transform,
@@ -138,15 +138,12 @@ class RandomAffine(AugmentationBase2d):
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
-        return cast(
-            torch.Tensor,
-            F.warp_affine(
-                input,
-                params["matrix"],
-                extract_image_size(input),
-                flags=self.interpolation,
-                align_corners=self.align_corners,
-            ),
+        return F.warp_affine(
+            input,
+            params["matrix"],
+            extract_image_size(input),
+            flags=self.interpolation,
+            align_corners=self.align_corners,
         )
 
     def _properties(self) -> Dict[str, Any]:
@@ -217,14 +214,14 @@ def apply_hsv_jitter(
     h, s, v = torch.split(kornia.rgb_to_hsv(input), 1, dim=1)
     h = torch.clamp(
         h * params["hue_scale"] + params["hue_shift"],
-        1e-2 * 2.0 * kornia.pi,
-        99e-2 * 2.0 * kornia.pi,
+        (1e-2 * 2.0 * kornia.pi).item(),
+        (99e-2 * 2.0 * kornia.pi).item(),
     )
     s = torch.clamp(
         s * params["saturation_scale"] + params["saturation_shift"], 1e-2, 99e-2
     )
     v = torch.clamp(v * params["value_scale"] + params["value_shift"], 1e-2, 99e-2)
-    return cast(torch.Tensor, kornia.hsv_to_rgb(torch.cat((h, s, v), dim=1)))
+    return kornia.hsv_to_rgb(torch.cat((h, s, v), dim=1))
 
 
 class RandomHSVJitter(AugmentationBase2d):
@@ -238,7 +235,7 @@ class RandomHSVJitter(AugmentationBase2d):
         saturation_shift: Range,
         value_scale: Range,
         value_shift: Range,
-        p=0.5,
+        p: float = 0.5,
         same_on_batch: bool = False,
     ):
         super().__init__(p=p, return_transform=False)
@@ -309,7 +306,7 @@ class DynamicSizePad2d(pystiche.Module):
     def remove_padding(
         self, input: torch.Tensor, size: Tuple[int, int]
     ) -> torch.Tensor:
-        return cast(torch.Tensor, kornia.center_crop(input, size))
+        return kornia.center_crop(input, size)
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()

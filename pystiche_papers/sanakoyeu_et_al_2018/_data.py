@@ -140,7 +140,7 @@ class RandomCrop(AugmentationBase2d):
     def __init__(
         self,
         size: Union[Tuple[int, int], int],
-        p=0.5,
+        p: float = 0.5,
         interpolation: str = "bilinear",
         return_transform: bool = False,
         same_on_batch: bool = False,
@@ -152,7 +152,7 @@ class RandomCrop(AugmentationBase2d):
         self.same_on_batch = same_on_batch
         self.align_corners = align_corners
         self._flags = dict(
-            interpolation=torch.tensor(kornia.Resample.get(interpolation).value),
+            interpolation=torch.tensor(kornia.Resample.get(interpolation).value),  # type: ignore[attr-defined]
             align_corners=torch.tensor(align_corners),
         )
 
@@ -210,7 +210,7 @@ class RandomCrop(AugmentationBase2d):
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
-        return cast(torch.Tensor, apply_crop(input, params, self._flags))
+        return apply_crop(input, params, self._flags)
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()
