@@ -2,7 +2,7 @@ import pytest
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 
-from ..asserts import assert_is_downloadable
+from ..utils import assert_is_downloadable
 
 
 @pytest.mark.slow

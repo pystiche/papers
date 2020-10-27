@@ -1,6 +1,9 @@
 from os import path
 from typing import Any, Dict, List, Optional, Sized, Tuple, Union, cast
 
+import kornia
+from kornia.augmentation.functional import apply_crop, compute_crop_transformation
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, Sampler
@@ -10,16 +13,22 @@ from torchvision.datasets.utils import download_and_extract_archive
 from pystiche.data import ImageFolderDataset
 from pystiche.image import transforms
 from pystiche.image.transforms import functional as F
-from pystiche.image.utils import extract_image_size
-from pystiche.misc import verify_str_arg
+from pystiche.image.utils import extract_edge_size, extract_image_size
+from pystiche.misc import to_2d_arg, verify_str_arg
 
-from ..utils import OptionalGrayscaleToFakegrayscale
-from ._augmentation import augmentation
+from ._augmentation import (
+    AugmentationBase2d,
+    _adapted_uniform,
+    generate_vertices_from_size,
+    post_crop_augmentation,
+    pre_crop_augmentation,
+)
 
 __all__ = [
     "ClampSize",
-    "style_image_transform",
-    "content_image_transform",
+    "OptionalUpsample",
+    "RandomCrop",
+    "image_transform",
     "WikiArt",
     "style_dataset",
     "content_dataset",
@@ -85,27 +94,154 @@ class ClampSize(transforms.Transform):
         return dct
 
 
-def style_image_transform(
-    impl_params: bool = True,
-    image_size: Tuple[int, int] = (768, 768),
-    train: bool = False,
-) -> nn.Sequential:
+class OptionalUpsample(transforms.Transform):
+    def __init__(
+        self, min_edge_size: int, interpolation_mode: str = "bilinear"
+    ) -> None:
+        super().__init__()
+        self.min_edge_size = min_edge_size
+        self.interpolation_mode = interpolation_mode
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        edge_size = extract_edge_size(image, edge="short")
+        if edge_size >= self.min_edge_size:
+            return image
+
+        return cast(
+            torch.Tensor,
+            F.resize(
+                image,
+                self.min_edge_size,
+                edge="short",
+                interpolation_mode=self.interpolation_mode,
+            ),
+        )
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["min_edge_size"] = self.min_edge_size
+        if self.interpolation_mode != "bilinear":
+            dct["interpolation_mode"] = self.interpolation_mode
+        return dct
+
+
+def _adapted_uniform_int(
+    shape: Union[Tuple, torch.Size],
+    low: Union[float, torch.Tensor],
+    high: Union[float, torch.Tensor],
+    same_on_batch: bool = False,
+) -> torch.Tensor:
+    return _adapted_uniform(shape, low, high + 1 - 1e-6, same_on_batch).int()
+
+
+class RandomCrop(AugmentationBase2d):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L85-L87
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L129-L139
+    def __init__(
+        self,
+        size: Union[Tuple[int, int], int],
+        p: float = 0.5,
+        interpolation: str = "bilinear",
+        return_transform: bool = False,
+        same_on_batch: bool = False,
+        align_corners: bool = False,
+    ) -> None:
+        super().__init__(p=p, return_transform=return_transform)
+        self.size = cast(Tuple[int, int], to_2d_arg(size))
+        self.interpolation = interpolation
+        self.same_on_batch = same_on_batch
+        self.align_corners = align_corners
+        self._flags = dict(
+            interpolation=torch.tensor(kornia.Resample.get(interpolation).value),  # type: ignore[attr-defined]
+            align_corners=torch.tensor(align_corners),
+        )
+
+    def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
+        batch_size = input_shape[0]
+        image_size = cast(Tuple[int, int], input_shape[-2:])
+        anchors = self.generate_anchors(
+            batch_size, image_size, self.size, self.same_on_batch
+        )
+        dst = generate_vertices_from_size(batch_size, self.size)
+        src = self.clamp_vertices_to_size(anchors + dst, image_size)
+        return dict(src=src, dst=dst)
+
+    @staticmethod
+    def generate_anchors(
+        batch_size: int,
+        image_size: Tuple[int, int],
+        crop_size: Tuple[int, int],
+        same_on_batch: bool,
+    ) -> torch.Tensor:
+        def generate_single_dim_anchor(
+            batch_size: int, image_length: int, crop_length: int, same_on_batch: bool
+        ) -> torch.Tensor:
+            diff = image_length - crop_length
+            if diff <= 0:
+                return torch.zeros((batch_size,), dtype=torch.int)
+            else:
+                return _adapted_uniform_int((batch_size,), 0, diff, same_on_batch)
+
+        single_dim_anchors = [
+            generate_single_dim_anchor(
+                batch_size, image_length, crop_length, same_on_batch
+            )
+            for image_length, crop_length in zip(image_size, crop_size)
+        ]
+        return torch.stack(single_dim_anchors, dim=1,).unsqueeze(1).repeat(1, 4, 1)
+
+    @staticmethod
+    def clamp_vertices_to_size(
+        vertices: torch.Tensor, size: Tuple[int, int]
+    ) -> torch.Tensor:
+        horz, vert = vertices.split(1, dim=2)
+        height, width = size
+        return torch.cat(
+            (torch.clamp(horz, 0, width - 1), torch.clamp(vert, 0, height - 1),), dim=2,
+        )
+
+    def compute_transformation(
+        self, input: torch.Tensor, params: Dict[str, torch.Tensor]
+    ) -> torch.Tensor:
+        return cast(
+            torch.Tensor, compute_crop_transformation(input, params, self._flags)
+        )
+
+    def apply_transform(
+        self, input: torch.Tensor, params: Dict[str, torch.Tensor]
+    ) -> torch.Tensor:
+        return apply_crop(input, params, self._flags)
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["size"] = self.size
+        if self.interpolation != "bilinear":
+            dct["interpolation"] = self.interpolation
+        if self.same_on_batch:
+            dct["same_on_batch"] = True
+        if self.align_corners:
+            dct["align_corners"] = True
+        return dct
+
+
+def image_transform(impl_params: bool = True, edge_size: int = 768) -> nn.Sequential:
     transforms_: List[nn.Module] = [
-        ClampSize(),
-        transforms.ValidRandomCrop(image_size),
-        OptionalGrayscaleToFakegrayscale(),
+        ClampSize() if impl_params else OptionalUpsample(edge_size),
     ]
-    if impl_params and train:
-        transforms_.append(augmentation(image_size=image_size))
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L286-L287
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L291-L292
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271-L276
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L24
+    if impl_params:
+        transforms_.append(pre_crop_augmentation())
+    transforms_.append(
+        RandomCrop(edge_size, p=1.0)  # type: ignore[arg-type]
+        if impl_params
+        else transforms.ValidRandomCrop(edge_size)
+    )
+    if impl_params:
+        transforms_.append(post_crop_augmentation())
     return nn.Sequential(*transforms_)
-
-
-def content_image_transform(impl_params: bool = True, **kwargs: Any) -> nn.Sequential:
-    transform = style_image_transform(impl_params=impl_params, **kwargs)
-    if not impl_params:
-        return transform
-
-    return nn.Sequential(transforms.Rescale(2.0), transform)
 
 
 class WikiArt(ImageFolderDataset):
@@ -178,11 +314,12 @@ class WikiArt(ImageFolderDataset):
 def style_dataset(
     root: str,
     style: str,
+    impl_params: bool = True,
     transform: Optional[nn.Module] = None,
     download: bool = False,
 ) -> WikiArt:
     if transform is None:
-        transform = style_image_transform()
+        transform = image_transform(impl_params=impl_params)
     return WikiArt(root, style, transform=transform, download=download)
 
 
@@ -192,7 +329,10 @@ def content_dataset(
     root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
-        transform = content_image_transform(impl_params=impl_params)
+        transform = image_transform(impl_params=impl_params)
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L133
+        if impl_params:
+            transform = nn.Sequential(transforms.Rescale(2.0), transform)
     return ImageFolderDataset(root, transform=transform)
 
 
