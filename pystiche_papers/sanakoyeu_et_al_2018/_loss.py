@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from collections import OrderedDict
-from typing import Any, Dict, Iterator, Optional, Sequence, Union, cast
+from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -23,7 +23,7 @@ __all__ = [
     "DiscriminatorLoss",
     "discriminator_loss",
     "transformed_image_loss",
-    "FeatureReconstructionOperator",
+    "MAEReconstructionOperator",
     "style_aware_content_loss",
     "transformer_loss",
 ]
@@ -294,32 +294,48 @@ def transformed_image_loss(
     )
 
 
-class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
-    def __init__(
-        self,
-        encoder: SequentialEncoder,
-        score_weight: float = 1.0,
-        impl_params: bool = True,
-    ):
-        super().__init__(encoder, score_weight=score_weight)
-        self.impl_params = impl_params
+class MAEReconstructionOperator(ops.EncodingComparisonOperator):
+    r"""The MAE reconstruction loss is a content loss.
 
-    def calculate_score(  # type: ignore[override]
-        self, input_repr: torch.Tensor, target_repr: torch.Tensor, ctx: None
+    It measures the mean absolute error (MAE) between the encodings of an
+    ``input_image`` :math:`\hat{I}` and a ``target_image`` :math:`I` :
+
+    .. math::
+
+        \mean |\parentheses{\Phi\of{\hat{I}} - \Phi\of{I}}|
+
+    Here :math:`\Phi\of{\cdot}` denotes the ``encoder``.
+
+    Args:
+        encoder: Encoder :math:`\Phi`.
+        score_weight: Score weight of the operator. Defaults to ``1.0``.
+    """
+
+    def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
+        return enc
+
+    def input_enc_to_repr(
+        self, enc: torch.Tensor, ctx: Optional[torch.Tensor]
     ) -> torch.Tensor:
-        if self.impl_params:
-            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L194
-            # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L177-L178
-            return torch.mean(torch.abs(input_repr - target_repr))
-        else:
-            return super().calculate_score(input_repr, target_repr, ctx)
+        return self.enc_to_repr(enc)
+
+    def target_enc_to_repr(self, enc: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        return self.enc_to_repr(enc), None
+
+    def calculate_score(
+        self,
+        input_repr: torch.Tensor,
+        target_repr: torch.Tensor,
+        ctx: Optional[torch.Tensor],
+    ) -> torch.Tensor:
+        return torch.mean(torch.abs(input_repr - target_repr))
 
 
 def style_aware_content_loss(
     encoder: SequentialEncoder,
     impl_params: bool = True,
     score_weight: Optional[float] = None,
-) -> FeatureReconstructionOperator:
+) -> Union[MAEReconstructionOperator, ops.FeatureReconstructionOperator]:
     r"""Style_aware_content_loss from from :cite:`SKL+2018`.
 
     Args:
@@ -338,8 +354,12 @@ def style_aware_content_loss(
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
         score_weight = 1e2 if impl_params else 1e0
 
-    return FeatureReconstructionOperator(
-        encoder, score_weight=score_weight, impl_params=impl_params
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L194
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L177-L178
+    return (
+        MAEReconstructionOperator(encoder, score_weight=score_weight)
+        if impl_params
+        else ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
     )
 
 
