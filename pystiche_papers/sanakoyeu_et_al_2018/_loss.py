@@ -386,7 +386,6 @@ def transformer_loss(
     """
     if style_aware_content_kwargs is None:
         style_aware_content_kwargs = {}
-
     style_aware_content_operator = style_aware_content_loss(
         encoder, impl_params=impl_params, **style_aware_content_kwargs
     )
