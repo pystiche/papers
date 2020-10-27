@@ -336,7 +336,7 @@ def style_aware_content_loss(
     impl_params: bool = True,
     score_weight: Optional[float] = None,
 ) -> Union[MAEReconstructionOperator, ops.FeatureReconstructionOperator]:
-    r"""Style_aware_content_loss from from :cite:`SKL+2018`.
+    r"""Style_aware_content_loss from :cite:`SKL+2018`.
 
     Args:
         encoder: :class:`~pystiche.enc.SequentialEncoder`.

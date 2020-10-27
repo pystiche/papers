@@ -3,11 +3,11 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
-from torch.nn.functional import binary_cross_entropy_with_logits, mse_loss
+from torch.nn.functional import binary_cross_entropy_with_logits
 
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import enc, image, loss, misc, ops
+from pystiche import enc, loss, misc, ops
 
 from tests.mocks import attach_method_mock
 
@@ -218,30 +218,18 @@ def test_transformed_image_loss(subtests):
                 )
 
 
-def test_FeatureReconstructionOperator(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
-    multi_layer_encoder, layer = multi_layer_encoder_with_layer
-    encoder = multi_layer_encoder.extract_encoder(layer)
-    target_enc = encoder(target_image)
-    input_enc = encoder(input_image)
+def test_MAEReconstructionOperator_call():
+    torch.manual_seed(0)
+    target_image = torch.rand(1, 3, 128, 128)
+    input_image = torch.rand(1, 3, 128, 128)
+    encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
 
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params)
-            op.set_target_image(target_image)
-            actual = op(input_image)
+    op = paper.MAEReconstructionOperator(encoder)
+    op.set_target_image(target_image)
 
-            score = (
-                torch.mean(torch.abs(input_enc - target_enc))
-                if impl_params
-                else mse_loss(input_enc, target_enc)
-            )
-
-            desired = (
-                score / image.extract_batch_size(input_enc) if impl_params else score
-            )
-            assert actual == ptu.approx(desired)
+    actual = op(input_image)
+    desired = torch.mean(torch.abs(encoder(input_image) - encoder(target_image)))
+    ptu.assert_allclose(actual, desired)
 
 
 def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
@@ -252,7 +240,14 @@ def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
             content_loss = paper.style_aware_content_loss(
                 encoder, impl_params=impl_params
             )
-            assert content_loss.score_weight == pytest.approx(score_weight)
+            assert isinstance(
+                content_loss,
+                paper.MAEReconstructionOperator
+                if impl_params
+                else ops.FeatureReconstructionOperator,
+            )
+            with subtests.test("score_weight"):
+                assert content_loss.score_weight == pytest.approx(score_weight)
 
 
 def test_transformer_loss(subtests, multi_layer_encoder_with_layer):
@@ -263,8 +258,9 @@ def test_transformer_loss(subtests, multi_layer_encoder_with_layer):
 
     with subtests.test("content_loss"):
         assert isinstance(transformer_loss.content_loss, ops.OperatorContainer)
-        for module in transformer_loss.content_loss.children():
-            assert isinstance(module, ops.FeatureReconstructionOperator)
+        with subtests.test("operator"):
+            for module in transformer_loss.content_loss.children():
+                assert isinstance(module, ops.EncodingComparisonOperator)
 
     with subtests.test("style_loss"):
         assert isinstance(
