@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from collections import OrderedDict
-from typing import Iterator, Optional, Sequence, Union, cast
+from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
-from torch.nn.functional import binary_cross_entropy_with_logits
+import torch.nn.functional as F
 
-from pystiche import enc, ops
+from pystiche import enc, loss, ops
 from pystiche.enc import Encoder, MultiLayerEncoder, SequentialEncoder
 
 from ._modules import (
@@ -23,6 +23,9 @@ __all__ = [
     "DiscriminatorLoss",
     "discriminator_loss",
     "transformed_image_loss",
+    "MAEReconstructionOperator",
+    "style_aware_content_loss",
+    "transformer_loss",
 ]
 
 
@@ -98,7 +101,7 @@ class PredictionOperator(EncodingDiscriminatorOperator):
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
         return torch.mean(
-            binary_cross_entropy_with_logits(
+            F.binary_cross_entropy_with_logits(
                 input_repr,
                 torch.ones_like(input_repr)
                 if self.real_images
@@ -268,7 +271,7 @@ def transformed_image_loss(
     impl_params: bool = True,
     score_weight: Optional[float] = None,
 ) -> ops.FeatureReconstructionOperator:
-    r"""Transformed_image_loss from from :cite:`SKL+2018`.
+    r"""Transformed_image_loss from :cite:`SKL+2018`.
 
     Args:
         transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
@@ -289,3 +292,121 @@ def transformed_image_loss(
     return ops.FeatureReconstructionOperator(
         transformer_block, score_weight=score_weight
     )
+
+
+class MAEReconstructionOperator(ops.EncodingComparisonOperator):
+    r"""The MAE reconstruction loss is a content loss.
+
+    It measures the mean absolute error (MAE) between the encodings of an
+    ``input_image`` :math:`\hat{I}` and a ``target_image`` :math:`I` :
+
+    .. math::
+
+        \mean |\parentheses{\Phi\of{\hat{I}} - \Phi\of{I}}|
+
+    Here :math:`\Phi\of{\cdot}` denotes the ``encoder``.
+
+    Args:
+        encoder: Encoder :math:`\Phi`.
+        score_weight: Score weight of the operator. Defaults to ``1.0``.
+    """
+
+    def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
+        return enc
+
+    def input_enc_to_repr(
+        self, enc: torch.Tensor, ctx: Optional[torch.Tensor]
+    ) -> torch.Tensor:
+        return self.enc_to_repr(enc)
+
+    def target_enc_to_repr(self, enc: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        return self.enc_to_repr(enc), None
+
+    def calculate_score(
+        self,
+        input_repr: torch.Tensor,
+        target_repr: torch.Tensor,
+        ctx: Optional[torch.Tensor],
+    ) -> torch.Tensor:
+        return F.l1_loss(input_repr, target_repr)
+
+
+def style_aware_content_loss(
+    encoder: SequentialEncoder,
+    impl_params: bool = True,
+    score_weight: Optional[float] = None,
+) -> Union[MAEReconstructionOperator, ops.FeatureReconstructionOperator]:
+    r"""Style_aware_content_loss from :cite:`SKL+2018`.
+
+    Args:
+        encoder: :class:`~pystiche.enc.SequentialEncoder`.
+        impl_params:  If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``1e2`` if
+            ``impl_params is True`` otherwise ``1e0``.
+
+    If ``impl_params is True``, the ``score`` is calculated with a normalized absolute
+    distance instead of a normalized squared euclidean distance.
+    """
+    if score_weight is None:
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
+        score_weight = 1e2 if impl_params else 1e0
+
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L194
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L177-L178
+    return (
+        MAEReconstructionOperator(encoder, score_weight=score_weight)
+        if impl_params
+        else ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
+    )
+
+
+def transformer_loss(
+    encoder: SequentialEncoder,
+    impl_params: bool = True,
+    style_aware_content_kwargs: Optional[Dict[str, Any]] = None,
+    transformed_image_kwargs: Optional[Dict[str, Any]] = None,
+    style_loss_kwargs: Optional[Dict[str, Any]] = None,
+) -> loss.PerceptualLoss:
+    r"""Transformer_loss from :cite:`SKL+2018`.
+
+    Args:
+        encoder: :class:`~pystiche.enc.SequentialEncoder`.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        style_aware_content_kwargs: Optional parameters for the
+            :func:`style_aware_content_loss`.
+        transformed_image_kwargs: Optional parameters for the
+            :func:`transformed_image_loss`.
+        style_loss_kwargs: Optional parameters for the :func:`prediction_loss`.
+
+    """
+    if style_aware_content_kwargs is None:
+        style_aware_content_kwargs = {}
+    style_aware_content_operator = style_aware_content_loss(
+        encoder, impl_params=impl_params, **style_aware_content_kwargs
+    )
+
+    if transformed_image_kwargs is None:
+        transformed_image_kwargs = {}
+    transformed_image_operator = transformed_image_loss(
+        impl_params=impl_params, **transformed_image_kwargs
+    )
+
+    content_loss = ops.OperatorContainer(
+        (
+            (
+                ("style_aware_content_loss", style_aware_content_operator),
+                ("tranformed_image_loss", transformed_image_operator),
+            )
+        )
+    )
+
+    if style_loss_kwargs is None:
+        style_loss_kwargs = {}
+    style_loss = prediction_loss(impl_params=impl_params, **style_loss_kwargs,)
+
+    return loss.PerceptualLoss(content_loss, style_loss)

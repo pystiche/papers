@@ -3,11 +3,11 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
-from torch.nn.functional import binary_cross_entropy_with_logits
+from torch.nn.functional import binary_cross_entropy_with_logits, l1_loss
 
 import pystiche
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import enc, misc, ops
+from pystiche import enc, loss, misc, ops
 
 from tests.mocks import attach_method_mock
 
@@ -216,3 +216,53 @@ def test_transformed_image_loss(subtests):
                     if impl_params
                     else pytest.approx(1.0)
                 )
+
+
+def test_MAEReconstructionOperator_call():
+    torch.manual_seed(0)
+    target_image = torch.rand(1, 3, 128, 128)
+    input_image = torch.rand(1, 3, 128, 128)
+    encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
+
+    op = paper.MAEReconstructionOperator(encoder)
+    op.set_target_image(target_image)
+
+    actual = op(input_image)
+    desired = l1_loss(encoder(input_image), encoder(target_image))
+    ptu.assert_allclose(actual, desired)
+
+
+def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
+    for impl_params, score_weight in ((True, 1e2), (False, 1e0)):
+        with subtests.test(impl_params=impl_params):
+            content_loss = paper.style_aware_content_loss(
+                encoder, impl_params=impl_params
+            )
+            assert isinstance(
+                content_loss,
+                paper.MAEReconstructionOperator
+                if impl_params
+                else ops.FeatureReconstructionOperator,
+            )
+            with subtests.test("score_weight"):
+                assert content_loss.score_weight == pytest.approx(score_weight)
+
+
+def test_transformer_loss(subtests, multi_layer_encoder_with_layer):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
+    transformer_loss = paper.transformer_loss(encoder)
+    assert isinstance(transformer_loss, loss.PerceptualLoss)
+
+    with subtests.test("content_loss"):
+        assert isinstance(transformer_loss.content_loss, ops.OperatorContainer)
+        with subtests.test("operator"):
+            for module in transformer_loss.content_loss.children():
+                assert isinstance(module, ops.EncodingComparisonOperator)
+
+    with subtests.test("style_loss"):
+        assert isinstance(
+            transformer_loss.style_loss, paper.MultiLayerPredictionOperator
+        )
