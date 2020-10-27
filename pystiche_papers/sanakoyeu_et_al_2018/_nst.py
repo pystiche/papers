@@ -6,9 +6,9 @@ from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
-from pystiche import misc, loss
+from pystiche import loss, misc
 
-from ._loss import DiscriminatorLoss
+from ._loss import DiscriminatorLoss, MultiLayerPredictionOperator
 from ._utils import ExponentialMovingAverageMeter, optimizer
 from ._utils import preprocessor as _preprocessor
 
@@ -61,10 +61,11 @@ def gan_optim_loop(
     """
     device = misc.get_device()
     style_image_loader = iter(style_image_loader)
+    preprocessor = _preprocessor()
 
     if discriminator_optimizer is None:
         discriminator_optimizer = optimizer(
-            discriminator_criterion.discriminator.parameters()
+            discriminator_criterion.prediction_loss.parameters()
         )
 
     if transformer_optimizer is None:
@@ -87,28 +88,31 @@ def gan_optim_loop(
             return cast(float, loss.item())
 
         cast(Optimizer, discriminator_optimizer).step(closure)
-        discriminator_success.update(discriminator_criterion.get_current_acc())
+        discriminator_success.update(discriminator_criterion.accuracy)
 
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
             cast(Optimizer, transformer_optimizer).zero_grad()
+            cast(MultiLayerPredictionOperator, transformer_criterion.style_loss).real()
             loss = transformer_criterion(output_image)
             loss.backward()
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
-        accuracy = transformer_criterion.style_loss.get_discriminator_acc()
+        accuracy = cast(
+            MultiLayerPredictionOperator, transformer_criterion.style_loss
+        ).get_accuracy()
         discriminator_success.update(1.0 - accuracy)
 
     for content_image in content_image_loader:
         input_image = content_image.to(device)
 
-        output_image = transformer(_preprocessor(input_image))
+        output_image = transformer(preprocessor(input_image))
 
         if discriminator_success.local_avg < target_win_rate:
             style_image = next(style_image_loader)
             style_image = style_image.to(device)
-            style_image = _preprocessor(style_image)
+            style_image = preprocessor(style_image)
             train_discriminator_one_step(
                 output_image,
                 style_image,
@@ -127,7 +131,7 @@ def gan_epoch_optim_loop(
     transformer: nn.Module,
     epochs: int,
     discriminator_criterion: DiscriminatorLoss,
-    transformer_criterion: nn.Module,
+    transformer_criterion: loss.PerceptualLoss,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
     discriminator_optimizer: Optional[Optimizer] = None,
     transformer_optimizer: Optional[Optimizer] = None,
@@ -171,7 +175,7 @@ def gan_epoch_optim_loop(
     if discriminator_optimizer is None:
         if discriminator_lr_scheduler is None:
             discriminator_optimizer = optimizer(
-                discriminator_criterion.get_parameters()
+                discriminator_criterion.prediction_loss.parameters()
             )
         else:
             discriminator_optimizer = discriminator_lr_scheduler.optimizer  # type: ignore[attr-defined]
