@@ -255,16 +255,18 @@ def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
             assert content_loss.score_weight == pytest.approx(score_weight)
 
 
-def test_transformer_loss(subtests):
-    perceptual_loss = paper.perceptual_loss()
-    assert isinstance(perceptual_loss, loss.PerceptualLoss)
+def test_transformer_loss(subtests, multi_layer_encoder_with_layer):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
+    transformer_loss = paper.transformer_loss(encoder)
+    assert isinstance(transformer_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
-        assert isinstance(perceptual_loss.content_loss, ops.OperatorContainer)
-        for module in perceptual_loss.children():
+        assert isinstance(transformer_loss.content_loss, ops.OperatorContainer)
+        for module in transformer_loss.content_loss.children():
             assert isinstance(module, ops.FeatureReconstructionOperator)
 
     with subtests.test("style_loss"):
         assert isinstance(
-            perceptual_loss.style_loss, paper.MultiLayerPredictionOperator
+            transformer_loss.style_loss, paper.MultiLayerPredictionOperator
         )

@@ -272,7 +272,7 @@ def transformed_image_loss(
     impl_params: bool = True,
     score_weight: Optional[float] = None,
 ) -> ops.FeatureReconstructionOperator:
-    r"""Transformed_image_loss from from :cite:`SKL+2018`.
+    r"""Transformed_image_loss from :cite:`SKL+2018`.
 
     Args:
         transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
@@ -351,7 +351,7 @@ def transformer_loss(
     transformed_image_operator: Optional[ops.FeatureReconstructionOperator] = None,
     style_loss: Optional[MultiLayerPredictionOperator] = None,
 ) -> PerceptualLoss:
-    r"""Transformer_loss from from :cite:`SKL+2018`.
+    r"""Transformer_loss from :cite:`SKL+2018`.
 
     Args:
         encoder: :class:`~pystiche.enc.SequentialEncoder`.
