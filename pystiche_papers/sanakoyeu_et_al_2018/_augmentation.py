@@ -329,7 +329,7 @@ def pre_crop_augmentation(
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L27
         # The interpolation mode should be "bicubic", but this isn't supported
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L113
-        RandomRescale(factor=80e-2, p=p, interpolation="bilinear"),
+        RandomRescale(factor=80e-2, p=p, interpolation="bilinear", align_corners=True),
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L71
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/img_augm.py#L82
         DynamicSizePad2d(

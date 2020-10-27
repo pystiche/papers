@@ -1,3 +1,4 @@
+import kornia
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -5,7 +6,6 @@ import torch
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.image import extract_batch_size, extract_image_size, extract_num_channels
-from pystiche.image.transforms.functional import rescale
 from pystiche_papers import utils
 from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
     DynamicSizePad2d,
@@ -14,15 +14,7 @@ from pystiche_papers.sanakoyeu_et_al_2018._augmentation import (
     RandomRescale,
 )
 
-
-def parametrize(argnames, argvalues, ids=None, **kwargs):
-    if ids is None:
-        ids = [
-            ", ".join(f"{name}={value}" for name, value in zip(argnames, values))
-            for values in argvalues
-        ]
-
-    return pytest.mark.parametrize(argnames, argvalues, ids=ids, **kwargs)
+from tests import parametrize
 
 
 def assert_is_size_and_value_range_preserving(input_image, transform):
@@ -61,26 +53,18 @@ def make_reproducible():
     utils.make_reproducible(0)
 
 
-@pytest.mark.skip(
-    "kornia.geometry.warp_perspective is not working as expected "
-    "(https://github.com/kornia/kornia/issues/747)"
-)
 def test_RandomRescale(input_image):
     factor = 0.5
-    transform = RandomRescale(factor, p=100e-2)
+    transform = RandomRescale(factor, p=100e-2, align_corners=True)
 
     actual = transform(input_image)
-    expected = rescale(input_image, factor)
-    ptu.assert_allclose(actual, expected)
+    expected = kornia.rescale(input_image, factor, align_corners=True)
+    ptu.assert_allclose(actual, expected, atol=1e-3)
 
 
-@pytest.mark.skip(
-    "kornia.geometry.warp_perspective is not working as expected "
-    "(https://github.com/kornia/kornia/issues/747)"
-)
-@parametrize(("factor", "p"), ((1.0, 100e-2), (0.5, 0e-2)))
+@parametrize.data(("factor", "p"), ((1.0, 100e-2), (0.5, 0e-2)))
 def test_RandomRescale_noop(input_image, factor, p):
-    transform = RandomRescale(factor, p=p)
+    transform = RandomRescale(factor, p=p, align_corners=True)
     assert_is_noop(input_image, transform)
 
 
@@ -90,7 +74,7 @@ def test_RandomAffine_smoke(input_image):
     assert_is_size_and_value_range_preserving(input_image, transform)
 
 
-@parametrize(("shift", "p"), ((0.0, 100e-2), (1.0, 0e-2)))
+@parametrize.data(("shift", "p"), ((0.0, 100e-2), (1.0, 0e-2)))
 def test_RandomAffine_noop(input_image, shift, p):
     transform = RandomAffine(shift, p=p)
     assert_is_noop(input_image, transform)

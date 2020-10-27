@@ -26,7 +26,7 @@ from pystiche.misc import to_2d_arg
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
-from tests import asserts
+from tests import asserts, parametrize
 from tests.utils import make_tar
 
 
@@ -163,44 +163,37 @@ def test_RandomCrop_repr(subtests):
             assert_property_in_repr(name, value)
 
 
-def test_image_transform(subtests):
+def test_image_transform():
     edge_size = 768
     make_reproducible()
     image = torch.rand(1, 3, 800, 800)
 
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            transform = paper.image_transform(
-                impl_params=impl_params, edge_size=edge_size
-            )
-            make_reproducible()
-            actual = transform(image)
+    transform = paper.image_transform(impl_params=False, edge_size=edge_size)
+    make_reproducible()
+    actual = transform(image)
 
-            transform = nn.Sequential(
-                paper.ClampSize() if impl_params else paper.OptionalUpsample(edge_size),
-                paper.RandomCrop(edge_size)
-                if impl_params
-                else transforms.ValidRandomCrop(edge_size),
-            )
-            make_reproducible()
-            expected = transform(image)
+    transform = nn.Sequential(
+        paper.OptionalUpsample(edge_size), transforms.ValidRandomCrop(edge_size),
+    )
+    make_reproducible()
+    expected = transform(image)
 
-            ptu.assert_allclose(actual, expected)
+    ptu.assert_allclose(actual, expected)
 
 
-def test_image_transform_augmentation(subtests):
+def test_image_transform_impl_params():
     edge_size = 768
     make_reproducible()
     image = torch.rand(1, 3, 800, 800)
 
-    transform = paper.image_transform(impl_params=True, edge_size=edge_size, train=True)
+    transform = paper.image_transform(impl_params=True, edge_size=edge_size)
     make_reproducible()
     actual = transform(image)
 
     transform = nn.Sequential(
         paper.ClampSize(),
         paper.pre_crop_augmentation(),
-        paper.RandomCrop(edge_size),
+        paper.RandomCrop(edge_size, p=1.0),
         paper.post_crop_augmentation(),
     )
     make_reproducible()
@@ -301,14 +294,12 @@ def test_content_dataset_transform_impl_params(
         ptu.assert_allclose(actual, expected)
 
 
-def test_batch_sampler(subtests):
-    for impl_params, num_samples in ((True, 300_000), (False, 100_000)):
-        batch_sampler = paper.batch_sampler((), impl_params=impl_params)
+@parametrize.data(("impl_params", "num_samples"), ((True, 300_000), (False, 100_000)))
+def test_batch_sampler(impl_params, num_samples):
+    batch_sampler = paper.batch_sampler((), impl_params=impl_params)
 
-        assert isinstance(batch_sampler, RandomSampler)
-
-        with subtests.test(impl_params=impl_params):
-            assert batch_sampler.num_samples == num_samples
+    assert isinstance(batch_sampler, RandomSampler)
+    assert batch_sampler.num_samples == num_samples
 
 
 def test_image_loader(subtests):
