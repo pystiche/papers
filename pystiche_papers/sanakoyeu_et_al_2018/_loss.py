@@ -1,14 +1,13 @@
 from abc import abstractmethod
 from collections import OrderedDict
-from typing import Iterator, Optional, Sequence, Union, cast
+from typing import Any, Dict, Iterator, Optional, Sequence, Union, cast
 
 import torch
 import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
-from pystiche import enc, ops
+from pystiche import enc, loss, ops
 from pystiche.enc import Encoder, MultiLayerEncoder, SequentialEncoder
-from pystiche.loss.perceptual import PerceptualLoss
 
 from ._modules import (
     DiscriminatorMultiLayerEncoder,
@@ -347,10 +346,10 @@ def style_aware_content_loss(
 def transformer_loss(
     encoder: SequentialEncoder,
     impl_params: bool = True,
-    style_aware_content_operator: Optional[ops.FeatureReconstructionOperator] = None,
-    transformed_image_operator: Optional[ops.FeatureReconstructionOperator] = None,
-    style_loss: Optional[MultiLayerPredictionOperator] = None,
-) -> PerceptualLoss:
+    style_aware_content_kwargs: Optional[Dict[str, Any]] = None,
+    transformed_image_kwargs: Optional[Dict[str, Any]] = None,
+    style_loss_kwargs: Optional[Dict[str, Any]] = None,
+) -> loss.PerceptualLoss:
     r"""Transformer_loss from :cite:`SKL+2018`.
 
     Args:
@@ -358,18 +357,25 @@ def transformer_loss(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        style_aware_content_operator: :class:`~pystiche.ops.OperatorContainer`.
-        transformed_image_operator: :func:`transformed_image_loss`.
-        style_loss: Optional :func:`style_aware_content_loss`.
+        style_aware_content_kwargs: Optional parameters for the
+            :func:`style_aware_content_loss`.
+        transformed_image_kwargs: Optional parameters for the
+            :func:`transformed_image_loss`.
+        style_loss_kwargs: Optional parameters for the :func:`prediction_loss`.
 
     """
-    if style_aware_content_operator is None:
-        style_aware_content_operator = style_aware_content_loss(
-            encoder, impl_params=impl_params
-        )
+    if style_aware_content_kwargs is None:
+        style_aware_content_kwargs = {}
 
-    if transformed_image_operator is None:
-        transformed_image_operator = transformed_image_loss(impl_params=impl_params)
+    style_aware_content_operator = style_aware_content_loss(
+        encoder, impl_params=impl_params, **style_aware_content_kwargs
+    )
+
+    if transformed_image_kwargs is None:
+        transformed_image_kwargs = {}
+    transformed_image_operator = transformed_image_loss(
+        impl_params=impl_params, **transformed_image_kwargs
+    )
 
     content_loss = ops.OperatorContainer(
         (
@@ -380,7 +386,8 @@ def transformer_loss(
         )
     )
 
-    if style_loss is None:
-        style_loss = prediction_loss()
+    if style_loss_kwargs is None:
+        style_loss_kwargs = {}
+    style_loss = prediction_loss(impl_params=impl_params, **style_loss_kwargs,)
 
-    return PerceptualLoss(content_loss, style_loss)
+    return loss.PerceptualLoss(content_loss, style_loss)
