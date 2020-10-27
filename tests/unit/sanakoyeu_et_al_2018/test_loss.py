@@ -244,10 +244,14 @@ def test_FeatureReconstructionOperator(
             assert actual == ptu.approx(desired)
 
 
-def test_style_aware_content_loss(subtests):
+def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
+    multi_layer_encoder, layer = multi_layer_encoder_with_layer
+    encoder = multi_layer_encoder.extract_encoder(layer)
     for impl_params, score_weight in ((True, 1e2), (False, 1e0)):
         with subtests.test(impl_params=impl_params):
-            content_loss = paper.style_aware_content_loss(impl_params=impl_params)
+            content_loss = paper.style_aware_content_loss(
+                encoder, impl_params=impl_params
+            )
             assert content_loss.score_weight == pytest.approx(score_weight)
 
 
