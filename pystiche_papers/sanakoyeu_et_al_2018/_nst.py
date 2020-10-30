@@ -230,7 +230,7 @@ def training(
     style_image_loader: DataLoader,
     impl_params: bool = True,
     transformer: Optional[nn.Module] = None,
-    discriminator_operator: Optional[MultiLayerPredictionOperator] = None,
+    prediction_operator: Optional[MultiLayerPredictionOperator] = None,
     discriminator_criterion: Optional[DiscriminatorLoss] = None,
     transformer_criterion: Optional[loss.PerceptualLoss] = None,
     discriminator_lr_scheduler: Optional[ExponentialLR] = None,
@@ -248,7 +248,7 @@ def training(
             the paper.
         transformer: Transformer to be optimized. If omitted, the default
             :func:`~pystiche_papers.sanakoyeu_et_al_2018.Transformer` is used.
-        discriminator_operator: Discriminator Operator. If omitted, the default
+        prediction_operator: Prediction Operator. If omitted, the default
             :func:`~pystiche_papers.sanakoyeu_et_al_2018.MultiLayerPredictionOperator`
             is used.
         discriminator_criterion: Optimization criterion for the ``discriminator``. If
@@ -277,11 +277,11 @@ def training(
         transformer = transformer.train()
     transformer = transformer.to(device)
 
-    if discriminator_operator is None:
-        discriminator_operator = prediction_loss()
+    if prediction_operator is None:
+        prediction_operator = prediction_loss()
 
     if discriminator_criterion is None:
-        discriminator_criterion = DiscriminatorLoss(discriminator_operator)
+        discriminator_criterion = DiscriminatorLoss(prediction_operator)
         discriminator_criterion = discriminator_criterion.eval()
     discriminator_criterion = discriminator_criterion.to(device)
 
@@ -301,7 +301,7 @@ def training(
         cast(loss.PerceptualLoss, criterion).set_content_image(content_image)
 
     if discriminator_lr_scheduler is None:
-        discriminator_optimizer = get_optimizer(discriminator_operator.parameters())
+        discriminator_optimizer = get_optimizer(prediction_operator)
         discriminator_lr_scheduler = _lr_scheduler(discriminator_optimizer)
 
     if transformer_lr_scheduler is None:
