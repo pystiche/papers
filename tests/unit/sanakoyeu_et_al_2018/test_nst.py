@@ -4,11 +4,13 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
+from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
-import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import misc
+import pystiche_papers.sanakoyeu_et_al_2018 as paper
+from pystiche import misc, enc
+from pystiche.image.transforms import functional as F
 
 from tests.utils import is_callable
 
@@ -75,9 +77,9 @@ def transformer_mocks(make_nn_module_mock, patcher):
 
 
 @pytest.fixture
-def discriminator_operator_mocks(make_nn_module_mock, patcher):
+def prediction_operator_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(identity=True)
-    patch = patcher("_discriminator_operator", return_value=mock)
+    patch = patcher("prediction_loss", return_value=mock)
     return patch, mock
 
 
@@ -85,17 +87,23 @@ def discriminator_operator_mocks(make_nn_module_mock, patcher):
 def transformer_loss_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock()
     attach_method_mock(mock, "set_content_image", return_value=None)
-    attach_method_mock(mock, "set_style_image", return_value=None)
-    patch = patcher("perceptual_loss", return_value=mock)
+    patch = patcher("transformer_loss", return_value=mock)
     return patch, mock
 
 
 @pytest.fixture
-def epoch_gan_optim_loop_patch(patcher):
+def discriminator_loss_mocks(make_nn_module_mock, patcher):
+    mock = make_nn_module_mock()
+    patch = patcher("DiscriminatorLoss", return_value=mock)
+    return patch, mock
+
+
+@pytest.fixture
+def gan_epoch_optim_loop_patch(patcher):
     def side_effect(_, transformer, *args, **kwargs):
         return transformer
 
-    return patcher("epoch_gan_optim_loop", prefix=False, side_effect=side_effect,)
+    return patcher("gan_epoch_optim_loop", prefix=False, side_effect=side_effect,)
 
 
 @pytest.fixture
@@ -109,14 +117,14 @@ def reset_mocks(*mocks):
 
 
 @pytest.fixture
-def training(epoch_gan_optim_loop_patch, image_loader, style_image):
+def training(gan_epoch_optim_loop_patch, image_loader):
     def training_(image_loader_=None, **kwargs):
         if image_loader_ is None:
             image_loader_ = image_loader
         output = paper.training(image_loader_, image_loader_, **kwargs)
 
-        epoch_gan_optim_loop_patch.assert_called_once()
-        args, kwargs = epoch_gan_optim_loop_patch.call_args
+        gan_epoch_optim_loop_patch.assert_called_once()
+        args, kwargs = gan_epoch_optim_loop_patch.call_args
 
         return args, kwargs, output
 
@@ -181,18 +189,17 @@ def test_training_device(
     optimizer_mocks,
     lr_scheduler_mocks,
     transformer_mocks,
-    discriminator_operator_mocks,
-    discriminator_loss_mocks,
+    prediction_operator_mocks,
     transformer_loss_mocks,
+    discriminator_loss_mocks,
     training,
-    style_image,
 ):
-    training(style_image_=style_image)
+    training()
 
     for mocks in (
         transformer_mocks,
-        discriminator_loss_mocks,
         transformer_loss_mocks,
+        discriminator_loss_mocks,
     ):
         _, mock = mocks
         mock = mock.to
@@ -204,9 +211,9 @@ def test_training_transformer_train(
     optimizer_mocks,
     lr_scheduler_mocks,
     transformer_mocks,
-    discriminator_operator_mocks,
-    discriminator_loss_mocks,
+    prediction_operator_mocks,
     transformer_loss_mocks,
+    discriminator_loss_mocks,
     training,
 ):
     args, _, _ = training()
@@ -220,9 +227,9 @@ def test_training_criterion_eval(
     optimizer_mocks,
     lr_scheduler_mocks,
     transformer_mocks,
-    discriminator_operator_mocks,
-    discriminator_loss_mocks,
+    prediction_operator_mocks,
     transformer_loss_mocks,
+    discriminator_loss_mocks,
     training,
 ):
     args, _, _ = training()
@@ -240,20 +247,21 @@ def test_training_num_epochs(
     optimizer_mocks,
     lr_scheduler_mocks,
     transformer_mocks,
-    discriminator_operator_mocks,
-    discriminator_loss_mocks,
+    prediction_operator_mocks,
     transformer_loss_mocks,
+    discriminator_loss_mocks,
     training,
-    default_transformer_epoch_optim_loop_patch,
+    gan_epoch_optim_loop_patch,
 ):
     mocks = (
         lr_scheduler_mocks[0],
         transformer_mocks[0],
         transformer_loss_mocks[0],
+        discriminator_loss_mocks[0],
     )
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
-            reset_mocks(*mocks, default_transformer_epoch_optim_loop_patch)
+            reset_mocks(*mocks, gan_epoch_optim_loop_patch)
             args, _, _ = training(impl_params=impl_params)
             num_epochs = args[3]
 
@@ -264,9 +272,6 @@ def test_training_criterion_update_fn(
     optimizer_mocks,
     lr_scheduler_mocks,
     transformer_mocks,
-    discriminator_operator_mocks,
-    discriminator_loss_mocks,
-    transformer_loss_mocks,
     training,
     content_image,
 ):
@@ -274,10 +279,14 @@ def test_training_criterion_update_fn(
     transformer_criterion = args[5]
     transformer_criterion_update_fn = args[6]
 
-    assert not transformer_criterion.content_loss.has_target_image
+    assert all(
+        not op.has_target_image for op in transformer_criterion.content_loss.operators()
+    )
 
     transformer_criterion_update_fn(content_image, transformer_criterion)
-    assert transformer_criterion.content_loss.has_target_image
+    assert all(
+        op.has_target_image for op in transformer_criterion.content_loss.operators()
+    )
     ptu.assert_allclose(transformer_criterion.content_loss.target_image, content_image)
 
 
@@ -302,12 +311,12 @@ def test_training_transformer_lr_scheduler_optimizer(
 
 
 def test_training_discriminator_lr_scheduler_optimizer(
-    discriminator_operator_mocks, training,
+    prediction_operator_mocks, training,
 ):
     parameter = torch.empty(1)
-    _, discriminator_operator = discriminator_operator_mocks
+    _, prediction_operator = prediction_operator_mocks
     attach_method_mock(
-        discriminator_operator, "parameters", return_value=iter((parameter,))
+        prediction_operator, "parameters", return_value=iter((parameter,))
     )
 
     _, kwargs, _ = training()
@@ -350,6 +359,9 @@ def stylization(input_image, transformer_mocks):
 
 def test_stylization_smoke(stylization, input_image):
     _, _, output_image = stylization(input_image)
+    input_image = F.resize(input_image, 768, edge="short")
+    input_image = input_image * 2 - 1
+    input_image = (input_image + 1) / 2
     ptu.assert_allclose(output_image, input_image, rtol=1e-6)
 
 
@@ -365,9 +377,9 @@ def test_stylization_device(
 
 
 def test_stylization_transformer_eval(
-    subtests, transformer_mocks, stylization, input_image,
+    transformer_mocks, stylization, input_image,
 ):
     _, transformer = transformer_mocks
     reset_mocks(transformer)
-    stylization(input_image)
+    stylization(input_image, impl_params=False)
     transformer.eval.assert_called_once_with()

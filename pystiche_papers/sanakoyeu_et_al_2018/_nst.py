@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union, cast
+from typing import Callable, Iterator, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -236,7 +236,9 @@ def training(
     discriminator_lr_scheduler: Optional[ExponentialLR] = None,
     transformer_lr_scheduler: Optional[ExponentialLR] = None,
     num_epochs: Optional[int] = None,
-    get_optimizer: Optional[Callable[[nn.Module], Optimizer]] = None,
+    get_optimizer: Optional[
+        Callable[[Union[nn.Module, Iterator[torch.nn.parameter.Parameter]]], Optimizer]
+    ] = None,
 ) -> nn.Module:
     r"""Training a transformer for the NST.
 
@@ -301,11 +303,11 @@ def training(
         cast(loss.PerceptualLoss, criterion).set_content_image(content_image)
 
     if discriminator_lr_scheduler is None:
-        discriminator_optimizer = get_optimizer(prediction_operator)
+        discriminator_optimizer = get_optimizer(prediction_operator.parameters())
         discriminator_lr_scheduler = _lr_scheduler(discriminator_optimizer)
 
     if transformer_lr_scheduler is None:
-        transformer_optimizer = get_optimizer(transformer)
+        transformer_optimizer = get_optimizer(transformer.parameters())
         transformer_lr_scheduler = _lr_scheduler(transformer_optimizer)
 
     if num_epochs is None:
@@ -335,16 +337,20 @@ def stylization(
     input_image: torch.Tensor,
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
+    transform_size: Union[int, Tuple[int, int]] = 768,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
 
     Args:
         input_image: Image to be stylised.
         transformer: Pretrained transformer for style transfer or string to load a
-            pretrained transformer.
+            pretrained ``transformer``.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
+        transform_size: Size to which the image is resized before transforming with the
+            ``transformer``. If :class:`int` is given, the size refers to the smaller
+            edge. Default to ``768``.
 
     """
     device = input_image.device
@@ -354,12 +360,13 @@ def stylization(
     if isinstance(transformer, str):
         style = transformer
         transformer = _transformer(style=style)
-        if not impl_params:
-            transformer = transformer.eval()
-        transformer = transformer.to(device)
+
+    if not impl_params:
+        transformer = transformer.eval()
+    transformer = transformer.to(device)
 
     with torch.no_grad():
-        input_image = F.resize(input_image, 768, edge="short")
+        input_image = F.resize(input_image, transform_size, edge="short")
         output_image = transformer(preprocessor(input_image))
         output_image = postprocessor(output_image)
 
