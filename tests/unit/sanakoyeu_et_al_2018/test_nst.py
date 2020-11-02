@@ -4,12 +4,11 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
-from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import misc, enc
+from pystiche import misc
 from pystiche.image.transforms import functional as F
 
 from tests.utils import is_callable
@@ -269,11 +268,7 @@ def test_training_num_epochs(
 
 
 def test_training_criterion_update_fn(
-    optimizer_mocks,
-    lr_scheduler_mocks,
-    transformer_mocks,
-    training,
-    content_image,
+    optimizer_mocks, lr_scheduler_mocks, transformer_mocks, training, content_image,
 ):
     args, _, _ = training()
     transformer_criterion = args[5]
