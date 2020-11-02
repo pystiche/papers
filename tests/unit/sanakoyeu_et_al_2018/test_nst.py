@@ -158,10 +158,12 @@ def test_training_smoke(subtests, training, image_loader):
         assert isinstance(num_epochs, int)
 
     with subtests.test("discriminator_criterion"):
-        assert isinstance(discriminator_criterion, type(paper.DiscriminatorLoss()))
+        assert isinstance(discriminator_criterion, type(paper.discriminator_loss()))
 
     with subtests.test("transformer_criterion"):
-        assert isinstance(transformer_criterion, type(paper.transformer_loss()()))
+        assert isinstance(
+            transformer_criterion, type(paper.transformer_loss(transformer.encoder))
+        )
 
     with subtests.test("transformer_criterion_update_fn"):
         assert is_callable(transformer_criterion_update_fn)
