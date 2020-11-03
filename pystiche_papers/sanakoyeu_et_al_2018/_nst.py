@@ -366,8 +366,11 @@ def stylization(
     transformer = transformer.to(device)
 
     with torch.no_grad():
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L492-L495'
         input_image = F.resize(input_image, transform_size, edge="short")
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L500
         output_image = transformer(preprocessor(input_image))
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L504
         output_image = postprocessor(output_image)
 
     return cast(torch.Tensor, output_image.detach())
