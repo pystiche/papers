@@ -4,11 +4,12 @@ import pytest
 
 import pytorch_testing_utils as ptu
 import torch
+from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche import misc
+from pystiche import enc, misc
 from pystiche.image.transforms import functional as F
 
 from tests.utils import is_callable
@@ -70,7 +71,8 @@ def lr_scheduler_mocks(mocker, patcher):
 
 @pytest.fixture
 def transformer_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(identity=True)
+    encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
+    mock = make_nn_module_mock(identity=True, encoder=encoder)
     patch = patcher("_transformer", return_value=mock)
     return patch, mock
 
@@ -285,7 +287,8 @@ def test_training_criterion_update_fn(
     assert all(
         op.has_target_image for op in transformer_criterion.content_loss.operators()
     )
-    ptu.assert_allclose(transformer_criterion.content_loss.target_image, content_image)
+    for op in transformer_criterion.content_loss.operators():
+        ptu.assert_allclose(op.target_image, content_image)
 
 
 def test_training_transformer_lr_scheduler_optimizer(
