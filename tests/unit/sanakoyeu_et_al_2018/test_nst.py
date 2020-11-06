@@ -99,7 +99,8 @@ def discriminator_loss_mocks(make_nn_module_mock, patcher):
 
 @pytest.fixture
 def gan_epoch_optim_loop_patch(patcher):
-    def side_effect(_, transformer, *args, **kwargs):
+    def side_effect(*args, **kwargs):
+        transformer = args[2]
         return transformer
 
     return patcher("gan_epoch_optim_loop", prefix=False, side_effect=side_effect,)
