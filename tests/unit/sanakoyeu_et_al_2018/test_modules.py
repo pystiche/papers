@@ -73,7 +73,7 @@ def test_ConvBlock(subtests):
                     )
 
 
-def test_UpsampleConvBlock(subtests, input_image):
+def test_UpsampleConvBlock(input_image):
     in_channels = out_channels = 3
     kernel_size = 3
     scale_factor = 2
@@ -118,31 +118,6 @@ def test_residual_block(subtests, input_image):
                 assert output_image.size() == input_image.size()
 
 
-def test_discriminator_modules(subtests):
-    channel_config = [
-        (3, 128),
-        (128, 128),
-        (128, 256),
-        (256, 512),
-        (512, 512),
-        (512, 1024),
-        (1024, 1024),
-    ]
-
-    discriminator = paper.Discriminator()
-
-    in_out_channels = []
-    module_names = []
-    for name, module in discriminator.named_children():
-        with subtests.test("modules"):
-            assert isinstance(module, paper.ConvBlock)
-            in_out_channels.append((module[0].in_channels, module[0].out_channels))
-            module_names.append(name)
-
-    with subtests.test("channel_config"):
-        assert in_out_channels == channel_config
-
-
 def test_TransformerBlock(subtests, input_image):
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
@@ -157,23 +132,3 @@ def test_TransformerBlock(subtests, input_image):
             with subtests.test("forward_size"):
                 output_image = transformer_block(input_image)
                 assert output_image.size() == input_image.size()
-
-
-def test_prediction_module(subtests):
-    in_channels = 3
-    kernel_size = 3
-
-    prediction_module = paper.prediction_module(in_channels, kernel_size)
-
-    assert isinstance(prediction_module, nn.Conv2d)
-
-    with subtests.test("in_channels"):
-        assert prediction_module.in_channels == in_channels
-    with subtests.test("out_channels"):
-        assert prediction_module.out_channels == 1
-
-    with subtests.test("kernel_size"):
-        assert prediction_module.kernel_size == misc.to_2d_arg(kernel_size)
-
-    with subtests.test("stride"):
-        assert prediction_module.stride == misc.to_2d_arg(1)

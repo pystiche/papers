@@ -4,10 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 from torch import nn
 
-import pystiche
 from pystiche import enc
 from pystiche.misc import verify_str_arg
-from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, channel_progression
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d
 
 from ..utils import ResidualBlock
 
@@ -17,10 +16,7 @@ __all__ = [
     "ConvBlock",
     "UpsampleConvBlock",
     "residual_block",
-    "Discriminator",
-    "DiscriminatorMultiLayerEncoder",
     "TransformerBlock",
-    "prediction_module",
 ]
 
 
@@ -199,40 +195,6 @@ def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:
     )
 
 
-class Discriminator(pystiche.Module):
-    r"""Discriminator from :cite:`SKL+2018`.
-
-    Args:
-        in_channels: Number of channels in the input. Defaults to ``3``.
-    """
-
-    def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(
-            indexed_children=channel_progression(
-                lambda in_channels, out_channels: ConvBlock(
-                    in_channels,
-                    out_channels,
-                    kernel_size=5,
-                    stride=2,
-                    padding=None,
-                    act="lrelu",
-                ),
-                channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
-            )
-        )
-
-
-class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
-    r"""Discriminator from :cite:`SKL+2018` as :class:`pystiche.enc.MultiLayerEncoder`.
-
-    Args:
-        in_channels: Number of channels in the input. Defaults to ``3``.
-    """
-
-    def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
-
-
 class TransformerBlock(enc.SequentialEncoder):
     r"""TransformerBlock from :cite:`SKL+2018`.
 
@@ -272,25 +234,3 @@ class TransformerBlock(enc.SequentialEncoder):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return super().forward(input)
-
-
-def prediction_module(
-    in_channels: int, kernel_size: Union[Tuple[int, int], int],
-) -> nn.Module:
-    r"""Prediction module from :cite:`SKL+2018`.
-
-    This block comprises a convolutional, which is used as an auxiliary classifier to
-    capture image details on different scales of the :class:`DiscriminatorEncoder`.
-
-    Args:
-        in_channels: Number of channels in the input.
-        kernel_size: Size of the convolving kernel.
-
-    """
-    return conv(
-        in_channels=in_channels,
-        out_channels=1,
-        kernel_size=kernel_size,
-        stride=1,
-        padding=None,
-    )
