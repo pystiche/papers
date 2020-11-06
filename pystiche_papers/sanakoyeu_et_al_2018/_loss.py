@@ -19,7 +19,8 @@ __all__ = [
     "transformer_loss",
 ]
 
-prediction_loss_ = prediction_loss
+
+style_loss_ = prediction_loss_ = prediction_loss
 
 
 class DiscriminatorLoss(nn.Module):
@@ -178,7 +179,6 @@ def transformer_loss(
     impl_params: bool = True,
     style_aware_content_kwargs: Optional[Dict[str, Any]] = None,
     transformed_image_kwargs: Optional[Dict[str, Any]] = None,
-    style_loss_kwargs: Optional[Dict[str, Any]] = None,
 ) -> loss.PerceptualLoss:
     r"""Transformer_loss from :cite:`SKL+2018`.
 
@@ -191,7 +191,6 @@ def transformer_loss(
             :func:`style_aware_content_loss`.
         transformed_image_kwargs: Optional parameters for the
             :func:`transformed_image_loss`.
-        style_loss_kwargs: Optional parameters for the :func:`prediction_loss`.
 
     """
     if style_aware_content_kwargs is None:
@@ -215,8 +214,5 @@ def transformer_loss(
         )
     )
 
-    if style_loss_kwargs is None:
-        style_loss_kwargs = {}
-    style_loss = prediction_loss(impl_params=impl_params, **style_loss_kwargs,)
-
+    style_loss = style_loss_(impl_params)
     return loss.PerceptualLoss(content_loss, style_loss)
