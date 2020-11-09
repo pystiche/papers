@@ -15,7 +15,7 @@ from ._loss import (
     prediction_loss,
     transformer_loss,
 )
-from ._modules import transformer as _transformer
+from ._transformer import transformer as _transformer
 from ._utils import ExponentialMovingAverageMeter
 from ._utils import lr_scheduler as _lr_scheduler
 from ._utils import optimizer
