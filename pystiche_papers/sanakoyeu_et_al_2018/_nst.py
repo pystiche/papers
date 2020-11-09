@@ -1,4 +1,4 @@
-from typing import Callable, Optional, cast
+from typing import Callable, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -7,14 +7,27 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
 from pystiche import loss, misc
+from pystiche.image.transforms import functional as F
 
-from ._loss import DiscriminatorLoss, MultiLayerPredictionOperator
-from ._utils import ExponentialMovingAverageMeter, optimizer
+from ._data import content_dataset, image_loader, style_dataset
+from ._loss import (
+    DiscriminatorLoss,
+    MultiLayerPredictionOperator,
+    prediction_loss,
+    transformer_loss,
+)
+from ._transformer import transformer as _transformer
+from ._utils import ExponentialMovingAverageMeter
+from ._utils import lr_scheduler as _lr_scheduler
+from ._utils import optimizer
+from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
 
 __all__ = [
     "gan_optim_loop",
     "gan_epoch_optim_loop",
+    "training",
+    "stylization",
 ]
 
 
@@ -210,3 +223,142 @@ def gan_epoch_optim_loop(
             transformer_lr_scheduler.step(epoch)
 
     return transformer
+
+
+def training(
+    content_image_loader: Union[DataLoader, str],
+    style_image_loader: Union[DataLoader, str],
+    style: Optional[str] = None,
+    impl_params: bool = True,
+) -> nn.Module:
+    r"""Training a transformer for the NST.
+
+    Args:
+        content_image_loader: Content images used as input for the ``transformer`` or
+            the root of the :func:`content_dataset`.
+        style_image_loader: Style images used as input for the ``discriminator`` or
+            the root of the :func:`style_dataset`.
+        style: Style to train the transformer on. See :func:`style_dataset` for details.
+            .. note::
+
+              This parameter has no effect if a :class:`~torch.utils.data.DataLoader` is
+              provided for ``style_image_loader``
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+
+    Raises:
+        ValueError: If no ``style`` is passed, but ``style_image_loader`` is passed as
+        dataset root.
+
+    """
+    device = misc.get_device()
+
+    if isinstance(content_image_loader, str):
+        root = content_image_loader
+        dataset = content_dataset(root, impl_params=impl_params)
+        content_image_loader = image_loader(dataset, impl_params=impl_params)
+
+    if isinstance(style_image_loader, str):
+        if style is not None:
+            root = style_image_loader
+            dataset = style_dataset(root, style=style, impl_params=impl_params)
+            style_image_loader = image_loader(dataset, impl_params=impl_params)
+        else:
+            raise ValueError(
+                "The parameter 'style' cannot be omitted if 'style_image_dataset' is "
+                "passed as dataset root."
+            )
+
+    transformer = _transformer()
+    transformer = transformer.train()
+    transformer = transformer.to(device)
+
+    prediction_operator = prediction_loss(impl_params=impl_params)
+
+    discriminator_criterion = DiscriminatorLoss(prediction_operator)
+    discriminator_criterion = discriminator_criterion.eval()
+    discriminator_criterion = discriminator_criterion.to(device)
+
+    transformer_criterion = transformer_loss(
+        transformer.encoder, impl_params=impl_params
+    )
+    transformer_criterion = transformer_criterion.eval()
+    transformer_criterion = transformer_criterion.to(device)
+
+    get_optimizer = optimizer
+
+    def transformer_criterion_update_fn(
+        content_image: torch.Tensor, criterion: nn.Module
+    ) -> None:
+        cast(loss.PerceptualLoss, criterion).set_content_image(content_image)
+
+    discriminator_optimizer = get_optimizer(prediction_operator.parameters())
+    discriminator_lr_scheduler = _lr_scheduler(discriminator_optimizer)
+
+    transformer_optimizer = get_optimizer(transformer.parameters())
+    transformer_lr_scheduler = _lr_scheduler(transformer_optimizer)
+
+    # The num_iterations are split up into multiple epochs with corresponding
+    # num_batches:
+    # The number of epochs is defined in _data.batch_sampler.
+    # 300_000 = 1 * 300_000
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L68
+    # 300_000 = 3 * 100_000
+    num_epochs = 1 if impl_params else 3
+
+    return gan_epoch_optim_loop(
+        content_image_loader,
+        style_image_loader,
+        transformer,
+        num_epochs,
+        discriminator_criterion,
+        transformer_criterion,
+        transformer_criterion_update_fn,
+        discriminator_lr_scheduler=discriminator_lr_scheduler,
+        transformer_lr_scheduler=transformer_lr_scheduler,
+        impl_params=impl_params,
+    )
+
+
+def stylization(
+    input_image: torch.Tensor,
+    transformer: Union[nn.Module, str],
+    impl_params: bool = True,
+    transform_size: Union[int, Tuple[int, int]] = 768,
+) -> torch.Tensor:
+    r"""Transforms an input image into a stylised version using the transformer.
+
+    Args:
+        input_image: Image to be stylised.
+        transformer: Pretrained transformer for style transfer or string to load a
+            pretrained ``transformer``.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        transform_size: Size to which the image is resized before transforming with the
+            ``transformer``. If :class:`int` is given, the size refers to the smaller
+            edge. Default to ``768``.
+
+    """
+    device = input_image.device
+
+    preprocessor = _preprocessor()
+    postprocessor = _postprocessor()
+    if isinstance(transformer, str):
+        style = transformer
+        transformer = _transformer(style=style)
+
+    if not impl_params:
+        transformer = transformer.eval()
+    transformer = transformer.to(device)
+
+    with torch.no_grad():
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L492-L495'
+        input_image = F.resize(input_image, transform_size, edge="short")
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L500
+        output_image = transformer(preprocessor(input_image))
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L504
+        output_image = postprocessor(output_image)
+
+    return cast(torch.Tensor, output_image.detach())
