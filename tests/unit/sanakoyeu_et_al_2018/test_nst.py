@@ -61,11 +61,13 @@ def optimizer_mocks(mocker, patcher):
     patch = patcher("optimizer", return_value=mock)
     return patch, mock
 
+
 @pytest.fixture
 def content_dataset_mocks(mocker, patcher):
     mock = mocker.Mock()
     patch = patcher("content_dataset", return_value=mock)
     return patch, mock
+
 
 @pytest.fixture
 def style_dataset_mocks(mocker, patcher):
@@ -132,12 +134,16 @@ def reset_mocks(*mocks):
 
 @pytest.fixture
 def training(gan_epoch_optim_loop_patch, image_loader):
-    def training_(content_image_loader_=None, style_image_loader_=None, style_=None, **kwargs):
+    def training_(
+        content_image_loader_=None, style_image_loader_=None, style_=None, **kwargs
+    ):
         if content_image_loader_ is None:
             content_image_loader_ = image_loader
         if style_image_loader_ is None:
             style_image_loader_ = image_loader
-        output = paper.training(content_image_loader_, style_image_loader_, style_, **kwargs)
+        output = paper.training(
+            content_image_loader_, style_image_loader_, style_, **kwargs
+        )
 
         gan_epoch_optim_loop_patch.assert_called_once()
         args, kwargs = gan_epoch_optim_loop_patch.call_args
@@ -236,7 +242,8 @@ def test_training_image_loader_str(
     prediction_operator_mocks,
     transformer_loss_mocks,
     discriminator_loss_mocks,
-    training):
+    training,
+):
     content_dataset_patch, content_dataset_mock = content_dataset_mocks
     style_dataset_patch, style_dataset_mock = style_dataset_mocks
 
@@ -247,7 +254,6 @@ def test_training_image_loader_str(
     with subtests.test("content_image_loader"):
         content_dataset_patch.assert_called_once()
         args, _ = content_dataset_patch.call_args
-
 
         assert args[0] == root
 
@@ -269,7 +275,8 @@ def test_training_style_image_loader_str_wrong_style(
     prediction_operator_mocks,
     transformer_loss_mocks,
     discriminator_loss_mocks,
-    training):
+    training,
+):
 
     root = "default_root"
     style = None
