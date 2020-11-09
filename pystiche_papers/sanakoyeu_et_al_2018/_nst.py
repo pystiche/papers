@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from pystiche import loss, misc
 from pystiche.image.transforms import functional as F
 
+from ._data import content_dataset, image_loader, style_dataset
 from ._loss import (
     DiscriminatorLoss,
     MultiLayerPredictionOperator,
@@ -225,21 +226,44 @@ def gan_epoch_optim_loop(
 
 
 def training(
-    content_image_loader: DataLoader,
-    style_image_loader: DataLoader,
+    content_image_loader: Union[DataLoader, str],
+    style_image_loader: Union[DataLoader, str],
+    style: Optional[str] = None,
     impl_params: bool = True,
 ) -> nn.Module:
     r"""Training a transformer for the NST.
 
     Args:
-        content_image_loader: Content images used as input for the ``transformer``.
-        style_image_loader: Style images used as input for the ``discriminator``.
+        content_image_loader: Content images used as input for the ``transformer`` or
+            string to use a predefined image_loader.
+        style_image_loader: Style images used as input for the ``discriminator`` or
+            string to use a predefined image_loader.
+        style: Optional style string which is needed if the 'style_image_loader' is a
+            string.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
 
     """
     device = misc.get_device()
+
+    if isinstance(content_image_loader, str):
+        root = content_image_loader
+        dataset = content_dataset(root, impl_params=impl_params)
+        content_image_loader = image_loader(dataset, impl_params=impl_params)
+
+    if isinstance(style_image_loader, str):
+        if style is not None:
+            root = style_image_loader
+            dataset = style_dataset(root, style=style, impl_params=impl_params)
+            style_image_loader = image_loader(dataset, impl_params=impl_params)
+        else:
+            raise ValueError(
+                "The style is currently '"
+                + str(style)
+                + "', please use a valid string for the style because it is needed for "
+                + "the style_dataset."
+            )
 
     transformer = _transformer()
     transformer = transformer.train()
