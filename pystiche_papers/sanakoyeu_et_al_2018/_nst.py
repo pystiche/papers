@@ -235,15 +235,19 @@ def training(
 
     Args:
         content_image_loader: Content images used as input for the ``transformer`` or
-            string to use a predefined image_loader.
+            the root of the :func:`content_dataset`.
         style_image_loader: Style images used as input for the ``discriminator`` or
-            string to use a predefined image_loader.
-        style: Optional style string which is needed if the 'style_image_loader' is a
-            string.
+            the root of the :func:`style_dataset`.
+        style: Style to train the transformer on. See :func:`style_dataset` for details.
+            .. note::
+            
+              This parameter has no effect if a :class:`~torch.utils.data.DataLoader` is provided for ``style_image_loader``
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
 
+Raises:
+    ValueError: If no ``style`` is passed, but ``style_image_loader`` is passed as dataset root.
     """
     device = misc.get_device()
 
@@ -259,10 +263,7 @@ def training(
             style_image_loader = image_loader(dataset, impl_params=impl_params)
         else:
             raise ValueError(
-                "The style is currently '"
-                + str(style)
-                + "', please use a valid string for the style because it is needed for "
-                + "the style_dataset."
+                "The parameter 'style' cannot be omitted if 'style_image_dataset' is passed as dataset root."
             )
 
     transformer = _transformer()
