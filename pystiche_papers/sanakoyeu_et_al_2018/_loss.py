@@ -51,7 +51,7 @@ class DiscriminatorLoss(nn.Module):
             loss += self.prediction_loss(input_photo).aggregate(0)
             accuracies.append(self.prediction_loss.get_accuracy())
 
-        self.accuracy = torch.mean(torch.cat(accuracies))
+        self.accuracy = torch.mean(torch.stack(accuracies))
 
         return cast(torch.Tensor, loss)
 
@@ -176,6 +176,7 @@ def style_aware_content_loss(
 
 def transformer_loss(
     encoder: SequentialEncoder,
+    prediction_loss: Optional[MultiLayerPredictionOperator] = None,
     impl_params: bool = True,
     style_aware_content_kwargs: Optional[Dict[str, Any]] = None,
     transformed_image_kwargs: Optional[Dict[str, Any]] = None,
@@ -184,6 +185,7 @@ def transformer_loss(
 
     Args:
         encoder: :class:`~pystiche.enc.SequentialEncoder`.
+        prediction_loss: Trainable :class:`MultiLayerPredictionOperator`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
@@ -214,5 +216,5 @@ def transformer_loss(
         )
     )
 
-    style_loss = style_loss_(impl_params)
+    style_loss = cast(ops.OperatorContainer, prediction_loss)
     return loss.PerceptualLoss(content_loss, style_loss)

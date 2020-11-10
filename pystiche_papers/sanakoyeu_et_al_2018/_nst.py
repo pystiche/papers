@@ -282,7 +282,7 @@ def training(
     discriminator_criterion = discriminator_criterion.to(device)
 
     transformer_criterion = transformer_loss(
-        transformer.encoder, impl_params=impl_params
+        transformer.encoder, prediction_operator, impl_params=impl_params
     )
     transformer_criterion = transformer_criterion.eval()
     transformer_criterion = transformer_criterion.to(device)

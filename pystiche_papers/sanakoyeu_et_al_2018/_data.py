@@ -41,7 +41,7 @@ __all__ = [
     "style_dataset",
     "Places365Subset",
     "content_dataset",
-    "batch_sampler",
+    "sampler",
     "image_loader",
 ]
 
@@ -573,8 +573,5 @@ def image_loader(
         sampler = cast(Sampler, sampler_(dataset, impl_params=impl_params))
 
     return DataLoader(
-        dataset,
-        sampler=sampler,
-        num_workers=num_workers,
-        pin_memory=pin_memory,
+        dataset, sampler=sampler, num_workers=num_workers, pin_memory=pin_memory,
     )
