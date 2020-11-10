@@ -118,13 +118,14 @@ def gan_optim_loop(
         discriminator_success.update(1.0 - accuracy)
 
     for content_image in content_image_loader:
+        content_image = content_image.squeeze(1)
         input_image = content_image.to(device)
 
         output_image = transformer(preprocessor(input_image))
 
-        if discriminator_success.local_avg < target_win_rate:
+        if discriminator_success.global_avg < target_win_rate:
             style_image = next(style_image_loader)
-            style_image = style_image.to(device)
+            style_image = style_image.to(device).squeeze(1)
             style_image = preprocessor(style_image)
             train_discriminator_one_step(
                 output_image,

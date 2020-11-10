@@ -9,12 +9,20 @@ from pystiche.image import write_image
 from pystiche.optim import OptimLogger
 
 
-def training_style(args):
-    contents = ("TODO",)  # TODO
+def training(args):
+    contents = (
+        "tuebingen_neckarfront__andreas_praefcke",
+        "bird",
+        "karya",
+        "kitty",
+        "tiger",
+    )
 
     styles = ("berthe-morisot",)
 
-    content_dataset = paper.content_dataset()  # TODO
+    content_dataset = paper.content_dataset(
+        path.join(args.dataset_dir, "content"), impl_params=args.impl_params
+    )
     content_image_loader = paper.image_loader(
         content_dataset,
         impl_params=args.impl_params,
@@ -22,7 +30,9 @@ def training_style(args):
     )
 
     for style in styles:
-        style_dataset = paper.style_dataset()  # TODO
+        style_dataset = paper.style_dataset(
+            path.join(args.dataset_dir, "style"), style, impl_params=args.impl_params
+        )
         style_image_loader = paper.image_loader(
             style_dataset,
             impl_params=args.impl_params,
@@ -52,6 +62,7 @@ def training_style(args):
 def parse_input():
     # TODO: write CLI
     image_source_dir = None
+    dataset_dir = None
     image_results_dir = None
     model_dir = None
     device = None
@@ -68,6 +79,10 @@ def parse_input():
     if image_source_dir is None:
         image_source_dir = path.join(here, "data", "images", "source")
     image_source_dir = process_dir(image_source_dir)
+
+    if dataset_dir is None:
+        dataset_dir = path.join(here, "data", "images", "dataset")
+    dataset_dir = process_dir(dataset_dir)
 
     if image_results_dir is None:
         image_results_dir = path.join(here, "data", "images", "results")
@@ -86,6 +101,7 @@ def parse_input():
 
     return Namespace(
         image_source_dir=image_source_dir,
+        dataset_dir=dataset_dir,
         image_results_dir=image_results_dir,
         model_dir=model_dir,
         device=device,
@@ -97,4 +113,4 @@ def parse_input():
 
 if __name__ == "__main__":
     args = parse_input()
-    training_style(args)
+    training(args)

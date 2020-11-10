@@ -543,7 +543,7 @@ def content_dataset(
     return Places365Subset(root, transform=transform)
 
 
-def batch_sampler(
+def sampler(
     data_source: Sized, impl_params: bool = True, num_samples: Optional[int] = None,
 ) -> RandomSampler:
 
@@ -559,22 +559,22 @@ def batch_sampler(
     return RandomSampler(data_source, replacement=True, num_samples=num_samples)
 
 
-batch_sampler_ = batch_sampler
+sampler_ = sampler
 
 
 def image_loader(
     dataset: Dataset,
     impl_params: bool = True,
-    batch_sampler: Optional[Sampler] = None,
+    sampler: Optional[Sampler] = None,
     num_workers: int = 0,
     pin_memory: bool = True,
 ) -> DataLoader:
-    if batch_sampler is None:
-        batch_sampler = cast(Sampler, batch_sampler_(dataset, impl_params=impl_params))
+    if sampler is None:
+        sampler = cast(Sampler, sampler_(dataset, impl_params=impl_params))
 
     return DataLoader(
         dataset,
-        batch_sampler=batch_sampler,
+        sampler=sampler,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
