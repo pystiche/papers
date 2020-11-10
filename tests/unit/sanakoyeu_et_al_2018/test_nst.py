@@ -385,7 +385,7 @@ def test_training_transformer_lr_scheduler_optimizer(
 
 
 def test_training_discriminator_lr_scheduler_optimizer(
-    prediction_operator_mocks, training,
+    prediction_operator_mocks, transformer_loss_mocks, training,
 ):
     parameter = torch.empty(1)
     _, prediction_operator = prediction_operator_mocks

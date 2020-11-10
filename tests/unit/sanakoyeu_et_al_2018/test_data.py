@@ -306,7 +306,7 @@ def test_content_dataset_transform_impl_params(
 
 @parametrize.data(("impl_params", "num_samples"), ((True, 300_000), (False, 100_000)))
 def test_batch_sampler(impl_params, num_samples):
-    batch_sampler = paper.batch_sampler((), impl_params=impl_params)
+    batch_sampler = paper.sampler((), impl_params=impl_params)
 
     assert isinstance(batch_sampler, RandomSampler)
     assert batch_sampler.num_samples == num_samples
@@ -318,7 +318,5 @@ def test_image_loader(subtests):
 
     assert isinstance(image_loader, DataLoader)
 
-    with subtests.test("batch_sampler"):
-        assert isinstance(
-            image_loader.batch_sampler, type(paper.batch_sampler(dataset)),
-        )
+    with subtests.test("sampler"):
+        assert isinstance(image_loader.sampler, type(paper.sampler(dataset)),)
