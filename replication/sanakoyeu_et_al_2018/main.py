@@ -6,18 +6,9 @@ import torch
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.image import write_image
-from pystiche.optim import OptimLogger
 
 
 def training(args):
-    contents = (
-        "tuebingen_neckarfront__andreas_praefcke",
-        "bird",
-        "karya",
-        "kitty",
-        "tiger",
-    )
-
     styles = ("berthe-morisot",)
 
     content_dataset = paper.content_dataset(
@@ -43,19 +34,16 @@ def training(args):
             content_image_loader, style_image_loader, impl_params=args.impl_params
         )
 
-        for content in contents:
-            images = paper.images(root=args.image_source_dir)
-            content_image = images[content].read().to(args.device)
+        for i in range(10):
+            content_image = next(iter(content_image_loader)).squeeze(1)
             output_image = paper.stylization(
                 content_image, transformer, impl_params=args.impl_params,
             )
 
-            output_name = f"{style}_{content}"
+            output_name = f"{style}_{str(i)}"
             if args.impl_params:
                 output_name += "__impl_params"
-            output_file = path.join(
-                args.image_results_dir, "style", f"{output_name}.jpg"
-            )
+            output_file = path.join(args.image_results_dir, f"{output_name}.jpg")
             write_image(output_image, output_file)
 
 
@@ -67,7 +55,6 @@ def parse_input():
     model_dir = None
     device = None
     impl_params = True
-    quiet = False
 
     def process_dir(dir):
         dir = path.abspath(path.expanduser(dir))
@@ -97,8 +84,6 @@ def parse_input():
     if isinstance(device, str):
         device = torch.device(device)
 
-    logger = OptimLogger()
-
     return Namespace(
         image_source_dir=image_source_dir,
         dataset_dir=dataset_dir,
@@ -106,8 +91,6 @@ def parse_input():
         model_dir=model_dir,
         device=device,
         impl_params=impl_params,
-        logger=logger,
-        quiet=quiet,
     )
 
 
