@@ -9,7 +9,21 @@ from pystiche.image import write_image
 
 
 def training(args):
-    styles = ("berthe-morisot",)
+    styles = (
+        "cezanne",
+        "el-greco",
+        "gauguin",
+        "kandinsky",
+        "kirchner",
+        "monet",
+        "morisot",
+        "munch",
+        "peploe",
+        "picasso",
+        "pollock",
+        "roerich",
+        "van-gogh",
+    )
 
     content_dataset = paper.content_dataset(
         path.join(args.dataset_dir, "content"), impl_params=args.impl_params
