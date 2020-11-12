@@ -43,11 +43,32 @@ def test_HyperParameters_delattr_unknown_attr(params):
         delattr(hyper_parameters, "unknown_attribute")
 
 
-def test_HyperParameters_contains(params):
+def test_HyperParameters_getitem(params):
+    hyper_parameters = HyperParameters(sub_param=HyperParameters(**params), **params)
+
+    for name in (*params.keys(), "sub_param"):
+        assert hyper_parameters[name] is getattr(hyper_parameters, name)
+
+
+def test_HyperParameters_dict_unpacking(params):
     hyper_parameters = HyperParameters(**params)
 
-    for name, val in params.items():
-        assert name in hyper_parameters
+    assert dict(hyper_parameters) == params
+    assert {**hyper_parameters} == params
+
+
+def test_HyperParameters_iter(params):
+    hyper_parameters = HyperParameters(sub_param=HyperParameters(**params), **params)
+
+    names = tuple(iter(hyper_parameters))
+
+    assert set(names[:-1]) == set(params.keys())
+    assert names[-1] == "sub_param"
+
+
+def test_HyperParameters_len(params):
+    hyper_parameters = HyperParameters(sub_param=HyperParameters(**params), **params)
+    assert len(hyper_parameters) == 1 + len(params)
 
 
 def test_HyperParameters_copy():

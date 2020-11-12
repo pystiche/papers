@@ -1,5 +1,7 @@
 import copy
+import itertools
 from collections import OrderedDict
+from collections.abc import Mapping
 from typing import Any, Dict, Iterator, Optional, Tuple
 
 import pystiche
@@ -7,7 +9,7 @@ import pystiche
 __all__ = ["HyperParameters"]
 
 
-class HyperParameters(pystiche.ComplexObject):
+class HyperParameters(Mapping, pystiche.ComplexObject):
     def __init__(self, **kwargs: Any) -> None:
         self.__params__: Dict[str, Any] = OrderedDict()
         self.__sub_params__: Dict[str, "HyperParameters"] = OrderedDict()
@@ -47,8 +49,14 @@ class HyperParameters(pystiche.ComplexObject):
         else:
             super().__delattr__(name)
 
-    def __contains__(self, name: str) -> bool:
-        return name in self.__params__ or name in self.__sub_params__
+    def __getitem__(self, name: str) -> Any:
+        return getattr(self, name)
+
+    def __iter__(self) -> Iterator:
+        return itertools.chain(self.__params__.keys(), self.__sub_params__.keys())
+
+    def __len__(self) -> int:
+        return len(self.__params__) + len(self.__sub_params__)
 
     def __copy__(self) -> "HyperParameters":
         params = copy.copy(self.__params__)
