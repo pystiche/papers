@@ -29,13 +29,14 @@ def figure_6(args):
         )
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L66
-        style_loss_kwargs = {
-            "patch_size": 2,
-            "stride": 1,
-            "target_transforms": paper.target_transforms(
-                num_scale_steps=1, num_rotate_steps=1,
+        target_transforms_kwargs = (
+            dict(num_scale_steps=1, num_rotate_steps=1) if args.impl_params else {}
+        )
+        style_loss_kwargs = dict(
+            target_transforms=paper.target_transforms(
+                impl_params=args.impl_params, **target_transforms_kwargs
             ),
-        }
+        )
         criterion = paper.perceptual_loss(
             impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
         )
