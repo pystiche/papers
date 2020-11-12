@@ -60,6 +60,9 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     )
 
 
+_hyper_parameters = hyper_parameters
+
+
 class NormalizeUnfoldGrad(torch.autograd.Function):
     @staticmethod
     def forward(  # type: ignore[override]
@@ -283,11 +286,7 @@ class ValidCropAfterRotate(transforms.Transform):
 
 
 def target_transforms(
-    impl_params: bool = True,
-    num_scale_steps: Optional[int] = None,
-    scale_step_width: float = 5e-2,
-    num_rotate_steps: Optional[int] = None,
-    rotate_step_width: float = 7.5,
+    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
 ) -> Sequence[transforms.Transform]:
     r"""Generate a list of scaling and rotations transformations.
 
@@ -295,14 +294,8 @@ def target_transforms(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper. For details see below.
-        num_scale_steps: Number of scale steps. Each scale is performed in both
-            directions, i.e. enlarging and shrinking the motif. Defaults to ``0`` if
-            ``impl_params is True`` otherwise ``3``.
-        scale_step_width: Width of each scale step. Defaults to ``5e-2``.
-        num_rotate_steps: Number of rotate steps. Each rotate is performed in both
-            directions, i.e. clockwise and counterclockwise. Defaults to ``0`` if
-            ``impl_params is True`` otherwise ``2``.
-        rotate_step_width: Width of each rotation step in degrees. Defaults to ``7.5``.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
     Returns:
        ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
@@ -315,28 +308,24 @@ def target_transforms(
     Otherwise, :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms` is used to
     generate the transforms.
     """
-    if num_scale_steps is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
-        num_scale_steps = 0 if impl_params else 3
-    if num_rotate_steps is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
-        num_rotate_steps = 0 if impl_params else 2
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     if not impl_params:
         return ops.MRFOperator.scale_and_rotate_transforms(
-            num_scale_steps=num_scale_steps,
-            scale_step_width=scale_step_width,
-            num_rotate_steps=num_rotate_steps,
-            rotate_step_width=rotate_step_width,
+            **hyper_parameters.target_transforms
         )
 
+    def symrange(steps: int) -> range:
+        return range(-steps, steps + 1)
+
     scaling_factors = [
-        1.0 + (base * scale_step_width)
-        for base in range(-num_scale_steps, num_scale_steps + 1)
+        1.0 + (base * hyper_parameters.target_transforms.scale_step_width)
+        for base in symrange(hyper_parameters.target_transforms.num_scale_steps)
     ]
     rotation_angles = [
-        base * rotate_step_width
-        for base in range(-num_rotate_steps, num_rotate_steps + 1)
+        base * hyper_parameters.target_transforms.rotate_step_width
+        for base in symrange(hyper_parameters.target_transforms.num_rotate_steps)
     ]
 
     transforms_ = []

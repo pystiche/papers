@@ -188,8 +188,11 @@ def test_target_transforms_smoke(impl_params, num_transforms):
 
 
 def test_target_transforms_call_smoke(target_image):
+    hyper_parameters = paper.hyper_parameters(impl_params=True)
+    hyper_parameters.target_transforms.num_scale_steps = 1
+    hyper_parameters.target_transforms.num_rotate_steps = 1
     for transform in paper.target_transforms(
-        impl_params=True, num_scale_steps=1, num_rotate_steps=1
+        impl_params=True, hyper_parameters=hyper_parameters
     ):
         assert isinstance(transform(target_image), torch.Tensor)
 
