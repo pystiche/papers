@@ -127,7 +127,7 @@ class MRFOperator(ops.MRFOperator):
 def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    layers: Optional[Sequence[str]] = None,
+    layers: Optional[Sequence[str]] = ("relu3_1", "relu4_1"),
     layer_weights: Union[str, Sequence[float]] = "sum",
     patch_size: Union[int, Tuple[int, int]] = 3,
     stride: Optional[Union[int, Tuple[int, int]]] = None,
@@ -175,9 +175,6 @@ def style_loss(
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
-
-    if layers is None:
-        layers = ("relu3_1", "relu4_1")
 
     if stride is None:
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L53

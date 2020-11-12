@@ -9,8 +9,10 @@ import pystiche
 from pystiche import enc, misc, ops
 from pystiche.image import extract_image_size, transforms
 from pystiche.image.transforms.functional import crop
+from pystiche_papers.utils import HyperParameters
 
 __all__ = [
+    "hyper_parameters",
     "extract_normalized_patches2d",
     "target_transforms",
     "preprocessor",
@@ -18,6 +20,44 @@ __all__ = [
     "multi_layer_encoder",
     "optimizer",
 ]
+
+
+def hyper_parameters(impl_params: bool = True) -> HyperParameters:
+    r"""Hyper parameters from :cite:`LW2016`."""
+    return HyperParameters(
+        content_loss=HyperParameters(
+            layer="relu4_2",
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L58
+            score_weight=2e1 if impl_params else 1e0,
+        ),
+        target_transforms=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
+            num_scale_steps=0 if impl_params else 3,
+            scale_step_width=5e-2,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
+            num_rotate_steps=0 if impl_params else 2,
+            rotate_step_width=7.5,
+        ),
+        style_loss=HyperParameters(
+            layers=("relu3_1", "relu4_1"),
+            layer_weights="sum",
+            patch_size=3,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L53
+            stride=2 if impl_params else 1,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L49
+            score_weight=1e-4 if impl_params else 1e0,
+        ),
+        regularization=HyperParameters(score_weight=1e-3),
+        image_pyramid=HyperParameters(
+            max_edge_size=384,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L44
+            num_steps=100 if impl_params else 200,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L43
+            num_levels=3 if impl_params else None,
+            min_edge_size=64,
+            edge="long",
+        ),
+    )
 
 
 class NormalizeUnfoldGrad(torch.autograd.Function):
