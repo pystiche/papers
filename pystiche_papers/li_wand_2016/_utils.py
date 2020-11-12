@@ -1,14 +1,18 @@
-from typing import Any, Sequence, Tuple, Union
+import itertools
+import math
+from typing import Any, Dict, Optional, Sequence, Tuple, Union, cast
 
 import torch
 from torch import optim
 
 import pystiche
-from pystiche import enc, misc
-from pystiche.image import transforms
+from pystiche import enc, misc, ops
+from pystiche.image import extract_image_size, transforms
+from pystiche.image.transforms.functional import crop
 
 __all__ = [
     "extract_normalized_patches2d",
+    "target_transforms",
     "preprocessor",
     "postprocessor",
     "multi_layer_encoder",
@@ -109,6 +113,204 @@ def extract_normalized_patches2d(
     for dim, size, step in zip(range(2, input.dim()), patch_size, stride):
         input = normalize_unfold_grad(input, dim, size, step)
     return pystiche.extract_patches2d(input, patch_size, stride)
+
+
+# Right now, this an (almost) exact port from the source. It needs to be refactored.
+# It does the following for a positive alpha (angle):
+# - create the vertices of the image
+# - rotate these vertices clockwise (!)
+# - find the intersection of the old vertical left edge with the new "horizontal"
+#   bottom edge
+# - find the intersection of the old vertical right with the horizontal extension of
+#   the first intersection
+# - Use the second intersection as bottom right vertex
+# - Use the the difference of image size and bottom right corner as top left vertex
+# https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/helper.lua#L74-L139
+def _computeBB(width: int, height: int, alpha: float) -> Tuple[int, int, int, int]:
+    x1 = 1
+    y1 = 1
+    x2 = width
+    y2 = 1
+    x3 = width
+    y3 = height
+    x4 = 1
+    y4 = height
+    x0 = width / 2
+    y0 = height / 2
+
+    x1r = x0 + (x1 - x0) * math.cos(alpha) + (y1 - y0) * math.sin(alpha)
+    y1r = y0 - (x1 - x0) * math.sin(alpha) + (y1 - y0) * math.cos(alpha)
+
+    x2r = x0 + (x2 - x0) * math.cos(alpha) + (y2 - y0) * math.sin(alpha)
+    y2r = y0 - (x2 - x0) * math.sin(alpha) + (y2 - y0) * math.cos(alpha)
+
+    x3r = x0 + (x3 - x0) * math.cos(alpha) + (y3 - y0) * math.sin(alpha)
+    y3r = y0 - (x3 - x0) * math.sin(alpha) + (y3 - y0) * math.cos(alpha)
+
+    x4r = x0 + (x4 - x0) * math.cos(alpha) + (y4 - y0) * math.sin(alpha)
+    y4r = y0 - (x4 - x0) * math.sin(alpha) + (y4 - y0) * math.cos(alpha)
+
+    if alpha > 0:
+        px1 = (
+            (x1 * y4 - y1 * x4) * (x1r - x2r) - (x1 - x4) * (x1r * y2r - y1r * x2r)
+        ) / ((x1 - x4) * (y1r - y2r) - (y1 - y4) * (x1r - x2r))
+        py1 = (
+            (x1 * y4 - y1 * x4) * (y1r - y2r) - (y1 - y4) * (x1r * y2r - y1r * x2r)
+        ) / ((x1 - x4) * (y1r - y2r) - (y1 - y4) * (x1r - x2r))
+        px2 = px1 + 1
+        py2 = py1
+
+        qx = (
+            (px1 * py2 - py1 * px2) * (x2r - x3r)
+            - (px1 - px2) * (x2r * y3r - y2r * x3r)
+        ) / ((px1 - px2) * (y2r - y3r) - (py1 - py2) * (x2r - x3r))
+        qy = (
+            (px1 * py2 - py1 * px2) * (y2r - y3r)
+            - (py1 - py2) * (x2r * y3r - y2r * x3r)
+        ) / ((px1 - px2) * (y2r - y3r) - (py1 - py2) * (x2r - x3r))
+
+        min_x = width - qx
+        min_y = qy
+        max_x = qx
+        max_y = height - qy
+
+    elif alpha < 0:
+        px1 = (
+            (x2 * y3 - y2 * x3) * (x1r - x2r) - (x2 - x3) * (x1r * y2r - y1r * x2r)
+        ) / ((x2 - x3) * (y1r - y2r) - (y2 - y3) * (x1r - x2r))
+        py1 = (
+            (x2 * y3 - y1 * x3) * (y1r - y2r) - (y2 - y3) * (x1r * y2r - y1r * x2r)
+        ) / ((x2 - x3) * (y1r - y2r) - (y2 - y3) * (x1r - x2r))
+        px2 = px1 - 1
+        py2 = py1
+
+        qx = (
+            (px1 * py2 - py1 * px2) * (x1r - x4r)
+            - (px1 - px2) * (x1r * y4r - y1r * x4r)
+        ) / ((px1 - px2) * (y1r - y4r) - (py1 - py2) * (x1r - x4r))
+        qy = (
+            (px1 * py2 - py1 * px2) * (y1r - y4r)
+            - (py1 - py2) * (x1r * y4r - y1r * x4r)
+        ) / ((px1 - px2) * (y1r - y4r) - (py1 - py2) * (x1r - x4r))
+        min_x = qx
+        min_y = qy
+        max_x = width - min_x
+        max_y = height - min_y
+    else:
+        min_x = x1
+        min_y = y1
+        max_x = x2
+        max_y = y3
+
+    return (
+        max(math.floor(min_x), 1),
+        max(math.floor(min_y), 1),
+        # The clamping to the maximum height and width is not part of the original
+        # implementation.
+        min(math.floor(max_x), width),
+        min(math.floor(max_y), height),
+    )
+
+
+class ValidCropAfterRotate(transforms.Transform):
+    def __init__(self, angle: float, clockwise: bool = False):
+        super().__init__()
+        self.angle = angle
+        self.clockwise = clockwise
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        origin, size = self._compute_crop(image)
+        return cast(torch.Tensor, crop(image, origin, size))
+
+    def _compute_crop(
+        self, image: torch.Tensor
+    ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+        height, width = extract_image_size(image)
+        alpha = math.radians(self.angle)
+        if not self.clockwise:
+            alpha *= -1
+        bounding_box = _computeBB(width, height, alpha)
+        origin = (bounding_box[1], bounding_box[0])
+        size = (bounding_box[3] - bounding_box[1], bounding_box[2] - bounding_box[0])
+        return origin, size
+
+    def _properties(self) -> Dict[str, Any]:
+        dct = super()._properties()
+        dct["angle"] = f"{self.angle}°"
+        if self.clockwise:
+            dct["clockwise"] = self.clockwise
+        return dct
+
+
+def target_transforms(
+    impl_params: bool = True,
+    num_scale_steps: Optional[int] = None,
+    scale_step_width: float = 5e-2,
+    num_rotate_steps: Optional[int] = None,
+    rotate_step_width: float = 7.5,
+) -> Sequence[transforms.Transform]:
+    r"""Generate a list of scaling and rotations transformations.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        num_scale_steps: Number of scale steps. Each scale is performed in both
+            directions, i.e. enlarging and shrinking the motif. Defaults to ``0`` if
+            ``impl_params is True`` otherwise ``3``.
+        scale_step_width: Width of each scale step. Defaults to ``5e-2``.
+        num_rotate_steps: Number of rotate steps. Each rotate is performed in both
+            directions, i.e. clockwise and counterclockwise. Defaults to ``0`` if
+            ``impl_params is True`` otherwise ``2``.
+        rotate_step_width: Width of each rotation step in degrees. Defaults to ``7.5``.
+
+    Returns:
+       ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
+       in total comprising every combination given by the input parameters.
+
+    If ``impl_params is True``, every transformation comprises a valid crop after the
+    rotation to avoid blank regions. Furthermore, the image is actually rescaled
+    instead of the motif, resulting in more patches overall.
+
+    Otherwise, :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms` is used to
+    generate the transforms.
+    """
+    if num_scale_steps is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
+        num_scale_steps = 0 if impl_params else 3
+    if num_rotate_steps is None:
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
+        num_rotate_steps = 0 if impl_params else 2
+
+    if not impl_params:
+        return ops.MRFOperator.scale_and_rotate_transforms(
+            num_scale_steps=num_scale_steps,
+            scale_step_width=scale_step_width,
+            num_rotate_steps=num_rotate_steps,
+            rotate_step_width=rotate_step_width,
+        )
+
+    scaling_factors = [
+        1.0 + (base * scale_step_width)
+        for base in range(-num_scale_steps, num_scale_steps + 1)
+    ]
+    rotation_angles = [
+        base * rotate_step_width
+        for base in range(-num_rotate_steps, num_rotate_steps + 1)
+    ]
+
+    transforms_ = []
+    for scaling_factor, rotation_angle in itertools.product(
+        scaling_factors, rotation_angles
+    ):
+        transforms_.append(
+            transforms.ComposedTransform(
+                transforms.RotateMotif(rotation_angle),
+                ValidCropAfterRotate(rotation_angle),
+                transforms.Rescale(scaling_factor),
+            )
+        )
+    return transforms_
 
 
 def preprocessor() -> transforms.CaffePreprocessing:

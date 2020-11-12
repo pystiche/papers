@@ -8,6 +8,8 @@ import pystiche.ops.functional as F
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import loss, misc, ops
 
+from tests import utils
+
 
 def test_FeatureReconstructionOperator(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
@@ -107,31 +109,24 @@ def test_style_loss(subtests):
             assert layer_weights == (1.0,) * len(layers)
 
 
-def test_style_loss_pyramid(subtests, mocker):
-    configs = ((True, 0, 0), (False, 3, 2))
-    for impl_params, num_scale_steps, num_rotate_steps in configs:
-        mock = mocker.patch(
-            "pystiche.ops.comparison.MRFOperator.scale_and_rotate_transforms"
-        )
-        paper.style_loss(impl_params=impl_params)
+@utils.parametrize_data(
+    ("impl_params", "num_scale_steps", "num_rotate_steps"),
+    pytest.param(True, 0, 0),
+    pytest.param(False, 3, 2),
+)
+def test_style_loss_target_transforms(
+    mocker, impl_params, num_scale_steps, num_rotate_steps
+):
+    mock = mocker.patch("pystiche_papers.li_wand_2016._loss._target_transforms")
+    paper.style_loss(impl_params=impl_params)
 
-        _, kwargs = mock.call_args
-        pyramid_num_scale_steps = kwargs["num_scale_steps"]
-        pyramid_scale_step_width = kwargs["scale_step_width"]
-        pyramid_num_rotate_steps = kwargs["num_rotate_steps"]
-        pyramid_rotate_step_width = kwargs["rotate_step_width"]
+    args = utils.call_args_to_namespace(mock.call_args, paper.target_transforms)
 
-        with subtests.test("num_scale_steps"):
-            assert pyramid_num_scale_steps == num_scale_steps
-
-        with subtests.test("num_scale_steps"):
-            assert pyramid_scale_step_width == pytest.approx(5e-2)
-
-        with subtests.test("num_rotate_steps"):
-            assert pyramid_num_rotate_steps == num_rotate_steps
-
-        with subtests.test("rotate_step_width"):
-            assert pyramid_rotate_step_width == pytest.approx(7.5)
+    assert args.impl_params is impl_params
+    assert args.num_scale_steps == num_scale_steps
+    assert args.scale_step_width == pytest.approx(5e-2)
+    assert args.num_rotate_steps == num_rotate_steps
+    assert args.rotate_step_width == pytest.approx(7.5)
 
 
 def test_TotalVariationOperator(subtests, input_image):

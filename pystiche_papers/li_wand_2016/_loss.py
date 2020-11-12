@@ -10,6 +10,7 @@ from pystiche.image import transforms
 
 from ._utils import extract_normalized_patches2d
 from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import target_transforms as _target_transforms
 
 __all__ = [
     "FeatureReconstructionOperator",
@@ -91,7 +92,6 @@ class MRFOperator(ops.MRFOperator):
         impl_params: bool = True,
         **mrf_op_kwargs: Any,
     ):
-
         super().__init__(encoder, patch_size, **mrf_op_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L108
@@ -190,7 +190,8 @@ def style_loss(
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
         num_rotate_steps = 0 if impl_params else 2
         rotate_step_width = 7.5
-        target_transforms = MRFOperator.scale_and_rotate_transforms(
+        target_transforms = _target_transforms(
+            impl_params=impl_params,
             num_scale_steps=num_scale_steps,
             scale_step_width=scale_step_width,
             num_rotate_steps=num_rotate_steps,
