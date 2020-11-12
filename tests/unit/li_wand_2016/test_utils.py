@@ -18,10 +18,7 @@ def test_hyper_parameters(subtests):
     assert isinstance(hyper_parameters, HyperParameters)
 
 
-impl_params = utils.parametrize_data("impl_params", (True, False))
-
-
-@impl_params
+@utils.impl_params
 def test_hyper_parameters_content_loss(subtests, impl_params):
     hyper_parameters = paper.hyper_parameters()
 
@@ -38,7 +35,7 @@ def test_hyper_parameters_content_loss(subtests, impl_params):
         )
 
 
-@impl_params
+@utils.impl_params
 def test_hyper_parameters_target_transforms(subtests, impl_params):
     hyper_parameters = paper.hyper_parameters()
 
@@ -59,7 +56,7 @@ def test_hyper_parameters_target_transforms(subtests, impl_params):
         assert hyper_parameters.rotate_step_width == pytest.approx(7.5)
 
 
-@impl_params
+@utils.impl_params
 def test_hyper_parameters_style_loss(subtests, impl_params):
     hyper_parameters = paper.hyper_parameters()
 
@@ -85,7 +82,7 @@ def test_hyper_parameters_style_loss(subtests, impl_params):
         )
 
 
-@impl_params
+@utils.impl_params
 def test_hyper_parameters_image_pyramid(subtests, impl_params):
     hyper_parameters = paper.hyper_parameters()
 

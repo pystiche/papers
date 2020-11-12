@@ -26,6 +26,7 @@ __all__ = [
     "call_args_to_kwargs_only",
     "call_args_to_namespace",
     "parametrize_data",
+    "impl_params",
 ]
 
 
@@ -175,3 +176,6 @@ def parametrize_data(argnames, *argvalues):
             for param in argvalues
         ]
     return pytest.mark.parametrize(argnames, argvalues)
+
+
+impl_params = parametrize_data("impl_params", (True, False))
