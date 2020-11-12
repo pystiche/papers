@@ -33,6 +33,7 @@ __all__ = [
     "image_transform",
     "WikiArt",
     "style_dataset",
+    "Places365Subset",
     "content_dataset",
     "batch_sampler",
     "image_loader",
