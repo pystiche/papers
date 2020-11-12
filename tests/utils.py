@@ -8,6 +8,7 @@ from os import path
 from types import SimpleNamespace
 
 import pytest
+from _pytest.mark.structures import ParameterSet
 
 import pytorch_testing_utils as ptu
 import torch
@@ -23,6 +24,8 @@ __all__ = [
     "call_args_list_to_dict",
     "generate_param_combinations",
     "call_args_to_kwargs_only",
+    "call_args_to_namespace",
+    "parametrize_data",
 ]
 
 
@@ -157,17 +160,18 @@ def call_args_to_namespace(call_args, *arg_names):
     return SimpleNamespace(**call_args_to_kwargs_only(call_args, *arg_names))
 
 
-def parametrize_data(argnames, *params):
+def parametrize_data(argnames, *argvalues):
     if isinstance(argnames, str):
         argnames = [name.strip() for name in argnames.split(",")]
-    params = [
-        param._replace(
-            id=", ".join(
-                [f"{name}={value}" for name, value in zip(argnames, param.values)]
-            )
-        )
-        if param.id is None
-        else param
-        for param in params
-    ]
-    return pytest.mark.parametrize(argnames, params)
+
+    def id(values):
+        return ", ".join([f"{name}={value}" for name, value in zip(argnames, values)])
+
+    if not isinstance(argvalues[0], ParameterSet):
+        argvalues = [pytest.param(values, id=id(values)) for values in zip(*argvalues)]
+    else:
+        argvalues = [
+            param._replace(id=id(param.values)) if param.id is None else param
+            for param in argvalues
+        ]
+    return pytest.mark.parametrize(argnames, argvalues)

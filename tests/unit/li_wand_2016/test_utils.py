@@ -9,6 +9,8 @@ import pystiche_papers.li_wand_2016 as paper
 from pystiche import enc
 from pystiche.image import transforms
 
+from tests import utils
+
 
 def test_extract_normalized_patches2d(subtests):
     height = 4
@@ -80,17 +82,12 @@ def test_extract_normalized_patches2d_no_overlap(subtests):
         ptu.assert_allclose(input_normalized.grad, input.grad)
 
 
-def test_target_transforms_smoke():
-    num_scale_steps = 2
-    num_rotate_steps = 3
-
-    target_transforms = paper.target_transforms(
-        num_scale_steps=num_scale_steps, num_rotate_steps=num_rotate_steps,
-    )
-
-    actual = len(target_transforms)
-    expected = (num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)
-    assert actual == expected
+@utils.parametrize_data(
+    ("impl_params", "num_transforms"), pytest.param(True, 1), pytest.param(False, 35),
+)
+def test_target_transforms_smoke(impl_params, num_transforms):
+    target_transforms = paper.target_transforms(impl_params=impl_params)
+    assert len(target_transforms) == num_transforms
 
 
 def test_preprocessor():
