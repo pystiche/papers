@@ -155,9 +155,9 @@ def style_loss(
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> MRFOperator:
         return MRFOperator(
             encoder,
-            hyper_parameters.style_loss.patch_size,
+            hyper_parameters.style_loss.patch_size,  # type: ignore[union-attr]
             impl_params=impl_params,
-            stride=hyper_parameters.style_loss.stride,
+            stride=hyper_parameters.style_loss.stride,  # type: ignore[union-attr]
             target_transforms=_target_transforms(
                 impl_params=impl_params, hyper_parameters=hyper_parameters
             ),
