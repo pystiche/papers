@@ -1,18 +1,20 @@
-from typing import Any, Optional, Sequence, Union
+from typing import Collection, Optional, Union
 
 from pystiche import pyramid
+from pystiche.loss import MultiOperatorLoss
+from pystiche.ops import Operator
+from pystiche_papers.utils import HyperParameters
+
+from ._utils import hyper_parameters as _hyper_parameters
 
 __all__ = ["image_pyramid"]
 
 
 def image_pyramid(
     impl_params: bool = True,
-    max_edge_size: int = 384,
-    num_steps: Optional[Union[int, Sequence[int]]] = None,
-    num_levels: Optional[int] = None,
-    min_edge_size: int = 64,
-    edge: Union[str, Sequence[str]] = "long",
-    **octave_image_pyramid_kwargs: Any,
+    hyper_parameters: Optional[HyperParameters] = None,
+    interpolation_mode: str = "bilinear",
+    resize_targets: Collection[Union[Operator, MultiOperatorLoss]] = (),
 ) -> pyramid.OctaveImagePyramid:
     r"""Image pyramid from :cite:`LW2016`.
 
@@ -20,38 +22,21 @@ def image_pyramid(
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        max_edge_size: Maximum edge size. Defaults to ``384``.
-        num_steps: Number of steps for each level. If omitted, the number is
-            determined with respect to ``impl_params``. Defaults to ``100`` if
-            ``impl_params is True`` otherwise ``200``.
-        num_levels: Optional number of levels. If omitted, the number is determined by
-            the number of steps of factor two between ``max_edge_size`` and
-            ``min_edge_size`` or with respect to ``impl_params``. Defaults to ``3`` if
-            ``impl_params is True`` otherwise the number is determined by
-            the number of steps of factor two between ``max_edge_size`` and
-            ``min_edge_size``.
-        min_edge_size: Minimum edge size for the automatic calculation of
-            ``num_levels``. Defaults to ``64``.
-        edge: Corresponding edge to the edge size for each level. Can be ``"short"`` or
-            ``"long"``. If sequence of ``str`` its length has to match the length of
-            ``edge_sizes``. Defaults to ``"long"``.
-        **octave_image_pyramid_kwargs: Optional parameters for the
-            :class:`~pystiche.pyramid.OctaveImagePyramid`.
-
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
+        interpolation_mode: Interpolation mode used for the resizing of the images.
+            Defaults to ``"bilinear"``.
+        resize_targets: Targets for resizing of set images and guides during iteration.
     """
-    if num_steps is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L44
-        num_steps = 100 if impl_params else 200
-
-    if num_levels is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L43
-        num_levels = 3 if impl_params else None
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     return pyramid.OctaveImagePyramid(
-        max_edge_size,
-        num_steps,
-        num_levels=num_levels,
-        min_edge_size=min_edge_size,
-        edge=edge,
-        **octave_image_pyramid_kwargs,
+        hyper_parameters.image_pyramid.max_edge_size,
+        hyper_parameters.image_pyramid.num_steps,
+        num_levels=hyper_parameters.image_pyramid.num_levels,
+        min_edge_size=hyper_parameters.image_pyramid.min_edge_size,
+        edge=hyper_parameters.image_pyramid.edge,
+        interpolation_mode=interpolation_mode,
+        resize_targets=resize_targets,
     )
