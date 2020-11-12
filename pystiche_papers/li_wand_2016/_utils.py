@@ -256,14 +256,13 @@ def target_transforms(
             implementation of the original authors rather than what is described in
             the paper. For details see below.
         num_scale_steps: Number of scale steps. Each scale is performed in both
-            directions, i.e. enlarging and shrinking the motif. Defaults to ``1``.
-        scale_step_width: Width of each scale step. Defaults to ``0`` if
+            directions, i.e. enlarging and shrinking the motif. Defaults to ``0`` if
             ``impl_params is True`` otherwise ``3``.
+        scale_step_width: Width of each scale step. Defaults to ``5e-2``.
         num_rotate_steps: Number of rotate steps. Each rotate is performed in both
             directions, i.e. clockwise and counterclockwise. Defaults to ``0`` if
             ``impl_params is True`` otherwise ``2``.
-        rotate_step_width: Width of each rotation step in degrees.
-            Defaults to ``7.5``.
+        rotate_step_width: Width of each rotation step in degrees. Defaults to ``7.5``.
 
     Returns:
        ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
