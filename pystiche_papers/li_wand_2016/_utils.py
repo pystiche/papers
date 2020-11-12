@@ -249,6 +249,33 @@ def target_transforms(
     num_rotate_steps: Optional[int] = None,
     rotate_step_width: float = 7.5,
 ) -> Sequence[transforms.Transform]:
+    r"""Generate a list of scaling and rotations transformations.
+
+    Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
+        num_scale_steps: Number of scale steps. Each scale is performed in both
+            directions, i.e. enlarging and shrinking the motif. Defaults to ``1``.
+        scale_step_width: Width of each scale step. Defaults to ``0`` if
+            ``impl_params is True`` otherwise ``3``.
+        num_rotate_steps: Number of rotate steps. Each rotate is performed in both
+            directions, i.e. clockwise and counterclockwise. Defaults to ``0`` if
+            ``impl_params is True`` otherwise ``2``.
+        rotate_step_width: Width of each rotation step in degrees.
+            Defaults to ``7.5``.
+
+    Returns:
+       ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
+       in total comprising every combination given by the input parameters.
+
+    If ``impl_params is True``, every transformation comprises a valid crop after the
+    rotation to avoid blank regions. Furthermore, the image is actually rescaled
+    instead of the motif, resulting in more patches overall.
+
+    Otherwise, :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms` is used to
+    generate the transforms.
+    """
     if num_scale_steps is None:
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
         num_scale_steps = 0 if impl_params else 3
