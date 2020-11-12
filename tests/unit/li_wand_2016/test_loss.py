@@ -113,26 +113,6 @@ def test_style_loss(subtests, impl_params):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-@utils.parametrize_data(
-    ("impl_params", "num_scale_steps", "num_rotate_steps"),
-    pytest.param(True, 0, 0),
-    pytest.param(False, 3, 2),
-)
-def test_style_loss_target_transforms(
-    mocker, impl_params, num_scale_steps, num_rotate_steps
-):
-    mock = mocker.patch("pystiche_papers.li_wand_2016._loss._target_transforms")
-    paper.style_loss(impl_params=impl_params)
-
-    args = utils.call_args_to_namespace(mock.call_args, paper.target_transforms)
-
-    assert args.impl_params is impl_params
-    assert args.num_scale_steps == num_scale_steps
-    assert args.scale_step_width == pytest.approx(5e-2)
-    assert args.num_rotate_steps == num_rotate_steps
-    assert args.rotate_step_width == pytest.approx(7.5)
-
-
 def test_TotalVariationOperator(subtests, input_image):
     configs = ((True, 1.0 / 2.0), (False, 1.0))
     for impl_params, score_correction_factor in configs:
