@@ -191,6 +191,7 @@ def style_loss(
         num_rotate_steps = 0 if impl_params else 2
         rotate_step_width = 7.5
         target_transforms = _target_transforms(
+            impl_params=impl_params,
             num_scale_steps=num_scale_steps,
             scale_step_width=scale_step_width,
             num_rotate_steps=num_rotate_steps,
