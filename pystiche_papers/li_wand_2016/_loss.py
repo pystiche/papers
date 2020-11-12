@@ -158,7 +158,9 @@ def style_loss(
             hyper_parameters.style_loss.patch_size,
             impl_params=impl_params,
             stride=hyper_parameters.style_loss.stride,
-            target_transforms=_target_transforms(),  # FIXME
+            target_transforms=_target_transforms(
+                impl_params=impl_params, hyper_parameters=hyper_parameters
+            ),
             score_weight=layer_weight,
         )
 

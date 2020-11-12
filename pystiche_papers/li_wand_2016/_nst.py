@@ -57,7 +57,9 @@ def nst(
     )
     criterion = criterion.to(device)
 
-    image_pyramid = _image_pyramid(resize_targets=(criterion,))
+    image_pyramid = _image_pyramid(
+        hyper_parameters=hyper_parameters, resize_targets=(criterion,)
+    )
 
     initial_resize = image_pyramid[-1].resize_image
     content_image = initial_resize(content_image)
