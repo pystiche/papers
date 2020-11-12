@@ -282,7 +282,7 @@ def test_content_dataset_transform_impl_params(
 ):
     dataset = paper.content_dataset("root")
 
-    assert isinstance(dataset, ImageFolderDataset)
+    assert isinstance(dataset, paper.Places365Subset)
 
     with subtests.test("transform"):
         make_reproducible()

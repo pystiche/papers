@@ -1,3 +1,5 @@
+import os
+import re
 from os import path
 from typing import Any, Dict, List, Optional, Sized, Tuple, Union, cast
 
@@ -31,6 +33,7 @@ __all__ = [
     "image_transform",
     "WikiArt",
     "style_dataset",
+    "Places365Subset",
     "content_dataset",
     "batch_sampler",
     "image_loader",
@@ -325,6 +328,155 @@ def style_dataset(
 
 # TODO: replace this with torchvision.datasets.Places365 as soon as
 #  https://github.com/pytorch/vision/pull/2610 is part of a release
+class Places365Subset(ImageFolderDataset):
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L80-L103
+    CATEGORIES = (
+        "/a/abbey",
+        "/a/amphitheater",
+        "/a/apartment-building/outdoor",
+        "/a/aqueduct",
+        "/a/arch",
+        "/a/arena/rodeo",
+        "/a/artists_loft",
+        "/a/athletic_field/outdoor",
+        "/b/badlands",
+        "/b/balcony/exterior",
+        "/b/bamboo_forest",
+        "/b/barn",
+        "/b/barndoor",
+        "/b/baseball_field",
+        "/b/basilica",
+        "/b/bayou",
+        "/b/beach",
+        "/b/beach_house",
+        "/b/beer_garden",
+        "/b/boardwalk",
+        "/b/boathouse",
+        "/b/botanical_garden",
+        "/b/building_facade",
+        "/b/bullring",
+        "/b/butte",
+        "/c/cabin/outdoor",
+        "/c/campsite",
+        "/c/campus",
+        "/c/canal/natural",
+        "/c/canal/urban",
+        "/c/canyon",
+        "/c/castle",
+        "/c/cemetery",
+        "/c/chalet",
+        "/c/church/outdoor",
+        "/c/cliff",
+        "/c/coast",
+        "/c/corn_field",
+        "/c/corral",
+        "/c/cottage",
+        "/c/courtyard",
+        "/c/crevasse",
+        "/d/dam",
+        "/d/desert/vegetation",
+        "/d/desert_road",
+        "/d/doorway/outdoor",
+        "/f/fairway",
+        "/f/farm",
+        "/f/field/cultivated",
+        "/f/field/wild",
+        "/f/field_road",
+        "/f/fishpond",
+        "/f/florist_shop/indoor",
+        "/f/forest/broadleaf",
+        "/f/forest_path",
+        "/f/forest_road",
+        "/f/formal_garden",
+        "/g/gazebo/exterior",
+        "/g/glacier",
+        "/g/golf_course",
+        "/g/gorge",
+        "/g/greenhouse/indoor",
+        "/g/greenhouse/outdoor",
+        "/g/grotto",
+        "/h/hayfield",
+        "/h/herb_garden",
+        "/h/hot_spring",
+        "/h/house",
+        "/h/hunting_lodge/outdoor",
+        "/i/ice_floe",
+        "/i/ice_shelf",
+        "/i/iceberg",
+        "/i/inn/outdoor",
+        "/i/islet",
+        "/j/japanese_garden",
+        "/k/kasbah",
+        "/k/kennel/outdoor",
+        "/l/lagoon",
+        "/l/lake/natural",
+        "/l/lawn",
+        "/l/library/outdoor",
+        "/l/lighthouse",
+        "/m/mansion",
+        "/m/marsh",
+        "/m/mausoleum",
+        "/m/moat/water",
+        "/m/mosque/outdoor",
+        "/m/mountain",
+        "/m/mountain_path",
+        "/m/mountain_snowy",
+        "/o/oast_house",
+        "/o/ocean",
+        "/o/orchard",
+        "/p/park",
+        "/p/pasture",
+        "/p/pavilion",
+        "/p/picnic_area",
+        "/p/pier",
+        "/p/pond",
+        "/r/raft",
+        "/r/railroad_track",
+        "/r/rainforest",
+        "/r/rice_paddy",
+        "/r/river",
+        "/r/rock_arch",
+        "/r/roof_garden",
+        "/r/rope_bridge",
+        "/r/ruin",
+        "/s/schoolhouse",
+        "/s/sky",
+        "/s/snowfield",
+        "/s/swamp",
+        "/s/swimming_hole",
+        "/s/synagogue/outdoor",
+        "/t/temple/asia",
+        "/t/topiary_garden",
+        "/t/tree_farm",
+        "/t/tree_house",
+        "/u/underwater/ocean_deep",
+        "/u/utility_room",
+        "/v/valley",
+        "/v/vegetable_garden",
+        "/v/viaduct",
+        "/v/village",
+        "/v/vineyard",
+        "/v/volcano",
+        "/w/waterfall",
+        "/w/watering_hole",
+        "/w/wave",
+        "/w/wheat_field",
+        "/z/zen_garden",
+    )
+
+    def _collect_image_files(self, depth: Optional[int]) -> Tuple[str, ...]:
+        image_files = super()._collect_image_files(depth)
+
+        categories = [
+            category.replace("/", re.escape(os.sep)) for category in self.CATEGORIES
+        ]
+        pattern = re.compile(f"({'|'.join(categories)})")
+
+        return tuple(
+            image_file for image_file in image_files if pattern.search(image_file)
+        )
+
+
 def content_dataset(
     root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
@@ -333,7 +485,7 @@ def content_dataset(
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/prepare_dataset.py#L133
         if impl_params:
             transform = nn.Sequential(transforms.Rescale(2.0), transform)
-    return ImageFolderDataset(root, transform=transform)
+    return Places365Subset(root, transform=transform)
 
 
 def batch_sampler(
