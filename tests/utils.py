@@ -141,15 +141,19 @@ def generate_param_combinations(**kwargs):
         yield dict(zip(names, params))
 
 
-def call_args_to_kwargs_only(call_args, *function_or_arg_names):
-    if not function_or_arg_names:
+def call_args_to_kwargs_only(call_args, *callable_or_arg_names):
+    if not callable_or_arg_names:
         raise pytest.UsageError
 
-    if callable(function_or_arg_names[0]):
-        argspec = inspect.getfullargspec(function_or_arg_names[0])
+    callable_or_arg_name = callable_or_arg_names[0]
+    if callable(callable_or_arg_name):
+        argspec = inspect.getfullargspec(callable_or_arg_name)
         arg_names = argspec.args
+        if isinstance(callable_or_arg_name, type):
+            # remove self
+            arg_names.pop(0)
     else:
-        arg_names = function_or_arg_names
+        arg_names = callable_or_arg_names
 
     args, kwargs = call_args
     kwargs_only = kwargs.copy()
