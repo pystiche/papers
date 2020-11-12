@@ -90,9 +90,11 @@ def test_target_transforms_smoke(impl_params, num_transforms):
     assert len(target_transforms) == num_transforms
 
 
-def test_target_transform_smoke(target_image):
-    transform = paper.target_transforms(impl_params=True)[0]
-    assert isinstance(transform(target_image), torch.Tensor)
+def test_target_transforms_call_smoke(target_image):
+    for transform in paper.target_transforms(
+        impl_params=True, num_scale_steps=1, num_rotate_steps=1
+    ):
+        assert isinstance(transform(target_image), torch.Tensor)
 
 
 def test_preprocessor():
