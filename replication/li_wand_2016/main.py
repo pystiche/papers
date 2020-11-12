@@ -28,7 +28,7 @@ def figure_6(args):
             f"Replicating the {position} half of figure 6 " f"with {params} parameters"
         )
 
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L67
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L66
         style_loss_kwargs = {
             "patch_size": 2,
             "stride": 1,
