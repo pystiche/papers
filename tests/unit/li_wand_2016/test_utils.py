@@ -80,6 +80,19 @@ def test_extract_normalized_patches2d_no_overlap(subtests):
         ptu.assert_allclose(input_normalized.grad, input.grad)
 
 
+def test_target_transforms_smoke():
+    num_scale_steps = 2
+    num_rotate_steps = 3
+
+    target_transforms = paper.target_transforms(
+        num_scale_steps=num_scale_steps, num_rotate_steps=num_rotate_steps,
+    )
+
+    actual = len(target_transforms)
+    expected = (num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)
+    assert actual == expected
+
+
 def test_preprocessor():
     assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
 
