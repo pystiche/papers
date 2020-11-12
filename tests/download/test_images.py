@@ -14,6 +14,7 @@ IMAGES_AND_IDS = [
         "gatys_et_al_2017",
         "johnson_alahi_li_2016",
         "li_wand_2016",
+        "sanakoyeu_et_al_2018",
         "ulyanov_et_al_2016",
     )
     for name, image in importlib.import_module(f"pystiche_papers.{paper}").images()
