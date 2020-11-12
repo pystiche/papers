@@ -253,55 +253,37 @@ def image_transform(impl_params: bool = True, edge_size: int = 768) -> nn.Sequen
     return nn.Sequential(*transforms_)
 
 
+def url(
+    id: int,
+    file: str,
+    base: str = "https://raw.githubusercontent.com/CompVis/adaptive-style-transfer/gh-pages/images/experiments/comparison_with_others/",
+) -> str:
+    return urljoin(base, f"{id:04d}/{file}")
+
 def images() -> DownloadableImageCollection:
-    base_sanakoyeu = "https://raw.githubusercontent.com/CompVis/adaptive-style-transfer/gh-pages/images/experiments/comparison_with_others/"
     content_images = {
-        "garden": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0063/"), "Places365_val_00009975_content.jpg"
-            ),
+        "garden": DownloadableImage(url(63, "Places365_val_00009975_content.jpg"),
             md5="f08cfeef2e020555e6bcf0f15d9d0e36",
         ),
-        "bridge_river": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0065/"), "Places365_val_00010170_content.jpg"
-            ),
+        "bridge_river": DownloadableImage(url(65, "Places365_val_00010170_content.jpg"),
             md5="df290455d760e566b498878edb07e82c",
         ),
-        "glacier_human": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0066/"), "Places365_val_00010262_content.jpg"
-            ),
+        "glacier_human": DownloadableImage(url(66, "Places365_val_00010262_content.jpg"),
             md5="420b014fc6b2e059a7c421ee5409495e",
         ),
-        "mountain": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0074/"), "Places365_val_00010926_content.jpg"
-            ),
+        "mountain": DownloadableImage(url(74, "Places365_val_00010926_content.jpg"),
             md5="127ae1ad474a24a763d2f4f43b1c311e",
         ),
-        "horses": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0076/"), "Places365_val_00010957_content.jpg"
-            ),
+        "horses": DownloadableImage(url(76, "Places365_val_00010957_content.jpg"),
             md5="99658ffb5cea1275cf2411ba431a5b3c",
         ),
-        "stone_facade": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0085/"), "Places365_val_00012263_content.jpg"
-            ),
+        "stone_facade": DownloadableImage(url(85, "Places365_val_00012263_content.jpg"),
             md5="8f4719f5f26ede9ea350102bd5a5a6e1",
         ),
-        "waterway": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0086/"), "Places365_val_00012321_content.jpg"
-            ),
+        "waterway": DownloadableImage(url(86, "Places365_val_00012321_content.jpg"),
             md5="9b0e9aecf9cab7e956b3d3e999c0db0e",
         ),
-        "garden_parc": DownloadableImage(
-            urljoin(
-                urljoin(base_sanakoyeu, "0087/"), "Places365_val_00012339_content.jpg"
-            ),
+        "garden_parc": DownloadableImage(url(87, "Places365_val_00012339_content.jpg"),
             md5="213680b20c63cfa981dcc0455276b79f",
         ),
     }
