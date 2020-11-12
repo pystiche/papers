@@ -43,6 +43,7 @@ parts are affected:
 
 .. autofunction:: content_loss
 .. autofunction:: extract_normalized_patches2d
+.. autofunction:: hyper_parameters
 .. autofunction:: images
 .. autofunction:: image_pyramid
 .. autofunction:: multi_layer_encoder
