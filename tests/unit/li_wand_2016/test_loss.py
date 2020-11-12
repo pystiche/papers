@@ -114,7 +114,9 @@ def test_style_loss(subtests):
     pytest.param(True, 0, 0),
     pytest.param(False, 3, 2),
 )
-def test_style_loss_pyramid(mocker, impl_params, num_scale_steps, num_rotate_steps):
+def test_style_loss_target_transforms(
+    mocker, impl_params, num_scale_steps, num_rotate_steps
+):
     mock = mocker.patch("pystiche_papers.li_wand_2016._loss._target_transforms")
     paper.style_loss(impl_params=impl_params)
 
