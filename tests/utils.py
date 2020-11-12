@@ -1,10 +1,11 @@
 import contextlib
-import copy
+import inspect
 import itertools
 import os
 import shutil
 import tempfile
 from os import path
+from types import SimpleNamespace
 
 import pytest
 
@@ -136,11 +137,37 @@ def generate_param_combinations(**kwargs):
         yield dict(zip(names, params))
 
 
-def call_args_to_kwargs_only(call_args, *arg_names):
-    if call_args is None:
+def call_args_to_kwargs_only(call_args, *function_or_arg_names):
+    if not function_or_arg_names:
         raise pytest.UsageError
-    args, kwargs = call_args
 
-    kwargs_only = copy.copy(kwargs)
+    if callable(function_or_arg_names[0]):
+        argspec = inspect.getfullargspec(function_or_arg_names[0])
+        arg_names = argspec.args
+    else:
+        arg_names = function_or_arg_names
+
+    args, kwargs = call_args
+    kwargs_only = kwargs.copy()
     kwargs_only.update(dict(zip(arg_names, args)))
     return kwargs_only
+
+
+def call_args_to_namespace(call_args, *arg_names):
+    return SimpleNamespace(**call_args_to_kwargs_only(call_args, *arg_names))
+
+
+def parametrize_data(argnames, *params):
+    if isinstance(argnames, str):
+        argnames = [name.strip() for name in argnames.split(",")]
+    params = [
+        param._replace(
+            id=", ".join(
+                [f"{name}={value}" for name, value in zip(argnames, param.values)]
+            )
+        )
+        if param.id is None
+        else param
+        for param in params
+    ]
+    return pytest.mark.parametrize(argnames, params)
