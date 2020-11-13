@@ -12,6 +12,15 @@ from utils import (
 )
 
 
+# The original authors provided models together with the used hyperparameters during
+# training. Unfortunately, these hyperparameters not only deviate
+# from the paper, but also from the defaults given in the reference implementation.
+# Depending on the style and whether instance norm was used or not, the following
+# hyperparameters might differ:
+# - the score_weight for paper.content_loss(), paper.style_loss(), and
+#   paper.regularization(),
+# - the size the style_image is resized to with paper.style_transform(), and
+# - the number of batches.
 def adapted_hyperparameters(impl_params, instance_norm, style):
     hyper_parameters = paper.hyper_parameters()
     if not impl_params:
