@@ -6,6 +6,7 @@ import torch
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche.image import write_image
+from pystiche_papers import utils
 
 
 def training(args):
@@ -21,19 +22,18 @@ def training(args):
     )
 
     styles = (
-        # "cezanne",
-        # "el-greco",
-        # "gauguin",
-        # "kandinsky",
-        # "kirchner",
-        # "monet",
         "berthe-morisot",
-        # "munch",
-        # "peploe",
-        # "picasso",
-        # "pollock",
-        # "roerich",
-        # "van-gogh",
+        "edvard-munch",
+        "el-greco",
+        "ernst-ludwig-kirchner",
+        "jackson-pollock",
+        "monet_water-lilies-1914",
+        "nicholas-roerich",
+        "pablo-picasso",
+        "paul-cezanne",
+        "samuel-peploe",
+        "vincent-van-gogh_road-with-cypresses-1890",
+        "wassily-kandinsky",
     )
 
     images = paper.images()
@@ -61,6 +61,11 @@ def training(args):
         transformer = paper.training(
             content_image_loader, style_image_loader, impl_params=args.impl_params
         )
+
+        model_name = f"sanakoyeu_et_al_2018__{style}"
+        if args.impl_params:
+            model_name += "__impl_params"
+        utils.save_state_dict(transformer, model_name, root=args.model_dir)
 
         for content in contents:
             content_image = images[content].read(device=args.device)
