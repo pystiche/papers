@@ -2,7 +2,7 @@ from typing import Optional, Sized, Tuple
 from urllib.parse import urljoin
 
 import torch
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader, Dataset
 
 import pystiche.image.transforms.functional as F
 from pystiche import image
@@ -12,10 +12,11 @@ from pystiche.data import (
     ImageFolderDataset,
 )
 from pystiche.image import transforms
+from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
-from ._utils import _maybe_get_luatorch_param
+from ._utils import hyper_parameters as _hyper_parameters
 
 __all__ = [
     "content_transform",
@@ -27,26 +28,31 @@ __all__ = [
 ]
 
 
+class TopLeftCropToMultiple(transforms.Transform):
+    def __init__(self, multiple: int = 16):
+        super().__init__()
+        self.multiple = multiple
+
+    def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
+        old_height, old_width = image.extract_image_size(input_image)
+        new_height = old_height - old_height % self.multiple
+        new_width = old_width - old_width % self.multiple
+        return new_height, new_width
+
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
+        size = self.calculate_size(input_image)
+        return F.top_left_crop(input_image, size)
+
+
 def content_transform(
-    edge_size: int = 256, multiple: int = 16, impl_params: bool = True,
+    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.ComposedTransform:
-    class TopLeftCropToMultiple(transforms.Transform):
-        def __init__(self, multiple: int):
-            super().__init__()
-            self.multiple = multiple
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
 
-        def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
-            old_height, old_width = image.extract_image_size(input_image)
-            new_height = old_height - old_height % self.multiple
-            new_width = old_width - old_width % self.multiple
-            return new_height, new_width
-
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            size = self.calculate_size(input_image)
-            return F.top_left_crop(input_image, size)
-
+    edge_size = hyper_parameters.content_transform.edge_size
     transforms_ = [
-        TopLeftCropToMultiple(multiple),
+        TopLeftCropToMultiple(),
         transforms.Resize((edge_size, edge_size)),
         OptionalGrayscaleToFakegrayscale(),
     ]
@@ -56,38 +62,16 @@ def content_transform(
     return transforms.ComposedTransform(*transforms_)
 
 
-LUATORCH_STYLE_EDGE_SIZES = {
-    ("candy", True): 384,
-    ("composition_vii", False): 512,
-    ("feathers", True): 180,
-    ("la_muse", False): 512,
-    ("la_muse", True): 512,
-    ("mosaic", True): 512,
-    ("starry_night", False): 512,
-    ("the_scream", True): 384,
-    ("the_wave", False): 512,
-    ("udnie", True): 256,
-}
-
-
-def get_style_edge_size(
-    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 256,
-) -> int:
-    return _maybe_get_luatorch_param(
-        LUATORCH_STYLE_EDGE_SIZES, impl_params, instance_norm, style, default
-    )
-
-
 def style_transform(
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    edge_size: Optional[int] = None,
-    edge: str = "long",
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.Resize:
-    if edge_size is None:
-        edge_size = get_style_edge_size(impl_params, instance_norm, style)
-    return transforms.Resize(edge_size, edge=edge)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
+
+    return transforms.Resize(
+        hyper_parameters.style_transform.edge_size,
+        edge=hyper_parameters.style_transform.edge,
+    )
 
 
 def images() -> DownloadableImageCollection:
@@ -155,63 +139,28 @@ def dataset(
     return ImageFolderDataset(root, transform=transform)
 
 
-LUATORCH_NUM_BATCHES = {
-    ("candy", True): 40000,
-    ("composition_vii", False): 60000,
-    ("feathers", True): 60000,
-    ("la_muse", False): 40000,
-    ("la_muse", True): 40000,
-    ("mosaic", True): 60000,
-    ("starry_night", False): 40000,
-    ("the_scream", True): 60000,
-    ("the_wave", False): 40000,
-    ("udnie", True): 40000,
-}
-
-
-def get_num_batches(
-    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 40000,
-) -> int:
-    return _maybe_get_luatorch_param(
-        LUATORCH_NUM_BATCHES, impl_params, instance_norm, style, default
-    )
-
-
 def batch_sampler(
-    data_source: Sized,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    num_batches: Optional[int] = None,
-    batch_size: int = 4,
+    data_source: Sized, hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
-    if num_batches is None:
-        num_batches = get_num_batches(impl_params, instance_norm, style)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
     return FiniteCycleBatchSampler(
-        data_source, num_batches=num_batches, batch_size=batch_size
+        data_source,
+        num_batches=hyper_parameters.batch_sampler.num_batches,
+        batch_size=hyper_parameters.batch_sampler.batch_size,
     )
-
-
-batch_sampler_ = batch_sampler
 
 
 def image_loader(
     dataset: Dataset,
-    batch_sampler: Optional[Sampler] = None,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    num_workers: int = 4,
+    hyper_parameters: Optional[HyperParameters] = None,
     pin_memory: bool = True,
 ) -> DataLoader:
-    if batch_sampler is None:
-        batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm, style=style
-        )
-
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
     return DataLoader(
         dataset,
-        batch_sampler=batch_sampler,
-        num_workers=num_workers,
+        batch_sampler=batch_sampler(dataset),
+        num_workers=hyper_parameters.batch_sampler.batch_size,
         pin_memory=pin_memory,
     )

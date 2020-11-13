@@ -2,17 +2,18 @@ from typing import Callable, Optional, Union, cast
 
 import torch
 from torch import nn
-from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
 import pystiche
 from pystiche import loss, misc, optim
+from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
 from ._data import images as _images
 from ._data import style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
+from ._utils import hyper_parameters as _hyper_parameters
 from ._utils import optimizer as _optimizer
 from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
@@ -25,9 +26,7 @@ def training(
     style_image: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: Optional[bool] = None,
-    transformer: Optional[nn.Module] = None,
-    criterion: Optional[loss.PerceptualLoss] = None,
-    optimizer: Optional[Optimizer] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
     quiet: bool = False,
     logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
@@ -47,12 +46,8 @@ def training(
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. If omitted,
             defaults to ``impl_params``.
-        transformer: Transformer to be optimized. If omitted,
-            :func:`~pystiche_papers.johnson_alahi_li_2016.transformer` is used.
-        criterion: Optimization criterion. If omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss` is used.
-        optimizer: Optimizer for the transformer. If omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016.optimizer` is used.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If omitted,
@@ -65,12 +60,9 @@ def training(
     If ``impl_params is True`` , an external preprocessing of the images is used.
 
     """
-    style: Optional[str]
     if isinstance(style_image, torch.Tensor):
         device = style_image.device
-        style = None
     else:
-        style = style_image
         device = misc.get_device()
         images = _images()
         style_image = images[style_image].read(device=device)
@@ -78,24 +70,20 @@ def training(
     if instance_norm is None:
         instance_norm = impl_params
 
-    if transformer is None:
-        transformer = _transformer(impl_params=impl_params, instance_norm=instance_norm)
-        transformer = transformer.train()
-    transformer = transformer.to(device)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
 
-    if criterion is None:
-        criterion = perceptual_loss(
-            impl_params=impl_params, instance_norm=instance_norm, style=style
-        )
-        criterion = criterion.eval()
-    criterion = criterion.to(device)
+    transformer = _transformer(impl_params=impl_params, instance_norm=instance_norm)
+    transformer = transformer.train().to(device)
 
-    if optimizer is None:
-        optimizer = _optimizer(transformer)
-
-    style_transform = _style_transform(
-        impl_params=impl_params, instance_norm=instance_norm, style=style
+    criterion = perceptual_loss(
+        impl_params=impl_params, hyper_parameters=hyper_parameters
     )
+    criterion = criterion.eval().to(device)
+
+    optimizer = _optimizer(transformer)
+
+    style_transform = _style_transform(hyper_parameters=hyper_parameters)
     style_transform = style_transform.to(device)
     style_image = style_transform(style_image)
     style_image = batch_up_image(style_image, loader=content_image_loader)

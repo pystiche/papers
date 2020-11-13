@@ -1,12 +1,11 @@
-from typing import Dict, Optional, Tuple, TypeVar
-
 from torch import nn, optim
 
 from pystiche import enc
 from pystiche.image import transforms
+from pystiche_papers.utils import HyperParameters
 
 __all__ = [
-    "_maybe_get_luatorch_param",
+    "hyper_parameters",
     "preprocessor",
     "postprocessor",
     "multi_layer_encoder",
@@ -14,23 +13,34 @@ __all__ = [
 ]
 
 
-T = TypeVar("T")
-
-
-def _maybe_get_luatorch_param(
-    param_dict: Dict[Tuple[str, bool], T],
-    impl_params: bool,
-    instance_norm: bool,
-    style: Optional[str],
-    default: T,
-) -> T:
-    if style is None or not impl_params:
-        return default
-
-    try:
-        return param_dict[(style, instance_norm)]
-    except KeyError:
-        return default
+def hyper_parameters() -> HyperParameters:
+    r"""Hyper parameters from :cite:`JAL2016`."""
+    return HyperParameters(
+        content_loss=HyperParameters(
+            layer="relu2_2",
+            # The paper reports no score weight so we go with the default value of the
+            # implementation instead
+            # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L36
+            score_weight=1e0,
+        ),
+        style_loss=HyperParameters(
+            layers=("relu1_2", "relu2_2", "relu3_3", "relu4_3"),
+            layer_weights="sum",
+            # The paper reports no style score weight so we go with the default value
+            # of the implementation instead
+            # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L43
+            score_weight=5e0,
+        ),
+        regularization=HyperParameters(
+            # The paper reports a range of regularization score weights so we go with
+            # the default value of the implementation instead
+            # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L33
+            score_weight=1e-6,
+        ),
+        content_transform=HyperParameters(edge_size=256),
+        style_transform=HyperParameters(edge_size=256, edge="long"),
+        batch_sampler=HyperParameters(num_batches=40000, batch_size=4),
+    )
 
 
 def preprocessor() -> transforms.CaffePreprocessing:
