@@ -12,16 +12,16 @@ from utils import (
 )
 
 
-# The original authors provided models together with the used hyperparameters during
-# training. Unfortunately, these hyperparameters not only deviate
+# The original authors provided models together with the used hyper-parameters during
+# training. Unfortunately, these hyper-parameters not only deviate
 # from the paper, but also from the defaults given in the reference implementation.
 # Depending on the style and whether instance norm was used or not, the following
-# hyperparameters might differ:
+# hyper-parameters might differ:
 # - the score_weight for paper.content_loss(), paper.style_loss(), and
 #   paper.regularization(),
 # - the size the style_image is resized to with paper.style_transform(), and
 # - the number of batches.
-def adapted_hyperparameters(impl_params, instance_norm, style):
+def adapted_hyper_parameters(impl_params, instance_norm, style):
     hyper_parameters = paper.hyper_parameters()
     if not impl_params:
         return hyper_parameters
@@ -96,7 +96,7 @@ def main(args):
             args.images_source_dir, style, device=args.device
         )
 
-        hyper_parameters = adapted_hyperparameters(
+        hyper_parameters = adapted_hyper_parameters(
             args.impl_params, args.instance_norm, style
         )
 
