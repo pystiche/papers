@@ -12,6 +12,70 @@ from utils import (
 )
 
 
+def adapted_hyperparameters(impl_params, instance_norm, style):
+    hyper_parameters = paper.hyper_parameters()
+    if not impl_params:
+        return hyper_parameters
+
+    content_loss = hyper_parameters.content_loss
+    style_loss = hyper_parameters.style_loss
+    regularization = hyper_parameters.regularization
+    style_transform = hyper_parameters.style_transform
+    batch_sampler = hyper_parameters.batch_sampler
+
+    if instance_norm and style == "candy":
+        style_loss.score_weight = 1e1
+        regularization.score_weight = 1e-4
+        style_transform.edge_size = 384
+
+    elif not instance_norm and style == "composition_vii":
+        style_transform.edge_size = 512
+        batch_sampler.num_batches = 60000
+
+    elif instance_norm and style == "feathers":
+        style_loss.score_weight = 1e1
+        regularization.score_weight = 1e-5
+        style_transform.edge_size = 180
+        batch_sampler.num_batches = 60000
+
+    elif instance_norm and style == "la_muse":
+        content_loss.score_weight = 5e-1
+        style_loss.score_weight = 1e1
+        regularization.score_weight = 1e-4
+        style_transform.edge_size = 512
+
+    elif not instance_norm and style == "la_muse":
+        regularization.score_weight = 1e-5
+        style_transform.edge_size = 512
+
+    elif instance_norm and style == "mosaic":
+        style_loss.score_weight = 1e1
+        regularization.score_weight = 1e-5
+        style_transform.edge_size = 512
+        batch_sampler.num_batches = 60000
+
+    elif not instance_norm and style == "starry_night":
+        style_loss.score_weight = 3e0
+        regularization.score_weight = 1e-5
+        style_transform.edge_size = 512
+
+    elif instance_norm and style == "the_scream":
+        style_loss.score_weight = 2e1
+        regularization.score_weight = 1e-5
+        style_transform.edge_size = 384
+        batch_sampler.num_batches = 60000
+
+    elif not instance_norm and style == "the_wave":
+        regularization.score_weight = 1e-4
+        style_transform.edge_size = 512
+
+    elif instance_norm and style == "udnie":
+        content_loss.score_weight = 5e-1
+        style_loss.score_weight = 1e1
+
+    return hyper_parameters
+
+
 def main(args):
     dataset = paper.dataset(args.dataset_dir, impl_params=args.impl_params)
     content_image_loader = paper.image_loader(
@@ -23,11 +87,16 @@ def main(args):
             args.images_source_dir, style, device=args.device
         )
 
+        hyper_parameters = adapted_hyperparameters(
+            args.impl_params, args.instance_norm, style
+        )
+
         transformer = paper.training(
             content_image_loader,
             style_image,
             impl_params=args.impl_params,
             instance_norm=args.instance_norm,
+            hyper_parameters=hyper_parameters,
             quiet=args.quiet,
             logger=optim.OptimLogger(),
         )
