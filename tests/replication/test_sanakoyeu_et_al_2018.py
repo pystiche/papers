@@ -4,7 +4,7 @@ from os import path
 
 import pytest
 
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import TensorDataset
 
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
 from pystiche import misc
@@ -31,25 +31,10 @@ def dir_manager():
 make_paper_mock_target = functools.partial(make_mock_target, PAPER)
 
 
-class TestContentDataset(Dataset):
-    def __init__(self, data):
-        self.data = data
-
-    def __iter__(self):
-        return iter([self.data])
-
-    def __getitem__(self, idx):
-        return self.data
-
-    def __len__(self):
-        return len([self.data])
-
-
 @pytest.fixture
-def content_dataset(mocker, content_image):
+def content_dataset(mocker):
     return mocker.patch(
-        make_paper_mock_target("content_dataset"),
-        return_value=TestContentDataset(content_image),
+        make_paper_mock_target("content_dataset"), return_value=TensorDataset(),
     )
 
 

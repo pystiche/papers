@@ -9,21 +9,35 @@ from pystiche.image import write_image
 
 
 def training(args):
-    styles = (
-        "cezanne",
-        "el-greco",
-        "gauguin",
-        "kandinsky",
-        "kirchner",
-        "monet",
-        "morisot",
-        "munch",
-        "peploe",
-        "picasso",
-        "pollock",
-        "roerich",
-        "van-gogh",
+    contents = (
+        "garden",
+        "bridge_river",
+        "glacier_human",
+        "mountain",
+        "horses",
+        "stone_facade",
+        "waterway",
+        "garden_parc",
     )
+
+    styles = (
+        # "cezanne",
+        # "el-greco",
+        # "gauguin",
+        # "kandinsky",
+        # "kirchner",
+        # "monet",
+        "berthe-morisot",
+        # "munch",
+        # "peploe",
+        # "picasso",
+        # "pollock",
+        # "roerich",
+        # "van-gogh",
+    )
+
+    images = paper.images()
+    images.download(args.image_source_dir)
 
     content_dataset = paper.content_dataset(
         path.join(args.dataset_dir, "content"), impl_params=args.impl_params
@@ -48,13 +62,13 @@ def training(args):
             content_image_loader, style_image_loader, impl_params=args.impl_params
         )
 
-        for i in range(10):
-            content_image = next(iter(content_image_loader)).squeeze(1)
+        for content in contents:
+            content_image = images[content].read(device=args.device)
             output_image = paper.stylization(
                 content_image, transformer, impl_params=args.impl_params,
             )
 
-            output_name = f"{style}_{str(i)}"
+            output_name = f"{style}_{content}"
             if args.impl_params:
                 output_name += "__impl_params"
             output_file = path.join(args.image_results_dir, f"{output_name}.jpg")
