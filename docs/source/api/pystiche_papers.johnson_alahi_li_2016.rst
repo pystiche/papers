@@ -50,6 +50,7 @@ parts are affected:
 .. autofunction:: content_loss
 .. autofunction:: content_transform
 .. autofunction:: dataset
+.. autofunction:: hyperparameters
 .. autofunction:: images
 .. autofunction:: image_loader
 .. autofunction:: multi_layer_encoder
