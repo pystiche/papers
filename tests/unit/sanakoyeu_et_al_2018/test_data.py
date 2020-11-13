@@ -14,7 +14,7 @@ from torch.utils.data.sampler import RandomSampler
 import pystiche
 import pystiche.image.transforms.functional as F
 import pystiche_papers.sanakoyeu_et_al_2018 as paper
-from pystiche.data import ImageFolderDataset
+from pystiche.data import DownloadableImageCollection, ImageFolderDataset
 from pystiche.image import (
     extract_edge_size,
     extract_image_size,
@@ -200,6 +200,10 @@ def test_image_transform_impl_params():
     expected = transform(image)
 
     ptu.assert_allclose(actual, expected)
+
+
+def test_images_smoke():
+    assert isinstance(paper.images(), DownloadableImageCollection)
 
 
 def test_WikiArt_unknown_style(tmpdir):
