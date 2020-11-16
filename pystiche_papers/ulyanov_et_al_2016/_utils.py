@@ -6,8 +6,10 @@ from torch.optim.optimizer import Optimizer
 
 from pystiche import enc
 from pystiche.image import transforms
+from pystiche_papers.utils import HyperParameters
 
 __all__ = [
+    "hyper_parameters",
     "multi_layer_encoder",
     "preprocessor",
     "postprocessor",
@@ -15,6 +17,87 @@ __all__ = [
     "DelayedExponentialLR",
     "lr_scheduler",
 ]
+
+
+def hyper_parameters(
+    impl_params: bool = True, instance_norm: bool = True
+) -> HyperParameters:
+    r"""Hyper parameters from :cite:`ULVL2016`."""
+    return HyperParameters(
+        content_loss=HyperParameters(
+            layer="relu4_2",
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
+            score_weight=6e-1 if impl_params and not instance_norm else 1e0,
+        ),
+        style_loss=HyperParameters(
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
+            layers=("relu1_1", "relu2_1", "relu3_1", "relu4_1")
+            if impl_params and instance_norm
+            else ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"),
+            layer_weights="sum",
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
+            score_weight=1e3 if impl_params and not instance_norm else 1e0,
+        ),
+        content_transform=HyperParameters(edge_size=256,),
+        style_transform=HyperParameters(
+            edge_size=256,
+            interpolation_mode="bicubic"
+            if impl_params and instance_norm
+            else "bilinear",
+        ),
+        batch_sampler=HyperParameters(
+            # The number of iterations is split up into multiple epochs with
+            # corresponding num_batches:
+            num_batches=(
+                # 50000 = 25 * 2000
+                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
+                2000
+                if instance_norm
+                # 3000 = 10 * 300
+                # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
+                else 300
+            )
+            if impl_params
+            else 200,
+            batch_size=(
+                (
+                    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L50
+                    1
+                    if instance_norm
+                    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L32
+                    else 4
+                )
+                if impl_params
+                else 16
+            ),
+        ),
+        optimizer=HyperParameters(
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29
+            lr=1e-3
+            if impl_params and instance_norm
+            else 1e-1,
+        ),
+        lr_scheduler=HyperParameters(
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201
+            lr_decay=0.8 if impl_params else 0.7,
+            delay=0 if impl_params else 4,
+        ),
+        # The number of iterations is split up into multiple epochs with
+        # corresponding num_batches:
+        num_epochs=(
+            # 50000 = 25 * 2000
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
+            25
+            if impl_params and instance_norm
+            # 3000 = 10 * 300 / 2000 = 10 * 200
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
+            else 10
+        ),
+    )
+
+
+_hyper_parameters = hyper_parameters
 
 
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
