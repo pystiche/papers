@@ -91,8 +91,8 @@ class GramOperator(ops.GramOperator):
         self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
     ):
         super().__init__(encoder, **gram_op_kwargs)
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L38
         self.normalize_by_num_channels = impl_params
-        self.loss_reduction = "mean"
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
         # nn.MSECriterion() was used to calculate the style loss, which by default uses
