@@ -91,7 +91,8 @@ class GramOperator(ops.GramOperator):
         self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
     ):
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L38
-        # In the reference implementation the output is only divided by the batch_size.
+        # In the reference implementation the gram_matrix is only divided by the
+        # batch_size.
         normalize = not impl_params
         self.normalize_by_num_channels = impl_params
         super().__init__(encoder, normalize=normalize, **gram_op_kwargs)
