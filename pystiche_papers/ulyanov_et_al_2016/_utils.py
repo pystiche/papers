@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
@@ -116,7 +116,10 @@ def postprocessor() -> transforms.CaffePostprocessing:
 
 
 def optimizer(
-    transformer: nn.Module, impl_params: bool = True, instance_norm: bool = True
+    transformer: nn.Module,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> optim.Adam:
     r"""Optimizer from :cite:`ULVL2016`.
 
@@ -130,11 +133,15 @@ def optimizer(
             :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
             flag is used for switching between two reference implementations. For
             details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
-    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29
-    lr = 1e-3 if impl_params and instance_norm else 1e-1
-    return optim.Adam(transformer.parameters(), lr=lr)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+    return optim.Adam(transformer.parameters(), lr=hyper_parameters.optimizer.lr)
 
 
 class DelayedExponentialLR(ExponentialLR):
@@ -165,20 +172,34 @@ class DelayedExponentialLR(ExponentialLR):
             return self.base_lrs
 
 
-def lr_scheduler(optimizer: Optimizer, impl_params: bool = True,) -> ExponentialLR:
+def lr_scheduler(
+    optimizer: Optimizer,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
+) -> ExponentialLR:
     r"""Learning rate scheduler from :cite:`ULVL2016`.
 
     Args:
         optimizer: Wrapped optimizer.
         impl_params: If ``True``, an :class:`~torch.optim.lr_scheduler.ExponentialLR`
-        with ``gamma==0.8`` is used instead of a
-        :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with
-        ``gamma==0.7`` and ``delay==5``.
+            with ``gamma==0.8`` is used instead of a
+            :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with
+            ``gamma==0.7`` and ``delay==5``.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
+            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
+            flag is used for switching between two reference implementations. For
+            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
     """
-    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L260
-    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L201
-    return (
-        ExponentialLR(optimizer, 0.8)
-        if impl_params
-        else DelayedExponentialLR(optimizer, 0.7, 5)
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
+    return DelayedExponentialLR(
+        optimizer,
+        hyper_parameters.lr_scheduler.lr_decay,
+        hyper_parameters.lr_scheduler.delay,
     )
