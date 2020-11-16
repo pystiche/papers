@@ -41,6 +41,7 @@ def hyper_parameters(
         content_transform=HyperParameters(edge_size=256,),
         style_transform=HyperParameters(
             edge_size=256,
+            edge="long",
             interpolation_mode="bicubic"
             if impl_params and instance_norm
             else "bilinear",
