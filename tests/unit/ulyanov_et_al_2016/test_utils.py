@@ -89,7 +89,7 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
         assert hyper_parameters.edge_size == 256
 
     with subtests.test("edge"):
-        assert hyper_parameters.edge_size == "long"
+        assert hyper_parameters.edge == "long"
 
     with subtests.test("interpolation_mode"):
         assert hyper_parameters.interpolation_mode == (
