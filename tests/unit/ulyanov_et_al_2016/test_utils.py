@@ -1,5 +1,3 @@
-import itertools
-
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -10,17 +8,7 @@ from pystiche import enc
 from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
-from tests import utils
-
-impl_params_and_instance_norm = utils.parametrize_data(
-    ("impl_params", "instance_norm"),
-    *[
-        pytest.param(impl_params, instance_norm)
-        for impl_params, instance_norm in itertools.product(
-            (True, False), (True, False)
-        )
-    ],
-)
+from .utils import impl_params_and_instance_norm
 
 
 def test_hyper_parameters_smoke():

@@ -1,9 +1,11 @@
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Optional
 
 import torch
 
 from pystiche import enc, image, loss, ops
+from pystiche_papers.utils import HyperParameters
 
+from ._utils import _hyper_parameters
 from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
@@ -32,9 +34,7 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         if not self.double_batch_size_mean:
             return score
 
-        # instance_norm:
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
-        # not instance_norm:
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
         # nn.MSECriterion() was used to calculate the content loss, which by default
         # uses reduction="mean" which also includes the batch_size. However, the
@@ -47,8 +47,7 @@ def content_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    layer: str = "relu4_2",
-    score_weight: Optional[float] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
     r"""Content_loss from :cite:`ULVL2016`.
 
@@ -64,25 +63,24 @@ def content_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-        layer: Layer from which the encodings of the ``multi_layer_encoder`` should be
-            taken. Defaults to ``"relu4_2"``.
-        score_weight: Score weight of the operator. If omitted, the ``score_weight`` is
-            determined with respect to ``impl_params`` and ``instance_norm``. For
-            details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     If ``impl_params is True`` , the score is divided twice by the batch_size.
 
     """
-    if score_weight is None:
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L22
-        score_weight = 6e-1 if impl_params and not instance_norm else 1e0
-
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
-    encoder = multi_layer_encoder.extract_encoder(layer)
+
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
 
     return FeatureReconstructionOperator(
-        encoder, score_weight=score_weight, impl_params=impl_params
+        multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
+        impl_params=impl_params,
+        score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
@@ -126,10 +124,7 @@ def style_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    layers: Optional[Sequence[str]] = None,
-    layer_weights: Union[str, Sequence[float]] = "sum",
-    score_weight: Optional[float] = None,
-    **gram_op_kwargs: Any,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> ops.MultiLayerEncodingOperator:
     r"""Style_loss from :cite:`ULVL2016`.
 
@@ -145,43 +140,29 @@ def style_loss(
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-        layers: Layers from which the encodings of the ``multi_layer_encoder`` should be
-            taken. If omitted, the layers are determined with respect to ``impl_params``
-            and ``instance_norm``. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        layer_weights: Layer weights of the operator. Defaults to ``"sum"``.
-        score_weight: Score weight of the operator. If omitted, the ``score_weight`` is
-            determined with respect to ``instance_norm`` and ``impl_params``. For
-            details see :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        **gram_op_kwargs: Optional parameters for the
-            :class:`~pystiche.ops.GramOperator`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     If ``impl_params`` is ``True`` , the score is divided twice by the batch_size.
 
     """
-    if score_weight is None:
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
-        score_weight = 1e3 if impl_params and not instance_norm else 1e0
-
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
-    if layers is None:
-        if impl_params and instance_norm:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
-            layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1")
-        else:
-            layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
+        return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
 
     return ops.MultiLayerEncodingOperator(
         multi_layer_encoder,
-        layers,
+        hyper_parameters.style_loss.layers,
         get_encoding_op,
-        layer_weights=layer_weights,
-        score_weight=score_weight,
+        layer_weights=hyper_parameters.style_loss.layer_weights,
+        score_weight=hyper_parameters.style_loss.score_weight,
     )
 
 
@@ -189,8 +170,7 @@ def perceptual_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    content_loss_kwargs: Optional[Dict[str, Any]] = None,
-    style_loss_kwargs: Optional[Dict[str, Any]] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> loss.PerceptualLoss:
     r"""Perceptual loss from :cite:`ULVL2016`.
 
@@ -206,29 +186,29 @@ def perceptual_loss(
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
             is used.
-        content_loss_kwargs: Optional parameters for the :func:`content_loss`.
-        style_loss_kwargs: Optional parameters for the :func:`style_loss`.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
 
-    if style_loss_kwargs is None:
-        style_loss_kwargs = {}
-    style_loss_ = style_loss(
-        impl_params=impl_params,
-        instance_norm=instance_norm,
-        multi_layer_encoder=multi_layer_encoder,
-        **style_loss_kwargs,
-    )
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
 
-    if content_loss_kwargs is None:
-        content_loss_kwargs = {}
-    content_loss_ = content_loss(
-        impl_params=impl_params,
-        instance_norm=instance_norm,
-        multi_layer_encoder=multi_layer_encoder,
-        **content_loss_kwargs,
+    return loss.PerceptualLoss(
+        content_loss(
+            impl_params=impl_params,
+            instance_norm=instance_norm,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
+        ),
+        style_loss(
+            impl_params=impl_params,
+            instance_norm=instance_norm,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
+        ),
     )
-
-    return loss.PerceptualLoss(content_loss_, style_loss_)
