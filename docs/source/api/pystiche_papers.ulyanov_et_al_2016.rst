@@ -117,6 +117,7 @@ The ``style_layers`` have either configuration ``1``
 .. autofunction:: content_loss
 .. autofunction:: content_transform
 .. autofunction:: dataset
+.. autofunction:: hyper_parameters
 .. autofunction:: images
 .. autofunction:: image_loader
 .. autofunction:: multi_layer_encoder
