@@ -20,7 +20,7 @@ def test_hyper_parameters(subtests):
 
 @utils.impl_params
 def test_hyper_parameters_content_loss(subtests, impl_params):
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "content_loss"
     assert sub_params in hyper_parameters
@@ -37,7 +37,7 @@ def test_hyper_parameters_content_loss(subtests, impl_params):
 
 @utils.impl_params
 def test_hyper_parameters_target_transforms(subtests, impl_params):
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "target_transforms"
     assert sub_params in hyper_parameters
@@ -58,7 +58,7 @@ def test_hyper_parameters_target_transforms(subtests, impl_params):
 
 @utils.impl_params
 def test_hyper_parameters_style_loss(subtests, impl_params):
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "style_loss"
     assert sub_params in hyper_parameters
@@ -84,7 +84,7 @@ def test_hyper_parameters_style_loss(subtests, impl_params):
 
 @utils.impl_params
 def test_hyper_parameters_image_pyramid(subtests, impl_params):
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "image_pyramid"
     assert sub_params in hyper_parameters

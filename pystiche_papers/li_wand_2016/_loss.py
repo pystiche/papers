@@ -72,7 +72,7 @@ def content_loss(
         multi_layer_encoder = _multi_layer_encoder()
 
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters()
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     return FeatureReconstructionOperator(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
@@ -150,7 +150,7 @@ def style_loss(
         multi_layer_encoder = _multi_layer_encoder()
 
     if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters()
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> MRFOperator:
         return MRFOperator(
