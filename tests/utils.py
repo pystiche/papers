@@ -173,7 +173,7 @@ def parametrize_data(argnames, *argvalues):
         return ", ".join([f"{name}={value}" for name, value in zip(argnames, values)])
 
     if not isinstance(argvalues[0], ParameterSet):
-        argvalues = [pytest.param(values, id=id(values)) for values in zip(*argvalues)]
+        argvalues = [pytest.param(*values, id=id(values)) for values in zip(*argvalues)]
     else:
         argvalues = [
             param._replace(id=id(param.values)) if param.id is None else param
