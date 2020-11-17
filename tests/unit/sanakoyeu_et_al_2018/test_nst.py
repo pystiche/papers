@@ -310,10 +310,7 @@ def test_training_criterion_eval(
     training,
 ):
     args, _, _ = training()
-    discriminator_criterion = args[4]
     transformer_criterion = args[5]
-    with subtests.test("discriminator_criterion"):
-        discriminator_criterion.eval.assert_called_once_with()
 
     with subtests.test("transformer_criterion"):
         transformer_criterion.eval.assert_called_once_with()

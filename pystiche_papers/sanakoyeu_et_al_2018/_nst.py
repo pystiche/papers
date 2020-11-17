@@ -276,9 +276,11 @@ def training(
     transformer = transformer.to(device)
 
     prediction_operator = prediction_loss(impl_params=impl_params)
+    # TODO: Change this in MultiLayerEncoder
+    prediction_operator.train()
+    prediction_operator.requires_grad_(True)
 
     discriminator_criterion = DiscriminatorLoss(prediction_operator)
-    discriminator_criterion = discriminator_criterion.eval()
     discriminator_criterion = discriminator_criterion.to(device)
 
     transformer_criterion = transformer_loss(
