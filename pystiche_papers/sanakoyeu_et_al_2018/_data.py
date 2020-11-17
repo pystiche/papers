@@ -24,7 +24,6 @@ from pystiche.image.utils import extract_edge_size, extract_image_size
 from pystiche.misc import to_2d_arg, verify_str_arg
 
 from ..utils import OptionalGrayscaleToFakegrayscale
-
 from ._augmentation import (
     AugmentationBase2d,
     _adapted_uniform,

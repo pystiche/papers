@@ -299,23 +299,6 @@ def test_training_transformer_train(
     transformer.train.assert_called_once_with()
 
 
-def test_training_criterion_eval(
-    subtests,
-    optimizer_mocks,
-    lr_scheduler_mocks,
-    transformer_mocks,
-    prediction_operator_mocks,
-    transformer_loss_mocks,
-    discriminator_loss_mocks,
-    training,
-):
-    args, _, _ = training()
-    transformer_criterion = args[5]
-
-    with subtests.test("transformer_criterion"):
-        transformer_criterion.eval.assert_called_once_with()
-
-
 def test_training_num_epochs(
     subtests,
     optimizer_mocks,

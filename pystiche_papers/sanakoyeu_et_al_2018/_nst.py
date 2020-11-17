@@ -286,7 +286,7 @@ def training(
     transformer_criterion = transformer_loss(
         transformer.encoder, prediction_operator, impl_params=impl_params
     )
-    transformer_criterion = transformer_criterion.eval()
+    transformer_criterion = transformer_criterion.train()
     transformer_criterion = transformer_criterion.to(device)
 
     get_optimizer = optimizer
