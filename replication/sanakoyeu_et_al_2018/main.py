@@ -56,7 +56,7 @@ def training(args):
 
     for style in styles:
         style_dataset = paper.style_dataset(
-            path.join(args.dataset_dir, "style"), style, impl_params=args.impl_params
+            path.join(args.dataset_dir, "style"), style, impl_params=args.impl_params, download=True
         )
         style_image_loader = paper.image_loader(
             style_dataset,
