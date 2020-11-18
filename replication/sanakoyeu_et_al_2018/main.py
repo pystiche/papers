@@ -39,22 +39,20 @@ def training(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    # content_dataset = paper.content_dataset(
-    #     path.join(args.dataset_dir, "content"), impl_params=args.impl_params
-    # )
+    content_dataset = paper.content_dataset(
+        path.join(args.dataset_dir, "content"), impl_params=args.impl_params
+    )
 
     content_dataset = paper.content_dataset(
-        path.join(
-            "home", "julianbueltemeier", "datasets", "places365", "data_large_standard"
-        ),
+        "/home/julianbueltemeier/datasets/places365/data_large_standard",
         impl_params=args.impl_params,
     )
 
-    content_image_loader = paper.image_loader(
-        content_dataset,
-        impl_params=args.impl_params,
-        pin_memory=str(args.device).startswith("cuda"),
-    )
+    # content_image_loader = paper.image_loader(
+    #     content_dataset,
+    #     impl_params=args.impl_params,
+    #     pin_memory=str(args.device).startswith("cuda"),
+    # )
 
     for style in styles:
         style_dataset = paper.style_dataset(

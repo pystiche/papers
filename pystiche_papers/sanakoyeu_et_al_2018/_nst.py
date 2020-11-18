@@ -1,3 +1,4 @@
+import time
 from typing import Callable, Optional, Tuple, Union, cast
 
 import torch
@@ -6,7 +7,7 @@ from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
-from pystiche import loss, misc
+from pystiche import LossDict, loss, misc, optim
 from pystiche.image.transforms import functional as F
 
 from ._data import content_dataset, image_loader, style_dataset
@@ -73,6 +74,10 @@ def gan_optim_loop(
 
     """
     device = misc.get_device()
+
+    logger = optim.OptimLogger()
+    log_fn = optim.default_transformer_optim_log_fn(logger, len(content_image_loader))
+    quiet = False
     style_image_loader = iter(style_image_loader)
     preprocessor = _preprocessor()
 
@@ -89,15 +94,29 @@ def gan_optim_loop(
             "discriminator_success", init_val=target_win_rate
         )
 
+    def logging(
+        loss: LossDict, batch_size: int, loading_time: float, processing_time: float
+    ) -> None:
+        image_loading_velocity = batch_size / max(loading_time, 1e-6)
+        image_processing_velocity = batch_size / max(processing_time, 1e-6)
+        # See https://github.com/pmeier/pystiche/pull/264#discussion_r430205029
+        log_fn(batch, loss, image_loading_velocity, image_processing_velocity)
+
     def train_discriminator_one_step(
         output_image: torch.Tensor,
         style_image: torch.Tensor,
         input_image: Optional[torch.Tensor] = None,
     ) -> None:
         def closure() -> float:
+            processing_time_start = time.time()
+
             cast(Optimizer, discriminator_optimizer).zero_grad()
             loss = discriminator_criterion(output_image, style_image, input_image)
             loss.backward()
+
+            processing_time = time.time() - processing_time_start
+
+            logging(loss, output_image.size()[0], loading_time, processing_time)
             return cast(float, loss.item())
 
         cast(Optimizer, discriminator_optimizer).step(closure)
@@ -105,10 +124,16 @@ def gan_optim_loop(
 
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
+            processing_time_start = time.time()
+
             cast(Optimizer, transformer_optimizer).zero_grad()
             cast(MultiLayerPredictionOperator, transformer_criterion.style_loss).real()
             loss = transformer_criterion(output_image)
             loss.backward()
+
+            processing_time = time.time() - processing_time_start
+
+            logging(loss, output_image.size()[0], loading_time, processing_time)
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
@@ -117,9 +142,12 @@ def gan_optim_loop(
         ).get_accuracy()
         discriminator_success.update(1.0 - accuracy)
 
-    for content_image in content_image_loader:
+    loading_time_start = time.time()
+    for batch, content_image in enumerate(content_image_loader):
         content_image = content_image.squeeze(1)
         input_image = content_image.to(device)
+
+        loading_time = time.time() - loading_time_start
 
         output_image = transformer(preprocessor(input_image))
 
