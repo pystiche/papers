@@ -226,7 +226,7 @@ class TotalVariationOperator(ops.TotalVariationOperator):
         super().__init__(**total_variation_op_kwargs)
 
         self.loss_reduction = "sum"
-        self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
+        self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
         score = F.total_variation_loss(
