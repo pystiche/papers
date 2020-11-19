@@ -94,7 +94,8 @@ class MRFOperator(ops.MRFOperator):
     ):
         super().__init__(encoder, patch_size, **mrf_op_kwargs)
 
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L108
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L221
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L224
         # They use normalized patches instead of the unnormalized patches described in
         # the paper.
         self.normalize_patches_grad = impl_params
