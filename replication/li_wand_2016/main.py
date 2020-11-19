@@ -46,6 +46,7 @@ def figure_6(args):
                 style_image,
                 impl_params=args.impl_params,
                 criterion=criterion,
+                starting_point="content" if args.impl_params else "random",
                 quiet=args.quiet,
                 logger=args.logger,
             )
