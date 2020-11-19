@@ -55,8 +55,7 @@ def test_MRFOperator(
 
     patch_size = 3
     stride = 1
-    configs = ((True, 1.0), (False, 1.0 / 2.0))
-    for (impl_params, score_correction_factor,) in configs:
+    for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
 
             op = paper.MRFOperator(
@@ -73,8 +72,7 @@ def test_MRFOperator(
             target_repr = extract_patches2d(target_enc, patch_size, stride)
             input_repr = extract_patches2d(input_enc, patch_size, stride)
 
-            score = F.mrf_loss(input_repr, target_repr, reduction="sum")
-            desired = score * score_correction_factor
+            desired = F.mrf_loss(input_repr, target_repr, reduction="sum")
 
             assert actual == ptu.approx(desired)
 
@@ -130,19 +128,12 @@ def test_style_loss_target_transforms(
 
 
 def test_TotalVariationOperator(subtests, input_image):
-    configs = ((True, 1.0), (False, 1.0 / 2.0))
-    for impl_params, score_correction_factor in configs:
-        with subtests.test(impl_params=impl_params):
-            op = paper.TotalVariationOperator(impl_params=impl_params,)
-            actual = op(input_image)
+    op = paper.TotalVariationOperator()
+    actual = op(input_image)
 
-            score = F.total_variation_loss(
-                input_image, exponent=op.exponent, reduction="sum"
-            )
+    desired = F.total_variation_loss(input_image, exponent=op.exponent, reduction="sum")
 
-            desired = score * score_correction_factor
-
-            assert actual == ptu.approx(desired)
+    assert actual == ptu.approx(desired)
 
 
 def test_regularization(subtests):
