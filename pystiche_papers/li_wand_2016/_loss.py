@@ -99,6 +99,10 @@ class MRFOperator(ops.MRFOperator):
         # the paper.
         self.normalize_patches_grad = impl_params
         self.loss_reduction = "sum"
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/style.lua#L34
+        # nn.MSECriterion() was used as criterion to calculate the style loss, which
+        # does not include the factor 1/2 given in the paper
+        self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
 
     def enc_to_repr(self, enc: torch.Tensor, is_guided: bool) -> torch.Tensor:
         if self.normalize_patches_grad:
@@ -116,7 +120,8 @@ class MRFOperator(ops.MRFOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        return F.mrf_loss(input_repr, target_repr, reduction=self.loss_reduction)
+        score = F.mrf_loss(input_repr, target_repr, reduction=self.loss_reduction)
+        return score * self.score_correction_factor
 
 
 def style_loss(
@@ -155,9 +160,10 @@ def style_loss(
 
     If ``impl_params is True``,
 
+    * an additional score correction factor of ``1.0 / 2.0`` is used,
     * normalized patches are used (see
       :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d` for
-      details) and
+      details), and
     * no target augmentation transformations are used.
 
     The parameters ``patch_size`` and ``stride`` can either be:
@@ -216,27 +222,37 @@ def style_loss(
 
 
 class TotalVariationOperator(ops.TotalVariationOperator):
-    def __init__(self, **total_variation_op_kwargs: Any):
+    def __init__(self, impl_params: bool = True, **total_variation_op_kwargs: Any):
         super().__init__(**total_variation_op_kwargs)
 
         self.loss_reduction = "sum"
+        self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
-        return F.total_variation_loss(
+        score = F.total_variation_loss(
             input_repr, exponent=self.exponent, reduction=self.loss_reduction
         )
+        return score * self.score_correction_factor
 
 
 def regularization(
-    exponent: float = 2.0, score_weight: float = 1e-3,
+    impl_params: bool = True, exponent: float = 2.0, score_weight: float = 1e-3,
 ) -> TotalVariationOperator:
     r"""Regularization from :cite:`LW2016`.
 
     Args:
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper. For details see below.
         exponent: A higher value leads to more smoothed results. Defaults to ``2.0``.
-        score_weight: Score weight of the operator. Defaults to ``1e-3``
+        score_weight: Score weight of the operator. Defaults to ``1e-3``.
+
+    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
+    is used.
     """
-    return TotalVariationOperator(exponent=exponent, score_weight=score_weight)
+    return TotalVariationOperator(
+        impl_params=impl_params, exponent=exponent, score_weight=score_weight
+    )
 
 
 def perceptual_loss(
@@ -281,6 +297,6 @@ def perceptual_loss(
 
     if regularization_kwargs is None:
         regularization_kwargs = {}
-    regularization_ = regularization(**regularization_kwargs)
+    regularization_ = regularization(impl_params=impl_params, **regularization_kwargs)
 
     return loss.PerceptualLoss(content_loss_, style_loss_, regularization_)
