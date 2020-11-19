@@ -26,7 +26,7 @@ from pystiche.misc import to_2d_arg
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
-from tests import asserts, parametrize
+from tests import asserts, mocks, parametrize
 from tests.utils import make_tar
 
 
@@ -139,11 +139,17 @@ def test_OptionalUpsample_repr(subtests):
             assert_property_in_repr(name, value)
 
 
-def test_RandomCrop_size(image):
-    edge_size = extract_edge_size(image) // 2
-    transform = paper.RandomCrop(edge_size)
+def test_RandomCrop_size(mocker, image_small_landscape):
+    mocker.patch(
+        mocks.make_mock_target("sanakoyeu_et_al_2018", "_data", "_adapted_uniform_int"),
+        side_effect=lambda shape, low, high, same_on_batch: torch.ones(
+            shape, dtype=torch.int32
+        ).mul(high),
+    )
+    edge_size = extract_edge_size(image_small_landscape) // 2
+    transform = paper.RandomCrop(edge_size, p=1.0)
 
-    output_image = transform(image)
+    output_image = transform(image_small_landscape)
     assert extract_image_size(output_image) == to_2d_arg(edge_size)
 
 

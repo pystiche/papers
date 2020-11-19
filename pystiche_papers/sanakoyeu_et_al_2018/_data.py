@@ -197,7 +197,9 @@ class RandomCrop(AugmentationBase2d):
             )
             for image_length, crop_length in zip(image_size, crop_size)
         ]
-        return torch.stack(single_dim_anchors, dim=1,).unsqueeze(1).repeat(1, 4, 1)
+        return (
+            torch.stack(single_dim_anchors, dim=1).flip(1).unsqueeze(1).repeat(1, 4, 1)
+        )
 
     @staticmethod
     def clamp_vertices_to_size(
