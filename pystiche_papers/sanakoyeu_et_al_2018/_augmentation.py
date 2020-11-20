@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Tuple, Union, cast
+import functools
+import inspect
+from typing import Any, Callable, Dict, List, Tuple, Union, cast
 
 import kornia
 import kornia.augmentation.functional as F
@@ -27,6 +29,25 @@ class AugmentationBase2d(
         if self.return_transform:
             dct["return_transform"] = True
         return dct
+
+
+def _autocast_device(
+    generate_parameters: Callable[[Any, torch.Size], Dict[str, torch.Tensor]]
+) -> Callable[[Any, torch.Size], Dict[str, torch.Tensor]]:
+    @functools.wraps(AugmentationBase2d.generate_parameters)
+    def wrapper(self: Any, batch_shape: torch.Size) -> Dict[str, torch.Tensor]:
+        params = generate_parameters(self, batch_shape)
+        for frame in inspect.getouterframes(inspect.currentframe())[1:]:
+            locals = frame.frame.f_locals
+            if "input" in locals:
+                device = locals["input"].device
+                break
+        else:
+            raise RuntimeError
+
+        return {param: tensor.to(device) for param, tensor in params.items()}
+
+    return wrapper
 
 
 def generate_vertices_from_size(batch_size: int, size: Tuple[int, int]) -> torch.Tensor:
@@ -60,6 +81,7 @@ class RandomRescale(AugmentationBase2d):
         self.align_corners = align_corners
         self.same_on_batch = True
 
+    @_autocast_device
     def generate_parameters(self, batch_shape: torch.Size) -> Dict[str, torch.Tensor]:
         batch_size, _, height, width = batch_shape
         vert_factor, horz_factor = self.factor
@@ -126,6 +148,7 @@ class RandomAffine(AugmentationBase2d):
         self.same_on_batch = same_on_batch
         self.align_corners = align_corners
 
+    @_autocast_device
     def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
         points = torch.tensor((((0, 0, 1), (0, 1, 0)),), dtype=torch.float)
         points = points.repeat(input_shape[0], 1, 1)
@@ -247,6 +270,7 @@ class RandomHSVJitter(AugmentationBase2d):
         self.value_shift = value_shift
         self.same_on_batch = same_on_batch
 
+    @_autocast_device
     def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
         return random_hsv_jitter_generator(
             input_shape[0],
