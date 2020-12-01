@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from collections import OrderedDict
-from typing import Iterator, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterator, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn.functional as F
@@ -179,7 +179,52 @@ class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
             layer weight is set to ``1.0 / len(layers)``. If sequence of ``float``s its
             length has to match ``layers``. Defaults to ``"mean"``.
         score_weight: Score weight of the operator. Defaults to ``1.0``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        init_weights: If ``True``, the weights are initialized as in the reference
+            impementation.
     """
+
+    def __init__(
+        self,
+        multi_layer_encoder: MultiLayerEncoder,
+        layers: Sequence[str],
+        get_encoding_op: Callable[
+            [enc.SingleLayerEncoder, float], ops.EncodingOperator
+        ],
+        layer_weights: Union[str, Sequence[float]] = "mean",
+        score_weight: float = 1e0,
+        impl_params: bool = True,
+        init_weights: bool = True,
+    ):
+        super().__init__(
+            multi_layer_encoder,
+            layers,
+            get_encoding_op,
+            layer_weights=layer_weights,
+            score_weight=score_weight,
+        )
+        if init_weights:
+            self.init_weights(impl_params=impl_params)
+
+    def init_weights(self, impl_params: bool = True) -> None:
+        if not impl_params:
+            return
+
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L54
+                # https://www.tensorflow.org/versions/r1.12/api_docs/python/tf/initializers/truncated_normal
+                std = 0.02
+                nn.init.trunc_normal_(
+                    module.weight, mean=0.0, std=std, a=-2 * std, b=2 * std
+                )
+            if isinstance(module, nn.InstanceNorm2d):
+                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L42-L43
+                # https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/random_normal_initializer
+                nn.init.normal_(module.weight, mean=1.0, std=0.02)
+                nn.init.zeros_(module.bias)
 
     def discriminator_operators(self) -> Iterator["EncodingDiscriminatorOperator"]:
         for op in self.operators():
