@@ -31,6 +31,15 @@ __all__ = [
 ]
 
 
+def _maybe_extract_transform(image_loader: DataLoader) -> Optional[Callable]:
+    try:
+        transform = image_loader.dataset.transform
+        image_loader.dataset.transform = None
+        return transform
+    except AttributeError:
+        return None
+
+
 def gan_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
@@ -72,9 +81,17 @@ def gan_optim_loop(
     calculation.
 
     """
+    content_transform = _maybe_extract_transform(content_image_loader)
+    style_transform = _maybe_extract_transform(style_image_loader)
+
     device = misc.get_device()
     style_image_loader = iter(style_image_loader)
-    preprocessor = _preprocessor()
+
+    if isinstance(content_transform, nn.Module):
+        content_transform = content_transform.to(device)
+    if isinstance(style_transform, nn.Module):
+        style_transform = style_transform.to(device)
+    preprocessor = _preprocessor().to(device)
 
     if discriminator_optimizer is None:
         discriminator_optimizer = optimizer(
@@ -119,13 +136,19 @@ def gan_optim_loop(
 
     for content_image in content_image_loader:
         input_image = content_image.to(device)
+        if content_transform is not None:
+            input_image = content_transform(input_image)
+        input_image = preprocessor(input_image)
 
-        output_image = transformer(preprocessor(input_image))
+        output_image = transformer(input_image)
 
         if discriminator_success.local_avg < target_win_rate:
             style_image = next(style_image_loader)
             style_image = style_image.to(device)
+            if style_transform is not None:
+                style_image = style_transform(style_image)
             style_image = preprocessor(style_image)
+
             train_discriminator_one_step(
                 output_image,
                 style_image,
