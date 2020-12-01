@@ -32,6 +32,15 @@ __all__ = [
 ]
 
 
+def _maybe_extract_transform(image_loader: DataLoader) -> Optional[Callable]:
+    try:
+        transform = image_loader.dataset.transform  # type: ignore[attr-defined]
+        image_loader.dataset.transform = None  # type: ignore[attr-defined]
+        return cast(Callable, transform)
+    except AttributeError:
+        return None
+
+
 def gan_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
@@ -73,13 +82,21 @@ def gan_optim_loop(
     calculation.
 
     """
+    content_transform = _maybe_extract_transform(content_image_loader)
+    style_transform = _maybe_extract_transform(style_image_loader)
+
     device = misc.get_device()
 
     logger = optim.OptimLogger()
     log_fn = optim.default_transformer_optim_log_fn(logger, len(content_image_loader))
     quiet = False
     style_image_loader = iter(style_image_loader)
-    preprocessor = _preprocessor()
+
+    if isinstance(content_transform, nn.Module):
+        content_transform = content_transform.to(device)
+    if isinstance(style_transform, nn.Module):
+        style_transform = style_transform.to(device)
+    preprocessor = _preprocessor().to(device)
 
     if discriminator_optimizer is None:
         discriminator_optimizer = optimizer(
@@ -146,6 +163,9 @@ def gan_optim_loop(
     for batch, content_image in enumerate(content_image_loader):
         content_image = content_image.squeeze(1)
         input_image = content_image.to(device)
+        if content_transform is not None:
+            input_image = content_transform(input_image)
+        input_image = preprocessor(input_image)
 
         loading_time = time.time() - loading_time_start
 
@@ -154,7 +174,11 @@ def gan_optim_loop(
         if discriminator_success.global_avg < target_win_rate:
             style_image = next(style_image_loader)
             style_image = style_image.to(device).squeeze(1)
+            if style_transform is not None:
+                style_image = style_transform(style_image)
+
             style_image = preprocessor(style_image)
+
             train_discriminator_one_step(
                 output_image,
                 style_image,
