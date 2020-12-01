@@ -9,8 +9,7 @@ from kornia.augmentation.functional import apply_crop, compute_crop_transformati
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset, Sampler
-from torch.utils.data.sampler import RandomSampler
+from torch.utils.data import BatchSampler, DataLoader, Dataset
 from torchvision.datasets.utils import download_and_extract_archive
 
 from pystiche.data import (
@@ -22,6 +21,11 @@ from pystiche.image import transforms
 from pystiche.image.transforms import functional as F
 from pystiche.image.utils import extract_edge_size, extract_image_size
 from pystiche.misc import to_2d_arg, verify_str_arg
+from pystiche_papers.data.utils import (
+    NumIterationsBatchSampler,
+    RandomNumIterationsBatchSampler,
+    SequentialNumIterationsBatchSampler,
+)
 
 from ._augmentation import (
     AugmentationBase2d,
@@ -544,19 +548,25 @@ def content_dataset(
 
 
 def batch_sampler(
-    data_source: Sized, impl_params: bool = True, num_samples: Optional[int] = None,
-) -> RandomSampler:
+    data_source: Sized, impl_params: bool = True, batch_size: int = 1
+) -> NumIterationsBatchSampler:
+    # https://github.com/CompVis/adaptive-style-transfer/blob/517539a6b60f20ef4e68620ac6a25de1df059baa/prepare_dataset.py#L50
+    # https://github.com/CompVis/adaptive-style-transfer/blob/517539a6b60f20ef4e68620ac6a25de1df059baa/prepare_dataset.py#L132
+    batch_sampler_cls = (
+        RandomNumIterationsBatchSampler
+        if impl_params
+        else SequentialNumIterationsBatchSampler
+    )
 
-    if num_samples is None:
-        # The num_iterations are split up into multiple epochs with corresponding
-        # num_batches:
-        # The number of epochs is defined in _nst.training .
-        # 300_000 = 1 * 300_000
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L68
-        # 300_000 = 3 * 100_000
-        num_samples = 300_000 if impl_params else 100_000
+    # The num_iterations are split up into multiple epochs with corresponding
+    # num_batches:
+    # The number of epochs is defined in _nst.training .
+    # 300_000 = 1 * 300_000
+    # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L68
+    # 300_000 = 3 * 100_000
+    num_iterations = (300_000 if impl_params else 100_000) // batch_size
 
-    return RandomSampler(data_source, replacement=True, num_samples=num_samples)
+    return batch_sampler_cls(data_source, num_iterations, batch_size=batch_size)
 
 
 batch_sampler_ = batch_sampler
@@ -565,12 +575,12 @@ batch_sampler_ = batch_sampler
 def image_loader(
     dataset: Dataset,
     impl_params: bool = True,
-    batch_sampler: Optional[Sampler] = None,
+    batch_sampler: Optional[Union[BatchSampler, NumIterationsBatchSampler]] = None,
     num_workers: int = 0,
-    pin_memory: bool = True,
+    pin_memory: bool = False,
 ) -> DataLoader:
     if batch_sampler is None:
-        batch_sampler = cast(Sampler, batch_sampler_(dataset, impl_params=impl_params))
+        batch_sampler = batch_sampler_(dataset, impl_params=impl_params)
 
     return DataLoader(
         dataset,

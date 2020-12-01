@@ -9,7 +9,6 @@ import pytorch_testing_utils as ptu
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import RandomSampler
 
 import pystiche
 import pystiche.image.transforms.functional as F
@@ -23,6 +22,10 @@ from pystiche.image import (
     write_image,
 )
 from pystiche.misc import to_2d_arg
+from pystiche_papers.data.utils import (
+    RandomNumIterationsBatchSampler,
+    SequentialNumIterationsBatchSampler,
+)
 from pystiche_papers.utils import make_reproducible
 
 from . import make_paper_mock_target
@@ -304,12 +307,18 @@ def test_content_dataset_transform_impl_params(
         ptu.assert_allclose(actual, expected)
 
 
-@parametrize.data(("impl_params", "num_samples"), ((True, 300_000), (False, 100_000)))
-def test_batch_sampler(impl_params, num_samples):
+@parametrize.data(
+    ("impl_params", "batch_sampler_type", "num_iterations"),
+    (
+        (True, RandomNumIterationsBatchSampler, 300_000),
+        (False, SequentialNumIterationsBatchSampler, 100_000),
+    ),
+)
+def test_batch_sampler(impl_params, batch_sampler_type, num_iterations):
     batch_sampler = paper.batch_sampler((), impl_params=impl_params)
 
-    assert isinstance(batch_sampler, RandomSampler)
-    assert batch_sampler.num_samples == num_samples
+    assert isinstance(batch_sampler, batch_sampler_type)
+    assert batch_sampler.num_iterations == num_iterations
 
 
 def test_image_loader(subtests):
