@@ -81,7 +81,7 @@ class InfiniteCycleBatchSampler(Sampler):
 # TODO: remove this as is serves no purpose anymore
 class FiniteCycleBatchSampler(SequentialNumIterationsBatchSampler):
     def __init__(self, data_source: Sized, num_batches: int, batch_size: int = 1):
-        # TODO: warning
+        self.num_batches = num_batches
         num_iterations = num_batches * batch_size
         super().__init__(
             data_source, num_iterations, batch_size=batch_size, drop_last=False
