@@ -35,7 +35,8 @@ parts are affected:
   - :func:`~pystiche_papers.li_wand_2016.image_pyramid`,
   - :func:`~pystiche_papers.li_wand_2016.content_loss`,
   - :func:`~pystiche_papers.li_wand_2016.style_loss`,
-  - :func:`~pystiche_papers.li_wand_2016.regularization`.
+  - :func:`~pystiche_papers.li_wand_2016.regularization`,
+  - :func:`~pystiche_papers.li_wand_2016.target_transforms`.
 
 
 .. automodule:: pystiche_papers.li_wand_2016
@@ -52,3 +53,4 @@ parts are affected:
 .. autofunction:: postprocessor
 .. autofunction:: regularization
 .. autofunction:: style_loss
+.. autofunction:: target_transforms

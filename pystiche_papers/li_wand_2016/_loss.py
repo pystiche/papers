@@ -10,6 +10,7 @@ from pystiche.image import transforms
 
 from ._utils import extract_normalized_patches2d
 from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import target_transforms as _target_transforms
 
 __all__ = [
     "FeatureReconstructionOperator",
@@ -91,17 +92,20 @@ class MRFOperator(ops.MRFOperator):
         impl_params: bool = True,
         **mrf_op_kwargs: Any,
     ):
-
         super().__init__(encoder, patch_size, **mrf_op_kwargs)
 
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L108
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L221
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L224
         # They use normalized patches instead of the unnormalized patches described in
         # the paper.
         self.normalize_patches_grad = impl_params
         self.loss_reduction = "sum"
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/style.lua#L34
-        # nn.MSECriterion() was used as criterion to calculate the style loss, which
-        # does not include the factor 1/2 given in the paper
+
+        # The score correction factor is not visible in the reference implementation
+        # of the original authors, since the calculation is performed with respect to
+        # the gradient and not the score. Roughly speaking, since the calculation
+        # comprises a *squared* distance, we need a factor of 1/2 in the forward pass.
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L220
         self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
     def enc_to_repr(self, enc: torch.Tensor, is_guided: bool) -> torch.Tensor:
@@ -190,7 +194,8 @@ def style_loss(
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
         num_rotate_steps = 0 if impl_params else 2
         rotate_step_width = 7.5
-        target_transforms = MRFOperator.scale_and_rotate_transforms(
+        target_transforms = _target_transforms(
+            impl_params=impl_params,
             num_scale_steps=num_scale_steps,
             scale_step_width=scale_step_width,
             num_rotate_steps=num_rotate_steps,
@@ -225,6 +230,12 @@ class TotalVariationOperator(ops.TotalVariationOperator):
         super().__init__(**total_variation_op_kwargs)
 
         self.loss_reduction = "sum"
+
+        # The score correction factor is not visible in the reference implementation
+        # of the original authors, since the calculation is performed with respect to
+        # the gradient and not the score. Roughly speaking, since the calculation
+        # comprises a *squared* distance, we need a factor of 1/2 in the forward pass.
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/tv.lua#L20-L30
         self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:

@@ -20,6 +20,7 @@ def nst(
     impl_params: bool = True,
     criterion: Optional[loss.PerceptualLoss] = None,
     image_pyramid: Optional[pyramid.ImagePyramid] = None,
+    starting_point: str = "random",
     quiet: bool = False,
     logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
@@ -38,6 +39,7 @@ def nst(
             :func:`~pystiche_papers.li_wand_2016.perceptual_loss` is used.
         image_pyramid: Image pyramid. If omitted, the default
             :func:`~pystiche_papers.li_wand_2016.image_pyramid` is used.
+        starting_point: Starting point of the NST. Defaults to ``"random"``.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
@@ -60,8 +62,9 @@ def nst(
     initial_resize = image_pyramid[-1].resize_image
     content_image = initial_resize(content_image)
     style_image = initial_resize(style_image)
+
     input_image = misc.get_input_image(
-        starting_point="content", content_image=content_image
+        starting_point=starting_point, content_image=content_image
     )
 
     preprocessor = _preprocessor().to(device)

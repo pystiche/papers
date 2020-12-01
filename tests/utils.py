@@ -1,13 +1,15 @@
 import contextlib
-import copy
+import inspect
 import itertools
 import os
 import shutil
 import tarfile
 import tempfile
 from os import path
+from types import SimpleNamespace
 
 import pytest
+from _pytest.mark.structures import ParameterSet
 
 import pytorch_testing_utils as ptu
 import torch
@@ -24,6 +26,8 @@ __all__ = [
     "generate_param_combinations",
     "make_tar",
     "call_args_to_kwargs_only",
+    "call_args_to_namespace",
+    "parametrize_data",
 ]
 
 
@@ -147,11 +151,38 @@ def make_tar(file, dir, name=None, compress=None):
         fh.add(dir, arcname=name)
 
 
-def call_args_to_kwargs_only(call_args, *arg_names):
+def call_args_to_kwargs_only(call_args, *function_or_arg_names):
     if call_args is None:
         raise pytest.UsageError
-    args, kwargs = call_args
 
-    kwargs_only = copy.copy(kwargs)
+    if callable(function_or_arg_names[0]):
+        argspec = inspect.getfullargspec(function_or_arg_names[0])
+        arg_names = argspec.args
+    else:
+        arg_names = function_or_arg_names
+
+    args, kwargs = call_args
+    kwargs_only = kwargs.copy()
     kwargs_only.update(dict(zip(arg_names, args)))
     return kwargs_only
+
+
+def call_args_to_namespace(call_args, *arg_names):
+    return SimpleNamespace(**call_args_to_kwargs_only(call_args, *arg_names))
+
+
+def parametrize_data(argnames, *argvalues):
+    if isinstance(argnames, str):
+        argnames = [name.strip() for name in argnames.split(",")]
+
+    def id(values):
+        return ", ".join([f"{name}={value}" for name, value in zip(argnames, values)])
+
+    if not isinstance(argvalues[0], ParameterSet):
+        argvalues = [pytest.param(values, id=id(values)) for values in zip(*argvalues)]
+    else:
+        argvalues = [
+            param._replace(id=id(param.values)) if param.id is None else param
+            for param in argvalues
+        ]
+    return pytest.mark.parametrize(argnames, argvalues)
