@@ -33,9 +33,9 @@ __all__ = [
 
 def _maybe_extract_transform(image_loader: DataLoader) -> Optional[Callable]:
     try:
-        transform = image_loader.dataset.transform
-        image_loader.dataset.transform = None
-        return transform
+        transform = image_loader.dataset.transform  # type: ignore[attr-defined]
+        image_loader.dataset.transform = None  # type: ignore[attr-defined]
+        return cast(Callable, transform)
     except AttributeError:
         return None
 
