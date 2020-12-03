@@ -109,6 +109,18 @@ def test_hyper_parameters_image_pyramid(subtests, impl_params):
         assert hyper_parameters.edge == "long"
 
 
+@utils.impl_params
+def test_hyper_parameters_nst(subtests, impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
+
+    sub_params = "nst"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("starting_point"):
+        assert hyper_parameters.starting_point == "content" if impl_params else "random"
+
+
 def test_extract_normalized_patches2d(subtests):
     height = 4
     width = 4

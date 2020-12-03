@@ -63,6 +63,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
             min_edge_size=64,
             edge="long",
         ),
+        nst=HyperParameters(starting_point="content" if impl_params else "random"),
     )
 
 

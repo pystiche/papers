@@ -65,7 +65,7 @@ def nst(
     content_image = initial_resize(content_image)
     style_image = initial_resize(style_image)
     input_image = misc.get_input_image(
-        starting_point="content", content_image=content_image
+        starting_point=hyper_parameters.nst.starting_point, content_image=content_image
     )
 
     preprocessor = _preprocessor().to(device)
