@@ -32,9 +32,9 @@ def nst(
     Args:
         content_image: Content image for the NST.
         style_image: Style image for the NST.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults

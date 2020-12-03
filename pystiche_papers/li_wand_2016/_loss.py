@@ -69,12 +69,9 @@ def content_loss(
     r"""Content loss from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`. In
-            addition, if ``True``, every transformation comprises a valid crop after the
-            rotation to avoid blank regions. Furthermore, the image is rescaled instead
-            of the motif, resulting in multiple image sizes.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         hyper_parameters: Hyper parameters. If omitted,
@@ -163,9 +160,9 @@ def style_loss(
     r"""Style loss from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         hyper_parameters: Hyper parameters. If omitted,
@@ -237,9 +234,9 @@ def regularization(
     r"""Regularization from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
         hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
@@ -264,9 +261,9 @@ def perceptual_loss(
     r"""Perceptual loss from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
         hyper_parameters: Hyper parameters. If omitted,
@@ -274,9 +271,9 @@ def perceptual_loss(
 
     .. seealso::
 
-        - :func:`content_loss`
-        - :func:`style_loss`
-        - :func:`regularization`
+        - :func:`pystiche_papers.li_wand_2016.content_loss`
+        - :func:`pystiche_papers.li_wand_2016.style_loss`
+        - :func:`pystiche_papers.li_wand_2016.regularization`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()

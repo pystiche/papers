@@ -27,27 +27,26 @@
 .. |archive| replace:: Archive
 .. _archive: https://github.com/pmeier/CNNMRF/tree/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f
 
-.. _table-li_wand_2016-impl_params:
+.. _li_wand_2016-impl_params:
 
-Implementation parameters
--------------------------
+Behavioral changes
+------------------
 
-Unfortunately, the the behavior in the reference implementation differ from what is
-described in the paper. The following parts are affected:
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+The following parts are affected:
 
 - :class:`~pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
 - :class:`~pystiche_papers.li_wand_2016.MRFOperator`
 - :class:`~pystiche_papers.li_wand_2016.TotalVariationOperator`
 - :class:`~pystiche_papers.li_wand_2016.target_transforms`
 
-The behavior can be switched with the ``impl_params`` flag, which defaults to ``True``.
-
 Hyper parameters
 ----------------
 
-Furthermore, the :func:`~pystiche_papers.li_wand_2016.hyper_parameters` also mismatch.
-The ``impl_params`` flag is used to switch between between these two sets.
-
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
 
 :func:`~pystiche_papers.li_wand_2016.content_loss`
 ``````````````````````````````````````````````````
@@ -79,6 +78,7 @@ The ``impl_params`` flag is used to switch between between these two sets.
 +-----------------------+-----------------+-----------+
 | ``rotate_step_width`` | ``7.5``                     |
 +-----------------------+-----------------+-----------+
+
 
 :func:`~pystiche_papers.li_wand_2016.style_loss`
 ````````````````````````````````````````````````

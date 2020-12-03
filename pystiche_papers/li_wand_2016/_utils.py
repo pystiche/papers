@@ -26,7 +26,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <table-li_wand_2016-impl_params>`.
     """
@@ -298,9 +298,12 @@ def target_transforms(
     r"""MRF target transformations from :cite:`LW2016`.
 
     Args:
-        impl_params: Switch the hyper parameters and behavior between the reference
+        impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`.
+            For details see :ref:`here <table-li_wand_2016-impl_params>`. In
+            addition, if ``True``, every transformation comprises a valid crop after the
+            rotation to avoid blank regions. Furthermore, the image is rescaled instead
+            of the motif, resulting in multiple image sizes.
         hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
