@@ -42,7 +42,9 @@ def test_content_loss(subtests):
         assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
+def test_MultiLayerEncodingOperator(
+    subtests, multi_layer_encoder_with_layer, target_image, input_image
+):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
@@ -51,7 +53,7 @@ def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.StyleLoss(
+            op = paper.MultiLayerEncodingOperator(
                 multi_layer_encoder,
                 (layer,),
                 lambda encoder, layer_weight: ops.GramOperator(
@@ -100,4 +102,4 @@ def test_perceptual_loss(subtests):
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, paper.StyleLoss)
+        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingOperator)
