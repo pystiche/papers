@@ -169,7 +169,7 @@ def gan_optim_loop(
 
         loading_time = time.time() - loading_time_start
 
-        output_image = transformer(preprocessor(input_image))
+        output_image = transformer(input_image)
 
         if discriminator_success.global_avg < target_win_rate:
             style_image = next(style_image_loader)
