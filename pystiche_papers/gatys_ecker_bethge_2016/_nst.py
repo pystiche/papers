@@ -60,11 +60,8 @@ def nst(
     )
     criterion = criterion.to(device)
 
-    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
-    # Cell [6]
-    starting_point = "content" if impl_params else "random"
     input_image = misc.get_input_image(
-        starting_point=starting_point, content_image=content_image
+        starting_point=hyper_parameters.nst.starting_point, content_image=content_image
     )
 
     preprocessor = _preprocessor().to(device)

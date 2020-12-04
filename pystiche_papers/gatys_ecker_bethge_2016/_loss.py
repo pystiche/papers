@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Sequence, Union
+from typing import Any, Callable, Optional, Sequence
 
 import torch
 from torch.nn.functional import mse_loss
@@ -13,17 +13,35 @@ from ._utils import multi_layer_encoder as _multi_layer_encoder
 __all__ = [
     "FeatureReconstructionOperator",
     "content_loss",
-    "StyleLoss",
+    "MultiLayerEncodingOperator",
     "style_loss",
     "perceptual_loss",
 ]
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
+    r"""Feature reconstruction operator from :cite:`GEB2016`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        impl_params: If ``False``, calculate the score with the squared error (SE)
+            instead of the mean squared error (MSE). Furthermore, use a score
+            correction factor of 1/2.
+        **feature_reconstruction_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.FeatureReconstructionOperator`.
+
+    .. seealso::
+
+        - :class:`pystiche.ops.FeatureReconstructionOperator`
+    """
+
     def __init__(
-        self, encoder: enc.Encoder, impl_params: bool = True, score_weight: float = 1e0
+        self,
+        encoder: enc.Encoder,
+        impl_params: bool = True,
+        **feature_reconstruction_op_kwargs: Any,
     ):
-        super().__init__(encoder, score_weight=score_weight)
+        super().__init__(encoder, **feature_reconstruction_op_kwargs)
 
         # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
         # Cell [8]
@@ -51,23 +69,22 @@ def content_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
-    r"""Content_loss from :cite:`GEB2016`.
+    r"""Content loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
-            used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior between the reference implementation of the
+            original authors and what is described in the paper. For details see
+            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
 
-    If ``impl_params is True``,
+    .. seealso::
 
-    * no additional score correction factor of ``1.0 / 2.0`` is used, and
-    * a loss reduction ``"mean"`` is used instead of a ``"sum"``.
-
+        - :class:`pystiche_papers.gatys_ecker_bethge_2016.FeatureReconstructionOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -82,22 +99,38 @@ def content_loss(
     )
 
 
-class StyleLoss(ops.MultiLayerEncodingOperator):
+class MultiLayerEncodingOperator(ops.MultiLayerEncodingOperator):
+    r"""Multi-layer encoding operator from :cite:`GEB2016`.
+
+    Args:
+        multi_layer_encoder: Multi-layer encoder.
+        layers: Layers of the ``multi_layer_encoder`` that the children operators
+            operate on.
+        get_encoding_op: Callable that returns a children operator given a
+            :class:`pystiche.enc.SingleLayerEncoder` extracted from the
+            ``multi_layer_encoder`` and its corresponding layer weight.
+        impl_params: If ``False``, use a score correction factor of 1/4.
+        **multi_layer_encoding_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.MultiLayerEncodingOperator`.
+
+    .. seealso::
+
+        - :class:`pystiche.ops.MultiLayerEncodingOperator`
+    """
+
     def __init__(
         self,
         multi_layer_encoder: enc.MultiLayerEncoder,
         layers: Sequence[str],
         get_encoding_op: Callable[[enc.Encoder, float], ops.EncodingOperator],
         impl_params: bool = True,
-        layer_weights: Union[str, Sequence[float]] = "mean",
-        score_weight: float = 1e0,
+        **multi_layer_encoding_op_kwargs: Any,
     ) -> None:
         super().__init__(
             multi_layer_encoder,
             layers,
             get_encoding_op,
-            layer_weights=layer_weights,
-            score_weight=score_weight,
+            **multi_layer_encoding_op_kwargs,
         )
         # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
         # Cell [3]
@@ -114,22 +147,23 @@ def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> StyleLoss:
-    r"""Style_loss from :cite:`GEB2016`.
+) -> MultiLayerEncodingOperator:
+    r"""Style loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
-            used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior between the reference implementation of the
+            original authors and what is described in the paper. For details see
+            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
 
-    If ``impl_params is True`` , no additional score correction factor of ``1.0 / 4.0``
-    is used.
+    .. seealso::
 
+        - :class:`pystiche_papers.gatys_ecker_bethge_2016.MultiLayerEncodingOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -140,7 +174,7 @@ def style_loss(
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
         return ops.GramOperator(encoder, score_weight=layer_weight)
 
-    return StyleLoss(
+    return MultiLayerEncodingOperator(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,
@@ -158,14 +192,20 @@ def perceptual_loss(
     r"""Perceptual loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
-            used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior between the reference implementation of the
+            original authors and what is described in the paper. For details see
+            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted,
+            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+
+    .. seealso::
+
+        - :func:`pystiche_papers.gatys_ecker_bethge_2016.content_loss`
+        - :func:`pystiche_papers.gatys_ecker_bethge_2016.style_loss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
