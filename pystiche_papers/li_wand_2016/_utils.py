@@ -28,7 +28,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     Args:
         impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
     """
     return HyperParameters(
         content_loss=HyperParameters(
@@ -300,7 +300,7 @@ def target_transforms(
     Args:
         impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <table-li_wand_2016-impl_params>`. In
+            For details see :ref:`here <li_wand_2016-impl_params>`. In
             addition, if ``True``, every transformation comprises a valid crop after the
             rotation to avoid blank regions. Furthermore, the image is rescaled instead
             of the motif, resulting in multiple image sizes.

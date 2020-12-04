@@ -72,9 +72,9 @@ def content_loss(
     r"""Content loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: Switch the behavior between the reference implementation of the
-            original authors and what is described in the paper. For details see
-            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <gatys_ecker_bethge_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
@@ -151,9 +151,9 @@ def style_loss(
     r"""Style loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: Switch the behavior between the reference implementation of the
-            original authors and what is described in the paper. For details see
-            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <gatys_ecker_bethge_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
@@ -192,9 +192,9 @@ def perceptual_loss(
     r"""Perceptual loss from :cite:`GEB2016`.
 
     Args:
-        impl_params: Switch the behavior between the reference implementation of the
-            original authors and what is described in the paper. For details see
-            :ref:`here <table-gatys_ecker_bethge_2016-impl_params>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <gatys_ecker_bethge_2016-impl_params>`.
         multi_layer_encoder: Pretrained multi-layer encoder. If
             omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder`
