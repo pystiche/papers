@@ -1,5 +1,4 @@
 import functools
-import inspect
 from typing import Any, Callable, Dict, List, Tuple, Union, cast
 
 import kornia
@@ -31,21 +30,18 @@ class AugmentationBase2d(
         return dct
 
 
-def _autocast_device(
-    generate_parameters: Callable[[Any, torch.Size], Dict[str, torch.Tensor]]
-) -> Callable[[Any, torch.Size], Dict[str, torch.Tensor]]:
-    @functools.wraps(AugmentationBase2d.generate_parameters)
-    def wrapper(self: Any, batch_shape: torch.Size) -> Dict[str, torch.Tensor]:
-        params = generate_parameters(self, batch_shape)
-        for frame in inspect.getouterframes(inspect.currentframe())[1:]:
-            locals = frame.frame.f_locals
-            if "input" in locals:
-                device = locals["input"].device
-                break
-        else:
-            raise RuntimeError
-
-        return {param: tensor.to(device) for param, tensor in params.items()}
+def autocast_params(
+    fn: Callable[[Any, torch.Tensor, Dict[str, torch.Tensor]], torch.Tensor]
+) -> Callable[[Any, torch.Tensor, Dict[str, torch.Tensor]], torch.Tensor]:
+    @functools.wraps(fn)
+    def wrapper(
+        self: Any, input: torch.Tensor, params: Dict[str, torch.Tensor]
+    ) -> torch.Tensor:
+        return fn(
+            self,
+            input,
+            {name: param.to(input.device) for name, param in params.items()},
+        )
 
     return wrapper
 
@@ -81,7 +77,6 @@ class RandomRescale(AugmentationBase2d):
         self.align_corners = align_corners
         self.same_on_batch = True
 
-    @_autocast_device
     def generate_parameters(self, batch_shape: torch.Size) -> Dict[str, torch.Tensor]:
         batch_size, _, height, width = batch_shape
         vert_factor, horz_factor = self.factor
@@ -92,11 +87,13 @@ class RandomRescale(AugmentationBase2d):
         )
         return dict(start_points=start_points, end_points=end_points,)
 
+    @autocast_params
     def compute_transformation(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
         return F.compute_perspective_transformation(input, params)
 
+    @autocast_params
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
@@ -148,7 +145,6 @@ class RandomAffine(AugmentationBase2d):
         self.same_on_batch = same_on_batch
         self.align_corners = align_corners
 
-    @_autocast_device
     def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
         points = torch.tensor((((0, 0, 1), (0, 1, 0)),), dtype=torch.float)
         points = points.repeat(input_shape[0], 1, 1)
@@ -158,6 +154,7 @@ class RandomAffine(AugmentationBase2d):
 
         return {"matrix": affine_matrix_from_three_points(points, points + shift)}
 
+    @autocast_params
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
@@ -270,7 +267,6 @@ class RandomHSVJitter(AugmentationBase2d):
         self.value_shift = value_shift
         self.same_on_batch = same_on_batch
 
-    @_autocast_device
     def generate_parameters(self, input_shape: torch.Size) -> Dict[str, torch.Tensor]:
         return random_hsv_jitter_generator(
             input_shape[0],
@@ -283,6 +279,7 @@ class RandomHSVJitter(AugmentationBase2d):
             self.value_shift,
         )
 
+    @autocast_params
     def apply_transform(
         self, input: torch.Tensor, params: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
@@ -312,7 +309,7 @@ class DynamicSizePad2d(pystiche.Module):
     def add_padding(self, input: torch.Tensor, size: Tuple[int, int]) -> torch.Tensor:
         height, width = size
         vert_factor, horz_factor = self.factor
-        pad_size = int(height * vert_factor), int(height * horz_factor)
+        pad_size = int(height * vert_factor), int(width * horz_factor)
         return pad(input, pad_size_to_pad(pad_size), mode=self.mode, value=self.value)
 
     @staticmethod
