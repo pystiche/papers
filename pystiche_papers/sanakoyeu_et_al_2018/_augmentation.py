@@ -309,7 +309,7 @@ class DynamicSizePad2d(pystiche.Module):
     def add_padding(self, input: torch.Tensor, size: Tuple[int, int]) -> torch.Tensor:
         height, width = size
         vert_factor, horz_factor = self.factor
-        pad_size = int(height * vert_factor), int(height * horz_factor)
+        pad_size = int(height * vert_factor), int(width * horz_factor)
         return pad(input, pad_size_to_pad(pad_size), mode=self.mode, value=self.value)
 
     @staticmethod
