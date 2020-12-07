@@ -346,26 +346,6 @@ def test_training_criterion_style_image(
     )
 
 
-def test_training_criterion_style_image_no_preprocessing(
-    preprocessor_mocks,
-    optimizer_mocks,
-    style_transforms_mocks,
-    transformer_mocks,
-    training,
-    image_loader,
-    style_image,
-):
-    _, style_transform = style_transforms_mocks
-
-    args, _, _ = training(image_loader, style_image, impl_params=False)
-    criterion = args[2]
-
-    ptu.assert_allclose(
-        criterion.style_loss.get_target_image(),
-        style_transform(utils.batch_up_image(style_image, image_loader.batch_size)),
-    )
-
-
 def test_training_criterion_update_fn(
     preprocessor_mocks,
     optimizer_mocks,
@@ -510,20 +490,3 @@ def test_stylization_transformer_str(
 
     with subtests.test("eval"):
         mock.eval.assert_called_once_with()
-
-
-def test_stylization_no_pre_post_processing(
-    subtests,
-    preprocessor_mocks,
-    postprocessor_mocks,
-    transformer_mocks,
-    input_image,
-    stylization,
-):
-    mocks = (preprocessor_mocks, postprocessor_mocks)
-
-    stylization(impl_params=False)
-
-    for _, mock in mocks:
-        with subtests.test(mock.name):
-            mock.assert_not_called()
