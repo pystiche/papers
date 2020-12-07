@@ -160,7 +160,7 @@ def gan_optim_loop(
         discriminator_success.update(1.0 - accuracy)
 
     loading_time_start = time.time()
-    for batch, content_image in enumerate(content_image_loader):
+    for batch, content_image in enumerate(content_image_loader, 1):
         content_image = content_image.squeeze(1)
         input_image = content_image.to(device)
         if content_transform is not None:
