@@ -4,6 +4,7 @@ from torch import nn, optim
 
 from pystiche import enc
 from pystiche.image import transforms
+from pystiche_papers.utils import Identity
 
 __all__ = [
     "_maybe_get_luatorch_param",
@@ -33,12 +34,17 @@ def _maybe_get_luatorch_param(
         return default
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
-    return transforms.CaffePreprocessing()
+def preprocessor(impl_params: bool = True) -> transforms.CaffePreprocessing:
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L57-L62
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/DataLoader.lua#L92
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L133
+    return transforms.CaffePreprocessing() if impl_params else Identity()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
-    return transforms.CaffePostprocessing()
+def postprocessor(impl_params: bool = True) -> transforms.CaffePostprocessing:
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L66-L71
+    # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style.lua#L89
+    return transforms.CaffePostprocessing() if impl_params else Identity()
 
 
 def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
