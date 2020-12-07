@@ -64,6 +64,7 @@ def nst(
     initial_resize = image_pyramid[-1].resize_image
     content_image = initial_resize(content_image)
     style_image = initial_resize(style_image)
+
     input_image = misc.get_input_image(
         starting_point=hyper_parameters.nst.starting_point, content_image=content_image
     )

@@ -55,7 +55,7 @@ def test_MRFOperator(
 
     patch_size = 3
     stride = 1
-    configs = ((True, 1.0), (False, 1.0 / 2.0))
+    configs = ((True, 1.0 / 2.0), (False, 1.0))
     for (impl_params, score_correction_factor,) in configs:
         with subtests.test(impl_params=impl_params):
 
@@ -114,7 +114,7 @@ def test_style_loss(subtests, impl_params):
 
 
 def test_TotalVariationOperator(subtests, input_image):
-    configs = ((True, 1.0), (False, 1.0 / 2.0))
+    configs = ((True, 1.0 / 2.0), (False, 1.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
             op = paper.TotalVariationOperator(impl_params=impl_params,)

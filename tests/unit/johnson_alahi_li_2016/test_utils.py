@@ -90,11 +90,27 @@ def test_hyper_parameters_batch_sampler(subtests):
 
 
 def test_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(
+        paper.preprocessor(impl_params=True), transforms.CaffePreprocessing
+    )
+
+
+def test_preprocessor_noop(input_image):
+    preprocessor = paper.preprocessor(impl_params=False)
+    assert isinstance(preprocessor, nn.Module)
+    ptu.assert_allclose(preprocessor(input_image), input_image)
 
 
 def test_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(
+        paper.postprocessor(impl_params=True), transforms.CaffePostprocessing
+    )
+
+
+def test_postprocessor_noop(input_image):
+    postprocessor = paper.postprocessor(impl_params=False)
+    assert isinstance(postprocessor, nn.Module)
+    ptu.assert_allclose(postprocessor(input_image), input_image)
 
 
 @pytest.mark.slow
