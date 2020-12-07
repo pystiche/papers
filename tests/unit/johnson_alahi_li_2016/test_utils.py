@@ -57,8 +57,8 @@ def test_hyper_parameters_content_transform(subtests):
     assert sub_params in hyper_parameters
     hyper_parameters = getattr(hyper_parameters, sub_params)
 
-    with subtests.test("edge_size"):
-        assert hyper_parameters.edge_size == 256
+    with subtests.test("image_size"):
+        assert hyper_parameters.edge_size == (256, 256)
 
 
 def test_hyper_parameters_style_transform(subtests):

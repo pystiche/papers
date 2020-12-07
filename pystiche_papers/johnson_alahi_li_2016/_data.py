@@ -1,7 +1,8 @@
-from typing import Optional, Sized, Tuple
+from typing import List, Optional, Sized, Tuple
 from urllib.parse import urljoin
 
 import torch
+from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 import pystiche.image.transforms.functional as F
@@ -17,6 +18,7 @@ from pystiche_papers.utils import HyperParameters
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
 from ._utils import hyper_parameters as _hyper_parameters
+from ._utils import preprocessor as _preprocessor
 
 __all__ = [
     "content_transform",
@@ -46,25 +48,43 @@ class TopLeftCropToMultiple(transforms.Transform):
 
 def content_transform(
     impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
-) -> transforms.ComposedTransform:
+) -> nn.Sequential:
+    r"""Content image transformation from :cite:`JAL2016`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
+
+            Additionally, if ``True``, appends the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.preprocessor` as a last
+            transformation step.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    edge_size = hyper_parameters.content_transform.edge_size
-    transforms_ = [
+    transforms_: List[nn.Module] = [
         TopLeftCropToMultiple(),
-        transforms.Resize((edge_size, edge_size)),
+        transforms.Resize(hyper_parameters.content_transform.image_size),
         OptionalGrayscaleToFakegrayscale(),
     ]
     if impl_params:
-        transforms_.append(transforms.CaffePreprocessing())
+        transforms_.append(_preprocessor())
 
-    return transforms.ComposedTransform(*transforms_)
+    return nn.Sequential(*transforms_)
 
 
 def style_transform(
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.Resize:
+    r"""Style image transformation from :cite:`JAL2016`.
+
+    Args:
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
@@ -129,9 +149,7 @@ def images() -> DownloadableImageCollection:
 
 
 def dataset(
-    root: str,
-    impl_params: bool = True,
-    transform: Optional[transforms.Transform] = None,
+    root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
         transform = content_transform(impl_params=impl_params)
@@ -142,6 +160,13 @@ def dataset(
 def batch_sampler(
     data_source: Sized, hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
+    r"""Batch sampler from :cite:`JAL2016`.
+
+    Args:
+        data_source: Dataset to sample from.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
     return FiniteCycleBatchSampler(

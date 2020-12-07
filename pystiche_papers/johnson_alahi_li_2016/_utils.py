@@ -37,7 +37,7 @@ def hyper_parameters() -> HyperParameters:
             # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L33
             score_weight=1e-6,
         ),
-        content_transform=HyperParameters(edge_size=256),
+        content_transform=HyperParameters(image_size=(256, 256)),
         style_transform=HyperParameters(edge_size=256, edge="long"),
         batch_sampler=HyperParameters(num_batches=40000, batch_size=4),
     )
