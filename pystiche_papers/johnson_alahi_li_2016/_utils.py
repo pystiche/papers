@@ -34,14 +34,14 @@ def _maybe_get_luatorch_param(
         return default
 
 
-def preprocessor(impl_params: bool = True) -> transforms.CaffePreprocessing:
+def preprocessor(impl_params: bool = True) -> nn.Module:
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L57-L62
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/DataLoader.lua#L92
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L133
     return transforms.CaffePreprocessing() if impl_params else Identity()
 
 
-def postprocessor(impl_params: bool = True) -> transforms.CaffePostprocessing:
+def postprocessor(impl_params: bool = True) -> nn.Module:
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L66-L71
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style.lua#L89
     return transforms.CaffePostprocessing() if impl_params else Identity()
