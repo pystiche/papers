@@ -100,13 +100,9 @@ def training(
     style_image = style_transform(style_image)
     style_image = batch_up_image(style_image, loader=content_image_loader)
 
-    if impl_params:
-        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L111
-        # A preprocessor is used in the implementation, which is not documented in the
-        # paper.
-        preprocessor = _preprocessor()
-        preprocessor = preprocessor.to(device)
-        style_image = preprocessor(style_image)
+    preprocessor = _preprocessor()
+    preprocessor = preprocessor.to(device)
+    style_image = preprocessor(style_image)
 
     criterion.set_style_image(style_image)
 
@@ -131,8 +127,6 @@ def stylization(
     impl_params: bool = True,
     instance_norm: Optional[bool] = None,
     framework: str = "pystiche",
-    preprocessor: Optional[nn.Module] = None,
-    postprocessor: Optional[nn.Module] = None,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transfromer.
 
@@ -150,13 +144,6 @@ def stylization(
         framework: Framework that was used to train the the transformer. Can be one of
             ``"pystiche"`` (default) and ``"luatorch"``. This only has an effect, if
             if a pretrained ``transformer`` is loaded.
-        preprocessor: Optional preprocessor that is called with the ``input_image``
-            before the optimization.
-        postprocessor: Optional preprocessor that is called with the ``output_image``
-            after the optimization.
-
-    If ``impl_params`` is ``True`` , an external preprocessing and postprocessing of the
-    images is used.
     """
     device = input_image.device
 
@@ -174,30 +161,15 @@ def stylization(
         transformer = transformer.eval()
     transformer = transformer.to(device)
 
-    if impl_params and preprocessor is None:
-        # A preprocessor is used in the implementation, which is not documented in the
-        # paper.
-        # content:
-        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L104
-        # style:
-        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L111
-        preprocessor = _preprocessor()
+    preprocessor = _preprocessor()
+    preprocessor = preprocessor.to(device)
 
-    if impl_params and postprocessor is None:
-        # A postprocessor is used in the implementation, which is not documented in the
-        # paper.
-        # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/slow_neural_style.lua#L137
-        postprocessor = _postprocessor()
+    postprocessor = _postprocessor()
+    postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
-        if preprocessor is not None:
-            preprocessor = preprocessor.to(device)
-            input_image = preprocessor(input_image)
-
+        input_image = preprocessor(input_image)
         output_image = transformer(input_image)
-
-        if postprocessor is not None:
-            postprocessor = postprocessor.to(device)
-            output_image = postprocessor(output_image)
+        output_image = postprocessor(output_image)
 
     return cast(torch.Tensor, output_image).detach()
