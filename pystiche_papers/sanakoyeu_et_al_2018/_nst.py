@@ -188,6 +188,8 @@ def gan_optim_loop(
             transformer_criterion_update_fn(input_image, transformer_criterion)
             train_transformer_one_step(output_image)
 
+        loading_time_start = time.time()
+
     return transformer
 
 
