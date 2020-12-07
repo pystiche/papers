@@ -35,6 +35,17 @@ def _maybe_get_luatorch_param(
 
 
 def preprocessor(impl_params: bool = True) -> nn.Module:
+    r"""Preprocessor from :cite:`JAL2016`.
+
+    Args:
+        impl_params: If ``True``, the input is preprocessed for models trained with
+            the Caffe framework. If ``False``, the preprocessor performs the identity
+            operation.
+
+    .. seealso::
+
+        - :class:`pystiche.image.transforms.CaffePreprocessing`
+    """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L57-L62
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/DataLoader.lua#L92
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L133
@@ -42,6 +53,17 @@ def preprocessor(impl_params: bool = True) -> nn.Module:
 
 
 def postprocessor(impl_params: bool = True) -> nn.Module:
+    r"""Preprocessor from :cite:`JAL2016`.
+
+    Args:
+        impl_params: If ``True``, the input is postprocessed from models trained with
+            the Caffe framework. If ``False``, the postprocessor performs the identity
+            operation.
+
+    .. seealso::
+
+        - :class:`pystiche.image.transforms.CaffePostprocessing`
+    """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L66-L71
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style.lua#L89
     return transforms.CaffePostprocessing() if impl_params else Identity()
