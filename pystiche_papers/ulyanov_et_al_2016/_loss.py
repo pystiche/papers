@@ -35,8 +35,8 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         self,
         encoder: enc.Encoder,
         impl_params: bool = True,
-        **feature_reconstruction_op_kwargs,
-    ):
+        **feature_reconstruction_op_kwargs: Any,
+    ) -> None:
         super().__init__(encoder, **feature_reconstruction_op_kwargs)
         self.double_batch_size_mean = impl_params
 
