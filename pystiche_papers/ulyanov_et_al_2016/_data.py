@@ -32,6 +32,18 @@ def content_transform(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.ComposedTransform:
+    r"""Content transform from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
@@ -62,9 +74,18 @@ def style_transform(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.Resize:
-    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
-    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
-    # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
+    r"""Style transform from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
@@ -78,7 +99,7 @@ def style_transform(
 
 
 def images() -> DownloadableImageCollection:
-
+    r"""Images from :cite:`ULVL2016,UVL2017`."""
     base_ulyanov = (
         "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/master/data/"
     )
@@ -220,6 +241,19 @@ def batch_sampler(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
+    r"""Batch sampler from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        data_source: Dataset to sample from.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm

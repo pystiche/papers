@@ -2,12 +2,11 @@ from typing import Callable, Optional, Union, cast
 
 import torch
 from torch import nn
-from torch.optim.lr_scheduler import ExponentialLR
-from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
 import pystiche
 from pystiche import loss, misc, optim
+from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
 from ._data import content_transform as _content_transform
@@ -15,8 +14,9 @@ from ._data import images as _images
 from ._data import style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
+from ._utils import hyper_parameters as _hyper_parameters
 from ._utils import lr_scheduler as _lr_scheduler
-from ._utils import optimizer
+from ._utils import optimizer as _optimizer
 from ._utils import postprocessor as _postprocessor
 from ._utils import preprocessor as _preprocessor
 
@@ -28,11 +28,7 @@ def training(
     style: Union[str, torch.Tensor],
     impl_params: bool = True,
     instance_norm: bool = True,
-    transformer: Optional[nn.Module] = None,
-    criterion: Optional[loss.PerceptualLoss] = None,
-    lr_scheduler: Optional[ExponentialLR] = None,
-    num_epochs: Optional[int] = None,
-    get_optimizer: Optional[Callable[[nn.Module], Optimizer]] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
     quiet: bool = False,
     logger: Optional[optim.OptimLogger] = None,
     log_fn: Optional[
@@ -46,25 +42,14 @@ def training(
         style: Style image on which the ``transformer`` should be trained. If the
             input is :class:`str`, the style image is read from
             :func:`~pystiche_papers.ulyanov_et_al_2016.images`.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
-        transformer: Transformer to be optimized. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.transformer` is used.
-        criterion: Optimization criterion. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.perceptual_loss` is used.
-        lr_scheduler: LRScheduler. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler` is used.
-        num_epochs: Optional number of epochs. If omitted, the num_epochs is determined
-            with respect to ``instance_norm`` and ``impl_params``. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        get_optimizer: Optional getter for the optimizer. If omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer` is used.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
         logger: Optional custom logger. If ``None``,
@@ -75,6 +60,11 @@ def training(
             ``None``.
 
     """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
     if isinstance(style, str):
         device = misc.get_device()
         images = _images()
@@ -83,46 +73,39 @@ def training(
         style_image = style
         device = style_image.device
 
-    if transformer is None:
-        transformer = _transformer(
-            impl_params=impl_params, instance_norm=instance_norm,
-        )
-        transformer = transformer.train()
+    transformer = _transformer(impl_params=impl_params, instance_norm=instance_norm,)
+    transformer = transformer.train()
     transformer = transformer.to(device)
 
-    if criterion is None:
-        criterion = perceptual_loss(
-            impl_params=impl_params, instance_norm=instance_norm,
-        )
-        criterion = criterion.eval()
+    criterion = perceptual_loss(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
+    criterion = criterion.eval()
     criterion = criterion.to(device)
 
-    if lr_scheduler is None:
-        if get_optimizer is None:
-            get_optimizer = optimizer
-        optimizer_ = get_optimizer(transformer)
-
-        lr_scheduler = _lr_scheduler(optimizer_, impl_params=impl_params,)
-
-    if num_epochs is None:
-        # The num_iterations are split up into multiple epochs with corresponding
-        # num_batches:
-        # 50000 = 25 * 2000
-        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
-        # 3000 = 10 * 300
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
-        # The num_batches is defined in ._data.batch_sampler .
-        num_epochs = 25 if impl_params and instance_norm else 10
+    optimizer = _optimizer(transformer)
+    lr_scheduler = _lr_scheduler(
+        optimizer,
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
 
     style_transform = _style_transform(
-        impl_params=impl_params, instance_norm=instance_norm
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
     )
     style_transform = style_transform.to(device)
+    style_image = style_transform(style_image)
+    style_image = batch_up_image(style_image, loader=content_image_loader)
+
     preprocessor = _preprocessor()
     preprocessor = preprocessor.to(device)
-    style_image = style_transform(style_image)
     style_image = preprocessor(style_image)
-    style_image = batch_up_image(style_image, loader=content_image_loader)
+
     criterion.set_style_image(style_image)
 
     def criterion_update_fn(input_image: torch.Tensor, criterion: nn.Module) -> None:
@@ -135,7 +118,7 @@ def training(
         transformer,
         criterion,
         criterion_update_fn,
-        num_epochs,
+        hyper_parameters.num_epochs,
         lr_scheduler=lr_scheduler,
         quiet=quiet,
         logger=logger,
@@ -155,14 +138,12 @@ def stylization(
         input_image: Image to be stylised.
         transformer: Pretrained transformer for style transfer or string to load a
             pretrained transformer.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
 
     """
     device = input_image.device
@@ -176,14 +157,16 @@ def stylization(
             transformer = transformer.eval()
     transformer = transformer.to(device)
 
+    postprocessor = _postprocessor()
+    postprocessor = postprocessor.to(device)
+
     with torch.no_grad():
         content_transform = _content_transform(
             impl_params=impl_params, instance_norm=instance_norm
         )
         content_transform = content_transform.to(device)
         input_image = content_transform(input_image)
-        postprocessor = _postprocessor()
-        postprocessor = postprocessor.to(device)
+
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
 

@@ -22,7 +22,7 @@ __all__ = [
 def hyper_parameters(
     impl_params: bool = True, instance_norm: bool = True
 ) -> HyperParameters:
-    r"""Hyper parameters from :cite:`ULVL2016`."""
+    r"""Hyper parameters from :cite:`ULVL2016,UVL2017`."""
     return HyperParameters(
         content_loss=HyperParameters(
             layer="relu4_2",
@@ -41,9 +41,12 @@ def hyper_parameters(
         content_transform=HyperParameters(edge_size=256,),
         style_transform=HyperParameters(
             edge_size=256,
+            # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
             edge="long",
             interpolation_mode="bicubic"
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
             if impl_params and instance_norm
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
             else "bilinear",
         ),
         batch_sampler=HyperParameters(
@@ -102,7 +105,7 @@ _hyper_parameters = hyper_parameters
 
 
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
-    r"""Multi-layer encoder from :cite:`ULVL2016`."""
+    r"""Multi-layer encoder from :cite:`ULVL2016,UVL2017`."""
     return enc.vgg19_multi_layer_encoder(
         weights="caffe", internal_preprocessing=False, allow_inplace=True
     )
@@ -122,19 +125,17 @@ def optimizer(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> optim.Adam:
-    r"""Optimizer from :cite:`ULVL2016`.
+    r"""Optimizer from :cite:`ULVL2016,UVL2017`.
 
     Args:
         transformer: Transformer to be optimized.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
@@ -179,19 +180,17 @@ def lr_scheduler(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> ExponentialLR:
-    r"""Learning rate scheduler from :cite:`ULVL2016`.
+    r"""Learning rate scheduler from :cite:`ULVL2016,UVL2017`.
 
     Args:
         optimizer: Wrapped optimizer.
-        impl_params: If ``True``, an :class:`~torch.optim.lr_scheduler.ExponentialLR`
-            with ``gamma==0.8`` is used instead of a
-            :func:`~pystiche_papers.ulyanov_et_al_2016.DelayedExponentialLR` with
-            ``gamma==0.7`` and ``delay==5``.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
     """
     if hyper_parameters is None:
