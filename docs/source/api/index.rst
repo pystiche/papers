@@ -20,11 +20,10 @@ to generate the results in the paper.
 In general, the deviations can be separated into two classes:
 
 1. **Behavioral changes**: These changes often result by misconceptions of the author
-   for how their used framework or library works internally. An example for this the
-   inclusion of a score correction factor of ``1/2`` for quadratic losses in the paper,
-   although this is not present in implementations for the squared error.
-
-   In some cases these changes also account for completely undocumented behavior.
+   for how their used framework or library works internally. An example for this is the
+   usage of the mean squared error (MSE) in the reference implementation whereas the
+   squared error (SE) is reported in the paper. In some cases these changes also
+   account for completely undocumented behavior.
 
    These changes have hard-coded behavior and cannot be adapted freely, but rather only
    be switched between both sets.
