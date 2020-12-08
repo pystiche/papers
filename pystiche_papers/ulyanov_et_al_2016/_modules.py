@@ -10,7 +10,20 @@ from pystiche import misc
 
 from ..utils import AutoPadConv2d, SequentialWithOutChannels
 
-__all__ = ["transformer"]
+__all__ = [
+    "noise",
+    "downsample",
+    "upsample",
+    "norm",
+    "activation",
+    "ConvBlock",
+    "ConvSequence",
+    "JoinBlock",
+    "BranchBlock",
+    "level",
+    "Transformer",
+    "transformer",
+]
 
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
