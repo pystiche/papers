@@ -27,30 +27,149 @@
 .. |archive| replace:: Archive
 .. _archive: https://github.com/pmeier/CNNMRF/tree/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f
 
-Unfortunately, the parameters in the reference implementation differ from the parameters
-described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following
-parts are affected:
+.. _li_wand_2016-impl_params:
 
-  - :func:`~pystiche_papers.li_wand_2016.image_pyramid`,
-  - :func:`~pystiche_papers.li_wand_2016.content_loss`,
-  - :func:`~pystiche_papers.li_wand_2016.style_loss`,
-  - :func:`~pystiche_papers.li_wand_2016.regularization`,
-  - :func:`~pystiche_papers.li_wand_2016.target_transforms`.
+Behavioral changes
+------------------
+
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+The following parts are affected:
+
+- :class:`~pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
+- :class:`~pystiche_papers.li_wand_2016.MRFOperator`
+- :class:`~pystiche_papers.li_wand_2016.TotalVariationOperator`
+- :class:`~pystiche_papers.li_wand_2016.target_transforms`
+
+Hyper parameters
+----------------
+
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+:func:`~pystiche_papers.li_wand_2016.content_loss`
+``````````````````````````````````````````````````
+
++------------------+-----------------+-----------+
+| Parameter        | ``impl_params``             |
++                  +-----------------+-----------+
+|                  | ``True``        | ``False`` |
++==================+=================+===========+
+| ``layer``        | ``"relu4_2"``               |
++------------------+-----------------+-----------+
+| ``score_weight`` | ``2e1``         | ``1e0``   |
++------------------+-----------------+-----------+
+
+
+:func:`~pystiche_papers.li_wand_2016.target_transforms`
+```````````````````````````````````````````````````````
+
++-----------------------+-----------------+-----------+
+| Parameter             | ``impl_params``             |
++                       +-----------------+-----------+
+|                       | ``True``        | ``False`` |
++=======================+=================+===========+
+| ``num_scale_steps``   | ``0``           | ``3``     |
++-----------------------+-----------------+-----------+
+| ``scale_step_width``  | ``5e-2``                    |
++-----------------------+-----------------+-----------+
+| ``num_rotate_steps``  | ``0``           | ``2``     |
++-----------------------+-----------------+-----------+
+| ``rotate_step_width`` | ``7.5``                     |
++-----------------------+-----------------+-----------+
+
+
+:func:`~pystiche_papers.li_wand_2016.style_loss`
+````````````````````````````````````````````````
+
++-------------------+-----------------+-----------+
+| Parameter         | ``impl_params``             |
++                   +-----------------+-----------+
+|                   | ``True``        | ``False`` |
++===================+=================+===========+
+| ``layers``        | ``("relu3_1", "relu4_1")``  |
++-------------------+-----------------+-----------+
+| ``layer_weights`` | ``"sum"``                   |
++-------------------+-----------------+-----------+
+| ``patch_size``    | ``3``                       |
++-------------------+-----------------+-----------+
+| ``stride``        | ``2``           | ``1``     |
++-------------------+-----------------+-----------+
+| ``score_weight``  | ``1e-4``        | ``1e0``   |
++-------------------+-----------------+-----------+
+
+
+:func:`~pystiche_papers.li_wand_2016.regularization`
+````````````````````````````````````````````````````
+
++------------------+-----------------+-----------+
+| Parameter        | ``impl_params``             |
++                  +-----------------+-----------+
+|                  | ``True``        | ``False`` |
++==================+=================+===========+
+| ``score_weight`` | ``1e-3``                    |
++------------------+-----------------+-----------+
+
+
+:func:`~pystiche_papers.li_wand_2016.image_pyramid`
+````````````````````````````````````````````````````
+
++-------------------+-----------------+-----------+
+| Parameter         | ``impl_params``             |
++                   +-----------------+-----------+
+|                   | ``True``        | ``False`` |
++===================+=================+===========+
+| ``max_edge_size`` | ``384``                     |
++-------------------+-----------------+-----------+
+| ``num_steps``     | ``100``         | ``200``   |
++-------------------+-----------------+-----------+
+| ``num_levels``    | ``3``           | ``None``  |
++-------------------+-----------------+-----------+
+| ``min_edge_size`` | ``64``                      |
++-------------------+-----------------+-----------+
+| ``edge``          | ``"long"``                  |
++-------------------+-----------------+-----------+
+
+``num_levels=None`` implies that the number of levels is automatically calculated
+depending on ``max_edge_size`` and ``min_edge_size``. See
+:class:`pystiche.pyramid.OctaveImagePyramid` for details.
+
+
+API
+---
 
 
 .. automodule:: pystiche_papers.li_wand_2016
 
-.. autofunction:: content_loss
-.. autofunction:: extract_normalized_patches2d
+..
+  _data.py
 .. autofunction:: images
-.. autofunction:: image_pyramid
-.. autofunction:: multi_layer_encoder
-.. autofunction:: nst
-.. autofunction:: optimizer
+
+..
+  _loss.py
+.. autoclass:: FeatureReconstructionOperator
+.. autofunction:: content_loss
+.. autoclass:: MRFOperator
+.. autofunction:: style_loss
+.. autoclass:: TotalVariationOperator
+.. autofunction:: regularization
 .. autofunction:: perceptual_loss
+
+..
+  _nst.py
+.. autofunction:: nst
+
+..
+  _pyramid.py
+.. autofunction:: image_pyramid
+
+..
+  _utils.py
+.. autofunction:: hyper_parameters
+.. autofunction:: extract_normalized_patches2d
+.. autofunction:: target_transforms
 .. autofunction:: preprocessor
 .. autofunction:: postprocessor
-.. autofunction:: regularization
-.. autofunction:: style_loss
-.. autofunction:: target_transforms
+.. autofunction:: multi_layer_encoder
+.. autofunction:: optimizer

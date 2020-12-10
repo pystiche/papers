@@ -1,5 +1,3 @@
-import itertools
-
 import pytorch_testing_utils as ptu
 from torch.utils.data import DataLoader
 
@@ -10,87 +8,98 @@ from pystiche.image import transforms
 from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 
+from .utils import impl_params_and_instance_norm
 
-def test_content_transform(subtests, content_image):
+
+@impl_params_and_instance_norm
+def test_content_transform(subtests, content_image, impl_params, instance_norm):
     edge_size = 16
 
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            content_transform = paper.content_transform(
-                edge_size=edge_size,
-                impl_params=impl_params,
-                instance_norm=instance_norm,
-            )
-            if instance_norm:
-                utils.make_reproducible()
-            actual = content_transform(content_image)
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    )
+    hyper_parameters.content_transform.edge_size = edge_size
 
-            if impl_params:
-                if instance_norm:
-                    transform = transforms.ValidRandomCrop(edge_size)
-                    utils.make_reproducible()
-                    desired = transform(content_image)
-                else:
-                    desired = F.resize(content_image, edge_size)
-            else:
-                transform = transforms.CenterCrop(edge_size)
-                desired = transform(content_image)
+    content_transform = paper.content_transform(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
 
-            ptu.assert_allclose(actual, desired)
+    utils.make_reproducible()
+    actual = content_transform(content_image)
+
+    if impl_params:
+        if instance_norm:
+            transform = transforms.ValidRandomCrop(edge_size)
+            utils.make_reproducible()
+            desired = transform(content_image)
+        else:
+            desired = F.resize(content_image, edge_size)
+    else:
+        transform = transforms.CenterCrop(edge_size)
+        desired = transform(content_image)
+
+    ptu.assert_allclose(actual, desired)
 
 
-def test_content_transform_grayscale_image(subtests, content_image):
+@impl_params_and_instance_norm
+def test_content_transform_grayscale_image(
+    subtests, content_image, impl_params, instance_norm
+):
     content_image = F.rgb_to_grayscale(content_image)
     edge_size = 16
 
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            content_transform = paper.content_transform(
-                edge_size=edge_size,
-                impl_params=impl_params,
-                instance_norm=instance_norm,
-            )
-            if instance_norm:
-                utils.make_reproducible()
-            actual = content_transform(content_image)
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    )
+    hyper_parameters.content_transform.edge_size = edge_size
 
-            if impl_params:
-                if instance_norm:
-                    transform = transforms.ValidRandomCrop(edge_size)
-                    utils.make_reproducible()
-                    transform_image = transform(content_image)
-                else:
-                    transform_image = F.resize(content_image, edge_size)
-            else:
-                transform = transforms.CenterCrop(edge_size)
-                transform_image = transform(content_image)
+    content_transform = paper.content_transform(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
+    if instance_norm:
+        utils.make_reproducible()
+    actual = content_transform(content_image)
 
-            desired = F.grayscale_to_fakegrayscale(transform_image)
+    if impl_params:
+        if instance_norm:
+            transform = transforms.ValidRandomCrop(edge_size)
+            utils.make_reproducible()
+            transform_image = transform(content_image)
+        else:
+            transform_image = F.resize(content_image, edge_size)
+    else:
+        transform = transforms.CenterCrop(edge_size)
+        transform_image = transform(content_image)
 
-            ptu.assert_allclose(actual, desired)
+    desired = F.grayscale_to_fakegrayscale(transform_image)
+
+    ptu.assert_allclose(actual, desired)
 
 
-def test_style_transform(subtests):
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            style_transform = paper.style_transform(
-                impl_params=impl_params, instance_norm=instance_norm
-            )
+@impl_params_and_instance_norm
+def test_style_transform(subtests, impl_params, instance_norm):
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    ).style_transform
 
-            assert isinstance(style_transform, transforms.Resize)
+    style_transform = paper.style_transform(
+        impl_params=impl_params, instance_norm=instance_norm
+    )
 
-            with subtests.test("edge_size"):
-                assert style_transform.size == 256
+    assert isinstance(style_transform, transforms.Resize)
 
-            with subtests.test("edge"):
-                assert style_transform.edge == "long"
+    with subtests.test("edge_size"):
+        assert style_transform.size == hyper_parameters.edge_size
 
-            with subtests.test("interpolation_mode"):
-                assert (
-                    style_transform.interpolation_mode == "bicubic"
-                    if impl_params and instance_norm
-                    else "bilinear"
-                )
+    with subtests.test("edge"):
+        assert style_transform.edge == hyper_parameters.edge
+
+    with subtests.test("interpolation_mode"):
+        assert style_transform.interpolation_mode == hyper_parameters.interpolation_mode
 
 
 def test_images_smoke():
@@ -110,27 +119,24 @@ def test_dataset(subtests, mocker):
         assert isinstance(dataset.transform, type(paper.content_transform()))
 
 
-def test_batch_sampler(subtests):
+@impl_params_and_instance_norm
+def test_batch_sampler(subtests, impl_params, instance_norm):
     data_source = ()
-    configs = (
-        (True, True, 2000, 1),
-        (True, False, 300, 4),
-        (False, True, 200, 16),
-        (False, False, 200, 16),
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    ).batch_sampler
+
+    batch_sampler = paper.batch_sampler(
+        data_source, impl_params=impl_params, instance_norm=instance_norm
     )
-    for impl_params, instance_norm, num_batches, batch_size in configs:
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            batch_sampler = paper.batch_sampler(
-                data_source, impl_params=impl_params, instance_norm=instance_norm
-            )
 
-            assert isinstance(batch_sampler, FiniteCycleBatchSampler)
+    assert isinstance(batch_sampler, FiniteCycleBatchSampler)
 
-            with subtests.test("num_batches"):
-                assert batch_sampler.num_batches == num_batches
+    with subtests.test("num_batches"):
+        assert batch_sampler.num_batches == hyper_parameters.num_batches
 
-            with subtests.test("num_size"):
-                assert batch_sampler.batch_size == batch_size
+    with subtests.test("num_size"):
+        assert batch_sampler.batch_size == hyper_parameters.batch_size
 
 
 def test_image_loader(subtests):

@@ -9,8 +9,9 @@ from torch.utils.data import DataLoader, TensorDataset
 
 import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche_papers import utils
+from pystiche_papers.utils import batch_up_image
 
+from tests import utils
 from tests.utils import is_callable
 
 
@@ -184,8 +185,16 @@ def test_training_smoke(subtests, training, image_loader):
         assert output is transformer
 
 
+@utils.parametrize_data(
+    ("impl_params", "instance_norm"),
+    *[
+        pytest.param(impl_params, instance_norm)
+        for impl_params, instance_norm in itertools.product(
+            (True, False), (True, False, None)
+        )
+    ],
+)
 def test_training_instance_norm(
-    subtests,
     preprocessor_mocks,
     optimizer_mocks,
     style_transforms_mocks,
@@ -193,26 +202,19 @@ def test_training_instance_norm(
     perceptual_loss_mocks,
     default_transformer_optim_loop_patch,
     training,
+    impl_params,
+    instance_norm,
 ):
-    mocks = (transformer_mocks[0], perceptual_loss_mocks[0], style_transforms_mocks[0])
+    mock, _ = transformer_mocks
+    training(impl_params=impl_params, instance_norm=instance_norm)
 
-    for impl_params, instance_norm in itertools.product(
-        (True, False), (True, False, None)
-    ):
-        reset_mocks(*mocks, default_transformer_optim_loop_patch)
-        training(impl_params=impl_params, instance_norm=instance_norm)
+    mock.assert_called_once()
 
-        for mock in mocks:
-            with subtests.test(
-                mock.name, impl_params=impl_params, instance_norm=instance_norm
-            ):
-                mock.assert_called_once()
-
-                _, kwargs = mock.call_args
-                if instance_norm is None:
-                    assert kwargs["instance_norm"] is impl_params
-                else:
-                    assert kwargs["instance_norm"] is instance_norm
+    _, kwargs = mock.call_args
+    if instance_norm is None:
+        assert kwargs["instance_norm"] is impl_params
+    else:
+        assert kwargs["instance_norm"] is instance_norm
 
 
 def test_training_device(
@@ -251,49 +253,6 @@ def test_training_transformer_train(
     transformer = args[1]
 
     transformer.train.assert_called_once_with()
-
-
-def test_training_style_image_tensor(
-    subtests,
-    preprocessor_mocks,
-    optimizer_mocks,
-    style_transforms_mocks,
-    transformer_mocks,
-    perceptual_loss_mocks,
-    training,
-):
-    training()
-
-    for mocks in (perceptual_loss_mocks, style_transforms_mocks):
-        patch, _ = mocks
-        with subtests.test(patch.name):
-            patch.assert_called_once()
-
-            _, kwargs = patch.call_args
-            assert kwargs["style"] is None
-
-
-def test_training_style_image_str(
-    subtests,
-    preprocessor_mocks,
-    optimizer_mocks,
-    images_patch,
-    style_transforms_mocks,
-    transformer_mocks,
-    perceptual_loss_mocks,
-    training,
-):
-    style = "style"
-
-    training(style_image_=style)
-
-    for mocks in (perceptual_loss_mocks, style_transforms_mocks):
-        patch, _ = mocks
-        with subtests.test(patch.name):
-            patch.assert_called_once()
-
-            _, kwargs = patch.call_args
-            assert kwargs["style"] == style
 
 
 def test_training_criterion_eval(
@@ -341,7 +300,7 @@ def test_training_criterion_style_image(
     ptu.assert_allclose(
         criterion.style_loss.get_target_image(),
         preprocessor(
-            style_transform(utils.batch_up_image(style_image, image_loader.batch_size))
+            style_transform(batch_up_image(style_image, image_loader.batch_size))
         ),
     )
 

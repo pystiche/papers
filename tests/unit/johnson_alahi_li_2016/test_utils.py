@@ -8,6 +8,87 @@ from pystiche import enc
 from pystiche.image import transforms
 
 
+def test_hyper_parameters_content_loss(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "content_loss"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("layer"):
+        assert hyper_parameters.layer == "relu2_2"
+
+    with subtests.test("score_weight"):
+        assert hyper_parameters.score_weight == pytest.approx(1e0)
+
+
+def test_hyper_parameters_style_loss(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "style_loss"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("layer"):
+        assert hyper_parameters.layers == ("relu1_2", "relu2_2", "relu3_3", "relu4_3")
+
+    with subtests.test("layer_weights"):
+        assert hyper_parameters.layer_weights == "sum"
+
+    with subtests.test("score_weight"):
+        assert hyper_parameters.score_weight == pytest.approx(5e0)
+
+
+def test_hyper_parameters_regularization(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "regularization"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("score_weight"):
+        assert hyper_parameters.score_weight == pytest.approx(1e-6)
+
+
+def test_hyper_parameters_content_transform(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "content_transform"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("image_size"):
+        assert hyper_parameters.image_size == (256, 256)
+
+
+def test_hyper_parameters_style_transform(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "style_transform"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("edge_size"):
+        assert hyper_parameters.edge_size == 256
+
+    with subtests.test("edge"):
+        assert hyper_parameters.edge == "long"
+
+
+def test_hyper_parameters_batch_sampler(subtests):
+    hyper_parameters = paper.hyper_parameters()
+
+    sub_params = "batch_sampler"
+    assert sub_params in hyper_parameters
+    hyper_parameters = getattr(hyper_parameters, sub_params)
+
+    with subtests.test("num_batches"):
+        assert hyper_parameters.num_batches == 40000
+
+    with subtests.test("batch_size"):
+        assert hyper_parameters.batch_size == 4
+
+
 def test_preprocessor():
     assert isinstance(
         paper.preprocessor(impl_params=True), transforms.CaffePreprocessing

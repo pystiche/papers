@@ -1,8 +1,9 @@
-from typing import Optional, Sized, Tuple
+from typing import List, Optional, Sized, Tuple
 from urllib.parse import urljoin
 
 import torch
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 import pystiche.image.transforms.functional as F
 from pystiche import image
@@ -12,10 +13,12 @@ from pystiche.data import (
     ImageFolderDataset,
 )
 from pystiche.image import transforms
+from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
-from ._utils import _maybe_get_luatorch_param
+from ._utils import hyper_parameters as _hyper_parameters
+from ._utils import preprocessor as _preprocessor
 
 __all__ = [
     "content_transform",
@@ -27,67 +30,68 @@ __all__ = [
 ]
 
 
+class TopLeftCropToMultiple(transforms.Transform):
+    def __init__(self, multiple: int = 16):
+        super().__init__()
+        self.multiple = multiple
+
+    def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
+        old_height, old_width = image.extract_image_size(input_image)
+        new_height = old_height - old_height % self.multiple
+        new_width = old_width - old_width % self.multiple
+        return new_height, new_width
+
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
+        size = self.calculate_size(input_image)
+        return F.top_left_crop(input_image, size)
+
+
 def content_transform(
-    edge_size: int = 256, multiple: int = 16, impl_params: bool = True,
-) -> transforms.ComposedTransform:
-    class TopLeftCropToMultiple(transforms.Transform):
-        def __init__(self, multiple: int):
-            super().__init__()
-            self.multiple = multiple
+    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+) -> nn.Sequential:
+    r"""Content image transformation from :cite:`JAL2016`.
 
-        def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
-            old_height, old_width = image.extract_image_size(input_image)
-            new_height = old_height - old_height % self.multiple
-            new_width = old_width - old_width % self.multiple
-            return new_height, new_width
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
 
-        def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-            size = self.calculate_size(input_image)
-            return F.top_left_crop(input_image, size)
+            Additionally, if ``True``, appends the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.preprocessor` as a last
+            transformation step.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
 
-    transforms_ = [
-        TopLeftCropToMultiple(multiple),
-        transforms.Resize((edge_size, edge_size)),
+    transforms_: List[nn.Module] = [
+        TopLeftCropToMultiple(),
+        transforms.Resize(hyper_parameters.content_transform.image_size),
         OptionalGrayscaleToFakegrayscale(),
     ]
     if impl_params:
-        transforms_.append(transforms.CaffePreprocessing())
+        transforms_.append(_preprocessor())
 
-    return transforms.ComposedTransform(*transforms_)
-
-
-LUATORCH_STYLE_EDGE_SIZES = {
-    ("candy", True): 384,
-    ("composition_vii", False): 512,
-    ("feathers", True): 180,
-    ("la_muse", False): 512,
-    ("la_muse", True): 512,
-    ("mosaic", True): 512,
-    ("starry_night", False): 512,
-    ("the_scream", True): 384,
-    ("the_wave", False): 512,
-    ("udnie", True): 256,
-}
-
-
-def get_style_edge_size(
-    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 256,
-) -> int:
-    return _maybe_get_luatorch_param(
-        LUATORCH_STYLE_EDGE_SIZES, impl_params, instance_norm, style, default
-    )
+    return nn.Sequential(*transforms_)
 
 
 def style_transform(
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    edge_size: Optional[int] = None,
-    edge: str = "long",
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.Resize:
-    if edge_size is None:
-        edge_size = get_style_edge_size(impl_params, instance_norm, style)
-    return transforms.Resize(edge_size, edge=edge)
+    r"""Style image transformation from :cite:`JAL2016`.
+
+    Args:
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
+
+    return transforms.Resize(
+        hyper_parameters.style_transform.edge_size,
+        edge=hyper_parameters.style_transform.edge,
+    )
 
 
 def images() -> DownloadableImageCollection:
@@ -145,9 +149,7 @@ def images() -> DownloadableImageCollection:
 
 
 def dataset(
-    root: str,
-    impl_params: bool = True,
-    transform: Optional[transforms.Transform] = None,
+    root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
         transform = content_transform(impl_params=impl_params)
@@ -155,63 +157,35 @@ def dataset(
     return ImageFolderDataset(root, transform=transform)
 
 
-LUATORCH_NUM_BATCHES = {
-    ("candy", True): 40000,
-    ("composition_vii", False): 60000,
-    ("feathers", True): 60000,
-    ("la_muse", False): 40000,
-    ("la_muse", True): 40000,
-    ("mosaic", True): 60000,
-    ("starry_night", False): 40000,
-    ("the_scream", True): 60000,
-    ("the_wave", False): 40000,
-    ("udnie", True): 40000,
-}
-
-
-def get_num_batches(
-    impl_params: bool, instance_norm: bool, style: Optional[str], default: int = 40000,
-) -> int:
-    return _maybe_get_luatorch_param(
-        LUATORCH_NUM_BATCHES, impl_params, instance_norm, style, default
-    )
-
-
 def batch_sampler(
-    data_source: Sized,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    num_batches: Optional[int] = None,
-    batch_size: int = 4,
+    data_source: Sized, hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
-    if num_batches is None:
-        num_batches = get_num_batches(impl_params, instance_norm, style)
+    r"""Batch sampler from :cite:`JAL2016`.
+
+    Args:
+        data_source: Dataset to sample from.
+        hyper_parameters: If omitted,
+            :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
     return FiniteCycleBatchSampler(
-        data_source, num_batches=num_batches, batch_size=batch_size
+        data_source,
+        num_batches=hyper_parameters.batch_sampler.num_batches,
+        batch_size=hyper_parameters.batch_sampler.batch_size,
     )
-
-
-batch_sampler_ = batch_sampler
 
 
 def image_loader(
     dataset: Dataset,
-    batch_sampler: Optional[Sampler] = None,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    style: Optional[str] = None,
-    num_workers: int = 4,
+    hyper_parameters: Optional[HyperParameters] = None,
     pin_memory: bool = True,
 ) -> DataLoader:
-    if batch_sampler is None:
-        batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm, style=style
-        )
-
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters()
     return DataLoader(
         dataset,
-        batch_sampler=batch_sampler,
-        num_workers=num_workers,
+        batch_sampler=batch_sampler(dataset),
+        num_workers=hyper_parameters.batch_sampler.batch_size,
         pin_memory=pin_memory,
     )

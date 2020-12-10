@@ -72,7 +72,7 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 @pytest.fixture
 def optimizer_mocks(mocker, patcher):
     mock = mocker.Mock()
-    patch = patcher("optimizer", return_value=mock)
+    patch = patcher("_optimizer", return_value=mock)
     return patch, mock
 
 

@@ -12,14 +12,18 @@ def test_content_loss(subtests):
     content_loss = paper.content_loss()
     assert isinstance(content_loss, ops.FeatureReconstructionOperator)
 
+    hyper_parameters = paper.hyper_parameters().content_loss
+
     with subtests.test("layer"):
-        assert content_loss.encoder.layer == "relu4_2"
+        assert content_loss.encoder.layer == hyper_parameters.layer
 
     with subtests.test("score_weight"):
-        assert content_loss.score_weight == pytest.approx(1e0)
+        assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
+def test_MultiLayerEncodingOperator(
+    subtests, multi_layer_encoder_with_layer, target_image, input_image
+):
 
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
@@ -29,7 +33,7 @@ def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.StyleLoss(
+            op = paper.MultiLayerEncodingOperator(
                 multi_layer_encoder,
                 (layer,),
                 lambda encoder, layer_weight: ops.GramOperator(
@@ -49,9 +53,10 @@ def test_StyleLoss(subtests, multi_layer_encoder_with_layer, target_image, input
 
 
 def test_style_loss(subtests):
-
     style_loss = paper.style_loss()
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+
+    hyper_parameters = paper.hyper_parameters().style_loss
 
     with subtests.test("encoding_ops"):
         assert all(isinstance(op, ops.GramOperator) for op in style_loss.operators())
@@ -60,21 +65,13 @@ def test_style_loss(subtests):
         *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
     )
     with subtests.test("layers"):
-        assert set(layers) == {"relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"}
+        assert layers == hyper_parameters.layers
 
     with subtests.test("layer_weights"):
-        layers, nums_channels = zip(
-            ("relu1_1", 64),
-            ("relu2_1", 128),
-            ("relu3_1", 256),
-            ("relu4_1", 512),
-            ("relu5_1", 512),
-        )
-        desired = tuple(1.0 / num_channels ** 2.0 for num_channels in nums_channels)
-        assert layer_weights == pytest.approx(desired)
+        assert layer_weights == pytest.approx(hyper_parameters.layer_weights)
 
     with subtests.test("score_weight"):
-        assert style_loss.score_weight == pytest.approx(1e3)
+        assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_guided_style_loss(subtests, content_guides):
@@ -82,7 +79,10 @@ def test_guided_style_loss(subtests, content_guides):
     assert isinstance(style_loss, ops.MultiRegionOperator)
 
     with subtests.test("encoding_ops"):
-        assert all(isinstance(op, paper.StyleLoss) for op in style_loss.operators())
+        assert all(
+            isinstance(op, paper.MultiLayerEncodingOperator)
+            for op in style_loss.operators()
+        )
 
     regions, region_weights = zip(
         *[(name, op.score_weight) for name, op in style_loss.named_operators()]
@@ -106,7 +106,7 @@ def test_perceptual_loss(subtests):
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, paper.StyleLoss)
+        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingOperator)
 
 
 def test_guided_perceptual_loss(subtests, content_guides):

@@ -9,10 +9,16 @@ from torch import nn
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, misc
+from pystiche_papers.ulyanov_et_al_2016._modules import (
+    AddNoiseChannels,
+    HourGlassBlock,
+    SequentialWithOutChannels,
+    join_channelwise,
+)
 
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
-    join_image = paper.join_channelwise(image_small_0, image_small_1)
+    join_image = join_channelwise(image_small_0, image_small_1)
     assert isinstance(join_image, torch.Tensor)
 
     input_num_channels = image.extract_num_channels(image_small_0)
@@ -26,7 +32,7 @@ def test_join_channelwise(subtests, image_small_0, image_small_1):
 def test_AddNoiseChannels(subtests, input_image):
     in_channels = image.extract_num_channels(input_image)
     num_noise_channels = in_channels + 1
-    module = paper.AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
+    module = AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
 
     assert isinstance(module, nn.Module)
 
@@ -45,7 +51,7 @@ def test_AddNoiseChannels(subtests, input_image):
 
 def test_noise():
     module = paper.noise()
-    assert isinstance(module, paper.AddNoiseChannels)
+    assert isinstance(module, AddNoiseChannels)
 
 
 def test_downsample(subtests):
@@ -70,9 +76,9 @@ def test_upsample(subtests):
 
 def test_HourGlassBlock(subtests):
     intermediate = nn.Conv2d(3, 3, 1)
-    hour_glass = paper.HourGlassBlock(intermediate)
+    hour_glass = HourGlassBlock(intermediate)
 
-    assert isinstance(hour_glass, paper.HourGlassBlock)
+    assert isinstance(hour_glass, HourGlassBlock)
 
     with subtests.test("down"):
         assert isinstance(hour_glass.down, type(paper.downsample()))
@@ -82,7 +88,7 @@ def test_HourGlassBlock(subtests):
         assert isinstance(hour_glass.up, type(paper.upsample()))
 
 
-def test_get_norm_module(subtests):
+def test_norm(subtests):
     in_channels = 3
     for instance_norm in (True, False):
         with subtests.test(instance_norm=instance_norm):
@@ -105,7 +111,7 @@ def test_get_norm_module(subtests):
                 assert norm_module.affine
 
 
-def test_get_activation_module(subtests):
+def test_activation(subtests):
     for impl_params, instance_norm in itertools.product((True, False), (True, False)):
         with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
             norm_module = paper.activation(
@@ -130,7 +136,7 @@ def test_ConvBlock(subtests):
     stride = 1
     conv_block = paper.ConvBlock(in_channels, out_channels, kernel_size, stride=stride)
 
-    assert isinstance(conv_block, paper.SequentialWithOutChannels)
+    assert isinstance(conv_block, SequentialWithOutChannels)
     assert len(conv_block) == 3
 
     with subtests.test("conv"):
@@ -154,7 +160,7 @@ def test_ConvSequence(subtests):
     in_channels = out_channels = 1
     conv_sequence = paper.ConvSequence(in_channels, out_channels)
 
-    assert isinstance(conv_sequence, paper.SequentialWithOutChannels)
+    assert isinstance(conv_sequence, SequentialWithOutChannels)
     assert len(conv_sequence) == 3
     assert all(isinstance(child, paper.ConvBlock) for child in conv_sequence.children())
 
@@ -257,7 +263,7 @@ def test_level_conv_sequence(subtests):
     for impl_params in (True, False):
         with subtests.test(impl_params=impl_params):
             module = paper.level(None, impl_params=impl_params)
-            assert isinstance(module, paper.SequentialWithOutChannels)
+            assert isinstance(module, SequentialWithOutChannels)
             assert len(module) == 3 if impl_params else 2
 
             with subtests.test("input"):
@@ -269,23 +275,23 @@ def test_level_conv_sequence(subtests):
 
             with subtests.test("noise"):
                 if not impl_params:
-                    assert isinstance(module[0], paper.AddNoiseChannels)
+                    assert isinstance(module[0], AddNoiseChannels)
 
 
 def test_level(subtests):
     deep_branch = nn.Conv2d(3, 3, 1)
     module = paper.level(deep_branch)
-    assert isinstance(module, paper.SequentialWithOutChannels)
+    assert isinstance(module, SequentialWithOutChannels)
     assert len(module) == 2
 
     with subtests.test("branch"):
         branch = module[0]
         assert isinstance(branch, paper.BranchBlock)
-        assert isinstance(branch.deep, paper.HourGlassBlock)
-        assert isinstance(branch.shallow, paper.SequentialWithOutChannels)
+        assert isinstance(branch.deep, HourGlassBlock)
+        assert isinstance(branch.shallow, SequentialWithOutChannels)
 
     with subtests.test("output_conv_seq"):
-        assert isinstance(module[1], paper.SequentialWithOutChannels)
+        assert isinstance(module[1], SequentialWithOutChannels)
 
 
 def test_Transformer(subtests, input_image):
@@ -296,7 +302,7 @@ def test_Transformer(subtests, input_image):
             transformer = paper.Transformer(levels, impl_params=impl_params)
 
             with subtests.test("pyramid"):
-                assert isinstance(transformer[0], paper.SequentialWithOutChannels)
+                assert isinstance(transformer[0], SequentialWithOutChannels)
 
             with subtests.test("output_conv"):
                 assert isinstance(
