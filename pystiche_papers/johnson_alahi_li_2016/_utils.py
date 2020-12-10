@@ -62,7 +62,7 @@ def preprocessor(impl_params: bool = True) -> nn.Module:
 
 
 def postprocessor(impl_params: bool = True) -> nn.Module:
-    r"""Preprocessor from :cite:`JAL2016`.
+    r"""Postprocessor from :cite:`JAL2016`.
 
     Args:
         impl_params: If ``True``, the input is postprocessed from models trained with
