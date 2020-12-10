@@ -360,11 +360,11 @@ def test_training_lr_scheduler_optimizer(
 def stylization(input_image, transformer_mocks):
     _, transformer = transformer_mocks
 
-    def stylization_(input_image_=None, transformer_="style", edge_size=16, **kwargs):
+    def stylization_(input_image_=None, transformer_="style", **kwargs):
         if input_image_ is None:
             input_image_ = input_image
 
-        output = paper.stylization(input_image_, transformer_, edge_size=edge_size, **kwargs)
+        output = paper.stylization(input_image_, transformer_, **kwargs)
 
         if isinstance(transformer_, str):
             transformer.assert_called_once()
@@ -381,20 +381,17 @@ def stylization(input_image, transformer_mocks):
     return stylization_
 
 
-def test_stylization_smoke(
-    stylization, postprocessor_mocks, input_image
-):
-    edge_size = 32
-    _, _, output_image = stylization(input_image, edge_size=edge_size)
-    ptu.assert_allclose(output_image, F.resize(input_image, (edge_size, edge_size)) + 0.5, rtol=1e-6)
+def test_stylization_smoke(stylization, postprocessor_mocks, input_image):
+    hyper_parameters = paper.hyper_parameters()
+    edge_size = hyper_parameters.content_transform.edge_size
+    _, _, output_image = stylization(input_image,)
+    ptu.assert_allclose(
+        output_image, F.resize(input_image, (edge_size, edge_size)) + 0.5, rtol=1e-6
+    )
 
 
 def test_stylization_device(
-    subtests,
-    postprocessor_mocks,
-    transformer_mocks,
-    stylization,
-    input_image,
+    subtests, postprocessor_mocks, transformer_mocks, stylization, input_image,
 ):
     stylization(input_image)
 
@@ -409,11 +406,7 @@ def test_stylization_device(
 
 
 def test_stylization_transformer_eval(
-    subtests,
-    postprocessor_mocks,
-    transformer_mocks,
-    stylization,
-    input_image,
+    subtests, postprocessor_mocks, transformer_mocks, stylization, input_image,
 ):
     _, transformer = transformer_mocks
     for impl_params, instance_norm in itertools.product((True, False), (True, False)):
