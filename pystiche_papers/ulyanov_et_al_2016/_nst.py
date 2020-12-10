@@ -85,7 +85,9 @@ def training(
     criterion = criterion.eval()
     criterion = criterion.to(device)
 
-    optimizer = _optimizer(transformer,impl_params=impl_params, instance_norm=instance_norm)
+    optimizer = _optimizer(
+        transformer, impl_params=impl_params, instance_norm=instance_norm
+    )
     lr_scheduler = _lr_scheduler(
         optimizer,
         impl_params=impl_params,
@@ -131,7 +133,7 @@ def stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: bool = True,
-    edge_size: int = 256,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
 
@@ -145,8 +147,8 @@ def stylization(
         instance_norm: Switch the behavior and hyper-parameters between both
             publications of the original authors. For details see
             :ref:`here <ulyanov_et_al_2016-instance_norm>`.
-        edge_size: Size of the image to which the image should be resized before
-            transformation.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
     device = input_image.device
@@ -160,12 +162,18 @@ def stylization(
         transformer = transformer.eval()
     transformer = transformer.to(device)
 
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
     postprocessor = _postprocessor()
     postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+        edge_size = hyper_parameters.content_transform.edge_size
         transform = transforms.Resize((edge_size, edge_size))
         input_image = transform(input_image)
 

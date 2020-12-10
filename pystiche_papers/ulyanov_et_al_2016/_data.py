@@ -187,9 +187,7 @@ def images() -> DownloadableImageCollection:
             md5="7fdd9603a5182dcef23d7fb1c5217888",
         ),
     }
-    return DownloadableImageCollection(
-        {**content_images, **style_images}
-    )
+    return DownloadableImageCollection({**content_images, **style_images})
 
 
 def dataset(
