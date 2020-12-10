@@ -108,13 +108,6 @@ def images_patch(mocker, content_image, style_image):
 
 
 @pytest.fixture
-def content_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
-    patch = patcher("_content_transform", return_value=mock)
-    return patch, mock
-
-
-@pytest.fixture
 def style_transforms_mocks(make_nn_module_mock, patcher):
     mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
     patch = patcher("_style_transform", return_value=mock)
@@ -367,11 +360,11 @@ def test_training_lr_scheduler_optimizer(
 def stylization(input_image, transformer_mocks):
     _, transformer = transformer_mocks
 
-    def stylization_(input_image_=None, transformer_="style", **kwargs):
+    def stylization_(input_image_=None, transformer_="style", edge_size=16, **kwargs):
         if input_image_ is None:
             input_image_ = input_image
 
-        output = paper.stylization(input_image_, transformer_, **kwargs)
+        output = paper.stylization(input_image_, transformer_, edge_size=edge_size, **kwargs)
 
         if isinstance(transformer_, str):
             transformer.assert_called_once()
@@ -389,16 +382,16 @@ def stylization(input_image, transformer_mocks):
 
 
 def test_stylization_smoke(
-    stylization, postprocessor_mocks, content_transforms_mocks, input_image
+    stylization, postprocessor_mocks, input_image
 ):
-    _, _, output_image = stylization(input_image)
-    ptu.assert_allclose(output_image, F.rescale(input_image, 2.0) + 0.5, rtol=1e-6)
+    edge_size = 32
+    _, _, output_image = stylization(input_image, edge_size=edge_size)
+    ptu.assert_allclose(output_image, F.resize(input_image, (edge_size, edge_size)) + 0.5, rtol=1e-6)
 
 
 def test_stylization_device(
     subtests,
     postprocessor_mocks,
-    content_transforms_mocks,
     transformer_mocks,
     stylization,
     input_image,
@@ -407,7 +400,6 @@ def test_stylization_device(
 
     for mocks in (
         postprocessor_mocks,
-        content_transforms_mocks,
         transformer_mocks,
     ):
         _, mock = mocks
@@ -418,9 +410,7 @@ def test_stylization_device(
 
 def test_stylization_transformer_eval(
     subtests,
-    preprocessor_mocks,
     postprocessor_mocks,
-    content_transforms_mocks,
     transformer_mocks,
     stylization,
     input_image,

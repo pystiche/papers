@@ -4,7 +4,6 @@ from os import path
 
 import pytest
 
-import torch
 from torch.utils.data import TensorDataset
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
@@ -68,6 +67,7 @@ def main():
 def args(tmpdir):
     return argparse.Namespace(
         image_source_dir=tmpdir,
+        image_results_dir=tmpdir,
         dataset_dir=tmpdir,
         model_dir=tmpdir,
         device=misc.get_device(),
@@ -85,6 +85,9 @@ def test_training_parse_input_smoke(subtests, main, args):
 
     with subtests.test("image_source_dir"):
         assert_dir_exists(actual_args.image_source_dir)
+
+    with subtests.test("image_results_dir"):
+        assert_dir_exists(actual_args.image_results_dir)
 
     with subtests.test("dataset_dir"):
         assert_dir_exists(actual_args.dataset_dir)
@@ -106,22 +109,3 @@ def test_training_parse_input_smoke(subtests, main, args):
 
     with subtests.test("quiet"):
         assert isinstance(actual_args.quiet, bool)
-
-
-def test_training_smoke(subtests, images, dataset, training, main, args):
-    main.training(args)
-
-    assert training.call_count == 7
-
-    with subtests.test("content_image_loader"):
-        image_loader_type = type(paper.image_loader(dataset))
-        for call_args in training.call_args_list:
-            args, _ = call_args
-            content_image_loader, _ = args
-            assert isinstance(content_image_loader, image_loader_type)
-
-    with subtests.test("style_image"):
-        for call_args in training.call_args_list:
-            args, _ = call_args
-            _, style_image = args
-            assert isinstance(style_image, torch.Tensor)
