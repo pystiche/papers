@@ -31,6 +31,7 @@ def figure_6(args):
         hyper_parameters = paper.hyper_parameters(impl_params=args.impl_params)
         if args.impl_params:
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L66
+            hyper_parameters.content_loss.layer = "relu4_2"
             hyper_parameters.target_transforms.num_scale_steps = 1
             hyper_parameters.target_transforms.num_rotate_steps = 1
 

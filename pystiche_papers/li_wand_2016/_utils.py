@@ -32,29 +32,38 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     """
     return HyperParameters(
         content_loss=HyperParameters(
-            layer="relu4_2",
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L57
+            layer="relu4_1" if impl_params else "relu4_2",
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L58
             score_weight=2e1 if impl_params else 1e0,
         ),
         target_transforms=HyperParameters(
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
             num_scale_steps=0 if impl_params else 3,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L67
             scale_step_width=5e-2,
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
             num_rotate_steps=0 if impl_params else 2,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L66
             rotate_step_width=7.5,
         ),
         style_loss=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L48
             layers=("relu3_1", "relu4_1"),
             layer_weights="sum",
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L50
             patch_size=3,
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L53
             stride=2 if impl_params else 1,
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L49
             score_weight=1e-4 if impl_params else 1e0,
         ),
-        regularization=HyperParameters(score_weight=1e-3),
+        regularization=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L59
+            score_weight=1e-3
+        ),
         image_pyramid=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L40
             max_edge_size=384,
             # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L44
             num_steps=100 if impl_params else 200,
