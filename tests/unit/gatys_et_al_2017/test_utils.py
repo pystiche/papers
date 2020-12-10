@@ -9,6 +9,8 @@ from pystiche import enc
 from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
+from tests import utils
+
 
 def test_preprocessor():
     assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
@@ -65,66 +67,99 @@ def test_compute_layer_weights():
     assert actual == pytest.approx(expected)
 
 
-def test_hyper_parameters_smoke(subtests):
-    hyper_parameters = paper.hyper_parameters()
+@utils.impl_params
+def test_hyper_parameters_smoke(impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
     assert isinstance(hyper_parameters, HyperParameters)
 
 
-def test_hyper_parameters_content_loss(subtests):
-    hyper_parameters = paper.hyper_parameters()
+@utils.impl_params
+def test_hyper_parameters_content_loss(subtests, impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "content_loss"
     assert sub_params in hyper_parameters
     hyper_parameters = getattr(hyper_parameters, sub_params)
 
     with subtests.test("layer"):
-        assert hyper_parameters.layer == "relu4_2"
+        assert hyper_parameters.layer == "relu4_2" if impl_params else "conv4_2"
 
     with subtests.test("score_weight"):
         assert hyper_parameters.score_weight == pytest.approx(1e0)
 
 
-def test_hyper_parameters_style_loss(subtests):
-    hyper_parameters = paper.hyper_parameters()
+@utils.impl_params
+def test_hyper_parameters_style_loss(subtests, impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
-    for sub_params in ("style_loss", "guided_style_loss"):
-        with subtests.test(sub_params):
+    sub_params = "style_loss"
+    assert sub_params in hyper_parameters
+    parameters = getattr(hyper_parameters, sub_params)
 
-            assert sub_params in hyper_parameters
-            parameters = getattr(hyper_parameters, sub_params)
+    layers, num_channels = zip(
+        ("relu1_1" if impl_params else "conv1_1", 64),
+        ("relu2_1" if impl_params else "conv2_1", 128),
+        ("relu3_1" if impl_params else "conv3_1", 256),
+        ("relu4_1" if impl_params else "conv4_1", 512),
+        ("relu5_1" if impl_params else "conv5_1", 512),
+    )
+    layer_weights = [1 / n ** 2 for n in num_channels]
 
-            layers, num_channels = zip(
-                ("relu1_1", 64),
-                ("relu2_1", 128),
-                ("relu3_1", 256),
-                ("relu4_1", 512),
-                ("relu5_1", 512),
-            )
+    with subtests.test("layers"):
+        assert parameters.layers == layers
 
-            with subtests.test("layer"):
-                assert parameters.layers == layers
+    with subtests.test("layer_weights"):
+        assert parameters.layer_weights == pytest.approx(layer_weights)
 
-            with subtests.test("layer_weights"):
-                assert parameters.layer_weights == pytest.approx(
-                    [1 / n ** 2 for n in num_channels]
-                )
-
-            with subtests.test("score_weight"):
-                assert parameters.score_weight == pytest.approx(1e3)
-
-    with subtests.test("guided_style_loss, region_weights"):
-        assert hyper_parameters.guided_style_loss.region_weights == "sum"
+    with subtests.test("score_weight"):
+        assert parameters.score_weight == pytest.approx(1e3)
 
 
-def test_hyper_parameters_image_pyramid(subtests):
-    hyper_parameters = paper.hyper_parameters()
+@utils.impl_params
+def test_hyper_parameters_guided_style_loss(subtests, impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
+
+    sub_params = "guided_style_loss"
+    assert sub_params in hyper_parameters
+    parameters = getattr(hyper_parameters, sub_params)
+
+    layers, num_channels = zip(
+        ("relu1_1" if impl_params else "conv1_1", 64),
+        ("relu2_1" if impl_params else "conv2_1", 128),
+        ("relu3_1" if impl_params else "conv3_1", 256),
+        ("relu4_1" if impl_params else "conv4_1", 512),
+        ("relu5_1" if impl_params else "conv5_1", 512),
+    )
+    layer_weights = [1 / n ** 2 for n in num_channels]
+
+    with subtests.test("layers"):
+        assert parameters.layers == layers
+
+    with subtests.test("layer_weights"):
+        assert parameters.layer_weights == pytest.approx(layer_weights)
+
+    with subtests.test("region_weights"):
+        assert parameters.region_weights == "sum"
+
+    with subtests.test("score_weight"):
+        assert parameters.score_weight == pytest.approx(1e3)
+
+
+@utils.impl_params
+def test_hyper_parameters_image_pyramid(subtests, impl_params):
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params)
 
     sub_params = "image_pyramid"
     assert sub_params in hyper_parameters
     hyper_parameters = getattr(hyper_parameters, sub_params)
 
     with subtests.test("edge_sizes"):
-        assert hyper_parameters.edge_sizes == (500, 800)
+        assert hyper_parameters.edge_sizes == (512 if impl_params else 500, 1024)
 
     with subtests.test("num_steps"):
-        assert hyper_parameters.num_steps == (500, 200)
+        if impl_params:
+            assert hyper_parameters.num_steps == (500, 200)
+        else:
+            assert len(hyper_parameters.num_steps) == 2
+            ratio = hyper_parameters.num_steps[0] / hyper_parameters.num_steps[1]
+            assert ratio == pytest.approx(2.5)

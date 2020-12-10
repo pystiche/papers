@@ -79,7 +79,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
         content_loss=HyperParameters(
             # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
             # Cell [3] / layers['content']
-            layer="relu4_2",
+            layer="relu4_2" if impl_params else "conv4_2",
             # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
             # Cell [3] / cw
             score_weight=1e0,
