@@ -16,14 +16,14 @@ def figure_2(args):
     hyper_parameters = paper.hyper_parameters()
 
     content_image = images["neckarfront"].read(
-        size=hyper_parameters.image_size, device=args.device
+        size=hyper_parameters.nst.image_size, device=args.device
     )
 
     class StyleImage:
         def __init__(self, label, image, score_weight):
             self.label = label
             self.image = image.read(
-                size=hyper_parameters.image_size, device=args.device
+                size=hyper_parameters.nst.image_size, device=args.device
             )
             self.score_weight = score_weight
 
@@ -65,28 +65,29 @@ def figure_3(args):
     hyper_parameters = paper.hyper_parameters()
 
     content_image = images["neckarfront"].read(
-        size=hyper_parameters.image_size, device=args.device
+        size=hyper_parameters.nst.image_size, device=args.device
     )
     style_image = images["composition_vii"].read(
-        size=hyper_parameters.image_size, device=args.device
+        size=hyper_parameters.nst.image_size, device=args.device
     )
 
-    style_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+    style_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
     layer_configs = [style_layers[: idx + 1] for idx in range(len(style_layers))]
 
     score_weights = (1e5, 1e4, 1e3, 1e2)
 
     for layers, score_weight in itertools.product(layer_configs, score_weights):
-        row_label = layers[-1].replace("relu", "Conv")
+        row_label = layers[-1]
         column_label = f"{1.0 / score_weight:.0e}"
         header = (
             f"Replicating Figure 3 image in row {row_label} and column {column_label}"
         )
         with args.logger.environment(header):
             hyper_parameters.style_loss.layers = style_layers
-            hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
-                style_layers
-            )
+            if args.impl_params:
+                hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
+                    style_layers
+                )
             hyper_parameters.style_loss.score_weight = score_weight
 
             output_image = paper.nst(

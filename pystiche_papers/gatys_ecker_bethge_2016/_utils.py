@@ -93,20 +93,44 @@ def compute_layer_weights(
 
 def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB2016`."""
-    style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+    # Cell [8]
+    style_loss_layers = (
+        ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+        if impl_params
+        else ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    )
+    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+    # Cell [8]
+    style_loss_layer_weights = (
+        compute_layer_weights(style_loss_layers) if impl_params else "mean"
+    )
 
     return HyperParameters(
-        content_loss=HyperParameters(layer="relu4_2", score_weight=1e0),
+        content_loss=HyperParameters(
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [8]
+            layer="relu4_2" if impl_params else "conv4_2",
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [8]
+            score_weight=1e0,
+        ),
         style_loss=HyperParameters(
             layers=style_loss_layers,
-            layer_weights=compute_layer_weights(style_loss_layers),
+            layer_weights=style_loss_layer_weights,
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [8]
             score_weight=1e3,
         ),
         nst=HyperParameters(
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [9]
             num_steps=500,
             # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
             # Cell [6]
             starting_point="content" if impl_params else "random",
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [4]
+            image_size=512,
         ),
-        image_size=500,
     )
