@@ -388,7 +388,7 @@ def level(
         modules.append(("conv_seq", conv_seq))
         return SequentialWithOutChannels(OrderedDict(modules))
 
-    use_noise = not impl_params
+    use_noise = not impl_params or not instance_norm
     shallow_branch = conv_sequence(in_channels, out_channels=8, use_noise=use_noise)
 
     if prev_level_block is None:
@@ -471,12 +471,18 @@ class Transformer(nn.Sequential):
     def init_weights(self) -> None:
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
+                # The default initialisation for nn.SpatialConvolution is used.
+                # For details see:
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialConvolution.lua#L34
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/SpatialFullConvolution.lua#L43
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(module.weight)
                 bound = 1 / sqrt(fan_in)
                 nn.init.uniform_(module.weight, -bound, bound)
                 if module.bias is not None:
                     nn.init.uniform_(module.bias, -bound, bound)
             if isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+                # https://github.com/torch/nn/blob/872682558c48ee661ebff693aa5a41fcdefa7873/BatchNormalization.lua#L65
+                # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/InstanceNormalization.lua#L26-L27
                 if module.weight is not None:
                     nn.init.uniform_(module.weight)
                 if module.bias is not None:
