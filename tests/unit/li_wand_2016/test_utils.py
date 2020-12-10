@@ -27,7 +27,7 @@ def test_hyper_parameters_content_loss(subtests, impl_params):
     hyper_parameters = getattr(hyper_parameters, sub_params)
 
     with subtests.test("layer"):
-        assert hyper_parameters.layer == "relu4_2"
+        assert hyper_parameters.layer == "relu4_1" if impl_params else "relu4_2"
 
     with subtests.test("score_weight"):
         assert hyper_parameters.score_weight == pytest.approx(
