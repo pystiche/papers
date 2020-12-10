@@ -60,18 +60,11 @@ def test_GramOperator(
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    configs = ((True, True, 1.0, False), (False, False, input_image.size()[0], True))
-    for (
-        impl_params,
-        normalize_by_num_channels,
-        extra_batch_normalization,
-        normalize,
-    ) in configs:
+    configs = ((True, True, 1.0), (False, False, input_image.size()[0]))
+    for (impl_params, normalize_by_num_channels, extra_batch_normalization) in configs:
         with subtests.test(impl_params=impl_params):
-            target_repr = pystiche.gram_matrix(
-                encoder(target_image), normalize=normalize
-            )
-            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=normalize)
+            target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
             intern_target_repr = (
                 target_repr / target_repr.size()[-1]
                 if normalize_by_num_channels
@@ -86,7 +79,7 @@ def test_GramOperator(
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            score = mse_loss(intern_input_repr, intern_target_repr,)
+            score = mse_loss(intern_input_repr, intern_target_repr)
             desired = score / extra_batch_normalization
 
             assert actual == ptu.approx(desired, rel=1e-3)
