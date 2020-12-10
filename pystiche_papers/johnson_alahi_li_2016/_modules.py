@@ -185,22 +185,17 @@ def decoder(
     r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
+        impl_params: If ``True``, the output of the is not externally pre-processed
+            before being fed into the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this
+            step is necessary to get meaningful encodings from the
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the
+            pre-processing transform has to be learned within the output layer of the
+            decoder. To make this possible, ``150 * tanh(input)`` is used as activation
+            in contrast to the ``(tanh(input) + 1) / 2`` given in the paper.
         instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
             :class:`~torch.nn.BatchNorm2d` as described in the paper. In addition, the
             number of channels of the convolution layers is reduced by half.
-
-    If ``impl_params is True``, the output of the decoder is not externally
-    pre-processed before being fed into the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.perceptual_loss`. Since this step is
-    necessary to get meaningful encodings from the
-    :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`, the
-    pre-processing transform has to be learned within the output layer of the decoder.
-    To make this possible, ``150 * tanh(input)`` is used as activation in contrast to
-    the ``(tanh(input) + 1) / 2`` given in the paper.
-
     """
 
     def get_value_range_delimiter() -> nn.Module:

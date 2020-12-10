@@ -25,6 +25,20 @@ __all__ = [
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
+    r"""Feature reconstruction operator from :cite:`LW2016`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        impl_params: If ``False``, calculate the score with the squared error (SE)
+            instead of the mean squared error (MSE).
+        **feature_reconstruction_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.FeatureReconstructionOperator`.
+
+    .. seealso::
+
+        :class:`pystiche.ops.FeatureReconstructionOperator`
+    """
+
     def __init__(
         self,
         encoder: enc.Encoder,
@@ -52,21 +66,20 @@ def content_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
-    r"""Content_loss from :cite:`LW2016`.
+    r"""Content loss from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
-    If ``impl_params is True`` , a loss reduction of ``"mean"`` is used instead of
-    ``"sum"``.
+    .. seealso::
 
+        :class:`pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -82,6 +95,24 @@ def content_loss(
 
 
 class MRFOperator(ops.MRFOperator):
+    r"""MRF operator from :cite:`LW2016`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        patch_size: Spatial size of the neural patches.
+        impl_params: If ``True``, normalize the gradient of the neural patches. If
+            ``False``, use a score correction factor of 1/2.
+        **mrf_op_kwargs: Additional parameters of a :class:`pystiche.ops.MRFOperator`.
+
+    In contrast to :class:`pystiche.ops.MRFOperator`, the the score is calculated
+    with the squared error (SE) instead of the mean squared error (MSE).
+
+    .. seealso::
+
+        - :class:`pystiche.ops.MRFOperator`
+        - :func:`pystiche_papers.li_wand_2016.extract_normalized_patches2d`
+    """
+
     def __init__(
         self,
         encoder: enc.Encoder,
@@ -91,15 +122,19 @@ class MRFOperator(ops.MRFOperator):
     ):
         super().__init__(encoder, patch_size, **mrf_op_kwargs)
 
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L108
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L221
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L224
         # They use normalized patches instead of the unnormalized patches described in
         # the paper.
         self.normalize_patches_grad = impl_params
         self.loss_reduction = "sum"
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/style.lua#L34
-        # nn.MSECriterion() was used as criterion to calculate the style loss, which
-        # does not include the factor 1/2 given in the paper
-        self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
+
+        # The score correction factor is not visible in the reference implementation
+        # of the original authors, since the calculation is performed with respect to
+        # the gradient and not the score. Roughly speaking, since the calculation
+        # comprises a *squared* distance, we need a factor of 1/2 in the forward pass.
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L220
+        self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
     def enc_to_repr(self, enc: torch.Tensor, is_guided: bool) -> torch.Tensor:
         if self.normalize_patches_grad:
@@ -126,25 +161,20 @@ def style_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> ops.MultiLayerEncodingOperator:
-    r"""Style_loss from :cite:`LW2016`.
+    r"""Style loss from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted,  the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
-    If ``impl_params is True``,
+    .. seealso::
 
-    * an additional score correction factor of ``1.0 / 2.0`` is used,
-    * normalized patches are used (see
-      :func:`~pystiche_papers.li_wand_2016._utils.extract_normalized_patches2d` for
-      details), and
-    * no target augmentation transformations are used.
+        - :class:`pystiche_papers.li_wand_2016.MRFOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -174,11 +204,32 @@ def style_loss(
 
 
 class TotalVariationOperator(ops.TotalVariationOperator):
+    r"""Total variation operator from :cite:`LW2016`.
+
+    Args:
+        impl_params: If ``False``, use a score correction factor of 1/2.
+        **total_variation_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.TotalVariationOperator`.
+
+    In contrast to :class:`pystiche.ops.TotalVariationOperator`, the the score is
+    calculated with the squared error (SE) instead of the mean squared error (MSE).
+
+    .. seealso::
+
+        - :class:`pystiche.ops.TotalVariationOperator`
+    """
+
     def __init__(self, impl_params: bool = True, **total_variation_op_kwargs: Any):
         super().__init__(**total_variation_op_kwargs)
 
         self.loss_reduction = "sum"
-        self.score_correction_factor = 1.0 if impl_params else 1.0 / 2.0
+
+        # The score correction factor is not visible in the reference implementation
+        # of the original authors, since the calculation is performed with respect to
+        # the gradient and not the score. Roughly speaking, since the calculation
+        # comprises a *squared* distance, we need a factor of 1/2 in the forward pass.
+        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/tv.lua#L20-L30
+        self.score_correction_factor = 1.0 / 2.0 if impl_params else 1.0
 
     def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
         score = F.total_variation_loss(
@@ -193,14 +244,15 @@ def regularization(
     r"""Regularization from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
-    If ``impl_params is True`` , an additional score correction factor of ``1.0 / 2.0``
-    is used.
+    .. seealso::
+
+        - :class:`pystiche_papers.li_wand_2016.TotalVariationOperator`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
@@ -219,14 +271,19 @@ def perceptual_loss(
     r"""Perceptual loss from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
-            :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        multi_layer_encoder: Pretrained multi-layer encoder. If
+            omitted, :func:`~pystiche_papers.li_wand_2016.multi_layer_encoder` is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
+
+    .. seealso::
+
+        - :func:`pystiche_papers.li_wand_2016.content_loss`
+        - :func:`pystiche_papers.li_wand_2016.style_loss`
+        - :func:`pystiche_papers.li_wand_2016.regularization`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()

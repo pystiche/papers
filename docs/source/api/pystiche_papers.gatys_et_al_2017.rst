@@ -25,27 +25,98 @@
 .. |archive| replace:: Archive
 .. _archive: https://github.com/pmeier/NeuralImageSynthesis/tree/cced0b978fe603569033b2c7f04460839e4d82c4
 
-Unfortunately, the parameters in the reference implementation differ from the parameters
-described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following parts
-are affected:
+.. _gatys_et_al_2017-impl_params:
 
-  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.style_loss`,
-  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.guided_style_loss`.
+Behavioral changes
+------------------
+
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+The following parts are affected:
+
+- :class:`~pystiche_papers.gatys_et_al_2017.MultiLayerEncodingOperator`
+
+
+Hyper parameters
+----------------
+
+:func:`~pystiche_papers.gatys_et_al_2017.content_loss`
+``````````````````````````````````````````````````````
+
++------------------+---------------+
+| Parameter        | Value         |
++==================+===============+
+| ``layer``        | ``"relu4_2"`` |
++------------------+---------------+
+| ``score_weight`` | ``1e0``       |
++------------------+---------------+
+
+
+:func:`~pystiche_papers.gatys_et_al_2017.style_loss`
+````````````````````````````````````````````````````
+
++-------------------+---------------------------------------------------------------+
+| Parameter         | Value                                                         |
++===================+===============================================================+
+| ``layers``        | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``   |
++-------------------+---------------------------------------------------------------+
+| ``layer_weights`` | ``(2.44e-04, 6.10e-05, 1.53e-05, 3.81e-06, 3.81e-06)`` [#f1]_ |
++-------------------+---------------------------------------------------------------+
+| ``score_weight``  | ``1e3``                                                       |
++-------------------+---------------------------------------------------------------+
+
+
+:func:`~pystiche_papers.gatys_et_al_2017.guided_style_loss`
+```````````````````````````````````````````````````````````
+
++--------------------+---------------------------------------------------------------+
+| Parameter          | Value                                                         |
++====================+===============================================================+
+| ``layers``         | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``   |
++--------------------+---------------------------------------------------------------+
+| ``layer_weights``  | ``(2.44e-04, 6.10e-05, 1.53e-05, 3.81e-06, 3.81e-06)`` [#f1]_ |
++--------------------+---------------------------------------------------------------+
+| ``region_weights`` | ``"sum"``                                                     |
++--------------------+---------------------------------------------------------------+
+| ``score_weight``   | ``1e3``                                                       |
++--------------------+---------------------------------------------------------------+
+
+
+.. [#f1]
+  The ``layer_weights`` are not fixed, but are computed with
+  :func:`~pystiche_papers.gatys_et_al_2017.compute_layer_weights`. The values here are
+  the approximate result for the default ``layers`` and
+  :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder`.
+
+API
+---
 
 .. automodule:: pystiche_papers.gatys_et_al_2017
 
-.. autofunction:: content_loss
-.. autofunction:: guided_nst
-.. autofunction:: guided_perceptual_loss
-.. autofunction:: guided_style_loss
-.. autofunction:: hyper_parameters
+..
+  _data.py
 .. autofunction:: images
-.. autofunction:: image_pyramid
-.. autofunction:: multi_layer_encoder
-.. autofunction:: nst
-.. autofunction:: optimizer
+
+..
+  _loss.py
+.. autofunction:: content_loss
+.. autoclass:: MultiLayerEncodingOperator
+.. autofunction:: style_loss
+.. autofunction:: guided_style_loss
 .. autofunction:: perceptual_loss
+.. autofunction:: guided_perceptual_loss
+
+..
+  _nst.py
+.. autofunction:: nst
+.. autofunction:: guided_nst
+
+..
+  _utils.py
 .. autofunction:: preprocessor
 .. autofunction:: postprocessor
-.. autofunction:: style_loss
+.. autofunction:: multi_layer_encoder
+.. autofunction:: optimizer
+.. autofunction:: compute_layer_weights
+.. autofunction:: hyper_parameters

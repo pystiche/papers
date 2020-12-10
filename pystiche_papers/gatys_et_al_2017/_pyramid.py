@@ -1,6 +1,6 @@
-from typing import Collection, Optional, Union
+from typing import Any, Optional
 
-from pystiche import loss, ops, pyramid
+from pystiche import pyramid
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import hyper_parameters as _hyper_parameters
@@ -9,20 +9,25 @@ __all__ = ["image_pyramid"]
 
 
 def image_pyramid(
-    hyper_parameters: Optional[HyperParameters] = None,
-    resize_targets: Collection[Union[ops.Operator, loss.MultiOperatorLoss]] = (),
+    hyper_parameters: Optional[HyperParameters] = None, **image_pyramid_kwargs: Any,
 ) -> pyramid.ImagePyramid:
     r"""Image pyramid from :cite:`GEB+2017`.
 
     Args:
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
-        resize_targets: Targets for resizing of set images and guides during iteration.
+        **image_pyramid_kwargs: Additional parameters of a
+            :class:`pystiche.pyramid.ImagePyramid`.
+
+    .. seealso::
+
+        - :class:`pystiche.pyramid.ImagePyramid`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
+
     return pyramid.ImagePyramid(
         hyper_parameters.image_pyramid.edge_sizes,
         hyper_parameters.image_pyramid.num_steps,
-        resize_targets=resize_targets,
+        **image_pyramid_kwargs,
     )

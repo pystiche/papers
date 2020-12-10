@@ -24,12 +24,12 @@ def content_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> ops.FeatureReconstructionOperator:
-    r"""Content_loss from :cite:`JAL2016`.
+    r"""Content loss from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` is used.
@@ -50,6 +50,19 @@ def content_loss(
 
 
 class GramOperator(ops.GramOperator):
+    r"""Gram operator from :cite:`JAL2016`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        impl_params: If ``True``, normalize the Gram matrix additionally by the number
+            of channels.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.ops.GramOperator`.
+
+    .. seealso::
+
+        - :class:`pystiche.ops.GramOperator`
+    """
+
     def __init__(
         self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
     ) -> None:
@@ -70,18 +83,17 @@ def style_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> ops.MultiLayerEncodingOperator:
-    r"""Style_loss from :cite:`JAL2016`.
+    r"""Style loss from :cite:`JAL2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder` is used.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
-
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)
@@ -102,6 +114,20 @@ def style_loss(
 
 
 class TotalVariationOperator(ops.TotalVariationOperator):
+    r"""Total variation operator from :cite:`LW2016`.
+
+    Args:
+        **total_variation_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.TotalVariationOperator`.
+
+    In contrast to :class:`pystiche.ops.TotalVariationOperator`, the the score is
+    calculated with the squared error (SE) instead of the mean squared error (MSE).
+
+    .. seealso::
+
+        - :class:`pystiche.ops.TotalVariationOperator`
+    """
+
     def __init__(self, **total_variation_op_kwargs: Any) -> None:
         super().__init__(**total_variation_op_kwargs)
 
@@ -139,16 +165,15 @@ def perceptual_loss(
     r"""Perceptual loss comprising content and style loss as well as a regularization.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
             :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
             is used.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
-
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder(impl_params=impl_params)

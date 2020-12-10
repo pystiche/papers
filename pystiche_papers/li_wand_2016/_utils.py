@@ -23,7 +23,13 @@ __all__ = [
 
 
 def hyper_parameters(impl_params: bool = True) -> HyperParameters:
-    r"""Hyper parameters from :cite:`LW2016`."""
+    r"""Hyper parameters from :cite:`LW2016`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+    """
     return HyperParameters(
         content_loss=HyperParameters(
             layer="relu4_2",
@@ -57,6 +63,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
             min_edge_size=64,
             edge="long",
         ),
+        nst=HyperParameters(starting_point="content" if impl_params else "random"),
     )
 
 
@@ -288,25 +295,21 @@ class ValidCropAfterRotate(transforms.Transform):
 def target_transforms(
     impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
 ) -> Sequence[transforms.Transform]:
-    r"""Generate a list of scaling and rotations transformations.
+    r"""MRF target transformations from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        hyper_parameters: If omitted,
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`. In
+            addition, if ``True``, every transformation comprises a valid crop after the
+            rotation to avoid blank regions. Furthermore, the image is rescaled instead
+            of the motif, resulting in multiple image sizes.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
-    Returns:
-       ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
-       in total comprising every combination given by the input parameters.
+    .. seealso::
 
-    If ``impl_params is True``, every transformation comprises a valid crop after the
-    rotation to avoid blank regions. Furthermore, the image is actually rescaled
-    instead of the motif, resulting in more patches overall.
-
-    Otherwise, :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms` is used to
-    generate the transforms.
+        - :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(impl_params=impl_params)
@@ -343,10 +346,12 @@ def target_transforms(
 
 
 def preprocessor() -> transforms.CaffePreprocessing:
+    r"""Preprocessor from :cite:`LW2016`."""
     return transforms.CaffePreprocessing()
 
 
 def postprocessor() -> transforms.CaffePostprocessing:
+    r"""Postprocessor from :cite:`LW2016`."""
     return transforms.CaffePostprocessing()
 
 

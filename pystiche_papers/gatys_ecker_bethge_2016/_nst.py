@@ -33,9 +33,9 @@ def nst(
     Args:
         content_image: Content image for the NST.
         style_image: Style image for the NST.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <gatys_ecker_bethge_2016-impl_params>`.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
@@ -46,9 +46,6 @@ def nst(
             step with the current step and loss. If ``None``,
             :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
             ``None``.
-
-    If ``impl_params is True`` the content_image is set as the starting point instead of
-    a random initialized image.
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
@@ -60,11 +57,8 @@ def nst(
     )
     criterion = criterion.to(device)
 
-    # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
-    # Cell [6]
-    starting_point = "content" if impl_params else "random"
     input_image = misc.get_input_image(
-        starting_point=starting_point, content_image=content_image
+        starting_point=hyper_parameters.nst.starting_point, content_image=content_image
     )
 
     preprocessor = _preprocessor().to(device)

@@ -18,10 +18,26 @@ __all__ = [
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
+    r"""Feature reconstruction operator from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        impl_params: If ``True``, normalize the score twice by the batch size.
+        **feature_reconstruction_op_kwargs: Additional parameters of a
+            :class:`pystiche.ops.FeatureReconstructionOperator`.
+
+    .. seealso::
+
+        - :class:`pystiche.ops.FeatureReconstructionOperator`
+    """
+
     def __init__(
-        self, encoder: enc.Encoder, impl_params: bool = True, score_weight: float = 1e0
-    ):
-        super().__init__(encoder, score_weight=score_weight)
+        self,
+        encoder: enc.Encoder,
+        impl_params: bool = True,
+        **feature_reconstruction_op_kwargs: Any,
+    ) -> None:
+        super().__init__(encoder, **feature_reconstruction_op_kwargs)
         self.double_batch_size_mean = impl_params
 
     def calculate_score(
@@ -49,25 +65,24 @@ def content_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
-    r"""Content_loss from :cite:`ULVL2016`.
+    r"""Content loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>` and below.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-        hyper_parameters: If omitted,
+            omitted, :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
-    If ``impl_params is True`` , the score is divided twice by the batch_size.
+    .. seealso::
 
+        - :class:`pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -85,6 +100,18 @@ def content_loss(
 
 
 class GramOperator(ops.GramOperator):
+    r"""Gram operator from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        encoder: Encoder used to encode the input.
+        impl_params: If ``True``, normalize the score twice by the batch size.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.ops.GramOperator`.
+
+    .. seealso::
+
+        - :class:`pystiche.ops.GramOperator`
+    """
+
     def __init__(
         self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
     ):
@@ -130,25 +157,24 @@ def style_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> ops.MultiLayerEncodingOperator:
-    r"""Style_loss from :cite:`ULVL2016`.
+    r"""Style loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>` and below.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
-            :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder` is used.
-        hyper_parameters: If omitted,
+            omitted, :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
-    If ``impl_params`` is ``True`` , the score is divided twice by the batch_size.
+    .. seealso::
 
+        - :class:`pystiche_papers.ulyanov_et_al_2016.GramOperator`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -176,23 +202,25 @@ def perceptual_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> loss.PerceptualLoss:
-    r"""Perceptual loss from :cite:`ULVL2016`.
+    r"""Perceptual loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            omitted, :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder`
             is used.
-        hyper_parameters: If omitted,
+        hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
+    .. seealso::
+
+        - :func:`pystiche_papers.ulyanov_et_al_2016.content_loss`
+        - :func:`pystiche_papers.ulyanov_et_al_2016.style_loss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()

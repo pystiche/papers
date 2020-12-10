@@ -91,7 +91,7 @@ def compute_layer_weights(
     return tuple(1.0 / n ** 2.0 for n in num_channels)
 
 
-def hyper_parameters() -> HyperParameters:
+def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB2016`."""
     style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
 
@@ -102,6 +102,11 @@ def hyper_parameters() -> HyperParameters:
             layer_weights=compute_layer_weights(style_loss_layers),
             score_weight=1e3,
         ),
-        nst=HyperParameters(num_steps=500),
+        nst=HyperParameters(
+            num_steps=500,
+            # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
+            # Cell [6]
+            starting_point="content" if impl_params else "random",
+        ),
         image_size=500,
     )

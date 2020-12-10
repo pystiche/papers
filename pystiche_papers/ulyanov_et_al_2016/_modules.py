@@ -10,6 +10,21 @@ from pystiche import misc
 
 from ..utils import AutoPadConv2d, SequentialWithOutChannels
 
+__all__ = [
+    "noise",
+    "downsample",
+    "upsample",
+    "norm",
+    "activation",
+    "ConvBlock",
+    "ConvSequence",
+    "JoinBlock",
+    "BranchBlock",
+    "level",
+    "Transformer",
+    "transformer",
+]
+
 
 def join_channelwise(*inputs: torch.Tensor, channel_dim: int = 1) -> torch.Tensor:
     return torch.cat(inputs, dim=channel_dim)
@@ -65,7 +80,7 @@ def upsample() -> nn.Upsample:
 
 
 class HourGlassBlock(SequentialWithOutChannels):
-    r"""HourGlassBlock from :cite:`ULVL2016`.
+    r"""HourGlassBlock from :cite:`ULVL2016,UVL2017`.
 
     This block embeds an ``intermediate`` module between a :func:`downsample` and
     :func:`upsample` operation.
@@ -115,7 +130,7 @@ def activation(
 
 
 class ConvBlock(SequentialWithOutChannels):
-    r"""ConvBlock from :cite:`ULVL2016`.
+    r"""ConvBlock from :cite:`ULVL2016,UVL2017`.
 
     This block comprises a convolution followed by normalization and activation. The
     input is reflection-padded to preserve the size.
@@ -124,20 +139,13 @@ class ConvBlock(SequentialWithOutChannels):
         in_channels: Number of channels in the input.
         out_channels:  Number of channels produced by the convolution.
         kernel_size: Size of the convolving kernel.
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
+        impl_params: If ``True`` and ``instance_norm=True``, use
+            :class:`~torch.nn.ReLU` instead of :class:`~torch.nn.LeakyReLU` as
+            activation.
+        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` instead of
+            :class:`~torch.nn.BatchNorm2d` as normalization.
         stride: Stride of the convolution. Defaults to ``1``.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         inplace: If ``True`` perform the activation in-place.
-
-    If ``impl_params and instance_norm is True`` the activation function is a
-    :class:`~torch.nn.ReLU` otherwise a :class:`~torch.nn.LeakyReLU` with
-    ``slope=0.01``.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
 
@@ -154,8 +162,8 @@ class ConvBlock(SequentialWithOutChannels):
         out_channels: int,
         kernel_size: Union[Tuple[int, int], int],
         impl_params: bool = True,
-        stride: Union[Tuple[int, int], int] = 1,
         instance_norm: bool = True,
+        stride: Union[Tuple[int, int], int] = 1,
         inplace: bool = True,
     ) -> None:
         modules = (
@@ -176,7 +184,7 @@ class ConvBlock(SequentialWithOutChannels):
 
 
 class ConvSequence(SequentialWithOutChannels):
-    r"""Sequence of convolutional blocks that occurs repeatedly in :cite:`ULVL2016`.
+    r"""Sequence of convolutional blocks from :cite:`ULVL2016,UVL2017`.
 
     Each sequence contains three
     :class:`~pystiche_paper.ulyanov_et_al_2016._modules.ConvBlock` s. The
@@ -227,7 +235,7 @@ class ConvSequence(SequentialWithOutChannels):
 
 
 class JoinBlock(nn.Module):
-    r"""JoinBlock from :cite:`ULVL2016` without upsampling.
+    r"""JoinBlock from :cite:`ULVL2016,UVL2017` without upsampling.
 
     This block concatenates an arbitrary number of inputs along the ``channel _dim``
     with prefixed normalization modules.
@@ -242,7 +250,6 @@ class JoinBlock(nn.Module):
             details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
         channel_dim: The dimension over which the tensors are concatenated. Defaults to
             ``1``.
-
     """
 
     def __init__(
@@ -283,7 +290,7 @@ class JoinBlock(nn.Module):
 
 
 class BranchBlock(nn.Module):
-    r"""BranchBlock from :cite:`ULVL2016`.
+    r"""BranchBlock from :cite:`ULVL2016,UVL2017`.
 
     Joins the branch from the previous pyramid level with the current using a
     :class:`~pystiche_paper.ulyanov_et_al_2016._modules.JoinBlock`.
@@ -333,7 +340,7 @@ def level(
     num_noise_channels: int = 3,
     inplace: bool = True,
 ) -> SequentialWithOutChannels:
-    r"""Defines one level of the transformer from :cite:`ULVL2016`.
+    r"""Level of the transformer from :cite:`ULVL2016,UVL2017`.
 
     The basic building block of a level is a :class:`ConvSequence` . If a previous
     level exists, i. e. the current level is not the first one, the previous level is
@@ -344,14 +351,11 @@ def level(
     Args:
         prev_level_block: Previous pyramid level. If given, it is incorporated in the
             current level.
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: If ``False``, append random channels to the input before feeding
+            it into the :class:`ConvSequence`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         in_channels: Number of channels in the input image. Defaults to ``3``.
         num_noise_channels: Number of additional noise channels. Defaults to ``3``.
         inplace: If ``True`` perform the activation in-place.
@@ -403,6 +407,17 @@ def level(
 
 
 class Transformer(nn.Sequential):
+    r"""Transformer from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        levels: Number of transformer levels.
+        impl_params: If ``True``, use a :class:`~torch.nn.Conv2d` instead of a
+            :class:`ConvBlock` as the final layer.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+    """
+
     def __init__(
         self,
         levels: int,
@@ -474,20 +489,18 @@ def transformer(
     instance_norm: bool = True,
     levels: int = 6,
 ) -> Transformer:
-    r"""Transformer from :cite:`ULVL2016`.
+    r"""Transformer from :cite:`ULVL2016,UVL2017`.
 
     Args:
         style: Style the transformer was trained on. Can be one of styles given by
             :func:`~pystiche_papers.ulyanov_et_al_2016.images`. If omitted, the
             transformer is initialized with random weights.
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see
-            :ref:`here <table-hyperparameters-ulyanov_et_al_2016>`.
-        instance_norm: If ``True``, use :class:`~torch.nn.InstanceNorm2d` rather than
-            :class:`~torch.nn.BatchNorm2d` as described in the paper. Additionally this
-            flag is used for switching between two reference implementations. For
-            details see :ref:`here <table-branches-ulyanov_et_al_2016>`.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         levels: Number of levels in the transformer. Defaults to ``6``.
 
     """
