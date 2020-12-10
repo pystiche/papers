@@ -53,6 +53,10 @@ def content_transform(
     transforms_: List[transforms.Transform] = []
     if impl_params:
         if instance_norm:
+            # Necessary transformation, otherwise ValidRandomCrop will not work with too
+            # small images. This is therefore not in the reference implementation.
+            # TODO: ??
+            transforms_.append(transforms.Resize(edge_size))
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/style.lua#L83
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/transforms.lua#L62-L92
             transforms_.append(transforms.ValidRandomCrop(edge_size))
