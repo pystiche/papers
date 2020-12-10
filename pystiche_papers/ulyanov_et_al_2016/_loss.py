@@ -18,32 +18,7 @@ __all__ = [
 ]
 
 
-# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
-class RemoveScoreWeightGradient(torch.autograd.Function):
-    @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.weight = weight
-        return input_tensor
-
-    @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
-        grad_input = grad_output.clone()
-        return grad_input / self.weight, None
-
-
-class AddScoreWeightGradient(torch.autograd.Function):
-    @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.weight = weight
-        return input_tensor
-
-    @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
-        grad_input = grad_output.clone()
-        return grad_input * self.weight, None
-
-
-# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L23-L25
 class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
     @staticmethod
     def forward(self: Any, input_tensor: torch.Tensor, batch_size: int) -> torch.Tensor:  # type: ignore[override]
@@ -101,6 +76,9 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L29
+        input_repr = input_repr * self.score_weight
+        target_repr = target_repr * self.score_weight
         score = super().calculate_score(input_repr, target_repr, ctx)
         if not self.double_batch_size_mean:
             return score
@@ -117,10 +95,7 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     def forward(
         self, input_image: torch.Tensor
     ) -> Union[torch.Tensor, pystiche.LossDict]:
-        input_image = AddScoreWeightGradient.apply(input_image, self.score_weight)
-        score = self.process_input_image(input_image)
-        score = RemoveScoreWeightGradient.apply(score, self.score_weight)
-        return cast(Union[torch.Tensor, pystiche.LossDict], score * self.score_weight)
+        return self.process_input_image(input_image)
 
 
 def content_loss(
@@ -215,6 +190,9 @@ class GramOperator(ops.GramOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
+        #
+        input_repr = input_repr * self.score_weight
+        target_repr = target_repr * self.score_weight
         score = super().calculate_score(input_repr, target_repr, ctx)
         if not self.double_batch_size_mean:
             return score
@@ -225,10 +203,7 @@ class GramOperator(ops.GramOperator):
     def forward(
         self, input_image: torch.Tensor
     ) -> Union[torch.Tensor, pystiche.LossDict]:
-        input_image = AddScoreWeightGradient.apply(input_image, self.score_weight)
-        score = self.process_input_image(input_image)
-        score = RemoveScoreWeightGradient.apply(score, self.score_weight)
-        return cast(Union[torch.Tensor, pystiche.LossDict], score * self.score_weight)
+        return self.process_input_image(input_image)
 
 
 def style_loss(
