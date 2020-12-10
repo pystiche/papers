@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 
 import pystiche
 from pystiche import loss, misc, optim
+from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import content_transform as _content_transform
 from ._data import images as _images
 from ._data import style_transform as _style_transform
 from ._loss import perceptual_loss
@@ -131,6 +131,7 @@ def stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: bool = False,
+    edge_size: int = 256,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
 
@@ -144,6 +145,8 @@ def stylization(
         instance_norm: Switch the behavior and hyper-parameters between both
             publications of the original authors. For details see
             :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        edge_size: Size of the image to which the image should be resized before
+            transformation.
 
     """
     device = input_image.device
@@ -152,20 +155,19 @@ def stylization(
         transformer = _transformer(
             style=style, impl_params=impl_params, instance_norm=instance_norm,
         )
-        if instance_norm or not impl_params:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32
-            transformer = transformer.eval()
+    if instance_norm or not impl_params:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32
+        transformer = transformer.eval()
     transformer = transformer.to(device)
 
     postprocessor = _postprocessor()
     postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
-        content_transform = _content_transform(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
-        content_transform = content_transform.to(device)
-        input_image = content_transform(input_image)
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+        transform = transforms.Resize((edge_size, edge_size))
+        input_image = transform(input_image)
 
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
