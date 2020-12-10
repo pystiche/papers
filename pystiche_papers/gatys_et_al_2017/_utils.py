@@ -56,18 +56,46 @@ def compute_layer_weights(
     return _compute_layer_weights(layers, multi_layer_encoder=multi_layer_encoder)
 
 
-def hyper_parameters() -> HyperParameters:
+def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB+2017`."""
-    style_loss_layers = ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+    # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+    # Cell [3] / layers['style']
+    style_loss_layers = (
+        ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+        if impl_params
+        else ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    )
     style_loss = HyperParameters(
         layers=style_loss_layers,
+        # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+        # Cell [3] / weights['style']
         layer_weights=compute_layer_weights(style_loss_layers),
+        # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+        # Cell [3] / sw
         score_weight=1e3,
     )
 
     return HyperParameters(
-        content_loss=HyperParameters(layer="relu4_2", score_weight=1e0),
+        content_loss=HyperParameters(
+            # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+            # Cell [3] / layers['content']
+            layer="relu4_2" if impl_params else "conv4_2",
+            # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+            # Cell [3] / cw
+            score_weight=1e0,
+        ),
         style_loss=style_loss,
-        guided_style_loss=style_loss.new_similar(region_weights="sum"),
-        image_pyramid=HyperParameters(edge_sizes=(500, 800), num_steps=(500, 200)),
+        guided_style_loss=style_loss.new_similar(
+            # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/SpatialControl.ipynb
+            # TODO: find the cell where this is performed
+            region_weights="sum"
+        ),
+        image_pyramid=HyperParameters(
+            # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+            # Cell [3] / img_size, hr_img_size
+            edge_sizes=(512 if impl_params else 500, 1024),
+            # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
+            # Cell [3] / max_iter, hr_max_iter
+            num_steps=(500, 200),
+        ),
     )
