@@ -85,7 +85,7 @@ def training(
     criterion = criterion.eval()
     criterion = criterion.to(device)
 
-    optimizer = _optimizer(transformer)
+    optimizer = _optimizer(transformer,impl_params=impl_params, instance_norm=instance_norm)
     lr_scheduler = _lr_scheduler(
         optimizer,
         impl_params=impl_params,
@@ -130,7 +130,7 @@ def stylization(
     input_image: torch.Tensor,
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
-    instance_norm: bool = False,
+    instance_norm: bool = True,
     edge_size: int = 256,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
