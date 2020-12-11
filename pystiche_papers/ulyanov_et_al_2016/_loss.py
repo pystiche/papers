@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, cast
 
 import torch
 
@@ -16,6 +16,60 @@ __all__ = [
     "style_loss",
     "perceptual_loss",
 ]
+
+
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
+class RemoveScoreWeightGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
+        self.weight = weight
+        return input_tensor
+
+    @staticmethod
+    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
+        grad_input = grad_output.clone()
+        return grad_input / self.weight, None
+
+
+class AddScoreWeightGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
+        self.weight = weight
+        return input_tensor
+
+    @staticmethod
+    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
+        grad_input = grad_output.clone()
+        return grad_input * self.weight, None
+
+
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
+class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(self: Any, input_tensor: torch.Tensor, batch_size: int) -> torch.Tensor:  # type: ignore[override]
+        self.batch_size = batch_size
+        return input_tensor
+
+    @staticmethod
+    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
+        grad_input = grad_output.clone()
+        return grad_input * self.batch_size, None
+
+
+# Scale gradients in the backward pass
+# https://github.com/jcjohnson/neural-style/issues/450
+# https://github.com/ProGamerGov/neural-style-pt/blob/cbcd023326a3487a2d75270ed1f3b3ddb4b72407/neural_style.py#L404
+class ScaleGradients(torch.autograd.Function):
+    @staticmethod
+    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
+        self.weight = weight
+        return input_tensor
+
+    @staticmethod
+    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
+        grad_input = grad_output.clone()
+        grad_input = grad_input / (torch.norm(grad_input, keepdim=True) + 1e-8)
+        return grad_input * self.weight, None
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
@@ -57,7 +111,16 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         # uses reduction="mean" which also includes the batch_size. However, the
         # score is divided once more by the batch_size in the reference implementation.
         batch_size = image.extract_batch_size(input_repr)
-        return score / batch_size
+        score = RemoveBatchSizeDivisionGradient.apply(score, batch_size)
+        return cast(torch.Tensor, score / batch_size)
+
+    def forward(
+        self, input_image: torch.Tensor
+    ) -> Union[torch.Tensor, pystiche.LossDict]:
+        input_image = AddScoreWeightGradient.apply(input_image, self.score_weight)
+        score = self.process_input_image(input_image)
+        score = RemoveScoreWeightGradient.apply(score, self.score_weight)
+        return cast(Union[torch.Tensor, pystiche.LossDict], score * self.score_weight)
 
 
 def content_loss(
@@ -98,34 +161,6 @@ def content_loss(
         impl_params=impl_params,
         score_weight=hyper_parameters.content_loss.score_weight,
     )
-
-
-# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
-class RemoveScoreWeightGradient(torch.autograd.Function):
-    @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.weight = weight
-        return input_tensor
-
-    @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
-        grad_input = grad_output.clone()
-        return grad_input / self.weight, None
-
-# Scale gradients in the backward pass
-# https://github.com/jcjohnson/neural-style/issues/450
-# https://github.com/ProGamerGov/neural-style-pt/blob/cbcd023326a3487a2d75270ed1f3b3ddb4b72407/neural_style.py#L404
-class ScaleGradients(torch.autograd.Function):
-    @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.weight = weight
-        return input_tensor
-
-    @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
-        grad_input = grad_output.clone()
-        grad_input = grad_input / (torch.norm(grad_input, keepdim=True) + 1e-8)
-        return grad_input * self.weight, None
 
 
 class GramOperator(ops.GramOperator):
@@ -190,9 +225,10 @@ class GramOperator(ops.GramOperator):
     def forward(
         self, input_image: torch.Tensor
     ) -> Union[torch.Tensor, pystiche.LossDict]:
-        score = self.process_input_image(input_image) * self.score_weight
+        input_image = AddScoreWeightGradient.apply(input_image, self.score_weight)
+        score = self.process_input_image(input_image)
         score = RemoveScoreWeightGradient.apply(score, self.score_weight)
-        return score
+        return cast(Union[torch.Tensor, pystiche.LossDict], score * self.score_weight)
 
 
 def style_loss(
