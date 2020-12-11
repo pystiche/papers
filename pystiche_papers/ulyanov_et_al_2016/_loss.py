@@ -1,8 +1,7 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple
 
 import torch
 
-import pystiche
 from pystiche import enc, image, loss, ops
 from pystiche_papers.utils import HyperParameters
 
@@ -152,6 +151,9 @@ class GramOperator(ops.GramOperator):
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
+        if self.normalize_gradients:
+            enc = ScaleGradients.apply(enc, self.score_weight)
+
         gram_matrix = super().enc_to_repr(enc)
         if not self.normalize_by_num_channels:
             return gram_matrix
@@ -171,14 +173,6 @@ class GramOperator(ops.GramOperator):
 
         batch_size = input_repr.size()[0]
         return score / batch_size
-
-    def forward(
-        self, input_image: torch.Tensor
-    ) -> Union[torch.Tensor, pystiche.LossDict]:
-        score = self.process_input_image(input_image)
-        if self.normalize_gradients:
-            score = ScaleGradients.apply(score, self.score_weight)
-        return score * self.score_weight
 
 
 def style_loss(
