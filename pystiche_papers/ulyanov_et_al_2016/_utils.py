@@ -34,7 +34,7 @@ def hyper_parameters(
             layers=("relu1_1", "relu2_1", "relu3_1", "relu4_1")
             if impl_params and instance_norm
             else ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"),
-            layer_weights=[1e3]*4 if impl_params and instance_norm else [1e3]*5,
+            layer_weights=[1e3] * 4 if impl_params and instance_norm else [1e3] * 5,
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
             score_weight=1e0 if impl_params and not instance_norm else 1e0,
         ),
