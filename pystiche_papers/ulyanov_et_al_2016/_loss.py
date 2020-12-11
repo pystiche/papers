@@ -1,7 +1,8 @@
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 
 import torch
 
+import pystiche
 from pystiche import enc, image, loss, ops
 from pystiche_papers.utils import HyperParameters
 
@@ -99,6 +100,18 @@ def content_loss(
     )
 
 
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L48-L55
+class RemoveScoreWeightGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
+        self.weight = weight
+        return input_tensor
+
+    @staticmethod
+    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
+        grad_input = grad_output.clone()
+        return grad_input / self.weight, None
+
 # Scale gradients in the backward pass
 # https://github.com/jcjohnson/neural-style/issues/450
 # https://github.com/ProGamerGov/neural-style-pt/blob/cbcd023326a3487a2d75270ed1f3b3ddb4b72407/neural_style.py#L404
@@ -173,6 +186,13 @@ class GramOperator(ops.GramOperator):
 
         batch_size = input_repr.size()[0]
         return score / batch_size
+
+    def forward(
+        self, input_image: torch.Tensor
+    ) -> Union[torch.Tensor, pystiche.LossDict]:
+        score = self.process_input_image(input_image) * self.score_weight
+        score = RemoveScoreWeightGradient.apply(score, self.score_weight)
+        return score
 
 
 def style_loss(
