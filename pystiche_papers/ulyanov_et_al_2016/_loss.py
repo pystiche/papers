@@ -135,7 +135,7 @@ class GramOperator(ops.GramOperator):
         # In the reference implementation the gram_matrix is only divided by the
         # batch_size.
         self.normalize_by_num_channels = impl_params
-        super().__init__(encoder, **gram_op_kwargs)
+        super().__init__(encoder, normalize=False, **gram_op_kwargs)
 
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L56-L57
         # In the reference implementation the gradients of the style_loss are

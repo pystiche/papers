@@ -63,8 +63,8 @@ def test_GramOperator(
     configs = ((True, True, 1.0), (False, False, input_image.size()[0]))
     for (impl_params, normalize_by_num_channels, extra_batch_normalization) in configs:
         with subtests.test(impl_params=impl_params):
-            target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
-            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
+            target_repr = pystiche.gram_matrix(encoder(target_image), normalize=False)
+            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=False)
             intern_target_repr = (
                 target_repr / target_repr.size()[-1]
                 if normalize_by_num_channels
