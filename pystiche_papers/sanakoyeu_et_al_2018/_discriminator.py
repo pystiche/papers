@@ -1,65 +1,105 @@
-from abc import abstractmethod
+import contextlib
 from collections import OrderedDict
-from typing import Callable, Iterator, Optional, Sequence, Tuple, Union, cast
+from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import torch
-import torch.nn.functional as F
 from torch import nn
 
-import pystiche
-from pystiche import enc, ops
-from pystiche.enc import Encoder, MultiLayerEncoder
+from pystiche import enc
 from pystiche_papers.sanakoyeu_et_al_2018._modules import ConvBlock, conv
 from pystiche_papers.utils import channel_progression
 
-__all__ = [
-    "Discriminator",
-    "DiscriminatorMultiLayerEncoder",
-    "prediction_module",
-    "EncodingDiscriminatorOperator",
-    "PredictionOperator",
-    "MultiLayerPredictionOperator",
-    "prediction_loss",
-]
+__all__ = ["MultiScaleDiscriminator", "discriminator"]
 
 
-class Discriminator(pystiche.Module):
-    r"""Discriminator from :cite:`SKL+2018`.
+class _Discriminator(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self._accuracy = 0.0
+        self._accuracies: List[torch.Tensor] = []
+        self._record_accuracies = False
+        self._real = True
 
-    Args:
-        in_channels: Number of channels in the input. Defaults to ``3``.
-    """
+        self.register_forward_hook(type(self)._forward_hook)
 
-    def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(
-            indexed_children=channel_progression(
-                lambda in_channels, out_channels: ConvBlock(
-                    in_channels,
-                    out_channels,
-                    kernel_size=5,
-                    stride=2,
-                    padding=None,
-                    act="lrelu",
-                ),
-                channels=(in_channels, 128, 128, 256, 512, 512, 1024, 1024),
-            )
-        )
+    @property
+    def accuracy(self) -> float:
+        return self._accuracy
+
+    @contextlib.contextmanager
+    def record_accuracies(self):
+        self._accuracies = []
+        self._record_accuracies = True
+        try:
+            yield lambda: self._recorder(True), lambda: self._recorder(False)
+        finally:
+            self._record_accuracies = False
+            self._accuracy = torch.mean(torch.stack(self._accuracies)).item()
+
+    @contextlib.contextmanager
+    def _recorder(self, real: bool):
+        self._real = real
+        yield
+
+    def _compute_accuracy(self, prediction: torch.Tensor) -> torch.Tensor:
+        comparator = torch.ge if self._real else torch.lt
+        return torch.mean(comparator(prediction, 0.0).float())
+
+    def _forward_hook(self, input: Any, output: Any) -> None:
+        if not self._record_accuracies:
+            return
+
+        if isinstance(output, torch.Tensor):
+            self._accuracies.append(self._compute_accuracy(output))
+            return
+
+        self.compute_accuracies(output)
+
+    def compute_accuracies(self, output: Any) -> None:
+        # TODO: add better error message
+        raise NotImplementedError
 
 
-class DiscriminatorMultiLayerEncoder(enc.MultiLayerEncoder):
-    r"""Discriminator from :cite:`SKL+2018` as :class:`pystiche.enc.MultiLayerEncoder`.
+class MultiScaleDiscriminator(_Discriminator):
+    r"""Discriminator from :cite:`SKL+2018`."""
 
-    Args:
-        in_channels: Number of channels in the input. Defaults to ``3``.
-    """
+    def __init__(
+        self,
+        discriminator_modules: Sequence[Tuple[str, nn.Module]],
+        prediction_modules: Dict[str, nn.Module],
+    ):
+        super().__init__()
+        self.mle = enc.MultiLayerEncoder(discriminator_modules)
+        self.predictors = nn.ModuleDict(prediction_modules)
 
-    def __init__(self, in_channels: int = 3) -> None:
-        super().__init__(tuple(Discriminator(in_channels=in_channels).named_children()))
+        for name, predictor in self.predictors.items():
+            if name not in self.mle:
+                # TODO
+                raise ValueError
+
+            self.mle.registered_layers.add(name)
+
+    def forward(self, input: torch.Tensor) -> Dict[str, torch.Tensor]:
+        encs = self.mle(input, self.predictors.keys())
+        return {
+            name: predictor(enc)
+            for (name, predictor), enc in zip(self.predictors.items(), encs)
+        }
+
+    def compute_accuracies(self, multi_scale_predictions: Dict[str, torch.Tensor]):
+        for prediction in multi_scale_predictions.values():
+            self._accuracies.append(self._compute_accuracy(prediction))
 
 
-def prediction_module(
+def _discriminator_module(in_channels: int, out_channels: int) -> ConvBlock:
+    return ConvBlock(
+        in_channels, out_channels, kernel_size=5, stride=2, padding=None, act="lrelu",
+    )
+
+
+def _prediction_module(
     in_channels: int, kernel_size: Union[Tuple[int, int], int],
-) -> nn.Module:
+) -> nn.Conv2d:
     r"""Prediction module from :cite:`SKL+2018`.
 
     This block comprises a convolutional, which is used as an auxiliary classifier to
@@ -79,226 +119,26 @@ def prediction_module(
     )
 
 
-class EncodingDiscriminatorOperator(ops.EncodingRegularizationOperator):
-    r"""Abstract base class for all discriminator operators working in an encoded space.
+def discriminator():
+    channels = (3, 128, 128, 256, 512, 512, 1024, 1024)
+    discriminator_modules = tuple(
+        zip(
+            [str(scale) for scale in range(len(channels) - 1)],
+            channel_progression(_discriminator_module, channels=channels,),
+        )
+    )
 
-    Args:
-        encoder: Encoder that is used to encode the input images.
-        score_weight: Score weight of the operator. Defaults to ``1.0``.
-
-    Attributes:
-        real_images: Discriminator mode in whose dependence the output of the functions
-            :func:`calculate_score` and :func:`calculate_accuracy` can be influenced.
-            This can be either real or fake. The discriminator mode should not
-            be set manually, but with the help of functions :func:`real` and
-            :func:`fake`.
-        accuracy: The accuracy of the discriminator at the last input.
-
-    """
-
-    def __init__(self, encoder: Encoder, score_weight: float = 1.0):
-        super().__init__(encoder, score_weight=score_weight)
-        self.real_images = True
-        self.accuracy: torch.Tensor
-        self.register_buffer("accuracy", torch.zeros(1))
-
-    def real(self, mode: bool = True) -> "EncodingDiscriminatorOperator":
-        r"""Sets the discriminator mode to real images.
-
-        Args:
-            mode: Whether to set the discriminator mode to real (``True``, default) or
-                fake (``False``) images.
-        """
-        self.real_images = mode
-        return self
-
-    def fake(self) -> "EncodingDiscriminatorOperator":
-        r"""Sets the discriminator mode to fake images."""
-        return self.real(False)
-
-    def process_input_image(self, image: torch.Tensor) -> torch.Tensor:
-        input_repr = self.input_image_to_repr(image)
-        self.accuracy = self.calculate_accuracy(input_repr)
-        return self.calculate_score(input_repr)
-
-    @abstractmethod
-    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-        pass
-
-
-class PredictionOperator(EncodingDiscriminatorOperator):
-    r"""Partial discriminator loss based on :class:`torch.nn.BCELoss`.
-
-    The class prediction is generated by the ``predictor``, which acts an
-    auxiliary classifier.
-
-    Args:
-        encoder: Encoder that is used to encode the input images.
-        predictor: Auxiliary classifier used to predict real or fake from the encodings
-            of the ``encoder``.
-        score_weight: Score weight of the operator. Defaults to ``1.0``.
-
-    """
-
-    def __init__(
-        self, encoder: Encoder, predictor: nn.Module, score_weight: float = 1e0,
-    ) -> None:
-        super().__init__(encoder, score_weight=score_weight)
-        self.predictor = predictor
-
-    def input_enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self.predictor(enc))
-
-    def calculate_score(self, input_repr: torch.Tensor) -> torch.Tensor:
-        return torch.mean(
-            F.binary_cross_entropy_with_logits(
-                input_repr,
-                torch.ones_like(input_repr)
-                if self.real_images
-                else torch.zeros_like(input_repr),
+    prediction_modules = OrderedDict(
+        [
+            (scale, _prediction_module(in_channels, kernel_size),)
+            for scale, in_channels, kernel_size in (
+                ("0", 128, 5),
+                ("1", 128, 10),
+                ("3", 512, 10),
+                ("5", 1024, 6),
+                ("6", 1024, 3),
             )
-        )
-
-    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
-        comparator = torch.ge if self.real_images else torch.lt
-        return torch.mean(comparator(input_repr, 0.0).float())
-
-
-class MultiLayerPredictionOperator(ops.MultiLayerEncodingOperator):
-    r"""Convenience container for multiple :class:`PredictionOperator` s.
-
-    Args:
-        multi_layer_encoder: Multi-layer encoder.
-        layers: Layers of the ``multi_layer_encoder`` that the children operators
-            operate on.
-        get_encoding_op: Callable that returns a children operator given a
-            :class:`pystiche.enc.SingleLayerEncoder` extracted from the
-            ``multi_layer_encoder`` and its corresponding layer weight.
-        layer_weights: Weights of the children operators passed to ``get_encoding_op``.
-            If ``"sum"``, each layer weight is set to ``1.0``. If ``"mean"``, each
-            layer weight is set to ``1.0 / len(layers)``. If sequence of ``float``s its
-            length has to match ``layers``. Defaults to ``"mean"``.
-        score_weight: Score weight of the operator. Defaults to ``1.0``.
-        impl_params: If ``True``, use the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        init_weights: If ``True``, the weights are initialized as in the reference
-            impementation.
-    """
-
-    def __init__(
-        self,
-        multi_layer_encoder: MultiLayerEncoder,
-        layers: Sequence[str],
-        get_encoding_op: Callable[
-            [enc.SingleLayerEncoder, float], ops.EncodingOperator
-        ],
-        layer_weights: Union[str, Sequence[float]] = "mean",
-        score_weight: float = 1e0,
-        impl_params: bool = True,
-        init_weights: bool = True,
-    ):
-        super().__init__(
-            multi_layer_encoder,
-            layers,
-            get_encoding_op,
-            layer_weights=layer_weights,
-            score_weight=score_weight,
-        )
-        if init_weights:
-            self.init_weights(impl_params=impl_params)
-
-    def init_weights(self, impl_params: bool = True) -> None:
-        if not impl_params:
-            return
-
-        for module in self.modules():
-            if isinstance(module, nn.Conv2d):
-                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L54
-                # https://www.tensorflow.org/versions/r1.12/api_docs/python/tf/initializers/truncated_normal
-                std = 0.02
-                nn.init.trunc_normal_(
-                    module.weight, mean=0.0, std=std, a=-2 * std, b=2 * std
-                )
-            if isinstance(module, nn.InstanceNorm2d):
-                # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/ops.py#L42-L43
-                # https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/random_normal_initializer
-                nn.init.normal_(module.weight, mean=1.0, std=0.02)
-                nn.init.zeros_(module.bias)
-
-    def discriminator_operators(self) -> Iterator["EncodingDiscriminatorOperator"]:
-        for op in self.operators():
-            if isinstance(op, EncodingDiscriminatorOperator):
-                yield op
-
-    def real(self, mode: bool = True) -> "MultiLayerPredictionOperator":
-        for op in self.discriminator_operators():
-            op.real(mode)
-        return self
-
-    def fake(self) -> "MultiLayerPredictionOperator":
-        return self.real(False)
-
-    def get_accuracy(self) -> torch.Tensor:
-        r"""Returns the average accuracy of all operators."""
-        accuracies = torch.stack([op.accuracy for op in self.discriminator_operators()])
-        return torch.mean(accuracies)
-
-
-def prediction_loss(
-    impl_params: bool = True,
-    multi_layer_encoder: Optional[MultiLayerEncoder] = None,
-    scale_weights: Union[str, Sequence[float]] = "sum",
-    score_weight: Optional[float] = None,
-) -> MultiLayerPredictionOperator:
-    r"""Partial discriminator loss from :cite:`SKL+2018` for a single image.
-
-    Capture image details at different scales with an auxiliary classifier and sum up
-    all losses and accuracies on different layers of the
-    :class:`~pystiche.enc.MultiLayerEncoder`.
-
-    Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        multi_layer_encoder: :class:`~pystiche.enc.MultiLayerEncoder`. If omitted, the
-            default
-            :class:`~pystiche_papers.sanakoyeu_et_al_2018.DiscriminatorMultiLayerEncoder`
-            is used.
-        scale_weights: Scale weights of the operator. Defaults to ``sum``.
-        score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``impl_params``. Defaults to ``1e0`` if
-            ``impl_params is True`` otherwise ``1e-3``.
-
-    """
-    if multi_layer_encoder is None:
-        multi_layer_encoder = DiscriminatorMultiLayerEncoder()
-
-    if score_weight is None:
-        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L98
-        score_weight = 1e0 if impl_params else 1e-3
-
-    predictors = OrderedDict(
-        (
-            ("0", prediction_module(128, 5)),
-            ("1", prediction_module(128, 10)),
-            ("3", prediction_module(512, 10)),
-            ("5", prediction_module(1024, 6)),
-            ("6", prediction_module(1024, 3)),
-        )
+        ]
     )
 
-    def get_encoding_op(
-        encoder: enc.SingleLayerEncoder, layer_weight: float
-    ) -> PredictionOperator:
-        return PredictionOperator(
-            encoder, predictors[encoder.layer], score_weight=layer_weight,
-        )
-
-    return MultiLayerPredictionOperator(
-        multi_layer_encoder,
-        tuple(predictors.keys()),
-        get_encoding_op,
-        layer_weights=scale_weights,
-        score_weight=score_weight,
-    )
+    return MultiScaleDiscriminator(discriminator_modules, prediction_modules)

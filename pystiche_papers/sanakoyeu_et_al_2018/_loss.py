@@ -1,35 +1,71 @@
-from typing import Any, Dict, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from pystiche import loss, ops
 from pystiche.enc import SequentialEncoder
 
-from ._discriminator import MultiLayerPredictionOperator, prediction_loss
+from ._discriminator import MultiScaleDiscriminator
+from ._discriminator import discriminator as _discriminator
 from ._modules import TransformerBlock
 
 __all__ = [
     "DiscriminatorLoss",
     "discriminator_loss",
-    "transformed_image_loss",
     "MAEReconstructionOperator",
-    "style_aware_content_loss",
+    "feature_reconstruction_loss",
+    "transformed_image_loss",
+    "content_loss",
+    "StyleLoss",
+    "style_loss",
     "transformer_loss",
 ]
 
 
-style_loss_ = prediction_loss_ = prediction_loss
+def _prediction_loss(
+    discriminator: MultiScaleDiscriminator,
+    real_inputs: Optional[Sequence[torch.Tensor]] = None,
+    fake_inputs: Optional[Sequence[torch.Tensor]] = None,
+):
+    if not (real_inputs or fake_inputs):
+        raise RuntimeError
+    elif real_inputs is None:
+        real_inputs = ()
+    elif fake_inputs is None:
+        fake_inputs = ()
+
+    def compute(input: torch.Tensor, real: bool) -> torch.Tensor:
+        make_target = torch.ones_like if real else torch.zeros_like
+        scale_losses = [
+            F.binary_cross_entropy_with_logits(prediction, make_target(prediction))
+            for prediction in discriminator(input).values()
+        ]
+        # TODO: sum or mean?
+        return torch.sum(torch.stack(scale_losses))
+
+    losses: List[torch.Tensor] = []
+
+    with discriminator.record_accuracies() as (real, fake):
+        with real():
+            for input in real_inputs:
+                losses.append(compute(input, real=True))
+
+        with fake():
+            for input in fake_inputs:
+                losses.append(compute(input, real=False))
+
+    # TODO: sum or mean?
+    return torch.sum(torch.stack(losses))
 
 
 class DiscriminatorLoss(nn.Module):
-    def __init__(self, prediction_loss: MultiLayerPredictionOperator) -> None:
+    def __init__(self, discriminator: Optional[MultiScaleDiscriminator] = None) -> None:
         super().__init__()
-        self.prediction_loss = prediction_loss
-
-        self.accuracy: torch.Tensor
-        self.register_buffer("accuracy", torch.zeros(1))
+        if discriminator is None:
+            discriminator = _discriminator()
+        self.discriminator = discriminator
 
     def forward(
         self,
@@ -37,72 +73,16 @@ class DiscriminatorLoss(nn.Module):
         input_painting: torch.Tensor,
         input_photo: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        accuracies = []
-
-        self.prediction_loss.real()
-        loss = self.prediction_loss(input_painting).aggregate(0)
-        accuracies.append(self.prediction_loss.get_accuracy())
-
-        self.prediction_loss.fake()
-        loss += self.prediction_loss(output_photo).aggregate(0)
-        accuracies.append(self.prediction_loss.get_accuracy())
-
+        real_inputs = [input_painting]
+        fake_inputs = [output_photo]
         if input_photo is not None:
-            loss += self.prediction_loss(input_photo).aggregate(0)
-            accuracies.append(self.prediction_loss.get_accuracy())
-
-        self.accuracy = torch.mean(torch.cat(accuracies))
-
-        return cast(torch.Tensor, loss)
+            fake_inputs.append(input_photo)
+        return _prediction_loss(self.discriminator, real_inputs, fake_inputs)
 
 
-def discriminator_loss(
-    impl_params: bool = True,
-    prediction_loss: Optional[MultiLayerPredictionOperator] = None,
-) -> DiscriminatorLoss:
-    r"""Discriminator loss from :cite:`SKL+2018`.
-
-    Calculates the loss and accuracy of the current discriminator on all real and fake
-    input images.
-
-    Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        prediction_loss: Trainable :class:`MultiLayerPredictionOperator`.
-
-    """
-    if prediction_loss is None:
-        prediction_loss = prediction_loss_(impl_params=impl_params)
-    return DiscriminatorLoss(prediction_loss)
-
-
-def transformed_image_loss(
-    transformer_block: Optional[SequentialEncoder] = None,
-    impl_params: bool = True,
-    score_weight: Optional[float] = None,
-) -> ops.FeatureReconstructionOperator:
-    r"""Transformed_image_loss from :cite:`SKL+2018`.
-
-    Args:
-        transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
-            which is used to transform the image.
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper.
-        score_weight: Score weight of the operator. If omitted, the score_weight is
-            determined with respect to ``impl_params``. Defaults to ``1e2`` if
-            ``impl_params is True`` otherwise ``1e0``.
-    """
-    if score_weight is None:
-        score_weight = 1e2 if impl_params else 1e0
-
-    if transformer_block is None:
-        transformer_block = TransformerBlock()
-
-    return ops.FeatureReconstructionOperator(
-        transformer_block, score_weight=score_weight
-    )
+def discriminator_loss():
+    # FIXME: properly implement me
+    return DiscriminatorLoss()
 
 
 class MAEReconstructionOperator(ops.EncodingComparisonOperator):
@@ -142,7 +122,7 @@ class MAEReconstructionOperator(ops.EncodingComparisonOperator):
         return F.l1_loss(input_repr, target_repr)
 
 
-def style_aware_content_loss(
+def feature_reconstruction_loss(
     encoder: SequentialEncoder,
     impl_params: bool = True,
     score_weight: Optional[float] = None,
@@ -174,6 +154,69 @@ def style_aware_content_loss(
     )
 
 
+def transformed_image_loss(
+    transformer_block: Optional[SequentialEncoder] = None,
+    impl_params: bool = True,
+    score_weight: Optional[float] = None,
+) -> ops.FeatureReconstructionOperator:
+    r"""Transformed_image_loss from :cite:`SKL+2018`.
+
+    Args:
+        transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
+            which is used to transform the image.
+        impl_params: If ``True``, uses the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+        score_weight: Score weight of the operator. If omitted, the score_weight is
+            determined with respect to ``impl_params``. Defaults to ``1e2`` if
+            ``impl_params is True`` otherwise ``1e0``.
+    """
+    if score_weight is None:
+        score_weight = 1e2 if impl_params else 1e0
+
+    if transformer_block is None:
+        transformer_block = TransformerBlock()
+
+    return ops.FeatureReconstructionOperator(
+        transformer_block, score_weight=score_weight
+    )
+
+
+def content_loss():
+    # FIXME: properly implement me
+    return ops.OperatorContainer(
+        (
+            (
+                ("feature_reconstruction_loss", feature_reconstruction_loss()),
+                ("tranformed_image_loss", transformed_image_loss()),
+            )
+        )
+    )
+
+
+class StyleLoss(ops.PixelRegularizationOperator):
+    def __init__(
+        self,
+        discriminator: Optional[MultiScaleDiscriminator] = None,
+        score_weight: float = 1e0,
+    ) -> None:
+        super().__init__(score_weight=score_weight)
+        if discriminator is None:
+            discriminator = _discriminator()
+        self.discriminator = discriminator
+
+    def input_image_to_repr(self, image: torch.Tensor,) -> torch.Tensor:
+        return image
+
+    def calculate_score(self, input_repr: torch.Tensor,) -> torch.Tensor:
+        return _prediction_loss(self.discriminator, real_inputs=[input_repr])
+
+
+def style_loss():
+    # FIXME: properly implement me
+    return StyleLoss()
+
+
 def transformer_loss(
     encoder: SequentialEncoder,
     impl_params: bool = True,
@@ -193,26 +236,5 @@ def transformer_loss(
             :func:`transformed_image_loss`.
 
     """
-    if style_aware_content_kwargs is None:
-        style_aware_content_kwargs = {}
-    style_aware_content_operator = style_aware_content_loss(
-        encoder, impl_params=impl_params, **style_aware_content_kwargs
-    )
-
-    if transformed_image_kwargs is None:
-        transformed_image_kwargs = {}
-    transformed_image_operator = transformed_image_loss(
-        impl_params=impl_params, **transformed_image_kwargs
-    )
-
-    content_loss = ops.OperatorContainer(
-        (
-            (
-                ("style_aware_content_loss", style_aware_content_operator),
-                ("tranformed_image_loss", transformed_image_operator),
-            )
-        )
-    )
-
-    style_loss = style_loss_(impl_params)
-    return loss.PerceptualLoss(content_loss, style_loss)
+    # FIXME: properly implement me
+    return loss.PerceptualLoss(content_loss(), style_loss())

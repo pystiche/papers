@@ -20,6 +20,7 @@ __all__ = [
 ]
 
 
+# TODO: rename to activation
 def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
     act = verify_str_arg(act, valid_args=["relu", "lrelu"])
     if act == "relu":
@@ -69,6 +70,7 @@ def norm(
     )
 
 
+# TODO: create a function called conv_block instead of creating directly
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
@@ -128,6 +130,8 @@ class ConvBlock(nn.Sequential):
         super().__init__(*modules)
 
 
+# TODO: create a function called upsample_conv_block instead of creating directly
+# TODO: (distant future) merge UpsampleConvBlock with ConvBlock
 class UpsampleConvBlock(ConvBlock):
     r"""UpsampleConvBlock from :cite:`SKL+2018`.
 
@@ -195,6 +199,8 @@ def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:
     )
 
 
+# TODO: since this is only used in the transformed image loss, shouldn't it be defined
+#  there?
 class TransformerBlock(enc.SequentialEncoder):
     r"""TransformerBlock from :cite:`SKL+2018`.
 
