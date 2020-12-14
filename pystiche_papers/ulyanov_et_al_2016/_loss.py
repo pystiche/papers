@@ -69,7 +69,7 @@ class ScaleGradients(torch.autograd.Function):
     def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
         grad_input = grad_output.clone()
         grad_input = grad_input / (torch.norm(grad_input, keepdim=True) + 1e-8)
-        return grad_input * self.weight, None
+        return grad_input, None
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
