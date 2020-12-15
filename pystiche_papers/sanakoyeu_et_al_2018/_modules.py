@@ -14,6 +14,7 @@ __all__ = [
     "activation",
     "conv",
     "ConvBlock",
+    "conv_block",
     "UpsampleConvBlock",
     "residual_block",
     "TransformerBlock",
@@ -69,7 +70,6 @@ def norm(
     )
 
 
-# TODO: create a function called conv_block instead of creating directly
 class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
@@ -127,6 +127,11 @@ class ConvBlock(nn.Sequential):
             modules.append(activation(act=act, inplace=inplace))
 
         super().__init__(*modules)
+
+
+def conv_block(in_channels: int, out_channels: int, **kwargs: Any) -> ConvBlock:
+    return ConvBlock(in_channels, out_channels, **kwargs)
+
 
 
 # TODO: create a function called upsample_conv_block instead of creating directly

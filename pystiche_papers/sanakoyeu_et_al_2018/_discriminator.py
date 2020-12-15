@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from pystiche import enc
-from pystiche_papers.sanakoyeu_et_al_2018._modules import ConvBlock, conv
+from pystiche_papers.sanakoyeu_et_al_2018._modules import conv_block, ConvBlock, conv
 from pystiche_papers.utils import channel_progression
 
 __all__ = ["MultiScaleDiscriminator", "discriminator"]
@@ -92,7 +92,7 @@ class MultiScaleDiscriminator(_Discriminator):
 
 
 def _discriminator_module(in_channels: int, out_channels: int) -> ConvBlock:
-    return ConvBlock(
+    return conv_block(
         in_channels, out_channels, kernel_size=5, stride=2, padding=None, act="lrelu",
     )
 

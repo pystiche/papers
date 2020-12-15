@@ -7,7 +7,7 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche_papers.sanakoyeu_et_al_2018._modules import (
-    ConvBlock,
+    conv_block,
     UpsampleConvBlock,
     conv,
     norm,
@@ -49,14 +49,14 @@ def encoder(impl_params: bool = True, in_channels: int = 3,) -> enc.SequentialEn
     modules.extend(
         (
             nn.ReflectionPad2d(15),
-            ConvBlock(
+            conv_block(
                 in_channels=in_channels, out_channels=32, kernel_size=3, stride=1
             ),
         )
     )
     modules.extend(
         channel_progression(
-            lambda in_channels, out_channels: ConvBlock(
+            lambda in_channels, out_channels: conv_block(
                 in_channels, out_channels, kernel_size=3, stride=2
             ),
             channels=(32, 32, 64, 128, 256),
