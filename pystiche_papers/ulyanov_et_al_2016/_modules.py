@@ -389,7 +389,7 @@ def level(
         return SequentialWithOutChannels(OrderedDict(modules))
 
     # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/models/pyramid.lua#L16-L18
-    use_noise = not impl_params or not instance_norm
+    use_noise = impl_params and not instance_norm
     shallow_branch = conv_sequence(in_channels, out_channels=8, use_noise=use_noise)
 
     if prev_level_block is None:

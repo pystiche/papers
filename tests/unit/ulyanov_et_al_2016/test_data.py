@@ -31,10 +31,9 @@ def test_content_transform(subtests, content_image, impl_params, instance_norm):
 
     if impl_params:
         if instance_norm:
-            desired = F.resize(content_image, edge_size)
             transform = transforms.ValidRandomCrop(edge_size)
             utils.make_reproducible()
-            desired = transform(desired)
+            desired = transform(content_image)
         else:
             desired = F.resize(content_image, edge_size)
     else:
@@ -67,10 +66,9 @@ def test_content_transform_grayscale_image(
 
     if impl_params:
         if instance_norm:
-            transform_image = F.resize(content_image, edge_size)
             transform = transforms.ValidRandomCrop(edge_size)
             utils.make_reproducible()
-            transform_image = transform(transform_image)
+            transform_image = transform(content_image)
         else:
             transform_image = F.resize(content_image, edge_size)
     else:
