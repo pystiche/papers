@@ -42,7 +42,6 @@ def _prediction_loss(
             F.binary_cross_entropy_with_logits(prediction, make_target(prediction))
             for prediction in discriminator(input).values()
         ]
-        # TODO: sum or mean?
         return torch.sum(torch.stack(scale_losses))
 
     losses: List[torch.Tensor] = []
@@ -56,7 +55,6 @@ def _prediction_loss(
             for input in fake_inputs:
                 losses.append(compute(input, real=False))
 
-    # TODO: sum or mean?
     return torch.sum(torch.stack(losses))
 
 
