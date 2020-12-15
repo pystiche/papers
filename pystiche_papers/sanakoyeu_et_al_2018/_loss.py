@@ -59,10 +59,8 @@ def _prediction_loss(
 
 
 class DiscriminatorLoss(nn.Module):
-    def __init__(self, discriminator: Optional[MultiScaleDiscriminator] = None) -> None:
+    def __init__(self, discriminator: Optional[MultiScaleDiscriminator]) -> None:
         super().__init__()
-        if discriminator is None:
-            discriminator = _discriminator()
         self.discriminator = discriminator
 
     def forward(
@@ -78,9 +76,20 @@ class DiscriminatorLoss(nn.Module):
         return _prediction_loss(self.discriminator, real_inputs, fake_inputs)
 
 
-def discriminator_loss():
-    # FIXME: properly implement me
-    return DiscriminatorLoss()
+_discriminator = _discriminator()
+
+def discriminator_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> DiscriminatorLoss:
+    """ DiscriminatorLoss from :cite:`SKL+2018`.
+
+    Args:
+        discriminator: Discriminator module to discriminate between real and fake
+            inputs. If omitted, the default
+            :func:`~pystiche_papers.sanakoyeu_et_al_2018.discriminator()` is used.
+
+    """
+    if discriminator is None:
+        discriminator = _discriminator
+    return DiscriminatorLoss(discriminator=discriminator)
 
 
 class MAEReconstructionOperator(ops.EncodingComparisonOperator):
@@ -180,7 +189,7 @@ def transformed_image_loss(
     )
 
 
-def content_loss():
+def content_loss() -> ops.OperatorContainer:
     # FIXME: properly implement me
     return ops.OperatorContainer(
         (
@@ -195,12 +204,10 @@ def content_loss():
 class StyleLoss(ops.PixelRegularizationOperator):
     def __init__(
         self,
-        discriminator: Optional[MultiScaleDiscriminator] = None,
+        discriminator: Optional[MultiScaleDiscriminator],
         score_weight: float = 1e0,
     ) -> None:
         super().__init__(score_weight=score_weight)
-        if discriminator is None:
-            discriminator = _discriminator()
         self.discriminator = discriminator
 
     def input_image_to_repr(self, image: torch.Tensor,) -> torch.Tensor:
@@ -210,9 +217,21 @@ class StyleLoss(ops.PixelRegularizationOperator):
         return _prediction_loss(self.discriminator, real_inputs=[input_repr])
 
 
-def style_loss():
-    # FIXME: properly implement me
-    return StyleLoss()
+def style_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> StyleLoss:
+    """ DiscriminatorLoss from :cite:`SKL+2018`.
+
+    The loss and accuracy of the ``discriminator`` is calculated if the input images are
+    to be recognized as real.
+
+    Args:
+        discriminator: Discriminator module to discriminate between real and fake
+            inputs. If omitted, the default
+            :func:`~pystiche_papers.sanakoyeu_et_al_2018.discriminator()` is used.
+
+    """
+    if discriminator is None:
+        discriminator = _discriminator
+    return StyleLoss(discriminator=discriminator)
 
 
 def transformer_loss(
