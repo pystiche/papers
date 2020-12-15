@@ -8,10 +8,10 @@ from pystiche import misc
 from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d, ResidualBlock
 
 
-def test_get_activation(subtests):
+def test_activation(subtests):
     for str_act, desired in (("relu", nn.ReLU), ("lrelu", nn.LeakyReLU)):
         with subtests.test(str_act):
-            actual = paper.get_activation(str_act)
+            actual = paper.activation(str_act)
 
             assert isinstance(actual, desired)
 

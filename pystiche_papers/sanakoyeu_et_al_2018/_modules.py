@@ -11,7 +11,7 @@ from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d
 from ..utils import ResidualBlock
 
 __all__ = [
-    "get_activation",
+    "activation",
     "conv",
     "ConvBlock",
     "UpsampleConvBlock",
@@ -20,8 +20,7 @@ __all__ = [
 ]
 
 
-# TODO: rename to activation
-def get_activation(act: str = "relu", inplace: bool = True) -> nn.Module:
+def activation(act: str = "relu", inplace: bool = True) -> nn.Module:
     act = verify_str_arg(act, valid_args=["relu", "lrelu"])
     if act == "relu":
         return nn.ReLU(inplace=inplace)
@@ -125,7 +124,7 @@ class ConvBlock(nn.Sequential):
         ]
 
         if act is not None:
-            modules.append(get_activation(act=act, inplace=inplace))
+            modules.append(activation(act=act, inplace=inplace))
 
         super().__init__(*modules)
 
