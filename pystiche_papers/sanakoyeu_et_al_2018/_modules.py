@@ -16,6 +16,7 @@ __all__ = [
     "ConvBlock",
     "conv_block",
     "UpsampleConvBlock",
+    "upsample_conv_block",
     "residual_block",
     "TransformerBlock",
 ]
@@ -133,8 +134,6 @@ def conv_block(in_channels: int, out_channels: int, **kwargs: Any) -> ConvBlock:
     return ConvBlock(in_channels, out_channels, **kwargs)
 
 
-
-# TODO: create a function called upsample_conv_block instead of creating directly
 # TODO: (distant future) merge UpsampleConvBlock with ConvBlock
 class UpsampleConvBlock(ConvBlock):
     r"""UpsampleConvBlock from :cite:`SKL+2018`.
@@ -165,6 +164,10 @@ class UpsampleConvBlock(ConvBlock):
             input, scale_factor=self.scale_factor, mode="nearest"
         )
         return cast(torch.Tensor, super().forward(interpolated_input))
+
+
+def upsample_conv_block(in_channels: int, out_channels: int, **kwargs: Any) -> UpsampleConvBlock:
+    return UpsampleConvBlock(in_channels, out_channels, **kwargs)
 
 
 def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:

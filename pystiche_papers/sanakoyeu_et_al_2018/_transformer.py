@@ -8,7 +8,7 @@ import pystiche
 from pystiche import enc
 from pystiche_papers.sanakoyeu_et_al_2018._modules import (
     conv_block,
-    UpsampleConvBlock,
+    upsample_conv_block,
     conv,
     norm,
     residual_block,
@@ -85,7 +85,7 @@ def decoder(
         residual_block(256, impl_params=impl_params) for _ in range(num_residual_blocks)
     ]
     upsample_conv_blocks = channel_progression(
-        lambda in_channels, out_channels: UpsampleConvBlock(
+        lambda in_channels, out_channels: upsample_conv_block(
             in_channels, out_channels, kernel_size=3, padding=None,
         ),
         channels=(256, 256, 128, 64, 32),
