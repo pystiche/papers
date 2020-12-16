@@ -15,7 +15,6 @@ __all__ = [
     "conv",
     "ConvBlock",
     "conv_block",
-    "UpsampleConvBlock",
     "upsample_conv_block",
     "residual_block",
     "TransformerBlock",
@@ -75,7 +74,8 @@ class ConvBlock(nn.Sequential):
     r"""ConvBlock from :cite:`SKL+2018`.
 
     This block comprises a convolution followed by a normalization and an optional
-    activation.
+    activation. The input is optionally interpolated in advance if a ``scale_factor``
+    is given.
 
     Args:
         in_channels: Number of channels in the input.
@@ -90,6 +90,8 @@ class ConvBlock(nn.Sequential):
             ``"lrelu"`` for a :class:`~torch.nn.LeakyReLU` with ``slope=0.2`` or
             ``None`` for no activation. Defaults to ``"relu"``.
         inplace: If ``True`` perform the activation in-place.
+        scale_factor: ``scale_factor`` of the optional interpolation. Defaults to
+            ``None``.
 
     The parameters ``kernel_size`` and ``stride`` can either be:
     * a single :class:`int` – in which case the same value is used for the height and
@@ -108,9 +110,11 @@ class ConvBlock(nn.Sequential):
         padding_mode: str = "zeros",
         act: Optional[str] = "relu",
         inplace: bool = True,
+        scale_factor: Optional[Union[Tuple[float, float], float]] = None,
     ) -> None:
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.scale_factor = scale_factor
 
         modules: List[nn.Module] = [
             conv(
@@ -129,47 +133,34 @@ class ConvBlock(nn.Sequential):
 
         super().__init__(*modules)
 
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        if self.scale_factor is not None:
+            input = nn.functional.interpolate(
+                input, scale_factor=self.scale_factor, mode="nearest"
+            )
+        return cast(torch.Tensor, super().forward(input))
+
 
 def conv_block(in_channels: int, out_channels: int, **kwargs: Any) -> ConvBlock:
     return ConvBlock(in_channels, out_channels, **kwargs)
 
 
-# TODO: (distant future) merge UpsampleConvBlock with ConvBlock
-class UpsampleConvBlock(ConvBlock):
-    r"""UpsampleConvBlock from :cite:`SKL+2018`.
-
-    This block upsamples the input followed by a :class:`ConvBlock`.
-
-    Args:
-        in_channels: Number of channels in the input.
-        out_channels: Number of channels produced by the convolution.
-        kernel_size: Size of the convolving kernel.
-        scale_factor: ``scale_factor`` of the interpolation. Defaults to ``2.0``.
-        kwargs: Other optional arguments of :class:`ConvBlock`
-    """
-
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: Union[Tuple[int, int], int],
-        scale_factor: Union[Tuple[float, float], float] = 2.0,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(in_channels, out_channels, kernel_size, **kwargs)
-        self.scale_factor = scale_factor
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        interpolated_input = nn.functional.interpolate(
-            input, scale_factor=self.scale_factor, mode="nearest"
-        )
-        return cast(torch.Tensor, super().forward(interpolated_input))
-
-
 def upsample_conv_block(
-    in_channels: int, out_channels: int, **kwargs: Any
-) -> UpsampleConvBlock:
-    return UpsampleConvBlock(in_channels, out_channels, **kwargs)
+    in_channels: int,
+    out_channels: int,
+    kernel_size: Union[Tuple[int, int], int] = 3,
+    padding: Optional[int] = None,
+    scale_factor: Union[Tuple[float, float], float] = 2.0,
+    **kwargs: Any,
+) -> ConvBlock:
+    return ConvBlock(
+        in_channels,
+        out_channels,
+        kernel_size=kernel_size,
+        padding=padding,
+        scale_factor=scale_factor,
+        **kwargs,
+    )
 
 
 def residual_block(channels: int, impl_params: bool = True) -> ResidualBlock:
