@@ -56,8 +56,7 @@ class _Discriminator(nn.Module):
         self.compute_accuracies(output)
 
     def compute_accuracies(self, output: Any) -> None:
-        # TODO: add better error message
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses should implement this!")
 
 
 class MultiScaleDiscriminator(_Discriminator):
@@ -77,8 +76,7 @@ class MultiScaleDiscriminator(_Discriminator):
 
         for name, predictor in self.predictors.items():
             if name not in self.mle:
-                # TODO
-                raise ValueError
+                raise ValueError(f"Layer {name} is not part of the MultiLayerEncoder.")
 
             self.mle.registered_layers.add(name)
 
