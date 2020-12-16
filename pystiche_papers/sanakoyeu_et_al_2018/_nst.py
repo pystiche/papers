@@ -12,8 +12,8 @@ from pystiche.image.transforms import functional as F
 from ._data import content_dataset, image_loader, style_dataset
 from ._loss import (
     DiscriminatorLoss,
-    discriminator_loss,
     MultiScaleDiscriminator,
+    discriminator_loss,
     transformer_loss,
 )
 from ._transformer import transformer as _transformer
@@ -95,9 +95,7 @@ def gan_optim_loop(
 
     if discriminator_optimizer is None:
         # TODO: check if all parameters (predictor??)
-        discriminator_optimizer = optimizer(
-            discriminator_criterion.parameters()
-        )
+        discriminator_optimizer = optimizer(discriminator_criterion.parameters())
 
     if transformer_optimizer is None:
         transformer_optimizer = optimizer(transformer)
@@ -119,7 +117,11 @@ def gan_optim_loop(
             return cast(float, loss.item())
 
         cast(Optimizer, discriminator_optimizer).step(closure)
-        discriminator_success.update(discriminator_criterion.accuracy)
+        discriminator_success.update(
+            cast(
+                MultiScaleDiscriminator, discriminator_criterion.discriminator
+            ).accuracy
+        )
 
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
@@ -210,9 +212,7 @@ def gan_epoch_optim_loop(
     """
     if discriminator_optimizer is None:
         if discriminator_lr_scheduler is None:
-            discriminator_optimizer = optimizer(
-                discriminator_criterion.parameters()
-            )
+            discriminator_optimizer = optimizer(discriminator_criterion.parameters())
         else:
             discriminator_optimizer = discriminator_lr_scheduler.optimizer  # type: ignore[attr-defined]
 

@@ -166,7 +166,9 @@ class UpsampleConvBlock(ConvBlock):
         return cast(torch.Tensor, super().forward(interpolated_input))
 
 
-def upsample_conv_block(in_channels: int, out_channels: int, **kwargs: Any) -> UpsampleConvBlock:
+def upsample_conv_block(
+    in_channels: int, out_channels: int, **kwargs: Any
+) -> UpsampleConvBlock:
     return UpsampleConvBlock(in_channels, out_channels, **kwargs)
 
 

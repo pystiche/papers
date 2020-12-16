@@ -7,11 +7,11 @@ from torch import nn
 import pystiche
 from pystiche import enc
 from pystiche_papers.sanakoyeu_et_al_2018._modules import (
-    conv_block,
-    upsample_conv_block,
     conv,
+    conv_block,
     norm,
     residual_block,
+    upsample_conv_block,
 )
 from pystiche_papers.utils import (
     channel_progression,

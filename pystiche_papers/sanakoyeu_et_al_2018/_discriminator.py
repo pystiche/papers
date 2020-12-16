@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from pystiche import enc
-from pystiche_papers.sanakoyeu_et_al_2018._modules import conv_block, ConvBlock, conv
+from pystiche_papers.sanakoyeu_et_al_2018._modules import ConvBlock, conv, conv_block
 from pystiche_papers.utils import channel_progression
 
 __all__ = ["MultiScaleDiscriminator", "discriminator"]
@@ -87,7 +87,9 @@ class MultiScaleDiscriminator(_Discriminator):
             for (name, predictor), enc in zip(self.predictors.items(), encs)
         }
 
-    def compute_accuracies(self, multi_scale_predictions: Dict[str, torch.Tensor]):
+    def compute_accuracies(
+        self, multi_scale_predictions: Dict[str, torch.Tensor]
+    ) -> None:
         for prediction in multi_scale_predictions.values():
             self._accuracies.append(self._compute_accuracy(prediction))
 
@@ -120,7 +122,7 @@ def _prediction_module(
     )
 
 
-def discriminator():
+def discriminator() -> MultiScaleDiscriminator:
     channels = (3, 128, 128, 256, 512, 512, 1024, 1024)
     discriminator_modules = tuple(
         zip(

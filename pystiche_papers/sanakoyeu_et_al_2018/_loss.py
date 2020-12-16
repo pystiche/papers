@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn.functional as F
@@ -28,7 +28,7 @@ def _prediction_loss(
     discriminator: MultiScaleDiscriminator,
     real_inputs: Optional[Sequence[torch.Tensor]] = None,
     fake_inputs: Optional[Sequence[torch.Tensor]] = None,
-):
+) -> torch.Tensor:
     if not (real_inputs or fake_inputs):
         raise RuntimeError
     elif real_inputs is None:
@@ -48,11 +48,11 @@ def _prediction_loss(
 
     with discriminator.record_accuracies() as (real, fake):
         with real():
-            for input in real_inputs:
+            for input in cast(Sequence, real_inputs):
                 losses.append(compute(input, real=True))
 
         with fake():
-            for input in fake_inputs:
+            for input in cast(Sequence, fake_inputs):
                 losses.append(compute(input, real=False))
 
     return torch.sum(torch.stack(losses))
@@ -73,13 +73,15 @@ class DiscriminatorLoss(nn.Module):
         fake_inputs = [output_photo]
         if input_photo is not None:
             fake_inputs.append(input_photo)
-        return _prediction_loss(self.discriminator, real_inputs, fake_inputs)
+        return _prediction_loss(
+            cast(MultiScaleDiscriminator, self.discriminator), real_inputs, fake_inputs
+        )
 
 
-_discriminator = _discriminator()
-
-def discriminator_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> DiscriminatorLoss:
-    """ DiscriminatorLoss from :cite:`SKL+2018`.
+def discriminator_loss(
+    discriminator: Optional[MultiScaleDiscriminator] = None,
+) -> DiscriminatorLoss:
+    """Discriminator_loss from :cite:`SKL+2018`.
 
     Args:
         discriminator: Discriminator module to discriminate between real and fake
@@ -88,7 +90,7 @@ def discriminator_loss(discriminator: Optional[MultiScaleDiscriminator] = None) 
 
     """
     if discriminator is None:
-        discriminator = _discriminator
+        discriminator = _discriminator()
     return DiscriminatorLoss(discriminator=discriminator)
 
 
@@ -147,6 +149,7 @@ def feature_reconstruction_loss(
 
     If ``impl_params is True``, the ``score`` is calculated with a normalized absolute
     distance instead of a normalized squared euclidean distance.
+
     """
     if score_weight is None:
         # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/main.py#L108
@@ -177,6 +180,7 @@ def transformed_image_loss(
         score_weight: Score weight of the operator. If omitted, the score_weight is
             determined with respect to ``impl_params``. Defaults to ``1e2`` if
             ``impl_params is True`` otherwise ``1e0``.
+
     """
     if score_weight is None:
         score_weight = 1e2 if impl_params else 1e0
@@ -203,9 +207,7 @@ def content_loss() -> ops.OperatorContainer:
 
 class StyleLoss(ops.PixelRegularizationOperator):
     def __init__(
-        self,
-        discriminator: Optional[MultiScaleDiscriminator],
-        score_weight: float = 1e0,
+        self, discriminator: MultiScaleDiscriminator, score_weight: float = 1e0,
     ) -> None:
         super().__init__(score_weight=score_weight)
         self.discriminator = discriminator
@@ -218,7 +220,7 @@ class StyleLoss(ops.PixelRegularizationOperator):
 
 
 def style_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> StyleLoss:
-    """ DiscriminatorLoss from :cite:`SKL+2018`.
+    """Generator_loss from :cite:`SKL+2018`.
 
     The loss and accuracy of the ``discriminator`` is calculated if the input images are
     to be recognized as real.
@@ -227,10 +229,9 @@ def style_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> Style
         discriminator: Discriminator module to discriminate between real and fake
             inputs. If omitted, the default
             :func:`~pystiche_papers.sanakoyeu_et_al_2018.discriminator()` is used.
-
     """
     if discriminator is None:
-        discriminator = _discriminator
+        discriminator = _discriminator()
     return StyleLoss(discriminator=discriminator)
 
 
