@@ -12,8 +12,8 @@ from pystiche.image.transforms import functional as F
 from ._data import content_dataset, image_loader, style_dataset
 from ._loss import (
     DiscriminatorLoss,
-    MultiLayerPredictionOperator,
-    prediction_loss,
+    discriminator_loss,
+    MultiScaleDiscriminator,
     transformer_loss,
 )
 from ._transformer import transformer as _transformer
@@ -94,8 +94,9 @@ def gan_optim_loop(
     preprocessor = _preprocessor().to(device)
 
     if discriminator_optimizer is None:
+        # TODO: check if all parameters (predictor??)
         discriminator_optimizer = optimizer(
-            discriminator_criterion.prediction_loss.parameters()
+            discriminator_criterion.parameters()
         )
 
     if transformer_optimizer is None:
@@ -123,15 +124,14 @@ def gan_optim_loop(
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
             cast(Optimizer, transformer_optimizer).zero_grad()
-            cast(MultiLayerPredictionOperator, transformer_criterion.style_loss).real()
             loss = transformer_criterion(output_image)
             loss.backward()
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
         accuracy = cast(
-            MultiLayerPredictionOperator, transformer_criterion.style_loss
-        ).get_accuracy()
+            MultiScaleDiscriminator, transformer_criterion.style_loss.discriminator
+        ).accuracy
         discriminator_success.update(1.0 - accuracy)
 
     for content_image in content_image_loader:
@@ -211,7 +211,7 @@ def gan_epoch_optim_loop(
     if discriminator_optimizer is None:
         if discriminator_lr_scheduler is None:
             discriminator_optimizer = optimizer(
-                discriminator_criterion.prediction_loss.parameters()
+                discriminator_criterion.parameters()
             )
         else:
             discriminator_optimizer = discriminator_lr_scheduler.optimizer  # type: ignore[attr-defined]
@@ -297,16 +297,14 @@ def training(
     transformer = transformer.train()
     transformer = transformer.to(device)
 
-    prediction_operator = prediction_loss(impl_params=impl_params)
-
-    discriminator_criterion = DiscriminatorLoss(prediction_operator)
-    discriminator_criterion = discriminator_criterion.eval()
+    discriminator_criterion = discriminator_loss()
+    discriminator_criterion = discriminator_criterion.train()
     discriminator_criterion = discriminator_criterion.to(device)
 
     transformer_criterion = transformer_loss(
         transformer.encoder, impl_params=impl_params
     )
-    transformer_criterion = transformer_criterion.eval()
+    transformer_criterion = transformer_criterion.train()
     transformer_criterion = transformer_criterion.to(device)
 
     get_optimizer = optimizer
@@ -316,7 +314,7 @@ def training(
     ) -> None:
         cast(loss.PerceptualLoss, criterion).set_content_image(content_image)
 
-    discriminator_optimizer = get_optimizer(prediction_operator.parameters())
+    discriminator_optimizer = get_optimizer(discriminator_criterion.parameters())
     discriminator_lr_scheduler = _lr_scheduler(discriminator_optimizer)
 
     transformer_optimizer = get_optimizer(transformer.parameters())
