@@ -70,6 +70,9 @@ class MultiScaleDiscriminator(_Discriminator):
     ):
         super().__init__()
         self.mle = enc.MultiLayerEncoder(discriminator_modules)
+        # FIXME: remove this when MultiLayerEncoder change this
+        self.mle.requires_grad_()
+        self.mle.train()
         self.predictors = nn.ModuleDict(prediction_modules)
 
         for name, predictor in self.predictors.items():
