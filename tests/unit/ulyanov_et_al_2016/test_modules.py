@@ -16,6 +16,8 @@ from pystiche_papers.ulyanov_et_al_2016._modules import (
     join_channelwise,
 )
 
+from .utils import impl_params_and_instance_norm
+
 
 def test_join_channelwise(subtests, image_small_0, image_small_1):
     join_image = join_channelwise(image_small_0, image_small_1)
@@ -259,23 +261,22 @@ def test_BranchBlock(subtests, input_image):
         ptu.assert_allclose(actual, desired)
 
 
-def test_level_conv_sequence(subtests):
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            module = paper.level(None, impl_params=impl_params)
-            assert isinstance(module, SequentialWithOutChannels)
-            assert len(module) == 3 if impl_params else 2
+@impl_params_and_instance_norm
+def test_level_conv_sequence(subtests, impl_params, instance_norm):
+    module = paper.level(None, impl_params=impl_params, instance_norm=instance_norm)
+    assert isinstance(module, SequentialWithOutChannels)
+    assert len(module) == 2 if impl_params and not instance_norm else 3
 
-            with subtests.test("input"):
-                first_module = module[0]
-                if impl_params:
-                    assert first_module[0].in_channels == 3
-                else:
-                    assert first_module.out_channels == 6
+    with subtests.test("input"):
+        first_module = module[1][0] if impl_params and not instance_norm else module[0]
+        assert (
+            first_module[0].in_channels == 6 if impl_params and not instance_norm else 3
+        )
+        assert first_module.out_channels == 8
 
-            with subtests.test("noise"):
-                if not impl_params:
-                    assert isinstance(module[0], AddNoiseChannels)
+    with subtests.test("noise"):
+        if impl_params and not instance_norm:
+            assert isinstance(module[0], AddNoiseChannels)
 
 
 def test_level(subtests):
