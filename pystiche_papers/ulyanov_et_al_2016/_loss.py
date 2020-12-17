@@ -18,7 +18,6 @@ __all__ = [
 ]
 
 
-# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L23-L25
 class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
     @staticmethod
     def forward(self: Any, input_tensor: torch.Tensor, batch_size: int) -> torch.Tensor:  # type: ignore[override]
@@ -31,8 +30,6 @@ class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
         return grad_input * self.batch_size, None
 
 
-# Scale gradients in the backward pass
-# https://github.com/jcjohnson/neural-style/issues/450
 # https://github.com/ProGamerGov/neural-style-pt/blob/cbcd023326a3487a2d75270ed1f3b3ddb4b72407/neural_style.py#L404
 class ScaleGradients(torch.autograd.Function):
     @staticmethod
@@ -77,6 +74,8 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L29
+        # A custom backward function was used, which multiplies the score_weight after
+        # the nn.MSEcriterion() backward pass.
         input_repr = input_repr * self.score_weight
         target_repr = target_repr * self.score_weight
         score = super().calculate_score(input_repr, target_repr, ctx)
@@ -89,6 +88,10 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         # uses reduction="mean" which also includes the batch_size. However, the
         # score is divided once more by the batch_size in the reference implementation.
         batch_size = image.extract_batch_size(input_repr)
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L23-L25
+        # A custom backward function was used, which does not contain a second
+        # division of the batch_size, so this overrides pytorchs automatic backward
+        # pass.
         score = RemoveBatchSizeDivisionGradient.apply(score, batch_size)
         return cast(torch.Tensor, score / batch_size)
 
@@ -174,6 +177,11 @@ class GramOperator(ops.GramOperator):
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L60
+        # A custom backward function was used, which multiplies the score_weight after
+        # the nn.MSEcriterion() and the gram_matrix backward pass.
+        enc = enc * self.score_weight
+
         if self.normalize_gradients:
             enc = ScaleGradients.apply(enc, self.score_weight)
 
@@ -190,9 +198,6 @@ class GramOperator(ops.GramOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        #
-        input_repr = input_repr * self.score_weight
-        target_repr = target_repr * self.score_weight
         score = super().calculate_score(input_repr, target_repr, ctx)
         if not self.double_batch_size_mean:
             return score
