@@ -166,15 +166,16 @@ def stylization(
     postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
-        if hyper_parameters is None:
-            hyper_parameters = _hyper_parameters(
-                impl_params=impl_params, instance_norm=instance_norm
-            )
-        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
-        edge_size = hyper_parameters.content_transform.edge_size
-        transform = transforms.Resize((edge_size, edge_size))
-        input_image = transform(input_image)
+        if impl_params:
+            if hyper_parameters is None:
+                hyper_parameters = _hyper_parameters(
+                    impl_params=impl_params, instance_norm=instance_norm
+                )
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+            edge_size = hyper_parameters.content_transform.edge_size
+            transform = transforms.Resize((edge_size, edge_size))
+            input_image = transform(input_image)
 
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
