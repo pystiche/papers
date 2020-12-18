@@ -68,6 +68,7 @@ def main():
 def args(tmpdir):
     return argparse.Namespace(
         image_source_dir=tmpdir,
+        image_results_dir=tmpdir,
         dataset_dir=tmpdir,
         model_dir=tmpdir,
         device=misc.get_device(),
@@ -85,6 +86,9 @@ def test_training_parse_input_smoke(subtests, main, args):
 
     with subtests.test("image_source_dir"):
         assert_dir_exists(actual_args.image_source_dir)
+
+    with subtests.test("image_results_dir"):
+        assert_dir_exists(actual_args.image_results_dir)
 
     with subtests.test("dataset_dir"):
         assert_dir_exists(actual_args.dataset_dir)
