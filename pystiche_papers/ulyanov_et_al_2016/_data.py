@@ -123,15 +123,6 @@ def images() -> DownloadableImageCollection:
             md5="dc9ad203263f34352e18bc29b03e1066",
             file="tuebingen_neckarfront__andreas_praefcke.jpg",
         ),
-        "che_high": DownloadableImage(
-            "https://upload.wikimedia.org/wikipedia/commons/5/58/CheHigh.jpg",
-            title="CheHigh",
-            author="Alberto Korda",
-            date="1960",
-            license=ExpiredCopyrightLicense(1960),
-            md5="62af957a89fdfcb9618570b6d836d054",
-            file="CheHigh.jpg",
-        ),
         "tower_of_babel": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/f/fc/Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_%28Vienna%29_-_Google_Art_Project_-_edited.jpg",
             title="The Tower of Babel",
@@ -151,31 +142,6 @@ def images() -> DownloadableImageCollection:
         ),
     }
 
-    texture_base_ulyanov = urljoin(base_ulyanov, "textures/")
-    base_ulyanov_suppl_texture = "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/texture_nets_v1/supplementary//texture_models/"
-
-    texture_images = {
-        "cezanne": DownloadableImage(
-            urljoin(texture_base_ulyanov, "cezanne.jpg"),
-            md5="fab6d360c361c38c331b3ee5ef0078f5",
-        ),
-        "bricks": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "bricks.png"),
-            md5="1e13818e1fbefbd22f110a1c2f781d40",
-        ),
-        "pebble": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "pebble.png"),
-            md5="5b5e5aa6c579e42e268058a94d683a6c",
-        ),
-        "pixels": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "pixelcity_windows2.jpg"),
-            md5="53026a8411e7c26e959e36d3223f3b8f",
-        ),
-        "peppers": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "red-peppers256.o.jpg"),
-            md5="16371574a10e0d10b88b807204c4f546",
-        ),
-    }
     base_johnson = (
         "https://raw.githubusercontent.com/jcjohnson/fast-neural-style/master/images/"
     )
@@ -217,9 +183,7 @@ def images() -> DownloadableImageCollection:
             md5="7fdd9603a5182dcef23d7fb1c5217888",
         ),
     }
-    return DownloadableImageCollection(
-        {**texture_images, **content_images, **style_images}
-    )
+    return DownloadableImageCollection({**content_images, **style_images})
 
 
 def dataset(
