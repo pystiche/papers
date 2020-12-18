@@ -152,9 +152,9 @@ def stylization(
         transformer = _transformer(
             style=style, impl_params=impl_params, instance_norm=instance_norm,
         )
-        if instance_norm or not impl_params:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32
-            transformer = transformer.eval()
+    if instance_norm or not impl_params:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32
+        transformer = transformer.eval()
     transformer = transformer.to(device)
 
     postprocessor = _postprocessor()
