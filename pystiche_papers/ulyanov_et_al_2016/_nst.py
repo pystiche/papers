@@ -131,7 +131,7 @@ def stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: bool = False,
-    edge_size: int = 256,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
 
@@ -147,6 +147,8 @@ def stylization(
             :ref:`here <ulyanov_et_al_2016-instance_norm>`.
         edge_size: Size of the image to which the image should be resized before
             transformation.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
     device = input_image.device
@@ -164,8 +166,13 @@ def stylization(
     postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
+        if hyper_parameters is None:
+            hyper_parameters = _hyper_parameters(
+                impl_params=impl_params, instance_norm=instance_norm
+            )
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+        edge_size = hyper_parameters.content_transform.edge_size
         transform = transforms.Resize((edge_size, edge_size))
         input_image = transform(input_image)
 
