@@ -85,7 +85,9 @@ def training(
     criterion = criterion.eval()
     criterion = criterion.to(device)
 
-    optimizer = _optimizer(transformer)
+    optimizer = _optimizer(
+        transformer, impl_params=impl_params, instance_norm=instance_norm
+    )
     lr_scheduler = _lr_scheduler(
         optimizer,
         impl_params=impl_params,
