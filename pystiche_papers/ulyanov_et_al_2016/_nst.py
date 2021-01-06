@@ -149,6 +149,11 @@ def stylization(
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
     device = input_image.device
     if isinstance(transformer, str):
         style = transformer
@@ -165,10 +170,6 @@ def stylization(
 
     with torch.no_grad():
         if impl_params:
-            if hyper_parameters is None:
-                hyper_parameters = _hyper_parameters(
-                    impl_params=impl_params, instance_norm=instance_norm
-                )
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
             edge_size = hyper_parameters.content_transform.edge_size
