@@ -30,11 +30,11 @@ class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
         return grad_input * self.batch_size, None
 
 
-# https://github.com/ProGamerGov/neural-style-pt/blob/cbcd023326a3487a2d75270ed1f3b3ddb4b72407/neural_style.py#L404
-class ScaleGradients(torch.autograd.Function):
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
+class ManipulateGradient(torch.autograd.Function):
     @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.weight = weight
+    def forward(ctx: Any, input_tensor: torch.Tensor, score_weight: float) -> torch.Tensor:  # type: ignore[override]
+        self.score_weight = score_weight
         return input_tensor
 
     @staticmethod
@@ -42,6 +42,9 @@ class ScaleGradients(torch.autograd.Function):
         grad_input = grad_output.clone()
         grad_input = grad_input / (torch.norm(grad_input, keepdim=True) + 1e-8)
         return grad_input, None
+
+
+manipulate_gradient = ManipulateGradient.apply
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
@@ -161,13 +164,12 @@ class GramOperator(ops.GramOperator):
         # In the reference implementation the gram_matrix is only divided by the
         # batch_size.
         self.normalize_by_num_channels = impl_params
-        super().__init__(encoder, normalize=False, **gram_op_kwargs)
+        super().__init__(encoder, **gram_op_kwargs)
 
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L56-L57
-        # In the reference implementation the gradients of the style_loss are
-        # normalized. For the transfer from luatorch to pytorch see this discussion:
-        # https://github.com/jcjohnson/neural-style/issues/450
-        self.normalize_gradients = impl_params
+        # In the reference implementation the gradient of the style loss is
+        # normalized. 
+        self.manipulate_gradient = impl_params
 
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
@@ -177,14 +179,8 @@ class GramOperator(ops.GramOperator):
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L60
-        # A custom backward function was used, which multiplies the score_weight after
-        # the nn.MSEcriterion() and the gram_matrix backward pass.
-        enc = enc * self.score_weight
-
-        if self.normalize_gradients:
-            enc = ScaleGradients.apply(enc, self.score_weight)
-
+        if self.manipulate_gradient:
+            enc = manipulate_gradient(enc, self.score_weight)
         gram_matrix = super().enc_to_repr(enc)
         if not self.normalize_by_num_channels:
             return gram_matrix
@@ -204,11 +200,6 @@ class GramOperator(ops.GramOperator):
 
         batch_size = input_repr.size()[0]
         return score / batch_size
-
-    def forward(
-        self, input_image: torch.Tensor
-    ) -> Union[torch.Tensor, pystiche.LossDict]:
-        return self.process_input_image(input_image)
 
 
 def style_loss(
