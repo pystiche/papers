@@ -145,8 +145,6 @@ def stylization(
         instance_norm: Switch the behavior and hyper-parameters between both
             publications of the original authors. For details see
             :ref:`here <ulyanov_et_al_2016-instance_norm>`.
-        edge_size: Size of the image to which the image should be resized before
-            transformation.
         hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
