@@ -1,5 +1,8 @@
+import functools
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+
+import more_itertools
 
 import torch
 import torch.nn.functional as F
@@ -148,6 +151,18 @@ class AutoPadConvTranspose2d(  # type: ignore[misc]
 
 
 class _AutoPadAvgPoolNdMixin(_AutoPadNdMixin, _AvgPoolNd):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not self.count_include_pad:
+            if len(cast(Tuple[int, ...], self.kernel_size)) > 2:
+                raise RuntimeError(
+                    f"count_include_pad=False is not yet supported for {type(self)}"
+                )
+            if any(stride != 1 for stride in cast(Tuple[int, ...], self.stride)):
+                raise RuntimeError(
+                    "count_include_pad=False is not yet supported for strides > 1"
+                )
+
     def _compute_pad_size(self) -> torch.Tensor:
         kernel_size = torch.tensor(self.kernel_size)
         stride = torch.tensor(self.stride)
@@ -156,6 +171,48 @@ class _AutoPadAvgPoolNdMixin(_AutoPadNdMixin, _AvgPoolNd):
     @property
     def _mode(self) -> str:
         return "constant"
+
+    @staticmethod
+    @functools.lru_cache()
+    def _compute_count_correction(
+        size: Tuple[int, ...],
+        kernel_size: Tuple[int, ...],
+        stride: Tuple[int, ...],
+        pad: Tuple[int, ...],
+    ) -> torch.Tensor:
+        corrections: List[torch.Tensor] = []
+        for size_, kernel_size_, stride_, pad_ in zip(
+            size, kernel_size, stride, more_itertools.chunked(pad, 2)
+        ):
+            pre = kernel_size_ / torch.arange(
+                start=(kernel_size_ - pad_[0]),
+                end=(kernel_size_ - 1) + 1,
+                step=1,
+                dtype=torch.float,
+            )
+            post = kernel_size_ / torch.arange(
+                start=kernel_size_ - 1,
+                end=(kernel_size_ - pad_[1]) - 1,
+                step=-1,
+                dtype=torch.float,
+            )
+            intermediate = torch.ones(size_ - sum(pad_))
+            corrections.append(torch.cat((pre, intermediate, post)))
+
+        if len(corrections) == 1:
+            return corrections[0]
+        else:  # len(corrections) == 2
+            return torch.mm(corrections[0].unsqueeze(1), corrections[1].unsqueeze(0))
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        output = super().forward(input)
+        if self.count_include_pad:
+            return output
+
+        count_correction = self._compute_count_correction(
+            input.size()[2:], self.kernel_size, self.stride, tuple(self._pad)
+        )
+        return output * count_correction.to(output)
 
     def _properties(self) -> Dict[str, Any]:
         dct = super()._properties()

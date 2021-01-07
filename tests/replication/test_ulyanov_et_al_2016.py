@@ -35,9 +35,9 @@ make_paper_mock_target = functools.partial(make_mock_target, PAPER)
 @pytest.fixture(scope="module", autouse=True)
 def multi_layer_encoder(module_mocker):
     return patch_multi_layer_encoder_loader(
-        target=make_paper_mock_target("_loss", "_multi_layer_encoder"),
+        targets=make_paper_mock_target("_loss", "_multi_layer_encoder"),
         loader=paper.multi_layer_encoder,
-        setup=((), {}),
+        setups=((), {}),
         mocker=module_mocker,
     )
 

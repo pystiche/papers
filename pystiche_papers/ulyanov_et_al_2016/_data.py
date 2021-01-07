@@ -12,8 +12,10 @@ from pystiche.data import (
 )
 from pystiche.image import transforms
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
+from pystiche_papers.utils import HyperParameters
 
 from ..utils import OptionalGrayscaleToFakegrayscale
+from ._utils import hyper_parameters as _hyper_parameters
 
 __all__ = [
     "content_transform",
@@ -26,8 +28,27 @@ __all__ = [
 
 
 def content_transform(
-    edge_size: int = 256, impl_params: bool = True, instance_norm: bool = True,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.ComposedTransform:
+    r"""Content transform from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+    edge_size = hyper_parameters.content_transform.edge_size
 
     transforms_: List[transforms.Transform] = []
     if impl_params:
@@ -49,19 +70,36 @@ def content_transform(
 
 
 def style_transform(
-    impl_params: bool = True, instance_norm: bool = True, edge_size: int = 256,
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> transforms.Resize:
-    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
-    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
-    # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
-    interpolation_mode = "bicubic" if impl_params and instance_norm else "bilinear"
+    r"""Style transform from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
     return transforms.Resize(
-        edge_size, edge="long", interpolation_mode=interpolation_mode
+        hyper_parameters.style_transform.edge_size,
+        edge=hyper_parameters.style_transform.edge,
+        interpolation_mode=hyper_parameters.style_transform.interpolation_mode,
     )
 
 
 def images() -> DownloadableImageCollection:
-
+    r"""Images from :cite:`ULVL2016,UVL2017`."""
     base_ulyanov = (
         "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/master/data/"
     )
@@ -85,15 +123,6 @@ def images() -> DownloadableImageCollection:
             md5="dc9ad203263f34352e18bc29b03e1066",
             file="tuebingen_neckarfront__andreas_praefcke.jpg",
         ),
-        "che_high": DownloadableImage(
-            "https://upload.wikimedia.org/wikipedia/commons/5/58/CheHigh.jpg",
-            title="CheHigh",
-            author="Alberto Korda",
-            date="1960",
-            license=ExpiredCopyrightLicense(1960),
-            md5="62af957a89fdfcb9618570b6d836d054",
-            file="CheHigh.jpg",
-        ),
         "tower_of_babel": DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/f/fc/Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_%28Vienna%29_-_Google_Art_Project_-_edited.jpg",
             title="The Tower of Babel",
@@ -113,31 +142,6 @@ def images() -> DownloadableImageCollection:
         ),
     }
 
-    texture_base_ulyanov = urljoin(base_ulyanov, "textures/")
-    base_ulyanov_suppl_texture = "https://raw.githubusercontent.com/DmitryUlyanov/texture_nets/texture_nets_v1/supplementary//texture_models/"
-
-    texture_images = {
-        "cezanne": DownloadableImage(
-            urljoin(texture_base_ulyanov, "cezanne.jpg"),
-            md5="fab6d360c361c38c331b3ee5ef0078f5",
-        ),
-        "bricks": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "bricks.png"),
-            md5="1e13818e1fbefbd22f110a1c2f781d40",
-        ),
-        "pebble": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "pebble.png"),
-            md5="5b5e5aa6c579e42e268058a94d683a6c",
-        ),
-        "pixels": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "pixelcity_windows2.jpg"),
-            md5="53026a8411e7c26e959e36d3223f3b8f",
-        ),
-        "peppers": DownloadableImage(
-            urljoin(base_ulyanov_suppl_texture, "red-peppers256.o.jpg"),
-            md5="16371574a10e0d10b88b807204c4f546",
-        ),
-    }
     base_johnson = (
         "https://raw.githubusercontent.com/jcjohnson/fast-neural-style/master/images/"
     )
@@ -179,9 +183,7 @@ def images() -> DownloadableImageCollection:
             md5="7fdd9603a5182dcef23d7fb1c5217888",
         ),
     }
-    return DownloadableImageCollection(
-        {**texture_images, **content_images, **style_images}
-    )
+    return DownloadableImageCollection({**content_images, **style_images})
 
 
 def dataset(
@@ -201,34 +203,30 @@ def batch_sampler(
     data_source: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
-    num_batches: Optional[int] = None,
-    batch_size: Optional[int] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
+    r"""Batch sampler from :cite:`ULVL2016,UVL2017`.
 
-    if num_batches is None:
-        # The num_iterations are split up into multiple epochs with corresponding
-        # num_batches:
-        # The number of epochs is defined in _nst.training .
-        if impl_params:
-            # 50000 = 25 * 2000
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
-            # 3000 = 10 * 300
-            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
-            num_batches = 2000 if instance_norm else 300
-        else:
-            # 2000 = 10 * 200
-            num_batches = 200
-
-    if batch_size is None:
-        if impl_params:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L50
-            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L32
-            batch_size = 1 if instance_norm else 4
-        else:
-            batch_size = 16
+    Args:
+        data_source: Dataset to sample from.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+    """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
 
     return FiniteCycleBatchSampler(
-        data_source, num_batches=num_batches, batch_size=batch_size
+        data_source,
+        num_batches=hyper_parameters.batch_sampler.num_batches,
+        batch_size=hyper_parameters.batch_sampler.batch_size,
     )
 
 

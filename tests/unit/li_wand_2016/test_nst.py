@@ -22,6 +22,8 @@ def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
         )
     )
 
+    hyper_parameters = paper.hyper_parameters()
+
     paper.nst(content_image, style_image)
 
     args, kwargs = mock.call_args
@@ -33,7 +35,7 @@ def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
 
     with subtests.test("input_image"):
         args = utils.call_args_to_namespace(spy.call_args, get_input_image)
-        assert args.starting_point == "random"
+        assert args.starting_point == hyper_parameters.nst.starting_point
         assert extract_image_size(args.content_image) == extract_image_size(
             initial_resize(content_image)
         )

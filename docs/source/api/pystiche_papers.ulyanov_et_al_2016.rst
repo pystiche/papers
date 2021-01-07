@@ -10,7 +10,7 @@
 |                          |                                                           |
 |                          | Viktor S. Lempitsky                                       |
 +--------------------------+-----------------------------------------------------------+
-| Citation                 | :cite:`ULVL2016`                                          |
+| Citation                 | :cite:`ULVL2016` / :cite:`UVL2017`                        |
 +--------------------------+-----------------------------------------------------------+
 | Reference implementation | |repo|_ / |archive|_                                      |
 +--------------------------+-----------------------------------------------------------+
@@ -27,105 +27,199 @@
 .. |archive| replace:: Archive
 .. _archive: https://github.com/pmeier/texture_nets
 
-Unfortunately, the parameters in the reference implementation differ from the parameters
-described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following parts
-are affected:
+.. _ulyanov_et_al_2016-instance_norm:
 
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.training`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.stylization`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler`,
+Instance norm
+-------------
+
+The authors published an improved version :cite:`UVL2017` of their initial paper
+:cite:`ULVL2016` with only a single but significant change: they developed
+:class:`~torch.nn.InstanceNorm2d` and used it as drop-in replacement for
+:class:`~torch.nn.BatchNorm2d` layers. To account for this we provide ``instance_norm``
+flag, which defaults to ``True``.
+
+The original authors also use the same repository for both implementations and only
+differentiate between them with the branches:
+
++------------------+---------------------+
+| Paper            | Branch              |
++==================+=====================+
+| :cite:`ULVL2016` | ``texture_nets_v1`` |
++------------------+---------------------+
+| :cite:`UVL2017`  | ``master``          |
++------------------+---------------------+
+
+.. _ulyanov_et_al_2016-impl_params:
+
+Behavioral changes
+------------------
+
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+The following parts are affected:
+
   - :func:`~pystiche_papers.ulyanov_et_al_2016.content_transform`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.style_transform`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.batch_sampler`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.content_loss`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.transformer`.
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`,
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.GramOperator`,
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.ConvBlock`,
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.level`,
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.Transformer`.
 
 
-.. _table-branches-ulyanov_et_al_2016:
+Hyper parameters
+----------------
 
-The original authors experimented with the network architecture and described two
-versions of the network in different papers, replacing the
-:class:`~torch.nn.BatchNorm2d` by :class:`~torch.nn.InstanceNorm2d` as an improvement.
-They call it StyleNet with a postfix BN if :class:`~torch.nn.BatchNorm2d` or IN if
-:class:`~torch.nn.InstanceNorm2d` is used:
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
 
-  - ``master``: Corresponds to the reference implementation of the
-    `StyleNet_IN <https://arxiv.org/abs/1701.02096>`_.
-  - ``texture_nets_v1``: Corresponds to the reference implementation of the
-    `StyleNet_BN <https://arxiv.org/abs/1603.03417>`_.
-
-Unfortunately, the hyperparameters used differ from those in the papers, as well as
-among the individual implementations themselves. If you use ``instance_norm`` and
-``impl_params``, the appropriate parameters will be used:
-
-  - ``master``: The parameters specified in the implementation branch
-    `master <https://github.com/pmeier/texture_nets/tree/master>`_.
-  - ``texture_nets_v1``: The parameters specified in the implementation branch
-    `texture_nets_v1 <https://github.com/pmeier/texture_nets/tree/texture_nets_v1>`_.
-
-.. _table-hyperparameters-ulyanov_et_al_2016:
-
-The following table provides an overview of the parameters:
-
-- the ``num_epochs`` of the :func:`~pystiche_papers.ulyanov_et_al_2016.training`,
-
-- the ``lr`` the learning rate of the
-  :func:`~pystiche_papers.ulyanov_et_al_2016.optimizer`,
-
-- the ``num_batches`` and ``batch_size`` of the
-  :func:`~pystiche_papers.ulyanov_et_al_2016.image_loader`,
-
-- the ``score_weight`` for
-
-  - the :func:`~pystiche_papers.ulyanov_et_al_2016.content_loss`,
-  - the :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`, as well as
-
-- the ``layers`` for
-
-  - the :func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`.
-
-The ``style_layers`` have either configuration ``1``
-``("relu1_1", "relu2_1", "relu3_1", "relu4_1")`` or  configuration ``2``
-``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")``.
+Although there are four possible combinations for ``impl_params`` and ``instance_norm``
+only three are listed below. Since the hyper-parameters in both papers are equal,
+both combinations with ``ìmpl_params=False`` are equal and thus not reported.
 
 
-+---------------------------+-------------+---------------------+
-| Parameter                 | ``master``  |``texture_nets_v1``  |
-+===========================+=============+=====================+
-| ``num_epochs``            | ``10``      | ``25``              |
-+---------------------------+-------------+---------------------+
-| ``learning_rate``         | ``1e-3``    | ``1e-1``            |
-+---------------------------+-------------+---------------------+
-| ``num_batches``           | ``2000``    | ``300``             |
-+---------------------------+-------------+---------------------+
-| ``batch_size``            | ``1``       | ``4``               |
-+---------------------------+-------------+---------------------+
-| ``content_score_weight``  | ``1e0``     | ``6e1``             |
-+---------------------------+-------------+---------------------+
-| ``style_score_weight``    | ``1e0``     | ``1e3``             |
-+---------------------------+-------------+---------------------+
-| ``style_layers``          | ``1``       | ``2``               |
-+---------------------------+-------------+---------------------+
+:func:`~pystiche_papers.ulyanov_et_al_2016.content_loss`
+````````````````````````````````````````````````````````
 
++------------------+---------------------+----------------------+-----------+
+| Parameter        | ``impl_params`` / ``ìnstance_norm``                    |
++                  +---------------------+----------------------+-----------+
+|                  | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++==================+=====================+======================+===========+
+| ``layer``        | ``"relu4_2"``                                          |
++------------------+---------------------+----------------------+-----------+
+| ``score_weight`` | ``1e0``             | ``6e-1``             | ``1e0``   |
++------------------+---------------------+----------------------+-----------+
+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.style_loss`
+``````````````````````````````````````````````````````
+
++-------------------+--------------------------------------------------+----------------------+--------------------------------------+
+| Parameter         | ``impl_params``                                                                                                |
++                   +--------------------------------------------------+----------------------+--------------------------------------+
+|                   | ``True`` / ``True``                              | ``True`` / ``False`` | ``False``                            |
++===================+==================================================+======================+======================================+
+| ``layers``        | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1")`` | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")`` |
++-------------------+--------------------------------------------------+----------------------+--------------------------------------+
+| ``layer_weights`` | ``"sum"``                                                                                                      |
++-------------------+--------------------------------------------------+----------------------+--------------------------------------+
+| ``score_weight``  | ``1e0``                                          | ``1e3``              | ``1e0``                              |
++-------------------+--------------------------------------------------+----------------------+--------------------------------------+
+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.content_transform`
+`````````````````````````````````````````````````````````````
+
++---------------+---------+
+| Parameter     | Value   |
++===============+=========+
+| ``edge_size`` | ``256`` |
++---------------+---------+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.style_transform`
+```````````````````````````````````````````````````````````
+
++------------------------+---------------------+----------------------+-----------+
+| Parameter              | ``impl_params`` / ``ìnstance_norm``                    |
++                        +---------------------+----------------------+-----------+
+|                        | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++========================+=====================+======================+===========+
+| ``edge_size``          | ``256``                                                |
++------------------------+---------------------+----------------------+-----------+
+| ``edge``               | ``"long"``                                             |
++------------------------+---------------------+----------------------+-----------+
+| ``interpolation_mode`` | ``"bicubic"``       | ``"bilinear"``                   |
++------------------------+---------------------+----------------------+-----------+
+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.batch_sampler`
+`````````````````````````````````````````````````````````
+
++-----------------+---------------------+----------------------+-----------+
+| Parameter       | ``impl_params`` / ``ìnstance_norm``                    |
++                 +---------------------+----------------------+-----------+
+|                 | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++=================+=====================+======================+===========+
+| ``num_batches`` | ``2_000``           | ``300``              | ``200``   |
++-----------------+---------------------+----------------------+-----------+
+| ``batch_size``  | ``1``               | ``4``                | ``16``    |
++-----------------+---------------------+----------------------+-----------+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.optimizer`
+`````````````````````````````````````````````````````
+
++-----------+---------------------+----------------------+-----------+
+| Parameter | ``impl_params`` / ``ìnstance_norm``                    |
++           +---------------------+----------------------+-----------+
+|           | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++===========+=====================+======================+===========+
+| ``lr``    | ``1e-3``            | ``1e0``              |           |
++-----------+---------------------+----------------------+-----------+
+
+
+:func:`~pystiche_papers.ulyanov_et_al_2016.lr_scheduler`
+````````````````````````````````````````````````````````
+
++--------------+---------------------+----------------------+-----------+
+| Parameter    | ``impl_params`` / ``ìnstance_norm``                    |
++              +---------------------+----------------------+-----------+
+|              | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++==============+=====================+======================+===========+
+| ``lr_decay`` | ``0.8``                                    | ``0.7``   |
++--------------+---------------------+----------------------+-----------+
+| ``delay``    | ``0``                                      | ``4``     |
++--------------+---------------------+----------------------+-----------+
+
+Miscellaneous
+`````````````
+
++----------------+---------------------+----------------------+-----------+
+| Parameter      | ``impl_params`` / ``ìnstance_norm``                    |
++                +---------------------+----------------------+-----------+
+|                | ``True`` / ``True`` | ``True`` / ``False`` | ``False`` |
++================+=====================+======================+===========+
+| ``num_epochs`` | ``25``              | ``10``                           |
++----------------+---------------------+----------------------+-----------+
+
+
+API
+---
 
 .. automodule:: pystiche_papers.ulyanov_et_al_2016
 
-.. autofunction:: batch_sampler
-.. autofunction:: content_loss
+..
+  _data.py
 .. autofunction:: content_transform
-.. autofunction:: dataset
+.. autofunction:: style_transform
 .. autofunction:: images
+.. autofunction:: dataset
+.. autofunction:: batch_sampler
 .. autofunction:: image_loader
-.. autofunction:: multi_layer_encoder
-.. autofunction:: optimizer
+
+..
+  _loss.py
+.. autoclass:: FeatureReconstructionOperator
+.. autofunction:: content_loss
+.. autoclass:: GramOperator
+.. autofunction:: style_loss
 .. autofunction:: perceptual_loss
+
+..
+  _modules.py
+.. autofunction:: transformer
+
+..
+  _nst.py
+.. autofunction:: training
+.. autofunction:: stylization
+
+..
+  _utils.py
+
+.. autofunction:: hyper_parameters
+.. autofunction:: multi_layer_encoder
 .. autofunction:: preprocessor
 .. autofunction:: postprocessor
-.. autofunction:: style_loss
-.. autofunction:: style_transform
-.. autofunction:: stylization
-.. autofunction:: training
-.. autofunction:: transformer
+.. autofunction:: optimizer
+.. autofunction:: lr_scheduler

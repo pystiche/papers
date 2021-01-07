@@ -31,18 +31,18 @@ def test_FeatureReconstructionOperator(
             assert actual == ptu.approx(desired)
 
 
-def test_content_loss(subtests):
-    content_loss = paper.content_loss()
+@utils.impl_params
+def test_content_loss(subtests, impl_params):
+    content_loss = paper.content_loss(impl_params=impl_params)
     assert isinstance(content_loss, paper.FeatureReconstructionOperator)
 
-    with subtests.test("layer"):
-        assert content_loss.encoder.layer == "relu4_2"
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params).content_loss
 
-    configs = ((True, 2e1), (False, 1e0))
-    for impl_params, weight in configs:
-        with subtests.test("score_weight"):
-            content_loss = paper.content_loss(impl_params=impl_params)
-            assert content_loss.score_weight == pytest.approx(weight)
+    with subtests.test("layer"):
+        assert content_loss.encoder.layer == hyper_parameters.layer
+
+    with subtests.test("score_weight"):
+        assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_MRFOperator(
@@ -79,54 +79,38 @@ def test_MRFOperator(
             assert actual == ptu.approx(desired)
 
 
-def test_style_loss(subtests):
-    style_loss = paper.style_loss()
+@utils.impl_params
+def test_style_loss(subtests, impl_params):
+    style_loss = paper.style_loss(impl_params=impl_params)
     assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
-    with subtests.test("encoding_ops"):
-        assert all(isinstance(op, ops.MRFOperator) for op in style_loss.operators())
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params).style_loss
 
-    configs = ((True, 1e-4, 2), (False, 1e0, 1))
-    for impl_params, score_weight, stride in configs:
-        style_loss = paper.style_loss(impl_params=impl_params)
-        layers, layer_weights, op_stride, op_target_transforms = zip(
-            *[
-                (op.encoder.layer, op.score_weight, op.stride, op.target_transforms)
-                for op in style_loss.operators()
-            ]
+    with subtests.test("ops"):
+        assert all(isinstance(op, paper.MRFOperator) for op in style_loss.operators())
+
+    layers, layer_weights, patch_size, stride = zip(
+        *[
+            (op.encoder.layer, op.score_weight, op.patch_size, op.stride)
+            for op in style_loss.operators()
+        ]
+    )
+    with subtests.test("layers"):
+        assert layers == hyper_parameters.layers
+
+    with subtests.test("layer_weights"):
+        assert layer_weights == pytest.approx((1.0,) * len(layers))
+
+    with subtests.test("patch_size"):
+        assert patch_size == (misc.to_2d_arg(hyper_parameters.patch_size),) * len(
+            layers
         )
 
-        with subtests.test("layers"):
-            assert set(layers) == {"relu3_1", "relu4_1"}
+    with subtests.test("stride"):
+        assert stride == (misc.to_2d_arg(hyper_parameters.stride),) * len(layers)
 
-        with subtests.test("stride"):
-            assert op_stride == (misc.to_2d_arg(stride),) * len(layers)
-
-        with subtests.test("score_weight"):
-            assert style_loss.score_weight == pytest.approx(score_weight)
-
-        with subtests.test("layer_weights"):
-            assert layer_weights == (1.0,) * len(layers)
-
-
-@utils.parametrize_data(
-    ("impl_params", "num_scale_steps", "num_rotate_steps"),
-    pytest.param(True, 0, 0),
-    pytest.param(False, 3, 2),
-)
-def test_style_loss_target_transforms(
-    mocker, impl_params, num_scale_steps, num_rotate_steps
-):
-    mock = mocker.patch("pystiche_papers.li_wand_2016._loss._target_transforms")
-    paper.style_loss(impl_params=impl_params)
-
-    args = utils.call_args_to_namespace(mock.call_args, paper.target_transforms)
-
-    assert args.impl_params is impl_params
-    assert args.num_scale_steps == num_scale_steps
-    assert args.scale_step_width == pytest.approx(5e-2)
-    assert args.num_rotate_steps == num_rotate_steps
-    assert args.rotate_step_width == pytest.approx(7.5)
+    with subtests.test("score_weight"):
+        assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_TotalVariationOperator(subtests, input_image):
@@ -145,15 +129,17 @@ def test_TotalVariationOperator(subtests, input_image):
             assert actual == ptu.approx(desired)
 
 
-def test_regularization(subtests):
-    regularization_loss = paper.regularization()
+@utils.impl_params
+def test_regularization(subtests, impl_params):
+    regularization_loss = paper.regularization(impl_params=impl_params)
     assert isinstance(regularization_loss, paper.TotalVariationOperator)
 
-    with subtests.test("score_weight"):
-        assert regularization_loss.score_weight == pytest.approx(1e-3)
+    hyper_parameters = paper.hyper_parameters(impl_params=impl_params).regularization
 
-    with subtests.test("exponent"):
-        assert regularization_loss.exponent == pytest.approx(2.0)
+    with subtests.test("score_weight"):
+        assert regularization_loss.score_weight == pytest.approx(
+            hyper_parameters.score_weight
+        )
 
 
 def test_perceptual_loss(subtests):

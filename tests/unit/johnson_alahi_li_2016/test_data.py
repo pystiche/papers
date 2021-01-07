@@ -1,5 +1,3 @@
-import itertools
-
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
@@ -30,51 +28,17 @@ def test_content_transform_impl_params():
     assert isinstance(preprocessing, transforms.CaffePreprocessing)
 
 
-def test_style_transform(subtests, styles):
-    for impl_params, instance_norm, style in itertools.product(
-        (True, False), (True, False), styles
-    ):
+def test_style_transform(subtests):
+    style_transform = paper.style_transform()
+    assert isinstance(style_transform, transforms.Resize)
 
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            style_transform = paper.style_transform(
-                impl_params=impl_params, instance_norm=instance_norm, style=style
-            )
+    hyper_parameters = paper.hyper_parameters().style_transform
 
-            assert isinstance(style_transform, transforms.Resize)
+    with subtests.test("size"):
+        assert style_transform.size == hyper_parameters.edge_size
 
-            with subtests.test("edge"):
-                assert style_transform.edge == "long"
-
-
-def test_style_transform_edge_size_default(subtests):
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            style_transform = paper.style_transform(
-                impl_params=impl_params, instance_norm=instance_norm
-            )
-            assert style_transform.size == 256
-
-
-def test_style_transform_edge_size_luatorch(subtests):
-    configs = (
-        ("candy", True, 384),
-        ("composition_vii", False, 512),
-        ("feathers", True, 180),
-        ("la_muse", False, 512),
-        ("la_muse", True, 512),
-        ("mosaic", True, 512),
-        ("starry_night", False, 512),
-        ("the_scream", True, 384),
-        ("the_wave", False, 512),
-        ("udnie", True, 256),
-    )
-
-    for style, instance_norm, edge_size in configs:
-        with subtests.test(style=style, instance_norm=instance_norm):
-            style_transform = paper.style_transform(
-                impl_params=True, instance_norm=instance_norm, style=style
-            )
-            assert style_transform.size == edge_size
+    with subtests.test("edge"):
+        assert style_transform.edge == hyper_parameters.edge
 
 
 def test_images_smoke():
@@ -96,42 +60,15 @@ def test_dataset(subtests, mocker):
 
 def test_batch_sampler(subtests):
     batch_sampler = paper.batch_sampler(())
-
     assert isinstance(batch_sampler, FiniteCycleBatchSampler)
 
+    hyper_parameters = paper.hyper_parameters().batch_sampler
+
     with subtests.test("num_batches"):
-        assert batch_sampler.batch_size == 4
+        assert batch_sampler.num_batches == hyper_parameters.num_batches
 
-
-def test_batch_sampler_num_batches_default(subtests):
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        with subtests.test(impl_params=impl_params, instance_norm=instance_norm):
-            batch_sampler = paper.batch_sampler(
-                (), impl_params=impl_params, instance_norm=instance_norm
-            )
-            assert batch_sampler.num_batches == 40000
-
-
-def test_batch_sampler_num_batches_luatorch(subtests):
-    configs = (
-        ("candy", True, 40000),
-        ("composition_vii", False, 60000),
-        ("feathers", True, 60000),
-        ("la_muse", False, 40000),
-        ("la_muse", True, 40000),
-        ("mosaic", True, 60000),
-        ("starry_night", False, 40000),
-        ("the_scream", True, 60000),
-        ("the_wave", False, 40000),
-        ("udnie", True, 40000),
-    )
-
-    for style, instance_norm, num_batches in configs:
-        with subtests.test(style=style, instance_norm=instance_norm):
-            batch_sampler = paper.batch_sampler(
-                (), impl_params=True, instance_norm=instance_norm, style=style
-            )
-            assert batch_sampler.num_batches == num_batches
+    with subtests.test("batch_size"):
+        assert batch_sampler.batch_size == hyper_parameters.batch_size
 
 
 def test_image_loader(subtests):

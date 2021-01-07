@@ -187,6 +187,59 @@ def test_AutoPadAvgPool2d(subtests, auto_pad_pool_params, input_image):
             assert actual == expected
 
 
+def test_AutoPadAvgPool2d_count_include_pad(input_image):
+    kernel_size = 5
+
+    manual = nn.AvgPool2d(
+        kernel_size, stride=1, padding=(kernel_size - 1) // 2, count_include_pad=False
+    )
+    auto = utils.AutoPadAvgPool2d(kernel_size, stride=1, count_include_pad=False)
+
+    ptu.assert_allclose(auto(input_image), manual(input_image), rtol=1e-6)
+
+
+def test_AutoPadAvgPool2d_count_include_pad_stride(input_image):
+    with pytest.raises(RuntimeError):
+        utils.AutoPadAvgPool2d(kernel_size=2, stride=2, count_include_pad=False)
+
+
+def test_AutoPadAvgPool1d_count_include_pad():
+    kernel_size = 5
+
+    from pystiche.misc import to_1d_arg
+    from pystiche_papers.utils.modules import _AutoPadAvgPoolNdMixin
+
+    class AutoPadAvgPool1d(_AutoPadAvgPoolNdMixin, nn.AvgPool1d):
+        def __init__(self, kernel_size, stride=None, **kwargs,) -> None:
+            kernel_size = to_1d_arg(kernel_size)
+            stride = kernel_size if stride is None else to_1d_arg(stride)
+            super().__init__(kernel_size, stride=stride, **kwargs)
+
+    torch.manual_seed(0)
+    input = torch.rand(1, 1, 32)
+
+    manual = nn.AvgPool1d(
+        kernel_size, stride=1, padding=(kernel_size - 1) // 2, count_include_pad=False
+    )
+    auto = AutoPadAvgPool1d(kernel_size, stride=1, count_include_pad=False)
+
+    ptu.assert_allclose(auto(input), manual(input), rtol=1e-6)
+
+
+def test_AutoPadAvgPool3d_count_include_pad(input_image):
+    from pystiche.misc import to_3d_arg
+    from pystiche_papers.utils.modules import _AutoPadAvgPoolNdMixin
+
+    class AutoPadAvgPool3d(_AutoPadAvgPoolNdMixin, nn.AvgPool3d):
+        def __init__(self, kernel_size, stride=None, **kwargs,) -> None:
+            kernel_size = to_3d_arg(kernel_size)
+            stride = kernel_size if stride is None else to_3d_arg(stride)
+            super().__init__(kernel_size, stride=stride, **kwargs)
+
+    with pytest.raises(RuntimeError):
+        AutoPadAvgPool3d(kernel_size=2, count_include_pad=False)
+
+
 def test_AutoPadAvgPool2d_repr_smoke():
     auto_pad_conv = utils.AutoPadAvgPool2d(kernel_size=1, stride=1,)
     assert isinstance(repr(auto_pad_conv), str)

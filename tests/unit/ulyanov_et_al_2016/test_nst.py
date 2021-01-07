@@ -72,7 +72,7 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 @pytest.fixture
 def optimizer_mocks(mocker, patcher):
     mock = mocker.Mock()
-    patch = patcher("optimizer", return_value=mock)
+    patch = patcher("_optimizer", return_value=mock)
     return patch, mock
 
 
@@ -105,13 +105,6 @@ def images_patch(mocker, content_image, style_image):
     attach_method_mock(images_mock, "__getitem__", side_effect=side_effect)
     images_patch = mocker.patch(make_patch_target("_images"), return_value=images_mock)
     return images_patch, images_mock
-
-
-@pytest.fixture
-def content_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
-    patch = patcher("_content_transform", return_value=mock)
-    return patch, mock
 
 
 @pytest.fixture
@@ -388,26 +381,22 @@ def stylization(input_image, transformer_mocks):
     return stylization_
 
 
-def test_stylization_smoke(
-    stylization, postprocessor_mocks, content_transforms_mocks, input_image
-):
+def test_stylization_smoke(stylization, postprocessor_mocks, input_image):
+    hyper_parameters = paper.hyper_parameters()
+    edge_size = hyper_parameters.content_transform.edge_size
     _, _, output_image = stylization(input_image)
-    ptu.assert_allclose(output_image, F.rescale(input_image, 2.0) + 0.5, rtol=1e-6)
+    ptu.assert_allclose(
+        output_image, F.resize(input_image, (edge_size, edge_size)) + 0.5, rtol=1e-6
+    )
 
 
 def test_stylization_device(
-    subtests,
-    postprocessor_mocks,
-    content_transforms_mocks,
-    transformer_mocks,
-    stylization,
-    input_image,
+    subtests, postprocessor_mocks, transformer_mocks, stylization, input_image,
 ):
     stylization(input_image)
 
     for mocks in (
         postprocessor_mocks,
-        content_transforms_mocks,
         transformer_mocks,
     ):
         _, mock = mocks
@@ -420,7 +409,6 @@ def test_stylization_transformer_eval(
     subtests,
     preprocessor_mocks,
     postprocessor_mocks,
-    content_transforms_mocks,
     transformer_mocks,
     stylization,
     input_image,

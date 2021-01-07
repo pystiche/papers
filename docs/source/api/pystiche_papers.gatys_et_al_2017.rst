@@ -25,26 +25,123 @@
 .. |archive| replace:: Archive
 .. _archive: https://github.com/pmeier/NeuralImageSynthesis/tree/cced0b978fe603569033b2c7f04460839e4d82c4
 
-Unfortunately, the parameters in the reference implementation differ from the parameters
-described in the paper. If ``impl_params is True``, the parameters from the reference
-implementation are used instead of the parameters from the paper. The following parts
-are affected:
+.. _gatys_et_al_2017-impl_params:
 
-  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.style_loss`,
-  - :func:`~pystiche_papers.gatys_ecker_bethge_2016.guided_style_loss`.
+Behavioral changes
+------------------
+
+.. seealso::
+  :ref:`Paper implementations <impl_params>`
+
+The following parts are affected:
+
+- :class:`~pystiche_papers.gatys_et_al_2017.MultiLayerEncodingOperator`
+
+
+Hyper parameters
+----------------
+
+:func:`~pystiche_papers.gatys_et_al_2017.content_loss`
+``````````````````````````````````````````````````````
+
++------------------+---------------+---------------+
+| Parameter        | ``impl_params``               |
++                  +---------------+---------------+
+|                  | ``True``      | ``False``     |
++==================+===============+===============+
+| ``layer``        | ``"relu4_2"`` | ``"conv4_2"`` |
++------------------+---------------+---------------+
+| ``score_weight`` | ``1e0``                       |
++------------------+-------------------------------+
+
+
+:func:`~pystiche_papers.gatys_et_al_2017.style_loss`
+````````````````````````````````````````````````````
+
++-------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| Parameter         | ``impl_params``                                                                                                           |
++                   +-------------------------------------------------------------+-------------------------------------------------------------+
+|                   | ``True``                                                    | ``False``                                                   |
++===================+=============================================================+=============================================================+
+| ``layers``        | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")`` | ``("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")`` |
++-------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| ``layer_weights`` | ``(2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)`` [#f1]_                                                                  |
++-------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| ``score_weight``  | ``1e3`` [#f1]_                                                                                                            |
++-------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+
+
+:func:`~pystiche_papers.gatys_et_al_2017.guided_style_loss`
+```````````````````````````````````````````````````````````
+
++--------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| Parameter          | ``impl_params``                                                                                                           |
++                    +-------------------------------------------------------------+-------------------------------------------------------------+
+|                    | ``True``                                                    | ``False``                                                   |
++====================+=============================================================+=============================================================+
+| ``layers``         | ``("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")`` | ``("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")`` |
++--------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| ``layer_weights``  | ``(2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)`` [#f1]_ [#f2]_                                                           |
++--------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| ``region_weights`` |                                                             | ``"sum"``                                                   |
++--------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+| ``score_weight``   | ``1e3`` [#f1]_                                                                                                            |
++--------------------+-------------------------------------------------------------+-------------------------------------------------------------+
+
+:func:`~pystiche_papers.gatys_et_al_2017.image_pyramid`
+```````````````````````````````````````````````````````
+
++----------------+------------------------+-----------------+
+| Parameter      | ``impl_params``                          |
++                +------------------------+-----------------+
+|                | ``True``               | ``False``       |
++================+========================+=================+
+| ``edge_sizes`` | ``(500, 1024)`` [#f3]_ | ``(512, 1024)`` |
++----------------+------------------------+-----------------+
+| ``num_steps``  | [#f4]_                 | ``(500, 200)``  |
++----------------+------------------------+-----------------+
+
+
+.. [#f1]
+  The values are reported in the
+  `supplementary material <http://bethgelab.org/media/uploads/stylecontrol/supplement/SupplementaryMaterial.pdf>`_.
+.. [#f2]
+  The ``layer_weights`` are computed by :math:`1 / n^2` where :math:`n` denotes the
+  number of channels of a feature map from the corresponding layer in the
+  :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder`.
+.. [#f3]
+  The paper only reports the ``edge_size`` for the low resolution.
+.. [#f4]
+  The paper only reports the ratio. i.e. :math:`500 / 200 = 2.5` of ``num_steps``.
+
+API
+---
 
 .. automodule:: pystiche_papers.gatys_et_al_2017
 
-.. autofunction:: content_loss
-.. autofunction:: guided_nst
-.. autofunction:: guided_perceptual_loss
-.. autofunction:: guided_style_loss
+..
+  _data.py
 .. autofunction:: images
-.. autofunction:: image_pyramid
-.. autofunction:: multi_layer_encoder
-.. autofunction:: nst
-.. autofunction:: optimizer
+
+..
+  _loss.py
+.. autofunction:: content_loss
+.. autoclass:: MultiLayerEncodingOperator
+.. autofunction:: style_loss
+.. autofunction:: guided_style_loss
 .. autofunction:: perceptual_loss
+.. autofunction:: guided_perceptual_loss
+
+..
+  _nst.py
+.. autofunction:: nst
+.. autofunction:: guided_nst
+
+..
+  _utils.py
 .. autofunction:: preprocessor
 .. autofunction:: postprocessor
-.. autofunction:: style_loss
+.. autofunction:: multi_layer_encoder
+.. autofunction:: optimizer
+.. autofunction:: compute_layer_weights
+.. autofunction:: hyper_parameters

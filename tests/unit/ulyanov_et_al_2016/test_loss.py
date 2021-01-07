@@ -1,5 +1,3 @@
-import itertools
-
 import pytest
 
 import pytorch_testing_utils as ptu
@@ -9,6 +7,8 @@ import pystiche
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import image, loss, ops
 from pystiche_papers import utils
+
+from .utils import impl_params_and_instance_norm
 
 
 def test_FeatureReconstructionOperator(
@@ -36,26 +36,22 @@ def test_FeatureReconstructionOperator(
             assert actual == ptu.approx(desired)
 
 
-def test_content_loss(subtests):
-    configs = (
-        (True, True, 1e0),
-        (True, False, 6e-1),
-        (False, True, 1e0),
-        (False, False, 1e0),
+@impl_params_and_instance_norm
+def test_content_loss(subtests, impl_params, instance_norm):
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    ).content_loss
+
+    content_loss = paper.content_loss(
+        impl_params=impl_params, instance_norm=instance_norm,
     )
-    for impl_params, instance_norm, score_weight in configs:
-        content_loss = paper.content_loss(
-            impl_params=impl_params,
-            instance_norm=instance_norm,
-            score_weight=score_weight,
-        )
-        assert isinstance(content_loss, paper.FeatureReconstructionOperator)
+    assert isinstance(content_loss, paper.FeatureReconstructionOperator)
 
-        with subtests.test("layer"):
-            assert content_loss.encoder.layer == "relu4_2"
+    with subtests.test("layer"):
+        assert content_loss.encoder.layer == hyper_parameters.layer
 
-        with subtests.test("score_weight"):
-            assert content_loss.score_weight == pytest.approx(score_weight)
+    with subtests.test("score_weight"):
+        assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_GramOperator(
@@ -96,36 +92,29 @@ def test_GramOperator(
             assert actual == ptu.approx(desired, rel=1e-3)
 
 
-def test_style_loss(subtests):
-    for impl_params, instance_norm in itertools.product((True, False), (True, False)):
-        style_loss = paper.style_loss(
-            impl_params=impl_params, instance_norm=instance_norm,
-        )
-        assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+@impl_params_and_instance_norm
+def test_style_loss(subtests, impl_params, instance_norm):
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    ).style_loss
 
-        with subtests.test("encoding_ops"):
-            assert all(
-                isinstance(op, paper.GramOperator) for op in style_loss.operators()
-            )
+    style_loss = paper.style_loss(impl_params=impl_params, instance_norm=instance_norm,)
+    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
 
-        layers, layer_weights = zip(
-            *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
-        )
-        with subtests.test("layers"):
-            desired_layers = (
-                {"relu1_1", "relu2_1", "relu3_1", "relu4_1"}
-                if impl_params and instance_norm
-                else {"relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"}
-            )
-            assert set(layers) == desired_layers
+    with subtests.test("encoding_ops"):
+        assert all(isinstance(op, paper.GramOperator) for op in style_loss.operators())
 
-        with subtests.test("layer_weights"):
-            desired_layer_weights = (1e0,) * len(desired_layers)
-            assert layer_weights == pytest.approx(desired_layer_weights)
+    layers, layer_weights = zip(
+        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+    )
+    with subtests.test("layers"):
+        assert layers == hyper_parameters.layers
 
-        with subtests.test("score_weight"):
-            score_weight = 1e3 if impl_params and not instance_norm else 1e0
-            assert style_loss.score_weight == pytest.approx(score_weight)
+    with subtests.test("layer_weights"):
+        assert layer_weights == pytest.approx((1e0,) * len(hyper_parameters.layers))
+
+    with subtests.test("score_weight"):
+        assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
 def test_perceptual_loss(subtests):

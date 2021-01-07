@@ -28,25 +28,19 @@ def figure_6(args):
             f"Replicating the {position} half of figure 6 " f"with {params} parameters"
         )
 
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L66
-        target_transforms_kwargs = (
-            dict(num_scale_steps=1, num_rotate_steps=1) if args.impl_params else {}
-        )
-        style_loss_kwargs = dict(
-            target_transforms=paper.target_transforms(
-                impl_params=args.impl_params, **target_transforms_kwargs
-            ),
-        )
-        criterion = paper.perceptual_loss(
-            impl_params=args.impl_params, style_loss_kwargs=style_loss_kwargs
-        )
+        hyper_parameters = paper.hyper_parameters(impl_params=args.impl_params)
+        if args.impl_params:
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/run_trans.lua#L66
+            hyper_parameters.content_loss.layer = "relu4_2"
+            hyper_parameters.target_transforms.num_scale_steps = 1
+            hyper_parameters.target_transforms.num_rotate_steps = 1
+
         with args.logger.environment(header):
             output_image = paper.nst(
                 content_image,
                 style_image,
                 impl_params=args.impl_params,
-                criterion=criterion,
-                starting_point="content" if args.impl_params else "random",
+                hyper_parameters=hyper_parameters,
                 quiet=args.quiet,
                 logger=args.logger,
             )

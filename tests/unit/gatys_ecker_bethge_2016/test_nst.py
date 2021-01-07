@@ -20,8 +20,11 @@ def test_nst_smoke(subtests, mocker, content_image, style_image):
     args, kwargs = mock.call_args
     input_image, criterion = args
     get_optimizer = kwargs["get_optimizer"]
+    num_steps = kwargs["num_steps"]
     preprocessor = kwargs["preprocessor"]
     postprocessor = kwargs["postprocessor"]
+
+    hyper_parameters = paper.hyper_parameters().nst
 
     with subtests.test("input_image"):
         ptu.assert_allclose(input_image, content_image)
@@ -33,6 +36,9 @@ def test_nst_smoke(subtests, mocker, content_image, style_image):
         assert is_callable(get_optimizer)
         optimizer = get_optimizer(input_image)
         assert isinstance(optimizer, type(paper.optimizer(input_image)))
+
+    with subtests.test("num_steps"):
+        assert num_steps == hyper_parameters.num_steps
 
     with subtests.test("preprocessor"):
         assert isinstance(preprocessor, type(paper.preprocessor()))
