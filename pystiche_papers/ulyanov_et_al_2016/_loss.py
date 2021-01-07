@@ -34,7 +34,7 @@ class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
 class ManipulateGradient(torch.autograd.Function):
     @staticmethod
     def forward(ctx: Any, input_tensor: torch.Tensor, score_weight: float) -> torch.Tensor:  # type: ignore[override]
-        self.score_weight = score_weight
+        ctx.score_weight = score_weight
         return input_tensor
 
     @staticmethod
@@ -139,7 +139,6 @@ def content_loss(
 
     return FeatureReconstructionOperator(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
-        impl_params=impl_params,
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
@@ -168,7 +167,7 @@ class GramOperator(ops.GramOperator):
 
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L56-L57
         # In the reference implementation the gradient of the style loss is
-        # normalized. 
+        # normalized.
         self.manipulate_gradient = impl_params
 
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
@@ -235,6 +234,10 @@ def style_loss(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
+    layer_weights = [hyper_parameters.style_loss.layer_weights] * len(
+        hyper_parameters.style_loss.layers
+    )
+
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
 
@@ -242,7 +245,7 @@ def style_loss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,
-        layer_weights=hyper_parameters.style_loss.layer_weights,
+        layer_weights=layer_weights,
         score_weight=hyper_parameters.style_loss.score_weight,
     )
 

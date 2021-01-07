@@ -68,8 +68,8 @@ def test_GramOperator(
         normalize,
     ) in configs:
         with subtests.test(impl_params=impl_params):
-            target_repr = pystiche.gram_matrix(encoder(target_image))
-            input_repr = pystiche.gram_matrix(encoder(input_image))
+            target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
             intern_target_repr = (
                 target_repr / target_repr.size()[-1]
                 if normalize_by_num_channels
@@ -109,7 +109,9 @@ def test_style_loss(subtests, impl_params, instance_norm):
         assert layers == hyper_parameters.layers
 
     with subtests.test("layer_weights"):
-        assert layer_weights == pytest.approx((1e3,) * len(hyper_parameters.layers))
+        assert layer_weights == pytest.approx(
+            [hyper_parameters.layer_weights] * len(hyper_parameters.layers)
+        )
 
     with subtests.test("score_weight"):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
