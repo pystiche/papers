@@ -109,9 +109,7 @@ def test_style_loss(subtests, impl_params, instance_norm):
         assert layers == hyper_parameters.layers
 
     with subtests.test("layer_weights"):
-        assert layer_weights == pytest.approx(
-            [hyper_parameters.layer_weights] * len(hyper_parameters.layers)
-        )
+        assert layer_weights == pytest.approx(hyper_parameters.layer_weights)
 
     with subtests.test("score_weight"):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)

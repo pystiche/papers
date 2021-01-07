@@ -234,10 +234,6 @@ def style_loss(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
-    layer_weights = [hyper_parameters.style_loss.layer_weights] * len(
-        hyper_parameters.style_loss.layers
-    )
-
     def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
         return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
 
@@ -245,7 +241,7 @@ def style_loss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,
-        layer_weights=layer_weights,
+        layer_weights=hyper_parameters.style_loss.layer_weights,
         score_weight=hyper_parameters.style_loss.score_weight,
     )
 
