@@ -39,6 +39,10 @@ def hyper_parameters(
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
             layers=style_loss_layers,
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
+            # The backward pass of the GramOperators in style_loss is manipulated and
+            # this is not independent of the score_weight. For this reason the
+            # layer_weights are set here to have the correct score_weight in the
+            # individual GramOperators.
             layer_weights=(
                 [1e3 if impl_params and not instance_norm else 1e0]
                 * len(style_loss_layers)
