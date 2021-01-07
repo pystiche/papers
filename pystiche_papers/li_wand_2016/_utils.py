@@ -9,8 +9,10 @@ import pystiche
 from pystiche import enc, misc, ops
 from pystiche.image import extract_image_size, transforms
 from pystiche.image.transforms.functional import crop
+from pystiche_papers.utils import HyperParameters
 
 __all__ = [
+    "hyper_parameters",
     "extract_normalized_patches2d",
     "target_transforms",
     "preprocessor",
@@ -18,6 +20,63 @@ __all__ = [
     "multi_layer_encoder",
     "optimizer",
 ]
+
+
+def hyper_parameters(impl_params: bool = True) -> HyperParameters:
+    r"""Hyper parameters from :cite:`LW2016`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+    """
+    return HyperParameters(
+        content_loss=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L57
+            layer="relu4_1" if impl_params else "relu4_2",
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L58
+            score_weight=2e1 if impl_params else 1e0,
+        ),
+        target_transforms=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
+            num_scale_steps=0 if impl_params else 3,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L67
+            scale_step_width=5e-2,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
+            num_rotate_steps=0 if impl_params else 2,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L66
+            rotate_step_width=7.5,
+        ),
+        style_loss=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L48
+            layers=("relu3_1", "relu4_1"),
+            layer_weights="sum",
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L50
+            patch_size=3,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L53
+            stride=2 if impl_params else 1,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L49
+            score_weight=1e-4 if impl_params else 1e0,
+        ),
+        regularization=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L59
+            score_weight=1e-3
+        ),
+        image_pyramid=HyperParameters(
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L40
+            max_edge_size=384,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L44
+            num_steps=100 if impl_params else 200,
+            # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L43
+            num_levels=3 if impl_params else None,
+            min_edge_size=64,
+            edge="long",
+        ),
+        nst=HyperParameters(starting_point="content" if impl_params else "random"),
+    )
+
+
+_hyper_parameters = hyper_parameters
 
 
 class NormalizeUnfoldGrad(torch.autograd.Function):
@@ -243,60 +302,42 @@ class ValidCropAfterRotate(transforms.Transform):
 
 
 def target_transforms(
-    impl_params: bool = True,
-    num_scale_steps: Optional[int] = None,
-    scale_step_width: float = 5e-2,
-    num_rotate_steps: Optional[int] = None,
-    rotate_step_width: float = 7.5,
+    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
 ) -> Sequence[transforms.Transform]:
-    r"""Generate a list of scaling and rotations transformations.
+    r"""MRF target transformations from :cite:`LW2016`.
 
     Args:
-        impl_params: If ``True``, uses the parameters used in the reference
-            implementation of the original authors rather than what is described in
-            the paper. For details see below.
-        num_scale_steps: Number of scale steps. Each scale is performed in both
-            directions, i.e. enlarging and shrinking the motif. Defaults to ``0`` if
-            ``impl_params is True`` otherwise ``3``.
-        scale_step_width: Width of each scale step. Defaults to ``5e-2``.
-        num_rotate_steps: Number of rotate steps. Each rotate is performed in both
-            directions, i.e. clockwise and counterclockwise. Defaults to ``0`` if
-            ``impl_params is True`` otherwise ``2``.
-        rotate_step_width: Width of each rotation step in degrees. Defaults to ``7.5``.
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`. In
+            addition, if ``True``, every transformation comprises a valid crop after the
+            rotation to avoid blank regions. Furthermore, the image is rescaled instead
+            of the motif, resulting in multiple image sizes.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.li_wand_2016.hyper_parameters` is used.
 
-    Returns:
-       ``(num_scale_steps * 2 + 1) * (num_rotate_steps * 2 + 1)`` transformations
-       in total comprising every combination given by the input parameters.
+    .. seealso::
 
-    If ``impl_params is True``, every transformation comprises a valid crop after the
-    rotation to avoid blank regions. Furthermore, the image is actually rescaled
-    instead of the motif, resulting in more patches overall.
-
-    Otherwise, :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms` is used to
-    generate the transforms.
+        - :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms`
     """
-    if num_scale_steps is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L52
-        num_scale_steps = 0 if impl_params else 3
-    if num_rotate_steps is None:
-        # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/cnnmrf.lua#L51
-        num_rotate_steps = 0 if impl_params else 2
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     if not impl_params:
         return ops.MRFOperator.scale_and_rotate_transforms(
-            num_scale_steps=num_scale_steps,
-            scale_step_width=scale_step_width,
-            num_rotate_steps=num_rotate_steps,
-            rotate_step_width=rotate_step_width,
+            **hyper_parameters.target_transforms
         )
 
+    def symrange(steps: int) -> range:
+        return range(-steps, steps + 1)
+
     scaling_factors = [
-        1.0 + (base * scale_step_width)
-        for base in range(-num_scale_steps, num_scale_steps + 1)
+        1.0 + (base * hyper_parameters.target_transforms.scale_step_width)
+        for base in symrange(hyper_parameters.target_transforms.num_scale_steps)
     ]
     rotation_angles = [
-        base * rotate_step_width
-        for base in range(-num_rotate_steps, num_rotate_steps + 1)
+        base * hyper_parameters.target_transforms.rotate_step_width
+        for base in symrange(hyper_parameters.target_transforms.num_rotate_steps)
     ]
 
     transforms_ = []
@@ -314,10 +355,12 @@ def target_transforms(
 
 
 def preprocessor() -> transforms.CaffePreprocessing:
+    r"""Preprocessor from :cite:`LW2016`."""
     return transforms.CaffePreprocessing()
 
 
 def postprocessor() -> transforms.CaffePostprocessing:
+    r"""Postprocessor from :cite:`LW2016`."""
     return transforms.CaffePostprocessing()
 
 

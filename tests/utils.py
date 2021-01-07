@@ -28,6 +28,7 @@ __all__ = [
     "call_args_to_kwargs_only",
     "call_args_to_namespace",
     "parametrize_data",
+    "impl_params",
 ]
 
 
@@ -151,15 +152,19 @@ def make_tar(file, dir, name=None, compress=None):
         fh.add(dir, arcname=name)
 
 
-def call_args_to_kwargs_only(call_args, *function_or_arg_names):
-    if call_args is None:
+def call_args_to_kwargs_only(call_args, *callable_or_arg_names):
+    if not callable_or_arg_names:
         raise pytest.UsageError
 
-    if callable(function_or_arg_names[0]):
-        argspec = inspect.getfullargspec(function_or_arg_names[0])
+    callable_or_arg_name = callable_or_arg_names[0]
+    if callable(callable_or_arg_name):
+        argspec = inspect.getfullargspec(callable_or_arg_name)
         arg_names = argspec.args
+        if isinstance(callable_or_arg_name, type):
+            # remove self
+            arg_names.pop(0)
     else:
-        arg_names = function_or_arg_names
+        arg_names = callable_or_arg_names
 
     args, kwargs = call_args
     kwargs_only = kwargs.copy()
@@ -179,10 +184,13 @@ def parametrize_data(argnames, *argvalues):
         return ", ".join([f"{name}={value}" for name, value in zip(argnames, values)])
 
     if not isinstance(argvalues[0], ParameterSet):
-        argvalues = [pytest.param(values, id=id(values)) for values in zip(*argvalues)]
+        argvalues = [pytest.param(*values, id=id(values)) for values in zip(*argvalues)]
     else:
         argvalues = [
             param._replace(id=id(param.values)) if param.id is None else param
             for param in argvalues
         ]
     return pytest.mark.parametrize(argnames, argvalues)
+
+
+impl_params = parametrize_data("impl_params", (True, False))
