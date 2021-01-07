@@ -1,8 +1,7 @@
-from typing import Any, Optional, Tuple, Union, cast
+from typing import Any, Optional, Tuple
 
 import torch
 
-import pystiche
 from pystiche import enc, image, loss, ops
 from pystiche_papers.utils import HyperParameters
 
@@ -38,12 +37,15 @@ manipulate_gradient = ManipulateGradient.apply
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     r"""Feature reconstruction operator from :cite:`ULVL2016,UVL2017`.
+
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the score twice by the batch size.
         **feature_reconstruction_op_kwargs: Additional parameters of a
             :class:`pystiche.ops.FeatureReconstructionOperator`.
+
     .. seealso::
+
         - :class:`pystiche.ops.FeatureReconstructionOperator`
     """
 
@@ -82,6 +84,7 @@ def content_loss(
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
     r"""Content loss from :cite:`ULVL2016,UVL2017`.
+
     Args:
         impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
@@ -94,7 +97,9 @@ def content_loss(
             is used.
         hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+
     .. seealso::
+
         - :class:`pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`
     """
     if multi_layer_encoder is None:
