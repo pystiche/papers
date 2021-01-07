@@ -18,18 +18,6 @@ __all__ = [
 ]
 
 
-class RemoveBatchSizeDivisionGradient(torch.autograd.Function):
-    @staticmethod
-    def forward(self: Any, input_tensor: torch.Tensor, batch_size: int) -> torch.Tensor:  # type: ignore[override]
-        self.batch_size = batch_size
-        return input_tensor
-
-    @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, Any]:  # type: ignore[override]
-        grad_input = grad_output.clone()
-        return grad_input * self.batch_size, None
-
-
 # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
 class ManipulateGradient(torch.autograd.Function):
     @staticmethod
@@ -50,15 +38,12 @@ manipulate_gradient = ManipulateGradient.apply
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
     r"""Feature reconstruction operator from :cite:`ULVL2016,UVL2017`.
-
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the score twice by the batch size.
         **feature_reconstruction_op_kwargs: Additional parameters of a
             :class:`pystiche.ops.FeatureReconstructionOperator`.
-
     .. seealso::
-
         - :class:`pystiche.ops.FeatureReconstructionOperator`
     """
 
@@ -77,11 +62,6 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L29
-        # A custom backward function was used, which multiplies the score_weight after
-        # the nn.MSEcriterion() backward pass.
-        input_repr = input_repr * self.score_weight
-        target_repr = target_repr * self.score_weight
         score = super().calculate_score(input_repr, target_repr, ctx)
         if not self.double_batch_size_mean:
             return score
@@ -92,17 +72,7 @@ class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
         # uses reduction="mean" which also includes the batch_size. However, the
         # score is divided once more by the batch_size in the reference implementation.
         batch_size = image.extract_batch_size(input_repr)
-        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/content_loss.lua#L23-L25
-        # A custom backward function was used, which does not contain a second
-        # division of the batch_size, so this overrides pytorchs automatic backward
-        # pass.
-        score = RemoveBatchSizeDivisionGradient.apply(score, batch_size)
-        return cast(torch.Tensor, score / batch_size)
-
-    def forward(
-        self, input_image: torch.Tensor
-    ) -> Union[torch.Tensor, pystiche.LossDict]:
-        return self.process_input_image(input_image)
+        return score / batch_size
 
 
 def content_loss(
@@ -112,7 +82,6 @@ def content_loss(
     hyper_parameters: Optional[HyperParameters] = None,
 ) -> FeatureReconstructionOperator:
     r"""Content loss from :cite:`ULVL2016,UVL2017`.
-
     Args:
         impl_params: Switch the behavior and hyper-parameters between the reference
             implementation of the original authors and what is described in the paper.
@@ -125,9 +94,7 @@ def content_loss(
             is used.
         hyper_parameters: Hyper parameters. If omitted,
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
-
     .. seealso::
-
         - :class:`pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`
     """
     if multi_layer_encoder is None:
@@ -140,6 +107,7 @@ def content_loss(
 
     return FeatureReconstructionOperator(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
+        impl_params=impl_params,
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
