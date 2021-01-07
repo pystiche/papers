@@ -158,13 +158,13 @@ class _AutoPadAvgPoolNdMixin(_AutoPadNdMixin, _AvgPoolNd):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if not self.count_include_pad:
-            if len(self.kernel_size) > 2:
+            if len(cast(Tuple[int, ...], self.kernel_size)) > 2:
                 raise RuntimeError(
                     f"count_include_pad=False is not yet supported for {type(self)}"
                 )
-            if any(stride != 1 for stride in self.stride):
+            if any(stride != 1 for stride in cast(Tuple[int, ...], self.stride)):
                 raise RuntimeError(
-                    f"count_include_pad=False is not yet supported for strides > 1"
+                    "count_include_pad=False is not yet supported for strides > 1"
                 )
 
     def _compute_pad_size(self) -> torch.Tensor:
