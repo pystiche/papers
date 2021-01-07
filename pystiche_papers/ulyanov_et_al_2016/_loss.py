@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import torch
 
@@ -15,6 +15,24 @@ __all__ = [
     "style_loss",
     "perceptual_loss",
 ]
+
+
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
+class ManipulateGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx: Any, input_tensor: torch.Tensor, score_weight: float) -> torch.Tensor:  # type: ignore[override]
+        ctx.score_weight = score_weight
+        return input_tensor
+
+    @staticmethod
+    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:  # type: ignore[override]
+        grad_output = grad_output / ctx.score_weight
+        grad_input = grad_output / (torch.norm(grad_output, p=1) + 1e-8)
+        grad_input = grad_input * ctx.score_weight
+        return grad_input, None
+
+
+manipulate_gradient = ManipulateGradient.apply
 
 
 class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
@@ -118,9 +136,13 @@ class GramOperator(ops.GramOperator):
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L38
         # In the reference implementation the gram_matrix is only divided by the
         # batch_size.
-        normalize = not impl_params
         self.normalize_by_num_channels = impl_params
-        super().__init__(encoder, normalize=normalize, **gram_op_kwargs)
+        super().__init__(encoder, **gram_op_kwargs)
+
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L56-L57
+        # In the reference implementation the gradient of the style loss is
+        # normalized.
+        self.manipulate_gradient = impl_params
 
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L217
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L162
@@ -130,6 +152,8 @@ class GramOperator(ops.GramOperator):
         self.double_batch_size_mean = impl_params
 
     def enc_to_repr(self, enc: torch.Tensor) -> torch.Tensor:
+        if self.manipulate_gradient:
+            enc = manipulate_gradient(enc, self.score_weight)
         gram_matrix = super().enc_to_repr(enc)
         if not self.normalize_by_num_channels:
             return gram_matrix

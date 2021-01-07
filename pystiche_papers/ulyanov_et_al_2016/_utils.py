@@ -23,6 +23,12 @@ def hyper_parameters(
     impl_params: bool = True, instance_norm: bool = True
 ) -> HyperParameters:
     r"""Hyper parameters from :cite:`ULVL2016,UVL2017`."""
+    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
+    style_loss_layers = (
+        ("relu1_1", "relu2_1", "relu3_1", "relu4_1")
+        if impl_params and instance_norm
+        else ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
+    )
     return HyperParameters(
         content_loss=HyperParameters(
             layer="relu4_2",
@@ -31,12 +37,17 @@ def hyper_parameters(
         ),
         style_loss=HyperParameters(
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
-            layers=("relu1_1", "relu2_1", "relu3_1", "relu4_1")
-            if impl_params and instance_norm
-            else ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1"),
-            layer_weights="sum",
+            layers=style_loss_layers,
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
-            score_weight=1e3 if impl_params and not instance_norm else 1e0,
+            # The backward pass of the GramOperators in style_loss is manipulated and
+            # this is not independent of the score_weight. For this reason the
+            # layer_weights are set here to have the correct score_weight in the
+            # individual GramOperators.
+            layer_weights=(
+                [1e3 if impl_params and not instance_norm else 1e0]
+                * len(style_loss_layers)
+            ),
+            score_weight=1e0,
         ),
         content_transform=HyperParameters(edge_size=256,),
         style_transform=HyperParameters(

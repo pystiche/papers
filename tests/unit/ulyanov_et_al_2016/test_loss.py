@@ -60,18 +60,11 @@ def test_GramOperator(
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    configs = ((True, True, 1.0, False), (False, False, input_image.size()[0], True))
-    for (
-        impl_params,
-        normalize_by_num_channels,
-        extra_batch_normalization,
-        normalize,
-    ) in configs:
+    configs = ((True, True, 1.0), (False, False, input_image.size()[0]))
+    for (impl_params, normalize_by_num_channels, extra_batch_normalization,) in configs:
         with subtests.test(impl_params=impl_params):
-            target_repr = pystiche.gram_matrix(
-                encoder(target_image), normalize=normalize
-            )
-            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=normalize)
+            target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
+            input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
             intern_target_repr = (
                 target_repr / target_repr.size()[-1]
                 if normalize_by_num_channels
@@ -111,7 +104,7 @@ def test_style_loss(subtests, impl_params, instance_norm):
         assert layers == hyper_parameters.layers
 
     with subtests.test("layer_weights"):
-        assert layer_weights == pytest.approx((1e0,) * len(hyper_parameters.layers))
+        assert layer_weights == pytest.approx(hyper_parameters.layer_weights)
 
     with subtests.test("score_weight"):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
