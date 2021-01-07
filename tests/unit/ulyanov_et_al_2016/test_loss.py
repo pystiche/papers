@@ -60,13 +60,8 @@ def test_GramOperator(
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    configs = ((True, True, 1.0, False), (False, False, input_image.size()[0], True))
-    for (
-        impl_params,
-        normalize_by_num_channels,
-        extra_batch_normalization,
-        normalize,
-    ) in configs:
+    configs = ((True, True, 1.0), (False, False, input_image.size()[0]))
+    for (impl_params, normalize_by_num_channels, extra_batch_normalization,) in configs:
         with subtests.test(impl_params=impl_params):
             target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
             input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
