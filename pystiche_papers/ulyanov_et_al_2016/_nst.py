@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 
 import pystiche
 from pystiche import loss, misc, optim
+from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import content_transform as _content_transform
 from ._data import images as _images
 from ._data import style_transform as _style_transform
 from ._loss import perceptual_loss
@@ -133,6 +133,7 @@ def stylization(
     transformer: Union[nn.Module, str],
     impl_params: bool = True,
     instance_norm: bool = False,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> torch.Tensor:
     r"""Transforms an input image into a stylised version using the transformer.
 
@@ -146,8 +147,15 @@ def stylization(
         instance_norm: Switch the behavior and hyper-parameters between both
             publications of the original authors. For details see
             :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
 
     """
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
     device = input_image.device
     if isinstance(transformer, str):
         style = transformer
@@ -164,11 +172,12 @@ def stylization(
     postprocessor = postprocessor.to(device)
 
     with torch.no_grad():
-        content_transform = _content_transform(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
-        content_transform = content_transform.to(device)
-        input_image = content_transform(input_image)
+        if impl_params:
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+            edge_size = hyper_parameters.content_transform.edge_size
+            transform = transforms.Resize((edge_size, edge_size))
+            input_image = transform(input_image)
 
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
