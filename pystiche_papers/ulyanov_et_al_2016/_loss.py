@@ -38,7 +38,7 @@ class ManipulateGradient(torch.autograd.Function):
         return input_tensor
 
     @staticmethod
-    def backward(self: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:  # type: ignore[override]
+    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:  # type: ignore[override]
         grad_output = grad_output / ctx.score_weight
         grad_input = grad_output / (torch.norm(grad_output, p=1) + 1e-8)
         grad_input = grad_input * ctx.score_weight
