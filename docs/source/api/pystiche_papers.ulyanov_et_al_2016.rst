@@ -60,7 +60,6 @@ Behavioral changes
 The following parts are affected:
 
   - :func:`~pystiche_papers.ulyanov_et_al_2016.content_transform`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.GramOperator`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.ConvBlock`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.level`,
