@@ -59,6 +59,11 @@ def training(mocker):
     return mocker.patch(make_paper_mock_target("training"))
 
 
+@pytest.fixture
+def stylization(mocker):
+    return mocker.patch(make_paper_mock_target("stylization"))
+
+
 @pytest.fixture(scope="module")
 def main():
     return utils.load_module(path.join(PAPER, "main.py"))
@@ -112,7 +117,7 @@ def test_training_parse_input_smoke(subtests, main, args):
         assert isinstance(actual_args.quiet, bool)
 
 
-def test_training_smoke(subtests, images, dataset, training, main, args):
+def test_training_smoke(subtests, images, dataset, training, stylization, main, args):
     main.training(args)
 
     assert training.call_count == 7
