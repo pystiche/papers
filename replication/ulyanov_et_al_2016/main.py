@@ -3,11 +3,12 @@ from argparse import Namespace
 from os import path
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import misc, optim
+from pystiche import image, misc, optim
 from pystiche_papers import utils
 
 
 def training(args):
+    contents = ("karya", "tiger", "neckarfront", "bird", "kitty")
     styles = (
         "candy",
         "the_scream",
@@ -19,7 +20,7 @@ def training(args):
     )
 
     dataset = paper.dataset(
-        path.join(args.dataset_dir, "style"),
+        path.join(args.dataset_dir, "content"),
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
     )
@@ -52,10 +53,28 @@ def training(args):
             model_name += "__instance_norm"
         utils.save_state_dict(transformer, model_name, root=args.model_dir)
 
+        for content in contents:
+            content_image = images[content].read(device=args.device)
+            output_image = paper.stylization(
+                content_image,
+                transformer,
+                impl_params=args.impl_params,
+                instance_norm=args.instance_norm,
+            )
+
+            output_name = f"{style}_{content}"
+            if args.impl_params:
+                output_name += "__impl_params"
+            if args.instance_norm:
+                output_name += "__instance_norm"
+            output_file = path.join(args.image_results_dir, f"{output_name}.png")
+            image.write_image(output_image, output_file)
+
 
 def parse_input():
     # TODO: write CLI
     image_source_dir = None
+    image_results_dir = None
     dataset_dir = None
     model_dir = None
     device = None
@@ -74,6 +93,10 @@ def parse_input():
         image_source_dir = path.join(here, "data", "images", "source")
     image_source_dir = process_dir(image_source_dir)
 
+    if image_results_dir is None:
+        image_results_dir = path.join(here, "data", "images", "results")
+    image_results_dir = process_dir(image_results_dir)
+
     if dataset_dir is None:
         dataset_dir = path.join(here, "data", "images", "dataset")
     dataset_dir = process_dir(dataset_dir)
@@ -87,6 +110,7 @@ def parse_input():
 
     return Namespace(
         image_source_dir=image_source_dir,
+        image_results_dir=image_results_dir,
         dataset_dir=dataset_dir,
         model_dir=model_dir,
         device=device,

@@ -59,6 +59,11 @@ def training(mocker):
     return mocker.patch(make_paper_mock_target("training"))
 
 
+@pytest.fixture
+def stylization(mocker):
+    return mocker.patch(make_paper_mock_target("stylization"))
+
+
 @pytest.fixture(scope="module")
 def main():
     return utils.load_module(path.join(PAPER, "main.py"))
@@ -68,6 +73,7 @@ def main():
 def args(tmpdir):
     return argparse.Namespace(
         image_source_dir=tmpdir,
+        image_results_dir=tmpdir,
         dataset_dir=tmpdir,
         model_dir=tmpdir,
         device=misc.get_device(),
@@ -85,6 +91,9 @@ def test_training_parse_input_smoke(subtests, main, args):
 
     with subtests.test("image_source_dir"):
         assert_dir_exists(actual_args.image_source_dir)
+
+    with subtests.test("image_results_dir"):
+        assert_dir_exists(actual_args.image_results_dir)
 
     with subtests.test("dataset_dir"):
         assert_dir_exists(actual_args.dataset_dir)
@@ -108,7 +117,7 @@ def test_training_parse_input_smoke(subtests, main, args):
         assert isinstance(actual_args.quiet, bool)
 
 
-def test_training_smoke(subtests, images, dataset, training, main, args):
+def test_training_smoke(subtests, images, dataset, training, stylization, main, args):
     main.training(args)
 
     assert training.call_count == 7
