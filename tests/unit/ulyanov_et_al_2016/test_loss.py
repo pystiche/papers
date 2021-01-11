@@ -5,35 +5,9 @@ from torch.nn.functional import mse_loss
 
 import pystiche
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import image, loss, ops
-from pystiche_papers import utils
+from pystiche import loss, ops
 
 from .utils import impl_params_and_instance_norm
-
-
-def test_FeatureReconstructionOperator(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
-    batch_size = 4
-    input_image = utils.batch_up_image(input_image, batch_size)
-    target_image = utils.batch_up_image(target_image, batch_size)
-    multi_layer_encoder, layer = multi_layer_encoder_with_layer
-    encoder = multi_layer_encoder.extract_encoder(layer)
-    target_enc = encoder(target_image)
-    input_enc = encoder(input_image)
-
-    for impl_params in (True, False):
-        with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
-            op.set_target_image(target_image)
-            actual = op(input_image)
-
-            score = mse_loss(input_enc, target_enc)
-
-            desired = (
-                score / image.extract_batch_size(input_enc) if impl_params else score
-            )
-            assert actual == ptu.approx(desired)
 
 
 @impl_params_and_instance_norm
@@ -45,7 +19,7 @@ def test_content_loss(subtests, impl_params, instance_norm):
     content_loss = paper.content_loss(
         impl_params=impl_params, instance_norm=instance_norm,
     )
-    assert isinstance(content_loss, paper.FeatureReconstructionOperator)
+    assert isinstance(content_loss, ops.FeatureReconstructionOperator)
 
     with subtests.test("layer"):
         assert content_loss.encoder.layer == hyper_parameters.layer
@@ -60,8 +34,8 @@ def test_GramOperator(
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
 
-    configs = ((True, True, 1.0), (False, False, input_image.size()[0]))
-    for (impl_params, normalize_by_num_channels, extra_batch_normalization,) in configs:
+    configs = ((True, True), (False, False))
+    for (impl_params, normalize_by_num_channels) in configs:
         with subtests.test(impl_params=impl_params):
             target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
             input_repr = pystiche.gram_matrix(encoder(input_image), normalize=True)
@@ -79,8 +53,7 @@ def test_GramOperator(
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            score = mse_loss(intern_input_repr, intern_target_repr,)
-            desired = score / extra_batch_normalization
+            desired = mse_loss(intern_input_repr, intern_target_repr)
 
             assert actual == ptu.approx(desired, rel=1e-3)
 
@@ -116,7 +89,7 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, ops.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
