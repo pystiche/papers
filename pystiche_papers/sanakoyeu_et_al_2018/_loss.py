@@ -1,20 +1,21 @@
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import List, Optional, Sequence, Tuple, Union, cast
 
 import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pystiche import loss, ops
-from pystiche.enc import SequentialEncoder
+from pystiche import enc, loss, ops
+from pystiche_papers.utils import AutoPadAvgPool2d, AutoPadConv2d
 
 from ._discriminator import MultiScaleDiscriminator
 from ._discriminator import discriminator as _discriminator
-from ._modules import TransformerBlock
+from ._transformer import Transformer
+from ._transformer import transformer as _transformer
 
 __all__ = [
     "DiscriminatorLoss",
     "discriminator_loss",
-    "MAEReconstructionOperator",
+    "MAEFeatureReconstructionOperator",
     "feature_reconstruction_loss",
     "transformed_image_loss",
     "content_loss",
@@ -59,7 +60,7 @@ def _prediction_loss(
 
 
 class DiscriminatorLoss(nn.Module):
-    def __init__(self, discriminator: Optional[MultiScaleDiscriminator]) -> None:
+    def __init__(self, discriminator: MultiScaleDiscriminator) -> None:
         super().__init__()
         self.discriminator = discriminator
 
@@ -94,15 +95,15 @@ def discriminator_loss(
     return DiscriminatorLoss(discriminator=discriminator)
 
 
-class MAEReconstructionOperator(ops.EncodingComparisonOperator):
-    r"""The MAE reconstruction loss is a content loss.
+class MAEFeatureReconstructionOperator(ops.EncodingComparisonOperator):
+    r"""The MAE feature reconstruction loss is a content loss.
 
     It measures the mean absolute error (MAE) between the encodings of an
     ``input_image`` :math:`\hat{I}` and a ``target_image`` :math:`I` :
 
     .. math::
 
-        \mean |\parentheses{\Phi\of{\hat{I}} - \Phi\of{I}}|
+        \mean \abs{\Phi\of{\hat{I}} - \Phi\of{I}}
 
     Here :math:`\Phi\of{\cdot}` denotes the ``encoder``.
 
@@ -132,11 +133,11 @@ class MAEReconstructionOperator(ops.EncodingComparisonOperator):
 
 
 def feature_reconstruction_loss(
-    encoder: SequentialEncoder,
+    encoder: enc.Encoder,
     impl_params: bool = True,
     score_weight: Optional[float] = None,
-) -> Union[MAEReconstructionOperator, ops.FeatureReconstructionOperator]:
-    r"""Style_aware_content_loss from :cite:`SKL+2018`.
+) -> Union[MAEFeatureReconstructionOperator, ops.FeatureReconstructionOperator]:
+    r"""Feature reconstruction from :cite:`SKL+2018`.
 
     Args:
         encoder: :class:`~pystiche.enc.SequentialEncoder`.
@@ -157,23 +158,65 @@ def feature_reconstruction_loss(
 
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L194
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L177-L178
-    return (
-        MAEReconstructionOperator(encoder, score_weight=score_weight)
+    cls = (
+        MAEFeatureReconstructionOperator
         if impl_params
-        else ops.FeatureReconstructionOperator(encoder, score_weight=score_weight)
+        else ops.FeatureReconstructionOperator
     )
+    return cls(encoder, score_weight=score_weight)
+
+
+# TODO: since this is only used in the transformed image loss, shouldn't it be defined
+#  there?
+class TransformerBlock(enc.SequentialEncoder):
+    r"""TransformerBlock from :cite:`SKL+2018`.
+
+    This block takes an image as input and produce a transformed image of the same size.
+
+    Args:
+        in_channels: Number of channels in the input. Defaults to ``3``.
+        kernel_size: Size of the convolving kernel. Defaults to ``10``.
+        stride: Stride of the convolution. Defaults to ``1``.
+        impl_params: If ``True``, use the parameters used in the reference
+            implementation of the original authors rather than what is described in
+            the paper.
+
+    If ``impl_params is True``, an :class:`~torch.nn.AvgPool2d` is used instead of a
+    :class:`~torch.nn.Conv2d` with :func:`~torch.nn.utils.weight_norm`.
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 3,
+        kernel_size: Union[Tuple[int, int], int] = 10,
+        stride: Union[Tuple[int, int], int] = 1,
+        impl_params: bool = True,
+    ):
+        kwargs = {
+            "kernel_size": kernel_size,
+            "stride": stride,
+        }
+        # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/module.py#L246
+        module = (
+            AutoPadAvgPool2d(**kwargs, count_include_pad=False)
+            if impl_params
+            else nn.utils.weight_norm(AutoPadConv2d(in_channels, in_channels, **kwargs))
+        )
+        self.impl_params = impl_params
+        super().__init__((module,))
 
 
 def transformed_image_loss(
-    transformer_block: Optional[SequentialEncoder] = None,
     impl_params: bool = True,
+    transformer_block: Optional[enc.Encoder] = None,
     score_weight: Optional[float] = None,
 ) -> ops.FeatureReconstructionOperator:
     r"""Transformed_image_loss from :cite:`SKL+2018`.
 
     Args:
-        transformer_block::class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock`
-            which is used to transform the image.
+        transformer_block:
+            :class:`~pystiche_papers.sanakoyeu_et_al_2018.TransformerBlock` which is
+            used to transform the image.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
@@ -182,23 +225,29 @@ def transformed_image_loss(
             ``impl_params is True`` otherwise ``1e0``.
 
     """
-    if score_weight is None:
-        score_weight = 1e2 if impl_params else 1e0
-
     if transformer_block is None:
         transformer_block = TransformerBlock()
+
+    if score_weight is None:
+        score_weight = 1e2 if impl_params else 1e0
 
     return ops.FeatureReconstructionOperator(
         transformer_block, score_weight=score_weight
     )
 
 
-def content_loss() -> ops.OperatorContainer:
-    # FIXME: properly implement me
+def content_loss(
+    impl_params: bool = True, transformer: Optional[Transformer] = None
+) -> ops.OperatorContainer:
+    if transformer is None:
+        transformer = _transformer(impl_params=impl_params)
     return ops.OperatorContainer(
         (
             (
-                ("feature_reconstruction_loss", feature_reconstruction_loss()),
+                (
+                    "feature_reconstruction_loss",
+                    feature_reconstruction_loss(transformer.encoder),
+                ),
                 ("tranformed_image_loss", transformed_image_loss()),
             )
         )
@@ -232,27 +281,27 @@ def style_loss(discriminator: Optional[MultiScaleDiscriminator] = None) -> Style
     """
     if discriminator is None:
         discriminator = _discriminator()
-    return StyleLoss(discriminator=discriminator)
+    return StyleLoss(discriminator)
 
 
 def transformer_loss(
-    encoder: SequentialEncoder,
     impl_params: bool = True,
-    style_aware_content_kwargs: Optional[Dict[str, Any]] = None,
-    transformed_image_kwargs: Optional[Dict[str, Any]] = None,
+    discriminator: Optional[MultiScaleDiscriminator] = None,
+    transformer: Optional[Transformer] = None,
 ) -> loss.PerceptualLoss:
     r"""Transformer_loss from :cite:`SKL+2018`.
 
     Args:
-        encoder: :class:`~pystiche.enc.SequentialEncoder`.
         impl_params: If ``True``, uses the parameters used in the reference
             implementation of the original authors rather than what is described in
             the paper.
-        style_aware_content_kwargs: Optional parameters for the
-            :func:`style_aware_content_loss`.
-        transformed_image_kwargs: Optional parameters for the
-            :func:`transformed_image_loss`.
 
     """
-    # FIXME: properly implement me
-    return loss.PerceptualLoss(content_loss(), style_loss())
+    if discriminator is None:
+        discriminator = _discriminator()
+    if transformer is None:
+        transformer = _transformer(impl_params=impl_params)
+
+    return loss.PerceptualLoss(
+        content_loss(transformer=transformer), style_loss(discriminator=discriminator)
+    )

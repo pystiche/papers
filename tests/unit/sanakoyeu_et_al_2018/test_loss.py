@@ -73,7 +73,7 @@ def test_MAEReconstructionOperator_call():
     input_image = torch.rand(1, 3, 128, 128)
     encoder = enc.SequentialEncoder((nn.Conv2d(3, 3, 1),))
 
-    op = paper.MAEReconstructionOperator(encoder)
+    op = paper.MAEFeatureReconstructionOperator(encoder)
     op.set_target_image(target_image)
 
     actual = op(input_image)
@@ -91,7 +91,7 @@ def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
             )
             assert isinstance(
                 content_loss,
-                paper.MAEReconstructionOperator
+                paper.MAEFeatureReconstructionOperator
                 if impl_params
                 else ops.FeatureReconstructionOperator,
             )

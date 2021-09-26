@@ -1,3 +1,4 @@
+import itertools
 from typing import Callable, Optional, Tuple, Union, cast
 
 import torch
@@ -10,14 +11,10 @@ from pystiche import loss, misc
 from pystiche.image.transforms import functional as F
 
 from ._data import content_dataset, image_loader, style_dataset
-from ._loss import (
-    DiscriminatorLoss,
-    MultiScaleDiscriminator,
-    discriminator_loss,
-    transformer_loss,
-)
+from ._discriminator import MultiScaleDiscriminator
+from ._discriminator import discriminator as _discriminator
+from ._loss import DiscriminatorLoss, discriminator_loss, transformer_loss
 from ._transformer import transformer as _transformer
-from ._utils import ExponentialMovingAverageMeter
 from ._utils import lr_scheduler as _lr_scheduler
 from ._utils import optimizer
 from ._utils import postprocessor as _postprocessor
@@ -40,16 +37,33 @@ def _maybe_extract_transform(image_loader: DataLoader) -> Optional[Callable]:
         return None
 
 
+def extract_device(*modules: nn.Module) -> torch.device:
+    if not modules:
+        raise RuntimeError
+
+    devices = {
+        tensor.device
+        for module in modules
+        for tensor in itertools.chain(module.parameters(), module.buffers())
+    }
+    if len(devices) > 1:
+        raise RuntimeError
+
+    return devices.pop()
+
+
 def gan_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
+    discriminator: MultiScaleDiscriminator,
     transformer: nn.Module,
-    discriminator_criterion: DiscriminatorLoss,
+    discriminator_criterion: nn.Module,
     transformer_criterion: loss.PerceptualLoss,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
     discriminator_optimizer: Optional[Optimizer] = None,
     transformer_optimizer: Optional[Optimizer] = None,
-    target_win_rate: float = 0.8,
+    target_discriminator_success: float = 0.8,
+    smoothing_factor: float = 95e-2,
     impl_params: bool = True,
 ) -> nn.Module:
     r"""Perform a GAN optimization for a single epoch.
@@ -68,7 +82,7 @@ def gan_optim_loop(
         transformer_optimizer: Optional optimizer for the ``transformer``. If
             ``None``, it is extracted from ``transformer_lr_scheduler`` or the default
             :func:`~pystiche_papers.sanakoyeu_et_al_2018.optimizer` is used.
-        target_win_rate: Initial value for the success of the discriminator, which also
+        target_discriminator_success: Initial value for the success of the discriminator, which also
             serves as a limit for the alternate training of the transformer and the
             discriminator. If the ``discriminator_success < target_win_rate``, the
             ``discriminator`` is updated and the ``transformer`` otherwise.
@@ -84,7 +98,9 @@ def gan_optim_loop(
     content_transform = _maybe_extract_transform(content_image_loader)
     style_transform = _maybe_extract_transform(style_image_loader)
 
-    device = misc.get_device()
+    device = extract_device(
+        discriminator, transformer, discriminator_criterion, transformer_criterion
+    )
     style_image_loader = iter(style_image_loader)
 
     if isinstance(content_transform, nn.Module):
@@ -100,10 +116,7 @@ def gan_optim_loop(
     if transformer_optimizer is None:
         transformer_optimizer = optimizer(transformer)
 
-    if "discriminator_success" not in locals():
-        discriminator_success = ExponentialMovingAverageMeter(
-            "discriminator_success", init_val=target_win_rate
-        )
+    discriminator_success = target_discriminator_success
 
     def train_discriminator_one_step(
         output_image: torch.Tensor,
@@ -117,11 +130,6 @@ def gan_optim_loop(
             return cast(float, loss.item())
 
         cast(Optimizer, discriminator_optimizer).step(closure)
-        discriminator_success.update(
-            cast(
-                MultiScaleDiscriminator, discriminator_criterion.discriminator
-            ).accuracy
-        )
 
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
@@ -131,34 +139,47 @@ def gan_optim_loop(
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
-        accuracy = cast(
-            MultiScaleDiscriminator, transformer_criterion.style_loss.discriminator
-        ).accuracy
-        discriminator_success.update(1.0 - accuracy)
 
-    for content_image in content_image_loader:
+    def compute_discriminator_success(success: float, accuracy: float) -> float:
+        return smoothing_factor * success + (1.0 - smoothing_factor) * accuracy
+
+    for step, content_image in enumerate(content_image_loader):
         input_image = content_image.to(device)
         if content_transform is not None:
             input_image = content_transform(input_image)
-        input_image = preprocessor(input_image)
+        # input_image = preprocessor(input_image)
+        input_image = input_image / 127.5 - 1.0
 
         output_image = transformer(input_image)
+        print()
 
-        if discriminator_success.local_avg < target_win_rate:
+        if discriminator_success < target_discriminator_success:
             style_image = next(style_image_loader)
             style_image = style_image.to(device)
             if style_transform is not None:
                 style_image = style_transform(style_image)
-            style_image = preprocessor(style_image)
+            # style_image = preprocessor(style_image)
+            style_image = style_image / 127.5 - 1.0
 
             train_discriminator_one_step(
                 output_image,
                 style_image,
                 input_image=input_image if impl_params else None,
             )
+
+            accuracy = discriminator.accuracy
         else:
             transformer_criterion_update_fn(input_image, transformer_criterion)
             train_transformer_one_step(output_image)
+
+            # During the training of the transformer we intentionally mislead the
+            # discriminator by labeling a fake image as real. This also affects the
+            # reported accuracy and we reverse that here.
+            accuracy = 1.0 - discriminator.accuracy
+
+        discriminator_success = compute_discriminator_success(
+            discriminator_success, accuracy
+        )
 
     return transformer
 
@@ -166,11 +187,12 @@ def gan_optim_loop(
 def gan_epoch_optim_loop(
     content_image_loader: DataLoader,
     style_image_loader: DataLoader,
+    discriminator: MultiScaleDiscriminator,
     transformer: nn.Module,
-    epochs: int,
-    discriminator_criterion: DiscriminatorLoss,
+    discriminator_criterion: nn.Module,
     transformer_criterion: loss.PerceptualLoss,
     transformer_criterion_update_fn: Callable[[torch.Tensor, nn.Module], None],
+    num_epochs: int,
     discriminator_optimizer: Optional[Optimizer] = None,
     transformer_optimizer: Optional[Optimizer] = None,
     discriminator_lr_scheduler: Optional[LRScheduler] = None,
@@ -184,7 +206,7 @@ def gan_epoch_optim_loop(
         content_image_loader: Content images used as input for the ``transformer``.
         style_image_loader: Style images used as input for the ``discriminator``.
         transformer: Transformer to be optimized.
-        epochs: Number of epochs.
+        num_epochs: Number of epochs.
         discriminator_criterion: Optimization criterion for the ``discriminator``.
         transformer_criterion: Optimization criterion for the ``transformer``.
         transformer_criterion_update_fn: Is called before each optimization step with
@@ -226,17 +248,18 @@ def gan_epoch_optim_loop(
         return gan_optim_loop(
             content_image_loader,
             style_image_loader,
+            discriminator,
             transformer,
             discriminator_criterion,
             transformer_criterion,
             transformer_criterion_update_fn,
             discriminator_optimizer=discriminator_optimizer,
             transformer_optimizer=transformer_optimizer,
-            target_win_rate=target_win_rate,
+            target_discriminator_success=target_win_rate,
             impl_params=impl_params,
         )
 
-    for epoch in range(epochs):
+    for epoch in range(num_epochs):
         transformer = optim_loop(transformer)
 
         if discriminator_lr_scheduler is not None:
@@ -275,7 +298,8 @@ def training(
         dataset root.
 
     """
-    device = misc.get_device()
+    # device = misc.get_device()
+    device = torch.device("cpu")
 
     if isinstance(content_image_loader, str):
         root = content_image_loader
@@ -293,19 +317,31 @@ def training(
                 "passed as dataset root."
             )
 
-    transformer = _transformer()
-    transformer = transformer.train()
-    transformer = transformer.to(device)
+    discriminator = _discriminator()
+    discriminator.train()
+    state_dict = torch.load(
+        "replication/sanakoyeu_et_al_2018/data/models/sanakoyeu_et_al_2018_discriminator__init.pth"
+    )
+    discriminator.load_state_dict(state_dict)
+    discriminator.to(device)
 
-    discriminator_criterion = discriminator_loss()
-    discriminator_criterion = discriminator_criterion.train()
-    discriminator_criterion = discriminator_criterion.to(device)
+    transformer = _transformer()
+    transformer.train()
+    state_dict = torch.load(
+        "replication/sanakoyeu_et_al_2018/data/models/sanakoyeu_et_al_2018_transformer__init.pth"
+    )
+    transformer.load_state_dict(state_dict)
+    transformer.to(device)
+
+    discriminator_criterion = discriminator_loss(discriminator=discriminator)
+    discriminator_criterion.train()
+    discriminator_criterion.to(device)
 
     transformer_criterion = transformer_loss(
-        transformer.encoder, impl_params=impl_params
+        impl_params=impl_params, discriminator=discriminator, transformer=transformer
     )
-    transformer_criterion = transformer_criterion.train()
-    transformer_criterion = transformer_criterion.to(device)
+    transformer_criterion.train()
+    transformer_criterion.to(device)
 
     get_optimizer = optimizer
 
@@ -314,7 +350,7 @@ def training(
     ) -> None:
         cast(loss.PerceptualLoss, criterion).set_content_image(content_image)
 
-    discriminator_optimizer = get_optimizer(discriminator_criterion.parameters())
+    discriminator_optimizer = get_optimizer(discriminator.parameters())
     discriminator_lr_scheduler = _lr_scheduler(discriminator_optimizer)
 
     transformer_optimizer = get_optimizer(transformer.parameters())
@@ -331,11 +367,12 @@ def training(
     return gan_epoch_optim_loop(
         content_image_loader,
         style_image_loader,
+        discriminator,
         transformer,
-        num_epochs,
         discriminator_criterion,
         transformer_criterion,
         transformer_criterion_update_fn,
+        num_epochs,
         discriminator_lr_scheduler=discriminator_lr_scheduler,
         transformer_lr_scheduler=transformer_lr_scheduler,
         impl_params=impl_params,
