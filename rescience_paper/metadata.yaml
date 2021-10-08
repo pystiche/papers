@@ -1,0 +1,123 @@
+# To be filled by the author(s) at the time of submission
+# -------------------------------------------------------
+
+# Title of the article:
+#  - For a successful replication, it should be prefixed with "[Re]"
+#  - For a failed replication, it should be prefixed with "[¬Re]"
+#  - For other article types, no instruction (but please, not too long)
+title: "[Re] Neural Style Transfer: A Replication Study"
+
+# List of authors with name, orcid number, email and affiliation
+# Affiliation "*" means contact author (required even for single-authored papers)
+authors:
+  - name: Julian Bültemeier
+    orcid: 0000-0001-8595-728X
+    email: julian.bueltemeier@th-owl.de
+    affiliations: 1
+    
+  - name: Philip Meier
+    orcid: 0000-0002-5184-1622
+    email: pmeier@quansight.com
+    affiliations: 2
+    
+  - name: Volker Lohweg
+    orcid: 0000-0002-3325-7887
+    email: volker.lohweg@th-owl.de
+    affiliations: 1
+
+# List of affiliations with code (corresponding to author affiliations), name
+# and address. You can also use these affiliations to add text such as "Equal
+# contributions" as name (with no address).
+affiliations:
+  - code:    1
+    name:    inIT – Institute Industrial IT
+    address: Lemgo, Germany
+    
+  - code:    2
+    name:    Quansight
+    address: Austin Texas, United States
+    
+
+
+
+# List of keywords (adding the programming language might be a good idea)
+keywords: python, pyTorch, pystiche, Neural Style Transfer (NST), Convolutional Neural Network (CNN)
+
+# Code URL and DOI/SWH (url is mandatory for replication, doi after acceptance)
+# You can get a DOI for your code from Zenodo, or an SWH identifier from
+# Software Heritage.
+#   see https://guides.github.com/activities/citable-code/
+code:
+  - url: https://github.com/pystiche/papers
+  - doi: 
+  - swh: 
+
+# Data URL and DOI (optional if no data)
+data:
+  - url:
+  - doi:
+
+# Information about the original article that has been replicated
+replication:
+ - cite: # Full textual citation
+ - bib:  # Bibtex key (if any) in your bibliography file
+ - url:  # URL to the PDF, try to link to a non-paywall version
+ - doi:  # Regular digital object identifier
+
+# Don't forget to surround abstract with double quotes
+abstract: "The manipulation of digital images or videos to match the look or visual style of another image comes from the field of Non-Photorealistic Rendering and started back around 1990. However, in recent years, a new class of software algorithms called Neural Style Transfer has emerged in this field with impressive results. Therefore, Neural Style Transfer has been a trending topic in academic research and image processing applications since its introduction in 2016. As a result, many different approaches have been published in this field in a short time. The problem of this rapid development with many publications is the lack of standardisation and the occurrence of bugs that lead to undocumented behaviour. This makes replication of the results difficult or even impossible. For this reason, a replication study of seven papers in the field of Neural Style Transfer has been conducted to highlight these shortcomings."
+
+# Bibliography file (yours)
+bibliography: bib/bibliography.bib
+  
+# Type of the article
+# Type can be:
+#  * Editorial
+#  * Letter
+#  * Replication
+type: Replication
+
+# Scientific domain of the article (e.g. Computational Neuroscience)
+#  (one domain only & try to be not overly specific)
+domain: Machine Learning (ML)
+
+# Coding language (main one only if several)
+language: python
+
+  
+# To be filled by the author(s) after acceptance
+# -----------------------------------------------------------------------------
+
+# For example, the URL of the GitHub issue where review actually occured
+review: 
+  - url: 
+
+contributors:
+  - name:
+    orcid: 
+    role: editor
+  - name:
+    orcid:
+    role: reviewer
+  - name:
+    orcid:
+    role: reviewer
+
+# This information will be provided by the editor
+dates:
+  - received:  November 1, 2018
+  - accepted:
+  - published: 
+
+# This information will be provided by the editor
+article:
+  - number: # Article number will be automatically assigned during publication
+  - doi:    # DOI from Zenodo
+  - url:    # Final PDF URL (Zenodo or rescience website?)
+
+# This information will be provided by the editor
+journal:
+  - name:   "ReScience C"
+  - issn:   2430-3658
+  - volume: 4
+  - issue:  1
