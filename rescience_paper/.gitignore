@@ -1,0 +1,11 @@
+images/
+
+# latex stuff:
+*.aux
+*.log
+*.bcf
+# *.log
+*.out
+*.pdf
+*.xml
+*.gz
