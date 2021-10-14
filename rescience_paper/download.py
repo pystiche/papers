@@ -1,13 +1,9 @@
-from torchvision.datasets.utils import download_and_extract_archive
-
-
-import tempfile
-
 import pathlib
-
 import shutil
-
+import tempfile
 from typing import Collection
+
+from torchvision.datasets.utils import download_and_extract_archive
 
 HERE = pathlib.Path(__file__).parent
 
