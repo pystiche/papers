@@ -1,9 +1,11 @@
 # ignore everything, but the stuff below
-*
 
-!bib/**
-!download.py
-!graphics/**
-!sections/**
-!content.tex
-!metadata.yaml
+/*
+
+!/bib
+!/download.py
+!/graphics
+!/sections
+!/content.tex
+!/metadata.yaml
+!/README.md

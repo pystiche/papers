@@ -23,6 +23,7 @@ def download_template(
     *,
     commit_hash: str = "75bf717a6b07f0f95e197e7cb8cbdbeee8bb564b",
     excluded: Collection[str] = (
+        "bibliography.bib",
         "content.tex",
         "metadata.yaml",
         "README.md",
