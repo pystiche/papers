@@ -1,11 +1,9 @@
-images/
+# ignore everything, but the stuff below
+*
 
-# latex stuff:
-*.aux
-*.log
-*.bcf
-# *.log
-*.out
-*.pdf
-*.xml
-*.gz
+!bib/**
+!download.py
+!graphics/**
+!sections/**
+!content.tex
+!metadata.yaml
