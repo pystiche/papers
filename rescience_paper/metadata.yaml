@@ -13,7 +13,7 @@ authors:
   - name: Julian Bültemeier
     orcid: 0000-0001-8595-728X
     email: julian.bueltemeier@th-owl.de
-    affiliations: 1
+    affiliations: "1,*"
     
   - name: Philip Meier
     orcid: 0000-0002-5184-1622
@@ -68,7 +68,7 @@ replication:
 abstract: "The manipulation of digital images or videos to match the look or visual style of another image comes from the field of Non-Photorealistic Rendering and started back around 1990. However, in recent years, a new class of software algorithms called Neural Style Transfer has emerged in this field with impressive results. Therefore, Neural Style Transfer has been a trending topic in academic research and image processing applications since its introduction in 2016. As a result, many different approaches have been published in this field in a short time. The problem of this rapid development with many publications is the lack of standardisation and the occurrence of bugs that lead to undocumented behaviour. This makes replication of the results difficult or even impossible. For this reason, a replication study of seven papers in the field of Neural Style Transfer has been conducted to highlight these shortcomings."
 
 # Bibliography file (yours)
-bibliography: bib/bibliography.bib
+bibliography: bibliography.bib
   
 # Type of the article
 # Type can be:

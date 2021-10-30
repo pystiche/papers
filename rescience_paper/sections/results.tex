@@ -1,0 +1,670 @@
+\section{Results}
+
+\subsection{Gatys, Ecker and Bethge 2016} \label{sec:Gatys1results}
+
+The result of the replicated paper \cite{GEB2016} are shown in \figref{fig:GEB2016_fig_2}. The results with the information from the paper did not visibly change the content image and therefore did not yield a meaningful stylised result. The reason for this is the different weighting between content and style, because in this case we have omitted an additional standardisation by the number of channels due to the missing specification in the paper. This standardisation factor corresponds to a value of $1/n^2$, where $n$ stands for the number of channels and take values of $n \in \{128, 256, 512\}$. A missing factor in such an order of magnitude can therefore lead to a lack of stylisation with this approach.
+
+However, there are also differences compared to the original release with the parameters from the implementation, which are not only due to rounding errors on the Graphical Processing Unit (GPU) or initialisation conditions. We assume this because we do not use random initialisation as a starting point and there are clear differences in the dominance of the style compared to the original release, which are comparable to the experience in Figure 4 in \cite{GEB2016} with different weightings between content and style.
+
+For this reason, we contacted the authors of the original release to get information about the hyperparameters. The adjustments of the hyperparmeters provided by the author are shown in the \tabref{tab:Gatys_2016_adapted_params} in the Appendix. The results with the adjusted hyperparameter are shown in \figref{fig:GEB2016_fig_2} in the right column. A major change is that a random initialisation of the starting point is used, which means that an exact reproduction of the images is no longer possible without the knowledge of the starting point at that time. However, the results in \figref{fig:GEB2016_random_init} with different starting points demonstrate that we can achieve plausible results with the information provided by the author. We therefore assume that the replication of this paper is successful. This is supported in particular by another following replication of this author, in which we were able to achieve very similar results with the content image as a starting point. See \figref{fig:GEB+2017_fig2} for this.
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}\\
+		content image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/shipwreck_of_the_minotaur__turner.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__B_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__B.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__B__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{images/gatys_ecker_bethge_2016/source/starry_night__vincent_van_gogh.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__C_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__C.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.6\textwidth]{images/gatys_ecker_bethge_2016/source/the_scream__edvard_munch.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__D_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__D.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__D__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.57\textwidth]{images/gatys_ecker_bethge_2016/source/figure_dans_un_fauteuil__pablo_ruiz_picasso.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__E_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__E.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__E__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/composition_vii__wassily_kandinsky.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__F_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__F.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__F__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Style image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Paper
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Implementation
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Author
+	\end{minipage}
+	\caption{Our stylised results with the parameters from the paper and the reference implementation according to the method from \cite{GEB2016}. The content image of the Neckarfront in Tübingen, Germany, on which the style transfer was applied is in the first column. Below it, in the left column, are the respective style images, followed by the result with the parameters from the paper and the reference implementation. In the last column are our results created with the information provided by the author.}
+	\label{fig:GEB2016_fig_2}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author2.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author3.jpg}
+	\end{minipage}
+	\caption{Our results of the method according to \cite{GEB2016} with the information provided by the author. For the individual images, different random noise images have been selected as starting point for the style transfer. All other hyperparameters are the same in these images.}
+	\label{fig:GEB2016_random_init}
+\end{figure}
+
+
+\subsection{Li and Wand 2016}
+
+\figref{fig:LW2016_fig6} shows our results from Figure 6 of the original publication in \cite{LW2016}. We use a different content image in the the lower row, as the original image was not freely available. However, it can be seen that there are significant differences between the parameters from the paper and the implementation. While the parameters from the implementation create useful stylised images, the style dominates when the parameters from the paper are used. This example shows how big the difference in the results can be due to the differences between the information in the paper and the reference implementation.
+
+There are also significant differences to the original release. If the image from the top row is compared with the corresponding image from the original work, the result shows less darker artefacts, which in the original result appear mainly in the hair and background. We therefore contacted the author, who provided helpful explanations and said that subsequent changes to the code may result in differences from the release. Therefore, we suspect that the difference from the original implementation is due to these changes and that this is a successful replication of the stylised results.
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/source/blue_bottle__christopher_michel_(cmichel67).jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/source/self-portrait__pablo_ruiz_picasso.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/results/fig_6__top_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/results/fig_6__top.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/source/s__theilr.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/source/composition_viii__wassily_kandinsky.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/results/fig_6__bottom_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/li_wand_2016/results/fig_6__bottom.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+	\centering
+	Content image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		Style image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		Paper
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.23\textwidth}
+		\centering
+		Implementation
+	\end{minipage}
+	\caption{Replication of the results in Figure 6 in \cite{LW2016}. In left column are the content images, followed by the style images and the respective results with the parameters from the paper and the reference implementation.}
+	\label{fig:LW2016_fig6}
+\end{figure}
+
+\subsection{Gatys et al. 2017} \label{sec:Gatys2results}
+
+The replicated results are shown in \figref{fig:GEB+2017_fig2}. The results show that there is only a minimal difference between our results with the implementation parameters and the parameters from the paper as well as in comparison to the original publication. We are thus able to successfully replicate the published images. The differences in this case therefore do not have a major impact on the overall result. The result also shows that the differences in in \secref{sec:Gatys1results} arise due to the use of a random starting point, since in this case the results can be replicated with the same approach and the content image as starting point(see the second column in \figref{fig:GEB+2017_fig2}).
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.25\textwidth}
+		\centering
+		\vspace{0pt}
+		\begin{tikzpicture}
+		\node(a){\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/house_concept_tillamook.jpg}};
+		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
+		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/house_concept_tillamook/building.png}};
+		\end{tikzpicture}
+       Content image
+	\end{minipage}\hfill%
+	\begin{minipage}[t]{0.25\textwidth}
+		\centering
+		\vspace{0pt}
+		\begin{tikzpicture}
+		\node(a){\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/watertown__shop602835_store.jpg}};
+		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
+		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/watertown__shop602835_store/building.png}};
+		\end{tikzpicture}
+		Style image I
+	\end{minipage}\hfill%
+	\begin{minipage}[t]{0.25\textwidth}
+		\centering
+		\vspace{0pt}
+		\begin{tikzpicture}
+		\node(a){\includegraphics[width=0.83\textwidth]{images/gatys_et_al_2017/source/wheat_field_with_cypresses__vincent_van_gogh.jpg}};
+		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
+		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/wheat_field_with_cypresses__vincent_van_gogh/foreground.png}};
+		\end{tikzpicture}
+		Style image II
+	\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__d_paper.jpg} 
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__d.jpg}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__e_paper.jpg} 
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__e.jpg}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__f_paper.jpg}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_2__f.jpg}
+\end{minipage}
+	\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	Paper
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	Implementation
+\end{minipage}
+\caption{Replication of Figure 2 from \cite{GEB+2017}. In the upper row the used content image, the first style image and a second style image for the sky region. The results in the left column are with the parameters from the paper and the right column with the parameters from the reference implementation.  The results are presented using the original method of \cite{GEB2016}, the new approach with a guided variant in which the style transfer from sky to sky and house to house is achieved by masks and a third variant in which a second stylistic image is used for the sky area.}
+\label{fig:GEB+2017_fig2}
+\end{figure}
+
+Another approach from the paper is the colour control, the replicated results of this method are shown in \figref{fig:GEB+2017_fig3}. The figure shows that in some cases it may be useful to want to preserve the colour of the original image. In order to achieve this, two different methods have been investigated. On the one hand, the transmission of luminance, which will preserve the colour of the content image perfectly, but individual strokes can change the colour unnatural (images (d)  and (g) in \figref{fig:GEB+2017_fig3}). On the other hand, a colour histogram matching was used (images (e)  and (h) in \figref{fig:GEB+2017_fig3}).
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/schultenhof_mettingen_bauerngarten_8__j.-h._janßen.jpg}
+		Content image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/starry_night_over_the_rhone__vincent_willem_van_gogh.jpg}
+		Style image
+	\end{minipage}
+\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__c_paper.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__c.jpg} 
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__d_paper.jpg} 
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__d.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__e_paper.jpg} 
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/gatys_et_al_2017/results/fig_3__e.jpg}
+	\end{minipage}
+	\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	Paper
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{0.45\textwidth}
+	\centering
+	Implementation
+\end{minipage}
+	\caption{Replication of Figure 3 in \cite{GEB+2017}. In the upper row the used content image and the style image. The results in  left column are with the parameters from the paper and the right column with the parameters from the reference implementation.}
+	\label{fig:GEB+2017_fig3}
+\end{figure}
+
+\subsection{Johnson et al. 2016}
+
+The authors of the original publication provide models with the hyperparameters used during the training in their github repository. However, the hyperparameters differ not only from the data in the paper but also from the default values from the reference implementation. This information also depends on the style used and whether instance norm has been used or not. The following hyperparameters may be affected:
+
+\begin{itemize}
+	\item the score weight for content loss, style loss and regularization loss
+	\item the size the style image is resized to, and
+	\item the number of batches
+\end{itemize}
+
+An overview of the adapted parameters that we also used for the replication with the implementation parameters can be found in the \tabref{tab:johnson_adapted_hyperparams} in the appendix.
+
+Our results for some sample results are shown in \figref{fig:johnson_alahi_li_2016_fig}. The results show that no stylised images are generated with the information from the paper. The reason for this is the specified value range delimiter in the paper, which transforms the transformed images into a wrong value range and thus makes a training impossible.
+
+Since the optimisation is based on random initial conditions of the transformer weights, we do not expect an exact reproduction of the images, but qualitative and meaningful stylised results. For comparison, the right column in \figref{fig:johnson_alahi_li_2016_fig} shows the results we have produced using the models provided by the authors. All of our trained models as well as scripts to use the pre-trained model weights of the original authors for the stylisation are available online.
+
+As can be seen in the results, we can achieve similar results with our models to those published by the authors. An exception is the style in the last column where the style of our model appears much smaller. However, contacting the author to get further information for this style via hyperparameters or other preprocessing steps for the style image has not been successful so far.
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/chicago.jpg}\\
+		content image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/johnson_alahi_li_2016/source/mosaic.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__mosaic__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__mosaic__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__mosaic__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/starry_night.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__starry_night__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__starry_night__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__starry_night__impl_params__instance_norm.jpg}
+	\end{minipage}
+    \hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.6\textwidth]{images/johnson_alahi_li_2016/source/candy.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__candy__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__candy__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__candy__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__the_scream__impl_params__instance_norm.jpg}
+	\end{minipage}
+    \hfill%
+    \begin{minipage}[t]{0.24\textwidth}
+    	\centering
+    	\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/feathers.jpg}
+    \end{minipage}
+    \hfill%
+    \begin{minipage}[t]{0.24\textwidth}
+    	\centering
+    	\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__feathers__instance_norm.jpg}
+    \end{minipage}
+    \hfill%
+    \begin{minipage}[t]{0.24\textwidth}
+    	\centering
+    	\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__feathers__impl_params__instance_norm.jpg}
+    \end{minipage}
+    \hfill%
+    \begin{minipage}[t]{0.24\textwidth}
+    	\centering
+    	\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__feathers__impl_params__instance_norm.jpg}
+    \end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Style image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Paper
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Implementation
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Author models
+	\end{minipage}
+	\caption{Our stylisation results of the content image due to the transformation of the models we trained with the information in the paper and the reference implementation in different styles with the approach of \cite{JAL2016}. The respective style images are shown in the left column. The last column shows the results we created with the models provided by the author online.}
+	\label{fig:johnson_alahi_li_2016_fig}
+\end{figure}
+
+
+\subsection{Ulyanov et al. 2016}
+
+Our stylisation results for some exemplary style images are shown in \figref{fig:ulyanov_et_al_2016_impl}. 
+
+\begin{figure}[H]
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/kitty.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/bird.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/turner.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_neckarfront_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_kitty_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_bird_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/pleades.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_neckarfront_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_kitty_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_bird_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/mosaic.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_neckarfront_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_kitty_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_bird_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/candy.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_neckarfront_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_kitty_coco__impl_params.png}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_bird_coco__impl_params.png}
+	\end{minipage}
+	\caption{Our stylisation results of the content images (top row) due to the transformation of the models we trained in different styles with the approach of \cite{ULVL2016}. The respective style images are shown in the left column.}
+	\label{fig:ulyanov_et_al_2016_impl}
+\end{figure}
+
+\subsection{Ulyanov et al. 2017}
+Modelle
+
+\subsection{Sanakoyeu et al. 2018}
+
+The authors of the original implementation have provided appropriate groups of style images for the training. We have also used these groups for training our models. The stylisation results of a few exemplary models are shown in \figref{}. Due to the random initialisation of both the transformer and the discriminator, we do not expect an exact replication of the images, but qualitative and meaningful stylised results. 
+
+However, the results show that comparable results can be achieved with our models. Due to this result and the fact that the minimal differences between the information in the paper and the reference implementation did not result in a big difference, we did not contact the author of this approach. Our trained models are available online.
+

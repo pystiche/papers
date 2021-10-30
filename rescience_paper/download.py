@@ -18,8 +18,12 @@ def download_template(
     tmp_dir: pathlib.Path,
     *,
     commit_hash: str = "75bf717a6b07f0f95e197e7cb8cbdbeee8bb564b",
+    executable: Collection[str] = (
+        "yaml-to-latex.py",
+    ),
     excluded: Collection[str] = (
         "bibliography.bib",
+        ".gitignore",
         "content.tex",
         "metadata.yaml",
         "README.md",
@@ -33,6 +37,8 @@ def download_template(
     template_dir = tmp_dir / f"template-{commit_hash}"
     for file_or_dir in template_dir.glob("*"):
         if file_or_dir.name not in excluded:
+            if file_or_dir.name in executable:
+                file_or_dir.chmod(file_or_dir.stat().st_mode | 0o100111)
             shutil.move(str(file_or_dir), str(HERE))
 
 
