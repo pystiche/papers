@@ -9,3 +9,9 @@ $ make
 $ touch article.tex
 $ make
 ```
+
+# clean
+
+```bash
+git clean -dffx
+```

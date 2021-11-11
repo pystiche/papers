@@ -12,6 +12,7 @@ def main():
     tmp_dir = pathlib.Path(tempfile.mkdtemp())
     download_template(tmp_dir)
     download_images(tmp_dir)
+    insert_preamble()
 
 
 def download_template(
@@ -48,6 +49,17 @@ def download_images(
     url="https://download.pystiche.org/replication-paper/images.tar.gz",
 ) -> None:
     download_and_extract_archive(url, str(tmp_dir), extract_root=str(HERE / "graphics"))
+
+
+def insert_preamble():
+    with open(HERE / "article.tex", "r+") as file:
+        lines = file.readlines()
+
+        idx = next(idx for idx, line in enumerate(lines) if line.strip() == r"\begin{document}")
+        lines.insert(idx, "\\input{preamble.tex}\n\n")
+
+        file.seek(0)
+        file.writelines(lines)
 
 
 if __name__ == "__main__":
