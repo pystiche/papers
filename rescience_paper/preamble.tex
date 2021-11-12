@@ -1,5 +1,17 @@
 \usepackage{standalone}
 \usepackage{lscape}
+\usepackage{amsfonts}
 
-\usepackage{graphicx}
 \graphicspath{{graphics/}}
+
+% referencing commands
+\newcommand*{\secname}{Section}
+\newcommand*{\secref}[1]{\secname{}~\ref{#1}}
+
+\newcommand*{\figname}{Figure}
+\newcommand*{\figref}[1]{\figname{}~\ref{#1}}
+
+\newcommand*{\tabname}{Table}
+\newcommand*{\tabref}[1]{\tablename{}~\ref{#1}}
+
+\newcommand{\urlfootnote}[3]{\footnote{#1, \url{#2}, retrieved on #3.}}
