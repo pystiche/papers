@@ -1,37 +1,45 @@
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch.autograd
 from torch.nn.functional import mse_loss
 
 import pystiche
+import pystiche.loss
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
-from pystiche import loss, ops
 
 
-def test_FeatureReconstructionOperator(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
-    multi_layer_encoder, layer = multi_layer_encoder_with_layer
-    encoder = multi_layer_encoder.extract_encoder(layer)
-    target_enc = encoder(target_image)
-    input_enc = encoder(input_image)
+@pytest.fixture(autouse=True)
+def disable_autograd():
+    with torch.autograd.no_grad():
+        yield
 
-    configs = ((True, "mean", 1.0), (False, "sum", 1.0 / 2.0))
-    for impl_params, loss_reduction, score_correction_factor in configs:
-        with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
-            op.set_target_image(target_image)
-            actual = op(input_image)
 
-            score = mse_loss(input_enc, target_enc, reduction=loss_reduction)
-            desired = score * score_correction_factor
+class TestFeatureReconstructionLoss:
+    def test_main(
+        self, subtests, multi_layer_encoder_with_layer, target_image, input_image
+    ):
+        multi_layer_encoder, layer = multi_layer_encoder_with_layer
+        encoder = multi_layer_encoder.extract_encoder(layer)
+        target_enc = encoder(target_image)
+        input_enc = encoder(input_image)
 
-            assert actual == ptu.approx(desired)
+        configs = ((True, "mean", 1.0), (False, "sum", 1.0 / 2.0))
+        for impl_params, loss_reduction, score_correction_factor in configs:
+            with subtests.test(impl_params=impl_params):
+                loss = paper.FeatureReconstructionLoss(encoder, impl_params=impl_params)
+                loss.set_target_image(target_image)
+                actual = loss(input_image)
+
+                score = mse_loss(input_enc, target_enc, reduction=loss_reduction)
+                desired = score * score_correction_factor
+
+                assert actual == ptu.approx(desired)
 
 
 def test_content_loss(subtests):
     content_loss = paper.content_loss()
-    assert isinstance(content_loss, paper.FeatureReconstructionOperator)
+    assert isinstance(content_loss, paper.FeatureReconstructionLoss)
 
     hyper_parameters = paper.hyper_parameters().content_loss
 
@@ -42,7 +50,7 @@ def test_content_loss(subtests):
         assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_MultiLayerEncodingOperator(
+def test_MultiLayerEncodingLoss(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
@@ -53,16 +61,16 @@ def test_MultiLayerEncodingOperator(
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.MultiLayerEncodingOperator(
+            loss = paper.MultiLayerEncodingLoss(
                 multi_layer_encoder,
                 (layer,),
-                lambda encoder, layer_weight: ops.GramOperator(
+                lambda encoder, layer_weight: pystiche.loss.GramLoss(
                     encoder, score_weight=layer_weight
                 ),
                 impl_params=impl_params,
             )
-            op.set_target_image(target_image)
-            actual = op(input_image)
+            loss.set_target_image(target_image)
+            actual = loss(input_image)
 
             score = mse_loss(input_repr, target_repr,)
             desired = score * score_correction_factor
@@ -72,15 +80,17 @@ def test_MultiLayerEncodingOperator(
 
 def test_style_loss(subtests):
     style_loss = paper.style_loss()
-    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+    assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     hyper_parameters = paper.hyper_parameters().style_loss
 
     with subtests.test("encoding_ops"):
-        assert all(isinstance(op, ops.GramOperator) for op in style_loss.operators())
+        assert all(
+            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.children()
+        )
 
     layers, layer_weights = zip(
-        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.children()]
     )
     with subtests.test("layers"):
         assert layers == hyper_parameters.layers
@@ -94,12 +104,12 @@ def test_style_loss(subtests):
 
 def test_perceptual_loss(subtests):
     perceptual_loss = paper.perceptual_loss()
-    assert isinstance(perceptual_loss, loss.PerceptualLoss)
+    assert isinstance(perceptual_loss, pystiche.loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, paper.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingOperator)
+        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingLoss)

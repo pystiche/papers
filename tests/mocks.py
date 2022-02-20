@@ -58,11 +58,11 @@ def patch_multi_layer_encoder_loader(
         patch_models_load_state_dict_from_url(mocker=mocker)
 
     if clear_cache:
-        _load_multi_layer_encoder.cache_clear()
+        _load_multi_layer_encoder.clear_cache()
 
     def new(*args, **kwargs):
         multi_layer_encoder = _load_multi_layer_encoder(loader, *args, **kwargs)
-        multi_layer_encoder.empty_storage()
+        multi_layer_encoder.clear_cache()
         return multi_layer_encoder
 
     if not isinstance(targets, list):

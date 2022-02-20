@@ -67,8 +67,6 @@ def args(tmpdir):
         image_results_dir=tmpdir,
         device=misc.get_device(),
         impl_params=True,
-        logger=optim.OptimLogger(),
-        quiet=True,
     )
 
 
@@ -88,12 +86,6 @@ def test_parse_input_smoke(subtests, main, args):
 
     with subtests.test("impl_params"):
         assert isinstance(actual_args.impl_params, bool)
-
-    with subtests.test("logger"):
-        assert isinstance(actual_args.logger, optim.OptimLogger)
-
-    with subtests.test("quiet"):
-        assert isinstance(actual_args.quiet, bool)
 
 
 def test_figure_2_smoke(subtests, images, nst, main, args):

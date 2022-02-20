@@ -1,7 +1,6 @@
 from torch import nn, optim
 
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters, Identity
 
 __all__ = [
@@ -53,12 +52,12 @@ def preprocessor(impl_params: bool = True) -> nn.Module:
 
     .. seealso::
 
-        - :class:`pystiche.image.transforms.CaffePreprocessing`
+        - :class:`pystiche.image.enc.CaffePreprocessing`
     """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L57-L62
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/DataLoader.lua#L92
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/train.lua#L133
-    return transforms.CaffePreprocessing() if impl_params else Identity()
+    return enc.CaffePreprocessing() if impl_params else Identity()
 
 
 def postprocessor(impl_params: bool = True) -> nn.Module:
@@ -71,11 +70,11 @@ def postprocessor(impl_params: bool = True) -> nn.Module:
 
     .. seealso::
 
-        - :class:`pystiche.image.transforms.CaffePostprocessing`
+        - :class:`pystiche.image.enc.CaffePostprocessing`
     """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L66-L71
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style.lua#L89
-    return transforms.CaffePostprocessing() if impl_params else Identity()
+    return enc.CaffePostprocessing() if impl_params else Identity()
 
 
 def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
@@ -86,7 +85,7 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
             performed internally.
     """
     return enc.vgg16_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=not impl_params, allow_inplace=True
+        framework="caffe", internal_preprocessing=not impl_params, allow_inplace=True
     )
 
 

@@ -2,10 +2,8 @@ import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
 
-import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche.data import DownloadableImageCollection, ImageFolderDataset
-from pystiche.image import transforms
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
 
@@ -25,7 +23,7 @@ def test_content_transform():
 def test_content_transform_impl_params():
     content_transform = paper.content_transform()
     preprocessing = tuple(content_transform.children())[-1]
-    assert isinstance(preprocessing, transforms.CaffePreprocessing)
+    assert isinstance(preprocessing, enc.CaffePreprocessing)
 
 
 def test_style_transform(subtests):

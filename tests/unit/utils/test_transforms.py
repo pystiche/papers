@@ -1,18 +1,20 @@
+import pytest
+
 import pytorch_testing_utils as ptu
 
-import pystiche.image.transforms.functional as F
 from pystiche_papers import utils
 
 
-def test_OptionalGrayscaleToFakegrayscale_no_grayscale(content_image):
-    transform = utils.OptionalGrayscaleToFakegrayscale()
-    actual = transform(content_image)
-    ptu.assert_allclose(actual, content_image)
+class TestOptionalGrayscaleToFakegrayscale:
+    @pytest.fixture
+    def transform(self):
+        return utils.OptionalGrayscaleToFakegrayscale()
 
+    def test_grayscale(self, transform, content_image):
+        single_channel = content_image[:, :1]
+        ptu.assert_allclose(
+            transform(single_channel), single_channel.repeat(1, 3, 1, 1)
+        )
 
-def test_OptionalGrayscaleToFakegrayscale(content_image):
-    image = F.rgb_to_grayscale(content_image)
-    transform = utils.OptionalGrayscaleToFakegrayscale()
-    actual = transform(image)
-    desired = F.grayscale_to_fakegrayscale(image)
-    ptu.assert_allclose(actual, desired)
+    def test_no_grayscale(self, transform, content_image):
+        ptu.assert_allclose(transform(content_image), content_image)

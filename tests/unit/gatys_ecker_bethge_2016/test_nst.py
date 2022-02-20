@@ -7,19 +7,17 @@ import torch
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
 
-from tests.utils import is_callable
-
 
 def test_nst_smoke(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2016._nst.optim.default_image_optim_loop"
+        "pystiche.optim.image_optimization"
     )
 
     paper.nst(content_image, style_image)
 
     args, kwargs = mock.call_args
     input_image, criterion = args
-    get_optimizer = kwargs["get_optimizer"]
+    optimizer = kwargs["optimizer"]
     num_steps = kwargs["num_steps"]
     preprocessor = kwargs["preprocessor"]
     postprocessor = kwargs["postprocessor"]
@@ -33,9 +31,7 @@ def test_nst_smoke(subtests, mocker, content_image, style_image):
         assert isinstance(criterion, type(paper.perceptual_loss()))
 
     with subtests.test("optimizer"):
-        assert is_callable(get_optimizer)
-        optimizer = get_optimizer(input_image)
-        assert isinstance(optimizer, type(paper.optimizer(input_image)))
+        assert optimizer is paper.optimizer
 
     with subtests.test("num_steps"):
         assert num_steps == hyper_parameters.num_steps
@@ -79,7 +75,7 @@ def assert_is_rand_uniform(samples, min=0.0, max=1.0, significance_level=5e-2):
 
 def test_nst_smoke_not_impl_params(subtests, mocker, content_image, style_image):
     mock = mocker.patch(
-        "pystiche_papers.gatys_ecker_bethge_2016._nst.optim.default_image_optim_loop"
+        "pystiche.optim.image_optimization"
     )
     paper.nst(content_image, style_image, impl_params=False)
     input_image, _ = mock.call_args[0]

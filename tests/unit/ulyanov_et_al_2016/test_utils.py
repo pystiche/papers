@@ -5,7 +5,6 @@ from torch import nn, optim
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from .utils import impl_params_and_instance_norm
@@ -198,11 +197,11 @@ def test_ulyanov_et_al_2016_multi_layer_encoder(subtests):
 
 
 def test_ulyanov_et_al_2016_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), enc.CaffePreprocessing)
 
 
 def test_ulyanov_et_al_2016_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), enc.CaffePostprocessing)
 
 
 @impl_params_and_instance_norm

@@ -4,14 +4,14 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 import pystiche
-import pystiche.ops.functional as F
+import pystiche.pystiche.loss.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import loss, ops
 
 
 def test_content_loss(subtests):
     content_loss = paper.content_loss()
-    assert isinstance(content_loss, ops.FeatureReconstructionOperator)
+    assert isinstance(content_loss, pystiche.loss.FeatureReconstructionLoss)
 
     hyper_parameters = paper.hyper_parameters().content_loss
 
@@ -19,7 +19,7 @@ def test_content_loss(subtests):
         assert content_loss.encoder.layer == hyper_parameters.layer
 
 
-def test_GramOperator(
+def test_GramLoss(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
@@ -30,9 +30,9 @@ def test_GramOperator(
     configs = ((True, target_repr.size()[1]), (False, 1.0))
     for impl_params, extra_num_channels_normalization in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.GramOperator(encoder, impl_params=impl_params,)
-            op.set_target_image(target_image)
-            actual = op(input_image)
+            loss = paper.GramLoss(encoder, impl_params=impl_params,)
+            loss.set_target_image(target_image)
+            actual = loss(input_image)
 
             score = mse_loss(input_repr, target_repr,)
             desired = score / extra_num_channels_normalization ** 2
@@ -42,15 +42,15 @@ def test_GramOperator(
 
 def test_style_loss(subtests):
     style_loss = paper.style_loss()
-    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+    assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     hyper_parameters = paper.hyper_parameters().style_loss
 
     with subtests.test("encoding_ops"):
-        assert all(isinstance(op, ops.GramOperator) for op in style_loss.operators())
+        assert all(isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.Losss())
 
     layers, layer_weights = zip(
-        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.Losss()]
     )
     with subtests.test("layers"):
         assert layers == hyper_parameters.layers
@@ -62,9 +62,9 @@ def test_style_loss(subtests):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_TotalVariationOperator(input_image):
-    op = paper.TotalVariationOperator()
-    actual = op(input_image)
+def test_TotalVariationLoss(input_image):
+    loss = paper.TotalVariationLoss()
+    actual = loss(input_image)
 
     desired = F.total_variation_loss(input_image, reduction="sum")
 
@@ -73,7 +73,7 @@ def test_TotalVariationOperator(input_image):
 
 def test_regularization(subtests):
     regularization = paper.regularization()
-    assert isinstance(regularization, paper.TotalVariationOperator)
+    assert isinstance(regularization, paper.TotalVariationLoss)
 
     hyper_parameters = paper.hyper_parameters().regularization
 
@@ -89,11 +89,11 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, ops.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, ops.MultiLayerEncodingOperator)
+        assert isinstance(perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     with subtests.test("regularization"):
-        assert isinstance(perceptual_loss.regularization, paper.TotalVariationOperator,)
+        assert isinstance(perceptual_loss.regularization, paper.TotalVariationLoss,)

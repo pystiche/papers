@@ -1,7 +1,9 @@
 from typing import List, Optional, Sized
 from urllib.parse import urljoin
 
+from torch import nn
 from torch.utils.data import DataLoader, Dataset, Sampler
+from torchvision import transforms
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -10,7 +12,6 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
-from pystiche.image import transforms
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import HyperParameters
 
@@ -31,7 +32,7 @@ def content_transform(
     impl_params: bool = True,
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> transforms.ComposedTransform:
+) -> nn.Sequential:
     r"""Content transform from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -66,7 +67,7 @@ def content_transform(
         transforms_.append(transforms.CenterCrop(edge_size))
 
     transforms_.append(OptionalGrayscaleToFakegrayscale())
-    return transforms.ComposedTransform(*transforms_)
+    return nn.Sequential(*transforms_)
 
 
 def style_transform(
@@ -190,7 +191,7 @@ def dataset(
     root: str,
     impl_params: bool = True,
     instance_norm: bool = True,
-    transform: Optional[transforms.Transform] = None,
+    transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
         transform = content_transform(

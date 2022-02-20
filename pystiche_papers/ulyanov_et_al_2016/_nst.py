@@ -4,9 +4,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-import pystiche
 from pystiche import loss, misc, optim
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
@@ -30,10 +28,6 @@ def training(
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
     quiet: bool = False,
-    logger: Optional[optim.OptimLogger] = None,
-    log_fn: Optional[
-        Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
-    ] = None,
 ) -> nn.Module:
     r"""Training a transformer for the NST.
 
@@ -52,12 +46,6 @@ def training(
             :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
-        logger: Optional custom logger. If ``None``,
-            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
-        log_fn: Optional custom logging function. It is called in every optimization
-            step with the current step and loss. If ``None``,
-            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
-            ``None``.
 
     """
     if hyper_parameters is None:
@@ -115,7 +103,7 @@ def training(
             preprocessor(input_image)
         )
 
-    return optim.default_transformer_epoch_optim_loop(
+    return optim.multi_epoch_model_optimization(
         content_image_loader,
         transformer,
         criterion,
@@ -123,8 +111,6 @@ def training(
         hyper_parameters.num_epochs,
         lr_scheduler=lr_scheduler,
         quiet=quiet,
-        logger=logger,
-        log_fn=log_fn,
     )
 
 

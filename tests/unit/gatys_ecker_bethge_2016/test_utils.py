@@ -5,18 +5,17 @@ from torch import nn, optim
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import enc, meta
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from tests import mocks, utils
 
 
 def test_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), enc.CaffePreprocessing)
 
 
 def test_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), enc.CaffePostprocessing)
 
 
 @pytest.mark.slow

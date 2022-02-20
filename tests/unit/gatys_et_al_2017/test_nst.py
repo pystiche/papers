@@ -4,7 +4,6 @@ import pytest
 
 import pytorch_testing_utils as ptu
 
-import pystiche.image.transforms.functional as F
 import pystiche_papers.gatys_et_al_2017 as paper
 
 from tests.utils import is_callable
@@ -242,22 +241,22 @@ def test_guided_nst_criterion_images_and_guides(
         )
 
     with subtests.test("content_guides"):
-        for region, op in criterion.style_loss.named_operators():
+        for region, loss in criterion.style_loss.named_Losss():
             content_guide = content_guides[region]
             ptu.assert_allclose(
-                op.get_input_guide(), top_level.resize_guide(content_guide)
+                loss.get_input_guide(), top_level.resize_guide(content_guide)
             )
 
     with subtests.test("style_images"):
-        for region, op in criterion.style_loss.named_operators():
+        for region, loss in criterion.style_loss.named_Losss():
             style_image, _ = style_images_and_guides[region]
             ptu.assert_allclose(
-                op.get_target_image(), preprocessor(top_level.resize_image(style_image))
+                loss.get_target_image(), preprocessor(top_level.resize_image(style_image))
             )
 
     with subtests.test("style_guides"):
-        for region, op in criterion.style_loss.named_operators():
+        for region, loss in criterion.style_loss.named_Losss():
             _, style_guide = style_images_and_guides[region]
             ptu.assert_allclose(
-                op.get_target_guide(), top_level.resize_guide(style_guide)
+                loss.get_target_guide(), top_level.resize_guide(style_guide)
             )

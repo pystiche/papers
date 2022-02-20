@@ -45,13 +45,13 @@ class SequentialWithOutChannels(nn.Sequential):
     def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
         super().__init__(*args)
         if out_channel_name is None:
-            out_channel_name = tuple(cast(Dict[str, nn.Module], self._modules).keys())[
+            out_channel_name = tuple(self._modules.keys())[
                 -1
             ]
         elif isinstance(out_channel_name, int):
             out_channel_name = str(out_channel_name)
 
-        self.out_channels = cast(Dict[str, nn.Module], self._modules)[
+        self.out_channels = self._modules[
             out_channel_name
         ].out_channels
 
@@ -60,7 +60,7 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if "padding" in kwargs:
             raise RuntimeError
-        super().__init__(*args, **kwargs)  # type: ignore[call-arg]
+        super().__init__(*args, **kwargs)
 
         self._pad = self._pad_size_to_pad(self._compute_pad_size())
 
