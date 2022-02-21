@@ -42,7 +42,7 @@ def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
 
     with subtests.test("style_image"):
         desired_style_image = preprocessor(initial_resize(style_image))
-        for loss in criterion.style_loss.Losss():
+        for loss in criterion.style_loss.children():
             ptu.assert_allclose(loss.target_image, desired_style_image)
 
     with subtests.test("criterion"):

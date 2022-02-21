@@ -5,7 +5,7 @@ from torch.nn.functional import mse_loss
 
 import pystiche
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche import loss, ops
+from pystiche import loss
 
 
 def test_content_loss(subtests):
@@ -60,11 +60,11 @@ def test_style_loss(subtests):
 
     with subtests.test("encoding_ops"):
         assert all(
-            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.Losss()
+            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.children()
         )
 
     layers, layer_weights = zip(
-        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.Losss()]
+        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.children()]
     )
     with subtests.test("layers"):
         assert layers == hyper_parameters.layers
@@ -83,11 +83,11 @@ def test_guided_style_loss(subtests, content_guides):
     with subtests.test("encoding_losses"):
         assert all(
             isinstance(loss, paper.MultiLayerEncodingLoss)
-            for loss in style_loss.Losss()
+            for loss in style_loss.children()
         )
 
     regions, region_weights = zip(
-        *[(name, loss.score_weight) for name, loss in style_loss.named_Losss()]
+        *[(name, loss.score_weight) for name, loss in style_loss.named_children()]
     )
 
     with subtests.test("regions"):
@@ -114,7 +114,7 @@ def test_perceptual_loss(subtests):
 def test_guided_perceptual_loss(subtests, content_guides):
 
     perceptual_loss = paper.guided_perceptual_loss(content_guides.keys())
-    assert isinstance(perceptual_loss, loss.GuidedPerceptualLoss)
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
