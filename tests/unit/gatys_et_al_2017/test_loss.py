@@ -78,7 +78,7 @@ def test_guided_style_loss(subtests, content_guides):
     style_loss = paper.guided_style_loss(content_guides.keys())
     assert isinstance(style_loss, pystiche.loss.MultiRegionLoss)
 
-    with subtests.test("encoding_ops"):
+    with subtests.test("encoding_losses"):
         assert all(
             isinstance(loss, paper.MultiLayerEncodingLoss)
             for loss in style_loss.Losss()

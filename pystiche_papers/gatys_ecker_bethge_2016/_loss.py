@@ -28,7 +28,7 @@ class FeatureReconstructionLoss(loss.FeatureReconstructionLoss):
             instead of the mean squared error (MSE). Furthermore, use a score
             correction factor of 1/2.
         **feature_reconstruction_loss_kwargs: Additional parameters of a
-            :class:`pystiche.ops.FeatureReconstructionOperator`.
+            :class:`pystiche.ops.FeatureReconstructionLoss`.
 
     .. seealso::
 
@@ -106,7 +106,7 @@ class MultiLayerEncodingLoss(loss.MultiLayerEncodingLoss):
         multi_layer_encoder: Multi-layer encoder.
         layers: Layers of the ``multi_layer_encoder`` that the children losses
             operate on.
-        encoding_loss_fn: Callable that returns a children operator given a
+        encoding_loss_fn: Callable that returns a children loss given a
             :class:`pystiche.enc.SingleLayerEncoder` extracted from the
             ``multi_layer_encoder`` and its corresponding layer weight.
         impl_params: If ``False``, use a score correction factor of 1/4.
