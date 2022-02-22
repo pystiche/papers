@@ -45,15 +45,11 @@ class SequentialWithOutChannels(nn.Sequential):
     def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
         super().__init__(*args)
         if out_channel_name is None:
-            out_channel_name = tuple(self._modules.keys())[
-                -1
-            ]
+            out_channel_name = tuple(self._modules.keys())[-1]
         elif isinstance(out_channel_name, int):
             out_channel_name = str(out_channel_name)
 
-        self.out_channels = self._modules[
-            out_channel_name
-        ].out_channels
+        self.out_channels = self._modules[out_channel_name].out_channels
 
 
 class _AutoPadNdMixin(pystiche.ComplexObject):

@@ -8,7 +8,7 @@ import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
-from pystiche import misc, optim
+from pystiche import misc
 from pystiche_papers.utils import HyperParameters
 
 from . import utils

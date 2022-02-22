@@ -251,7 +251,8 @@ def test_guided_nst_criterion_images_and_guides(
         for region, loss in criterion.style_loss.named_Losss():
             style_image, _ = style_images_and_guides[region]
             ptu.assert_allclose(
-                loss.get_target_image(), preprocessor(top_level.resize_image(style_image))
+                loss.get_target_image(),
+                preprocessor(top_level.resize_image(style_image)),
             )
 
     with subtests.test("style_guides"):

@@ -69,9 +69,9 @@ def compute_layer_weights(
         layers = reversed(layers[: layers.index(layer) + 1])
         for layer_ in layers:
             with contextlib.suppress(AttributeError):
-                return cast(int,
-                            modules[layer_].out_channels  # type: ignore[union-attr]
-                            )
+                return cast(
+                    int, modules[layer_].out_channels  # type: ignore[union-attr]
+                )
 
         raise RuntimeError(
             f"Neither '{layer}' nor any previous layer has an 'out_channels' "
@@ -97,7 +97,9 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     # Cell [8]
     style_loss_layers = ["conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1"]
     if impl_params:
-        style_loss_layers = [layer.replace("conv", "relu") for layer in style_loss_layers]
+        style_loss_layers = [
+            layer.replace("conv", "relu") for layer in style_loss_layers
+        ]
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     # Cell [8]
     style_loss_layer_weights = (

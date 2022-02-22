@@ -1,13 +1,7 @@
-from typing import cast
-
 import torch
 from torch import nn
 
-# import pystiche.image.transforms.functional as F
 from pystiche import image
-
-# from pystiche.image import transforms
-
 
 __all__ = [
     "OptionalGrayscaleToFakegrayscale",

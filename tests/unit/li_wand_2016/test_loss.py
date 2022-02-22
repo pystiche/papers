@@ -45,9 +45,7 @@ def test_content_loss(subtests, impl_params):
         assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_MRFLoss(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
+def test_MRFLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
@@ -152,7 +150,9 @@ def test_perceptual_loss(subtests):
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss)
+        assert isinstance(
+            perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss
+        )
 
     with subtests.test("regularization"):
         assert isinstance(perceptual_loss.regularization, paper.TotalVariationLoss)

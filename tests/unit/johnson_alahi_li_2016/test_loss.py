@@ -19,9 +19,7 @@ def test_content_loss(subtests):
         assert content_loss.encoder.layer == hyper_parameters.layer
 
 
-def test_GramLoss(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
+def test_GramLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_repr = pystiche.gram_matrix(encoder(target_image), normalize=True)
@@ -47,7 +45,9 @@ def test_style_loss(subtests):
     hyper_parameters = paper.hyper_parameters().style_loss
 
     with subtests.test("encoding_ops"):
-        assert all(isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.Losss())
+        assert all(
+            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.Losss()
+        )
 
     layers, layer_weights = zip(
         *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.Losss()]
@@ -93,7 +93,9 @@ def test_perceptual_loss(subtests):
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss)
+        assert isinstance(
+            perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss
+        )
 
     with subtests.test("regularization"):
         assert isinstance(perceptual_loss.regularization, paper.TotalVariationLoss,)
