@@ -4,14 +4,14 @@ import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
 import pystiche
-import pystiche.ops.functional as F
+import pystiche.pystiche.loss.functional as F
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import loss, misc, ops
 
 from tests import utils
 
 
-def test_FeatureReconstructionOperator(
+def test_FeatureReconstructionLoss(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
@@ -22,9 +22,9 @@ def test_FeatureReconstructionOperator(
     configs = ((True, "mean"), (False, "sum"))
     for impl_params, loss_reduction in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
-            op.set_target_image(target_image)
-            actual = op(input_image)
+            loss = paper.FeatureReconstructionLoss(encoder, impl_params=impl_params,)
+            loss.set_target_image(target_image)
+            actual = loss(input_image)
 
             desired = mse_loss(input_enc, target_enc, reduction=loss_reduction)
 
@@ -34,7 +34,7 @@ def test_FeatureReconstructionOperator(
 @utils.impl_params
 def test_content_loss(subtests, impl_params):
     content_loss = paper.content_loss(impl_params=impl_params)
-    assert isinstance(content_loss, paper.FeatureReconstructionOperator)
+    assert isinstance(content_loss, paper.FeatureReconstructionLoss)
 
     hyper_parameters = paper.hyper_parameters(impl_params=impl_params).content_loss
 
@@ -45,9 +45,7 @@ def test_content_loss(subtests, impl_params):
         assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_MRFOperator(
-    subtests, multi_layer_encoder_with_layer, target_image, input_image
-):
+def test_MRFLoss(subtests, multi_layer_encoder_with_layer, target_image, input_image):
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
     target_enc = encoder(target_image)
@@ -59,11 +57,11 @@ def test_MRFOperator(
     for (impl_params, score_correction_factor,) in configs:
         with subtests.test(impl_params=impl_params):
 
-            op = paper.MRFOperator(
+            loss = paper.MRFLoss(
                 encoder, patch_size, impl_params=impl_params, stride=stride
             )
-            op.set_target_image(target_image)
-            actual = op(input_image)
+            loss.set_target_image(target_image)
+            actual = loss(input_image)
 
             extract_patches2d = (
                 paper.extract_normalized_patches2d
@@ -82,17 +80,17 @@ def test_MRFOperator(
 @utils.impl_params
 def test_style_loss(subtests, impl_params):
     style_loss = paper.style_loss(impl_params=impl_params)
-    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+    assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     hyper_parameters = paper.hyper_parameters(impl_params=impl_params).style_loss
 
     with subtests.test("ops"):
-        assert all(isinstance(op, paper.MRFOperator) for op in style_loss.operators())
+        assert all(isinstance(loss, paper.MRFLoss) for loss in style_loss.Losss())
 
     layers, layer_weights, patch_size, stride = zip(
         *[
-            (op.encoder.layer, op.score_weight, op.patch_size, op.stride)
-            for op in style_loss.operators()
+            (loss.encoder.layer, loss.score_weight, loss.patch_size, loss.stride)
+            for loss in style_loss.Losss()
         ]
     )
     with subtests.test("layers"):
@@ -113,15 +111,15 @@ def test_style_loss(subtests, impl_params):
         assert style_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_TotalVariationOperator(subtests, input_image):
+def test_TotalVariationLoss(subtests, input_image):
     configs = ((True, 1.0 / 2.0), (False, 1.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.TotalVariationOperator(impl_params=impl_params,)
-            actual = op(input_image)
+            loss = paper.TotalVariationLoss(impl_params=impl_params,)
+            actual = loss(input_image)
 
             score = F.total_variation_loss(
-                input_image, exponent=op.exponent, reduction="sum"
+                input_image, exponent=loss.exponent, reduction="sum"
             )
 
             desired = score * score_correction_factor
@@ -132,7 +130,7 @@ def test_TotalVariationOperator(subtests, input_image):
 @utils.impl_params
 def test_regularization(subtests, impl_params):
     regularization_loss = paper.regularization(impl_params=impl_params)
-    assert isinstance(regularization_loss, paper.TotalVariationOperator)
+    assert isinstance(regularization_loss, paper.TotalVariationLoss)
 
     hyper_parameters = paper.hyper_parameters(impl_params=impl_params).regularization
 
@@ -148,11 +146,13 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
+            perceptual_loss.content_loss, paper.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, ops.MultiLayerEncodingOperator)
+        assert isinstance(
+            perceptual_loss.style_loss, pystiche.loss.MultiLayerEncodingLoss
+        )
 
     with subtests.test("regularization"):
-        assert isinstance(perceptual_loss.regularization, paper.TotalVariationOperator)
+        assert isinstance(perceptual_loss.regularization, paper.TotalVariationLoss)

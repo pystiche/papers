@@ -1,7 +1,8 @@
 import torch
+from torch import nn
+from torchvision import transforms
 
 from pystiche import data
-from pystiche.image import transforms
 
 __all__ = ["images"]
 
@@ -13,17 +14,17 @@ def image_note(url: str, mirror: bool = False) -> str:
     return f"{note}. The unprocessed image can be downloaded from {url}"
 
 
-def make_image_transform(image: str) -> transforms.ComposedTransform:
-    image_transform: transforms.Transform
+def make_image_transform(image: str) -> nn.Sequential:
+    image_transform: nn.Module
     if image == "emma":
         image_transform = transforms.Crop(origin=(30, 12), size=(930, 682))
     elif image == "jenny":
 
-        class MirrorHorizontally(transforms.Transform):
+        class MirrorHorizontally(nn.Module):
             def forward(self, image: torch.Tensor) -> torch.Tensor:
                 return image.flip(2)
 
-        image_transform = transforms.ComposedTransform(
+        image_transform = nn.Sequential(
             transforms.Crop(origin=(211, 462), size=(1843, 1386)), MirrorHorizontally()
         )
     elif image == "s":
@@ -31,7 +32,7 @@ def make_image_transform(image: str) -> transforms.ComposedTransform:
     else:
         raise RuntimeError
 
-    return transforms.ComposedTransform(
+    return nn.Sequential(
         image_transform,
         transforms.Resize(384, edge="vert", interpolation_mode="bicubic"),
     )

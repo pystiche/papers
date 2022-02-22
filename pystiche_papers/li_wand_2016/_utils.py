@@ -3,12 +3,11 @@ import math
 from typing import Any, Dict, Optional, Sequence, Tuple, Union, cast
 
 import torch
-from torch import optim
+from torch import nn, optim
 
 import pystiche
 from pystiche import enc, misc, ops
-from pystiche.image import extract_image_size, transforms
-from pystiche.image.transforms.functional import crop
+from pystiche.image import extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 __all__ = [
@@ -271,7 +270,7 @@ def _computeBB(width: int, height: int, alpha: float) -> Tuple[int, int, int, in
     )
 
 
-class ValidCropAfterRotate(transforms.Transform):
+class ValidCropAfterRotate(nn.Module):
     def __init__(self, angle: float, clockwise: bool = False):
         super().__init__()
         self.angle = angle
@@ -303,7 +302,7 @@ class ValidCropAfterRotate(transforms.Transform):
 
 def target_transforms(
     impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
-) -> Sequence[transforms.Transform]:
+) -> Sequence[nn.Module]:
     r"""MRF target transformations from :cite:`LW2016`.
 
     Args:
@@ -345,7 +344,7 @@ def target_transforms(
         scaling_factors, rotation_angles
     ):
         transforms_.append(
-            transforms.ComposedTransform(
+            nn.Sequential(
                 transforms.RotateMotif(rotation_angle),
                 ValidCropAfterRotate(rotation_angle),
                 transforms.Rescale(scaling_factor),
@@ -354,20 +353,20 @@ def target_transforms(
     return transforms_
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
+def preprocessor() -> enc.CaffePreprocessing:
     r"""Preprocessor from :cite:`LW2016`."""
-    return transforms.CaffePreprocessing()
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
+def postprocessor() -> enc.CaffePostprocessing:
     r"""Postprocessor from :cite:`LW2016`."""
-    return transforms.CaffePostprocessing()
+    return enc.CaffePostprocessing()
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`LW2016`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 

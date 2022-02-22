@@ -5,7 +5,6 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.optimizer import Optimizer
 
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 __all__ = [
@@ -118,16 +117,16 @@ _hyper_parameters = hyper_parameters
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`ULVL2016,UVL2017`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
-    return transforms.CaffePreprocessing()
+def preprocessor() -> enc.CaffePreprocessing:
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
-    return transforms.CaffePostprocessing()
+def postprocessor() -> enc.CaffePostprocessing:
+    return enc.CaffePostprocessing()
 
 
 def optimizer(

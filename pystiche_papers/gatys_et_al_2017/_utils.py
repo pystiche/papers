@@ -4,7 +4,6 @@ import torch
 from torch import optim
 
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.gatys_ecker_bethge_2016 import (
     compute_layer_weights as _compute_layer_weights,
 )
@@ -20,18 +19,18 @@ __all__ = [
 ]
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
-    return transforms.CaffePreprocessing()
+def preprocessor() -> enc.CaffePreprocessing:
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
-    return transforms.CaffePostprocessing()
+def postprocessor() -> enc.CaffePostprocessing:
+    return enc.CaffePostprocessing()
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`GEB+2017`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 

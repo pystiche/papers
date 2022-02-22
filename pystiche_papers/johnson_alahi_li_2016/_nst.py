@@ -28,10 +28,6 @@ def training(
     instance_norm: Optional[bool] = None,
     hyper_parameters: Optional[HyperParameters] = None,
     quiet: bool = False,
-    logger: Optional[optim.OptimLogger] = None,
-    log_fn: Optional[
-        Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
-    ] = None,
 ) -> nn.Module:
     r"""Training a transformer for the NST.
 
@@ -50,12 +46,6 @@ def training(
             :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
-        logger: Optional custom logger. If omitted,
-            :class:`pystiche.optim.OptimLogger` is used. Defaults to ``None``.
-        log_fn: Optional custom logging function. It is called in every optimization
-            step with the current step and loss. If omitted,
-            :func:`~pystiche.optim.default_image_optim_log_fn` is used. Defaults to
-            ``None``.
 
     If ``impl_params is True`` , an external preprocessing of the images is used.
 
@@ -97,15 +87,13 @@ def training(
     def criterion_update_fn(input_image: torch.Tensor, criterion: nn.Module) -> None:
         cast(loss.PerceptualLoss, criterion).set_content_image(input_image)
 
-    return optim.default_transformer_optim_loop(
+    return optim.model_optimization(
         content_image_loader,
         transformer,
         criterion,
         criterion_update_fn,
         optimizer=optimizer,
         quiet=quiet,
-        logger=logger,
-        log_fn=log_fn,
     )
 
 

@@ -42,8 +42,8 @@ def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
 
     with subtests.test("style_image"):
         desired_style_image = preprocessor(initial_resize(style_image))
-        for op in criterion.style_loss.operators():
-            ptu.assert_allclose(op.target_image, desired_style_image)
+        for loss in criterion.style_loss.Losss():
+            ptu.assert_allclose(loss.target_image, desired_style_image)
 
     with subtests.test("criterion"):
         assert isinstance(criterion, type(paper.perceptual_loss()))

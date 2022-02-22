@@ -4,15 +4,14 @@ from urllib.parse import urljoin
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
-import pystiche.image.transforms.functional as F
 from pystiche import image
 from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
     ImageFolderDataset,
 )
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
@@ -30,7 +29,7 @@ __all__ = [
 ]
 
 
-class TopLeftCropToMultiple(transforms.Transform):
+class TopLeftCropToMultiple(nn.Module):
     def __init__(self, multiple: int = 16):
         super().__init__()
         self.multiple = multiple

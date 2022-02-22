@@ -1,10 +1,8 @@
 import pytorch_testing_utils as ptu
 from torch.utils.data import DataLoader
 
-import pystiche.image.transforms.functional as F
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche.data import DownloadableImageCollection, ImageFolderDataset
-from pystiche.image import transforms
 from pystiche_papers import utils
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 

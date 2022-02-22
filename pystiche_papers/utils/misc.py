@@ -18,11 +18,9 @@ from torch.hub import _get_torch_home
 from torch.utils.data.dataloader import DataLoader
 
 from pystiche.image import extract_batch_size, is_single_image, make_batched_image
-from pystiche.optim import OptimLogger
 
 __all__ = [
     "batch_up_image",
-    "paper_replication",
     "make_reproducible",
     "get_tmp_dir",
     "get_sha256_hash",
@@ -40,12 +38,12 @@ def batch_up_image(
     loader: Optional[DataLoader] = None,
 ) -> torch.Tensor:
     def extract_batch_size_from_loader(loader: DataLoader) -> int:
-        batch_size = cast(Optional[int], loader.batch_size)
+        batch_size = loader.batch_size
         if batch_size is not None:
             return batch_size
 
         try:
-            batch_size = loader.batch_sampler.batch_size  # type: ignore[attr-defined]
+            batch_size = loader.batch_sampler.batch_size  # type: ignore[union-attr]
             assert isinstance(batch_size, int)
             return batch_size
         except (AttributeError, AssertionError):
@@ -63,24 +61,6 @@ def batch_up_image(
         raise RuntimeError
 
     return image.repeat(desired_batch_size, 1, 1, 1)
-
-
-@contextlib.contextmanager
-def paper_replication(
-    optim_logger: OptimLogger, title: str, url: str, author: str, year: Union[str, int]
-) -> Iterator:
-    header = "\n".join(
-        (
-            "Replication of the paper",
-            f"'{title}'",
-            url,
-            "authored by",
-            author,
-            f"in {str(year)}",
-        )
-    )
-    with optim_logger.environment(header):
-        yield
 
 
 def make_reproducible(

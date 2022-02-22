@@ -4,8 +4,14 @@ from argparse import Namespace
 from os import path
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
-from pystiche import image, misc, optim
+from pystiche import image, misc
 from pystiche_papers import utils
+
+
+def save_result(output_image, output_file):
+    print(f"Saving result to {output_file}")
+    image.write_image(output_image, output_file)
+    print("#" * int(os.environ.get("COLUMNS", "80")))
 
 
 @utils.abort_if_cuda_memory_exausts
@@ -35,26 +41,21 @@ def figure_2(args):
         StyleImage("F", images["composition_vii"], 1e4),
     )
 
-    params = "implementation" if args.impl_params else "paper"
     for style_image in style_images:
-        header = f"Replicating Figure 2 {style_image.label} with {params} parameters"
-        with args.logger.environment(header):
-            hyper_parameters.style_loss.score_weight = style_image.score_weight
+        print(f"Replicating Figure 2 {style_image.label}")
+        hyper_parameters.style_loss.score_weight = style_image.score_weight
 
-            output_image = paper.nst(
-                content_image,
-                style_image.image,
-                impl_params=args.impl_params,
-                hyper_parameters=hyper_parameters,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
+        output_image = paper.nst(
+            content_image,
+            style_image.image,
+            impl_params=args.impl_params,
+            hyper_parameters=hyper_parameters,
+        )
 
-            output_file = path.join(
-                args.image_results_dir, f"fig_2__{style_image.label}.jpg"
-            )
-            args.logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
-            image.write_image(output_image, output_file)
+        save_result(
+            output_image,
+            path.join(args.image_results_dir, f"fig_2__{style_image.label}.jpg"),
+        )
 
 
 @utils.abort_if_cuda_memory_exausts
@@ -71,6 +72,7 @@ def figure_3(args):
         size=hyper_parameters.nst.image_size, device=args.device
     )
 
+    # TODO: this should use the layers from the hyper_parameters
     style_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
     layer_configs = [style_layers[: idx + 1] for idx in range(len(style_layers))]
 
@@ -79,31 +81,30 @@ def figure_3(args):
     for layers, score_weight in itertools.product(layer_configs, score_weights):
         row_label = layers[-1]
         column_label = f"{1.0 / score_weight:.0e}"
-        header = (
+        print(
             f"Replicating Figure 3 image in row {row_label} and column {column_label}"
         )
-        with args.logger.environment(header):
-            hyper_parameters.style_loss.layers = style_layers
-            if args.impl_params:
-                hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
-                    style_layers
-                )
-            hyper_parameters.style_loss.score_weight = score_weight
-
-            output_image = paper.nst(
-                content_image,
-                style_image,
-                impl_params=args.impl_params,
-                hyper_parameters=hyper_parameters,
-                quiet=args.quiet,
-                logger=args.logger,
+        # FIXME: this should be layers
+        hyper_parameters.style_loss.layers = style_layers
+        if args.impl_params:
+            hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
+                layers
             )
+        hyper_parameters.style_loss.score_weight = score_weight
 
-            output_file = path.join(
+        output_image = paper.nst(
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
+            hyper_parameters=hyper_parameters,
+        )
+
+        save_result(
+            output_image,
+            path.join(
                 args.image_results_dir, f"fig_3__{row_label}__{column_label}.jpg"
-            )
-            args.logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
-            image.write_image(output_image, output_file)
+            ),
+        )
 
 
 def parse_input():
@@ -112,7 +113,6 @@ def parse_input():
     image_results_dir = None
     device = None
     impl_params = True
-    quiet = False
 
     def process_dir(dir):
         dir = path.abspath(path.expanduser(dir))
@@ -130,15 +130,12 @@ def parse_input():
     image_results_dir = process_dir(image_results_dir)
 
     device = misc.get_device(device)
-    logger = optim.OptimLogger()
 
     return Namespace(
         image_source_dir=image_source_dir,
         image_results_dir=image_results_dir,
         device=device,
         impl_params=impl_params,
-        logger=logger,
-        quiet=quiet,
     )
 
 

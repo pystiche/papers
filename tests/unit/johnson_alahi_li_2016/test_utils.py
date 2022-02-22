@@ -5,7 +5,6 @@ from torch import nn, optim
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import enc
-from pystiche.image import transforms
 
 
 def test_hyper_parameters_content_loss(subtests):
@@ -90,9 +89,7 @@ def test_hyper_parameters_batch_sampler(subtests):
 
 
 def test_preprocessor():
-    assert isinstance(
-        paper.preprocessor(impl_params=True), transforms.CaffePreprocessing
-    )
+    assert isinstance(paper.preprocessor(impl_params=True), enc.CaffePreprocessing)
 
 
 def test_preprocessor_noop(input_image):
@@ -102,9 +99,7 @@ def test_preprocessor_noop(input_image):
 
 
 def test_postprocessor():
-    assert isinstance(
-        paper.postprocessor(impl_params=True), transforms.CaffePostprocessing
-    )
+    assert isinstance(paper.postprocessor(impl_params=True), enc.CaffePostprocessing)
 
 
 def test_postprocessor_noop(input_image):
