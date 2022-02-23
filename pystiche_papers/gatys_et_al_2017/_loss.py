@@ -28,10 +28,10 @@ def content_loss(
 
     Args:
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
@@ -46,7 +46,7 @@ def content_loss(
 
 
 class MultiLayerEncodingLoss(loss.MultiLayerEncodingLoss):
-    r"""Multi-layer encoding Loss from :cite:`GEB2016`.
+    r"""Multi-layer encoding Loss from :cite:`GEB+2017`.
 
     Args:
         multi_layer_encoder: Multi-layer encoder.
@@ -100,10 +100,10 @@ def style_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     .. seealso::
 
@@ -141,10 +141,10 @@ def guided_style_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     .. seealso::
 
@@ -186,10 +186,10 @@ def perceptual_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
@@ -224,10 +224,10 @@ def guided_perceptual_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
