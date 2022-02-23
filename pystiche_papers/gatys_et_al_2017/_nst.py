@@ -31,7 +31,7 @@ def nst(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
     """
@@ -92,7 +92,7 @@ def guided_nst(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
         quiet: If ``True``, not information is logged during the optimization. Defaults
             to ``False``.
     """
