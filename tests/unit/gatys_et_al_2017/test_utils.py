@@ -56,7 +56,7 @@ def test_optimizer(subtests, input_image):
 
 def test_compute_layer_weights():
     multi_layer_encoder = paper.multi_layer_encoder()
-    layers = tuple(multi_layer_encoder.children_names())
+    layers = tuple(dict(multi_layer_encoder.named_children()).keys())
 
     actual = paper.compute_layer_weights(layers)
     expected = pystiche_papers.gatys_ecker_bethge_2016.compute_layer_weights(

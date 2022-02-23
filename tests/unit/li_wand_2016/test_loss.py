@@ -85,12 +85,12 @@ def test_style_loss(subtests, impl_params):
     hyper_parameters = paper.hyper_parameters(impl_params=impl_params).style_loss
 
     with subtests.test("ops"):
-        assert all(isinstance(loss, paper.MRFLoss) for loss in style_loss.Losss())
+        assert all(isinstance(loss, paper.MRFLoss) for loss in style_loss.children())
 
     layers, layer_weights, patch_size, stride = zip(
         *[
             (loss.encoder.layer, loss.score_weight, loss.patch_size, loss.stride)
-            for loss in style_loss.Losss()
+            for loss in style_loss.children()
         ]
     )
     with subtests.test("layers"):

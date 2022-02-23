@@ -45,12 +45,10 @@ def test_style_loss(subtests):
     hyper_parameters = paper.hyper_parameters().style_loss
 
     with subtests.test("encoding_ops"):
-        assert all(
-            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.Losss()
-        )
+        assert all(isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.children())
 
     layers, layer_weights = zip(
-        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.Losss()]
+        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.children()]
     )
     with subtests.test("layers"):
         assert layers == hyper_parameters.layers

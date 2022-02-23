@@ -95,11 +95,11 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB2016`."""
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     # Cell [8]
-    style_loss_layers = ["conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1"]
+    style_loss_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
     if impl_params:
-        style_loss_layers = [
+        style_loss_layers = tuple(
             layer.replace("conv", "relu") for layer in style_loss_layers
-        ]
+        )
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     # Cell [8]
     style_loss_layer_weights = (

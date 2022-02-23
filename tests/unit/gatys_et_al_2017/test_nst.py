@@ -3,6 +3,7 @@ import unittest.mock
 import pytest
 
 import pytorch_testing_utils as ptu
+from torchvision.transforms import functional as F
 
 import pystiche_papers.gatys_et_al_2017 as paper
 
@@ -66,7 +67,9 @@ def postprocessor_mocks(make_nn_module_mock, patcher):
 @pytest.fixture
 def image_pyramid_mocks(mocker, patcher):
     def resize(image_or_guide):
-        return F.rescale(image_or_guide, 2.0)
+        return F.resize(
+            image_or_guide, [length * 2 for length in image_or_guide.shape[-2:]]
+        )
 
     top_level_mock = mocker.Mock()
     attach_method_mock(
@@ -103,7 +106,7 @@ def guided_perceptual_loss_mocks(make_nn_module_mock, patcher):
 
 @pytest.fixture(autouse=True)
 def default_image_pyramid_optim_loop_patch(patcher):
-    return patcher("optim.default_image_pyramid_optim_loop")
+    return patcher("optim.pyramid_image_optimization")
 
 
 @pytest.mark.slow
@@ -241,23 +244,19 @@ def test_guided_nst_criterion_images_and_guides(
         )
 
     with subtests.test("content_guides"):
-        for region, loss in criterion.style_loss.named_Losss():
-            content_guide = content_guides[region]
+        for region, content_guide in content_guides.items():
             ptu.assert_allclose(
-                loss.get_input_guide(), top_level.resize_guide(content_guide)
+                criterion.regional_content_guide(region),
+                top_level.resize_guide(content_guide),
             )
 
-    with subtests.test("style_images"):
-        for region, loss in criterion.style_loss.named_Losss():
-            style_image, _ = style_images_and_guides[region]
+    with subtests.test("style_images_and_guides"):
+        for region, (style_image, style_guide) in style_images_and_guides.items():
             ptu.assert_allclose(
-                loss.get_target_image(),
+                criterion.regional_style_image(region),
                 preprocessor(top_level.resize_image(style_image)),
             )
-
-    with subtests.test("style_guides"):
-        for region, loss in criterion.style_loss.named_Losss():
-            _, style_guide = style_images_and_guides[region]
             ptu.assert_allclose(
-                loss.get_target_guide(), top_level.resize_guide(style_guide)
+                criterion.regional_style_guide(region),
+                top_level.resize_guide(style_guide),
             )
