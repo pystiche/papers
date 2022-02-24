@@ -1,14 +1,21 @@
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch
 from torch.nn.functional import mse_loss
 
 import pystiche
-import pystiche.pystiche.loss.functional as F
+import pystiche.loss.functional as F
 import pystiche_papers.li_wand_2016 as paper
-from pystiche import loss, misc, ops
+from pystiche import loss, misc
 
 from tests import utils
+
+
+@pytest.fixture(autouse=True)
+def disable_autograd():
+    with torch.autograd.no_grad():
+        yield
 
 
 def test_FeatureReconstructionLoss(
