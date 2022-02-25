@@ -24,13 +24,13 @@ __all__ = [
 
 
 class FeatureReconstructionLoss(loss.FeatureReconstructionLoss):
-    r"""Feature reconstruction operator from :cite:`LW2016`.
+    r"""Feature reconstruction loss from :cite:`LW2016`.
 
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``False``, calculate the score with the squared error (SE)
             instead of the mean squared error (MSE).
-        **feature_reconstruction_op_kwargs: Additional parameters of a
+        **feature_reconstruction_loss_kwargs: Additional parameters of a
             :class:`pystiche.loss.FeatureReconstructionLoss`.
 
     .. seealso::
@@ -42,9 +42,9 @@ class FeatureReconstructionLoss(loss.FeatureReconstructionLoss):
         self,
         encoder: enc.Encoder,
         impl_params: bool = True,
-        **feature_reconstruction_op_kwargs: Any,
+        **feature_reconstruction_loss_kwargs: Any,
     ):
-        super().__init__(encoder, **feature_reconstruction_op_kwargs)
+        super().__init__(encoder, **feature_reconstruction_loss_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/content.lua#L15
         # nn.MSECriterion() was used as criterion to calculate the content loss, which
@@ -78,7 +78,7 @@ def content_loss(
 
     .. seealso::
 
-        :class:`pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
+        :class:`pystiche_papers.li_wand_2016.FeatureReconstructionLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -94,14 +94,14 @@ def content_loss(
 
 
 class MRFLoss(loss.MRFLoss):
-    r"""MRF operator from :cite:`LW2016`.
+    r"""MRF loss from :cite:`LW2016`.
 
     Args:
         encoder: Encoder used to encode the input.
         patch_size: Spatial size of the neural patches.
         impl_params: If ``True``, normalize the gradient of the neural patches. If
             ``False``, use a score correction factor of 1/2.
-        **mrf_op_kwargs: Additional parameters of a :class:`pystiche.loss.MRFLoss`.
+        **mrf_loss_kwargs: Additional parameters of a :class:`pystiche.loss.MRFLoss`.
 
     In contrast to :class:`pystiche.loss.MRFLoss`, the score is calculated with the
     squared error (SE) instead of the mean squared error (MSE).
@@ -117,9 +117,9 @@ class MRFLoss(loss.MRFLoss):
         encoder: enc.Encoder,
         patch_size: Union[int, Tuple[int, int]],
         impl_params: bool = True,
-        **mrf_op_kwargs: Any,
+        **mrf_loss_kwargs: Any,
     ):
-        super().__init__(encoder, patch_size, **mrf_op_kwargs)
+        super().__init__(encoder, patch_size, **mrf_loss_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L221
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L224
@@ -175,7 +175,7 @@ def style_loss(
 
     .. seealso::
 
-        - :class:`pystiche_papers.li_wand_2016.MRFOperator`
+        - :class:`pystiche_papers.li_wand_2016.MRFLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -205,11 +205,11 @@ def style_loss(
 
 
 class TotalVariationLoss(loss.TotalVariationLoss):
-    r"""Total variation operator from :cite:`LW2016`.
+    r"""Total variation loss from :cite:`LW2016`.
 
     Args:
         impl_params: If ``False``, use a score correction factor of 1/2.
-        **total_variation_op_kwargs: Additional parameters of a
+        **total_variation_loss_kwargs: Additional parameters of a
             :class:`pystiche.loss.TotalVariationLoss`.
 
     In contrast to :class:`pystiche.loss.TotalVariationLoss`, the the score is
@@ -220,8 +220,8 @@ class TotalVariationLoss(loss.TotalVariationLoss):
         - :class:`pystiche.loss.TotalVariationLoss`
     """
 
-    def __init__(self, impl_params: bool = True, **total_variation_op_kwargs: Any):
-        super().__init__(**total_variation_op_kwargs)
+    def __init__(self, impl_params: bool = True, **total_variation_loss_kwargs: Any):
+        super().__init__(**total_variation_loss_kwargs)
 
         self.loss_reduction = "sum"
 
@@ -253,7 +253,7 @@ def regularization(
 
     .. seealso::
 
-        - :class:`pystiche_papers.li_wand_2016.TotalVariationOperator`
+        - :class:`pystiche_papers.li_wand_2016.TotalVariationLoss`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
