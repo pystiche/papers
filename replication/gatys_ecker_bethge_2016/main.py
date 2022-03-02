@@ -83,10 +83,10 @@ def figure_3(args):
             f"Replicating Figure 3 image in row {row_label} and column {column_label}"
         )
         with args.logger.environment(header):
-            hyper_parameters.style_loss.layers = style_layers
+            hyper_parameters.style_loss.layers = layers
             if args.impl_params:
                 hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
-                    style_layers
+                    layers
                 )
             hyper_parameters.style_loss.score_weight = score_weight
 
