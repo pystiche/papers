@@ -1,696 +1,756 @@
 \newpage
 \section{Appendix} 
 
-\subsection{Parameters} \label{sec:parameters_appendix}
-\subsubsection{Gatys, Ecker and Bethge 2016}
+\subsection{Image credits} \label{app:image_credits}
+We have used images in this work that are marked as public domain or fall under licences such as the Creative Commons CC0 licence. These licences allow the images to be used in a scientific work and allow modifications of the content. All images that are not accredited come from the author of this study.
 
-\begin{landscape}
-\begin{table*}[!t]
-	\renewcommand{\arraystretch}{1.0}
-	\caption{The hyperparameters used from the implementation and paper of Gatys, Ecker and Bethge 2016 \cite{GEB2016}}
-	\label{tab:GEB2016_parameters}
-	\centering
-	\begin{tabular}{c|c|c}
-		\hline
-		\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
-		\hline\hline
-		image size & 512 & 512 \\
-		image resize & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
-		starting point & "content" & "random" \\
-		number steps & 500 & 500 \\
-		Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
-		Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
-		\hline
-		\bfseries Optimizer & &\\
-		\hline
-		type & LBFGS & LBFGS\\
-		learning rate & 1.0 & 1.0\\
-		max iter & 1 & 1 \\
-		\hline
-		\bfseries  Content Loss & & \\
-		\hline
-		layer & "relu4\_2" & "conv4\_2" \\
-		score weight & 1e0 & 1e0 \\
- 		score correction factor & 1e0 & 1.0 / 2.0 \\
-		loss reduction & "mean" & "sum" \\
-		\hline
-		\bfseries  Style Loss & & \\
-		\hline
-		layer & ("relu1\_1", "relu2\_1", "relu3\_1", "relu4\_1", "relu5\_1") & ("conv1\_1", "conv2\_1", "conv3\_1", "conv4\_1", "conv5\_1") \\
-		score weight & 1e3$^4$ & 1e3$^4$ \\
-		score correction factor & 1e0 & 1.0 / 4.0 \\
-		layer weights & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ & "mean" \\
-		\hline
-	\end{tabular}
-\raggedright
-	\footnotesize{
-		\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
-		Simonyan and Zisserman in \cite{SZ2015}.
-	    \\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
-        \\$^3$ The layer\_weights are computed by $1/n^2$ where $n$ denotes the number of channels of a feature map from the corresponding layer in the pretrained Encoder.
-        \\$^4$ Different information for the content/style ratio is given for the different images, more detailed information can be found in the text of the results.
-    }
-\end{table*}
-\end{landscape}
+It may happen that a single image is integrated several times in this list with different sources. This is because some of these images are in the repositories of the original publication and we use these images in these cases. Below is a list of the images and the corresponding figures in which the images appear:
 
-\begin{table*}[!t]
-	\renewcommand{\arraystretch}{1.3}
-	\caption{An overview of the adapted parameters during the optimisation provided by the author for the approach in \cite{GEB2016}.}
-	\label{tab:Gatys_2016_adapted_params}
-	\centering
-	\begin{tabular}{c|c}
-		\hline
-		\bfseries B &  \\
-		\hline
-		starting point & "random" \\
-		number steps & 2000  \\
-		style loss score weight & 1e6 \\
-		content loss score weight$^1$ &  1e3\\
-		\hline
-		\bfseries C &  \\
-		\hline
-		starting point & "random" \\
-		number steps & 2000  \\
-		style loss score weight & 1e6 \\
-		content loss score weight$^1$ &  8e2\\
-		\hline
-		\bfseries D &  \\
-		\hline
-		starting point & "random" \\
-		number steps & 2000  \\
-		style loss score weight & 1e6 \\
-		content loss score weight$^1$ &  5e3\\
-		\hline
-		\bfseries E &  \\
-		\hline
-		starting point & "random" \\
-		number steps & 2000  \\
-		style loss score weight & 1e6 \\
-		content loss score weight$^1$ &  5e2\\
-		\hline
-		\bfseries F &  \\
-		\hline
-		starting point & "random" \\
-		number steps & 2000  \\
-		style loss score weight & 1e6 \\
-		content loss score weight$^1$ &  5e2\\
-		\hline
-	\end{tabular}
-\footnotesize{
-	\\$^1$ This weighting $\alpha$ results from the weight ratio $\frac{\alpha}{\beta}$ given in the paper and the style loss score weight $\beta$.
-}
-\end{table*}
+\imagecredits{\figref{fig:fig_nst}}{Bird}{https://pixabay.com/photos/colorful-bird-rainbow-parakeet-1311016/}
 
-\begin{figure}[H]
-	\centering
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{A}};
-		\end{tikzpicture}  
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__B.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/shipwreck_of_the_minotaur__turner.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{B}};
-		\end{tikzpicture}
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__C.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/starry_night__vincent_van_gogh.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{C}};
-		\end{tikzpicture} 
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__D.jpg}};
-		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
-		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/the_scream__edvard_munch.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{D}};
-		\end{tikzpicture}
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__E.jpg}};
-		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
-		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/figure_dans_un_fauteuil__pablo_ruiz_picasso.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{E}};
-		\end{tikzpicture} 
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__F.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/composition_vii__wassily_kandinsky.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{F}};
-		\end{tikzpicture}
-	\end{minipage}
-	\caption{Replication of the Figure 3 in \cite{GEB2016} with the information given in the reference implementation.}
-	\label{fig:GEB2016_fig_2_appendix}
-\end{figure}
+\imagecredits{\figref{fig:fig_nst}}{Mosaic}{https://pixabay.com/photos/mosaic-stones-structure-template-755722/}
 
-\begin{figure}[H]
-	\centering
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{A}};
-		\end{tikzpicture}  
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__B__impl_params__author2.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/shipwreck_of_the_minotaur__turner.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{B}};
-		\end{tikzpicture}
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author2.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/starry_night__vincent_van_gogh.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{C}};
-		\end{tikzpicture} 
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__D__impl_params__author2.jpg}};
-		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
-		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/the_scream__edvard_munch.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{D}};
-		\end{tikzpicture}
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__E__impl_params__author2.jpg}};
-		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
-		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/figure_dans_un_fauteuil__pablo_ruiz_picasso.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{E}};
-		\end{tikzpicture} 
-	\end{minipage}
-	\hfill
-	\begin{minipage}[t]{0.45\textwidth}
-		\centering
-		\vspace{0pt}
-		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__F__impl_params__author2.jpg}};
-		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
-		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/composition_vii__wassily_kandinsky.jpg}};
-		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{F}};
-		\end{tikzpicture}
-	\end{minipage}
-	\caption{Replication of the Figure 3 in \cite{GEB2016} with the information provided by the author.}
-	\label{fig:GEB2016_author_fig_2_appendix}
-\end{figure}
+\imagecredits{\figref{fig:generated_style_nst} and \figref{fig:GEB2016_fig_2}}{Vincent van Gogh, \eqq{The Starry Night}}{https://en.wikipedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg}
+
+\imagecredits{\figref{fig:GEB2016_fig_2} and \figref{fig:ulyanov_et_al_2016_impl}}{Neckarfront Tübingen}{https://commons.wikimedia.org/wiki/File:Tuebingen_Neckarfront.jpg}
+
+\imagecredits{\figref{fig:GEB2016_fig_2}}{William Turner, \eqq{The Shipwreck of the Minotaur}}{https://www.artble.com/imgs/c/d/1/98090/the_shipwreck_of_the_minotaur.jpg}
+
+\imagecredits{\figref{fig:GEB2016_fig_2}}{Edvard Munch, \eqq{The Scream}}{https://commons.wikimedia.org/wiki/File:The_Scream.jpg}
+
+\imagecredits{\figref{fig:GEB2016_fig_2}}{Pablo Picasso, \eqq{ Figure dans un Fauteuil}}{https://en.wikipedia.org/wiki/File:Pablo_Picasso,_1909-10,_Figure_dans_un_Fauteuil_(Seated_Nude,_Femme_nue_assise),_oil_on_canvas,_92.1_x_73_cm,_Tate_Modern,_London.jpg}
+
+\imagecredits{\figref{fig:GEB2016_fig_2}}{Wassily Kandinsky, \eqq{Composition VII}}{https://de.wikipedia.org/wiki/Datei:Vassily_Kandinsky,_1913_-_Composition_7.jpg}
+
+\imagecredits{\figref{fig:LW2016_fig6}}{Portrait1}{https://raw.githubusercontent.com/chuanli11/CNNMRF/master/data/content/potrait1.jpg}
+
+\imagecredits{\figref{fig:LW2016_fig6}}{Pablo Picasso, \eqq{Self-portrait}}{https://raw.githubusercontent.com/chuanli11/CNNMRF/master/data/style/picasso.jpg}
+
+\imagecredits{\figref{fig:LW2016_fig6}}{Wassily Kandinsky, \eqq{Composition VIII}}{https://www.wassilykandinsky.net/work-50.php}
+
+\imagecreditshref{\figref{fig:LW2016_fig6}}{\emph{theilr}, \eqq{S}}{https://www.flickr.com/photos/theilr/9270411440/in/photolist-f8chm1-2di8AWD-8fQR9T-7rFKyH-saiwW-zpadej-qWGN8h-5XPnhU-c8xQQU-4LfwCV-xkpyx-u7btA-6tQSSb-dTWGR5-A3KxB-c8xRy1-wuvjG-bWCTQF-8iWWZX-A3Kzp-udguk-wuAMP-duvkYh-fBiXrd-zSCmK-6KRmEh-dsHKin-wuvhg-cxQ5Zq-dfjcZ4-dfjd4a-8iWQmX-d6HCqC-7oroQq-62PsFn-dHpQ8U-dG72Bj-wuNFS-37MqGY-dRk9Md-4fjyzH-4Gikhb-36xtSU-A3KB2-moS7H-dzaoJi-y6uLQ-dS55AH-5ANWkG-zSCrd}{Flickr Link}
+
+\imagecredits{\figref{fig:GEB+2017_fig2}}{Watertown}{https://ae01.alicdn.com/img/pb/136/085/095/1095085136_084.jpg}
+
+\imagecredits{\figref{fig:GEB+2017_fig2}}{Vincent van Gogh, \eqq{Wheat Field with Cypresses}}{https://de.wikipedia.org/wiki/Datei:Wheat-Field-with-Cypresses-(1889)-Vincent-van-Gogh-Met.jpg}
+
+\imagecredits{\figref{fig:GEB+2017_fig3}}{Garden at the Schultenhof in Mettingen}{https://commons.wikimedia.org/wiki/File:Schultenhof_Mettingen_Bauerngarten_8.jpg}
+
+\imagecredits{\figref{fig:GEB+2017_fig3}}{Vincent van Gogh, \eqq{Starry Night Over the Rhône}}{https://commons.wikimedia.org/wiki/File:Starry_Night_Over_the_Rhone.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig}}{Chicago}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/content/chicago.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig}}{Mosaic}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/styles/mosaic.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig}}{Vincent van Gogh, \eqq{The Starry Night}}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/styles/starry_night.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig} and \figref{fig:ulyanov_et_al_2016_impl}}{candy}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/styles/candy.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig}}{Edvard Munch, \eqq{The Scream}}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/styles/the_scream.jpg}
+
+\imagecredits{\figref{fig:johnson_alahi_li_2016_fig}}{feathers}{https://github.com/jcjohnson/fast-neural-style/blob/master/images/styles/feathers.jpg}
+
+\imagecredits{\figref{fig:ulyanov_et_al_2016_impl}}{cat}{https://github.com/DmitryUlyanov/texture_nets/blob/texture_nets_v1/data/readme_pics/kitty.jpg}
+
+\imagecredits{\figref{fig:ulyanov_et_al_2016_impl}}{bird}{https://github.com/DmitryUlyanov/texture_nets/blob/texture_nets_v1/supplementary/bird.jpg}
+
+\imagecredits{\figref{fig:ulyanov_et_al_2016_impl}}{William Turner, \eqq{The Shipwreck of the Minotaur}}{https://github.com/DmitryUlyanov/texture_nets/blob/texture_nets_v1/supplementary/stylization_models/turner.jpg}
+
+\imagecredits{\figref{fig:ulyanov_et_al_2016_impl}}{pleades}{https://github.com/DmitryUlyanov/texture_nets/blob/texture_nets_v1/supplementary/stylization_models/pleades.jpg}
+
+\imagecredits{\figref{fig:ulyanov_et_al_2016_impl}}{Marie-Lan Nguyen, \eqq{Mosaic ducks Massimo}}{https://github.com/DmitryUlyanov/texture_nets/blob/texture_nets_v1/supplementary/stylization_models/mosaic.jpg}
 
 
-\subsubsection{Gatys et al. 2017}
-\begin{landscape}
-	\begin{table*}[!t]
-		\renewcommand{\arraystretch}{1.0}
-		\caption{The hyperparameters used from the implementation and paper of Gatys et al. 2017 \cite{GEB+2017}.}
-		\label{tab:GEB+2017_parameters}
-		\centering
-		\begin{tabular}{c|c|c}
-			\hline
-			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
-			\hline\hline
-			image size & 512 & (500, 1024)$^4$ \\
-			image resize & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
-			starting point & "content" & "content" \\
-			number steps & 500 & (500, 200)$^4$ \\
-			Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
-			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
-			\hline
-			\bfseries Optimizer & &\\
-			\hline
-			type & LBFGS & LBFGS\\
-			learning rate & 1.0 & 1.0\\
-			max iter & 1 & 1 \\
-			\hline
-			\bfseries  Content Loss & & \\
-			\hline
-			layer & "relu4\_2" & "conv4\_2" \\
-			score weight & 1e0 & 1e0 \\
-			loss reduction & "mean" & "mean" \\
-			\hline
-			\bfseries  Style Loss & & \\
-			\hline
-			layer & ("relu1\_1", "relu2\_1", "relu3\_1", "relu4\_1", "relu5\_1") & ("conv1\_1", "conv2\_1", "conv3\_1", "conv4\_1", "conv5\_1") \\
-			score weight & 1e3 & 1e3 \\
-			score correction factor & 1e0 & 1.0 / 4.0 \\
-			layer weights & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ \\
-			\hline
-		\end{tabular}
-	\raggedright
-		\footnotesize{
-		\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
-		Simonyan and Zisserman in \cite{SZ2015}. 
-		\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
-		\\$^3$ The layer\_weights are computed by $1/n^2$ where $n$ denotes the number of channels of a feature map from the corresponding layer in the pretrained Encoder.
-		\\$^4$ An image pyramid with two levels has been used.
-		}
-	\end{table*}
-\end{landscape}
-
-\subsubsection{Li and Wand 2016}
-\begin{landscape}
-	\begin{table*}[!t]
-		\renewcommand{\arraystretch}{1.0}
-		\caption{The hyperparameters used from the implementation and paper of Li and Wand 2016 \cite{LW2016}}
-		\label{tab:LW2016_parameters}
-		\centering
-		\begin{tabular}{c|c|c}
-			\hline
-			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
-			\hline\hline
-			image size & 384 & 384 \\
-			image resize$^3$ & Resize with bicubic interpolation (Pillow) & Resize with bicubic interpolation (Pillow)\\
-			starting point & "content"  & "random" \\
-			number steps &  & $^4$ \\
-			Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
-			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
-			\hline
-			\bfseries Optimizer & &\\
-			\hline
-			type & LBFGS & LBFGS \\
-			learning rate & 1.0 & 1.0 \\
-			max iter & 1 & 1 \\
-			\hline
-			\bfseries  Content Loss & & \\
-			\hline
-			layer & "relu4\_1" & "relu4\_2" \\
-			score weight & 2e1 & 1e0 \\
-			loss reduction & "mean" & "sum" \\
-			\hline
-			\bfseries  Style Loss & & \\
-			\hline
-			layer & ("relu3\_1", "relu4\_1") & ("relu3\_1", "relu4\_1") \\
-			score weight & 1e-4 & 1e0 \\
-			score correction factor & 1.0 / 2.0 & 1.0 \\
-			loss reduction & "sum" & "sum" \\
-			patch size & 3 & 3\\
-			stride & 2 & 1\\
-			\hline
-			\bfseries  Regularization Loss & & \\
-			\hline
-			score weight & 1e-3 & 1e-3 \\
-			score correction factor & 1.0 / 2.0 & 1.0 \\
-			loss reduction & "sum" & "sum" \\
-			\hline
-			\bfseries  Image Pyramid & & \\
-			\hline
-			max edge size & 384 & 384 \\
-			min edge size & 64 & 64 \\
-			edge & "long" & "long" \\
-			num steps & 100 & 200 \\
-			num levels & 3 & None$^4$ \\
-			 
-			\hline
-		\end{tabular}
-	\raggedright
-		\footnotesize{
-			\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
-			Simonyan and Zisserman in \cite{SZ2015}.
-			\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
-			\\$^3$ For some of the images, further transformations, such as cropping and mirroring, are performed beforehand to get the same image as in the paper.
-			\\$^4$ num levels=None implies that the number of levels is automatically calculated depending on max edge size and min edge size.
-		}
-	\end{table*}
-\end{landscape}
-
-\subsubsection{Johnson, Alahi and Li 2016}
-
-\begin{landscape}
-	\begin{table*}[!t]
-		\renewcommand{\arraystretch}{1.0}
-		\caption{The hyperparameters used from the implementation and paper of Johnson et al. 2016 \cite{JAL2016}.}
-		\label{tab:JAL2016_parameters}
-		\centering
-		\begin{tabular}{c|c|c}
-			\hline
-			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
-			\hline\hline
-			content image size & (256, 256)$^6$ & (256, 256)$^6$ \\
-			style image size & 256 for the long edge & 256 for the long edge\\
-			image resize$^3$ & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
-			Pretrained Encoder & VGG16 with caffe weights$^1$ & VGG16 with caffe weights$^1$ \\
-			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
-			\hline
-			\bfseries Optimizer & &\\
-			\hline
-			type & Adam & Adam \\
-			learning rate & 1e-3 & 1e-3 \\
-			number batches & 40000 & 40000\\
-			batch size & 4 & 4 \\
-			\hline
-			\bfseries  Content Loss & & \\
-			\hline
-			layer & "relu2\_2" & "relu2\_2" \\
-			score weight & 1e0 & - \\
-			\hline
-			\bfseries  Style Loss & & \\
-			\hline
-			layers & ("relu1\_2", "relu2\_2", "relu3\_3", "relu4\_3")& ("relu1\_2", "relu2\_2", "relu3\_3", "relu4\_3")\\
-			additional factor & 5e0 & - \\
-			\hline
-			\bfseries  Regularization Loss & & \\
-			\hline
-			score weight & 1e-6 & - \\
-			loss function & squared error$^5$ & squared error$^5$ \\
-			\hline
-			\hline
-			\bfseries  Transformer & & \\
-			\hline
-			value range delimiter & 150 * tanh(x) & sigmoid(2.0*x)\\
-			\hline
-		\end{tabular}
-	\raggedright
-		\footnotesize{
-			\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
-			Simonyan and Zisserman in \cite{SZ2015}.
-			\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
-			\\$^3$ For some of the images, further transformations, such as cropping and mirroring, are performed beforehand to get the same image as in the paper.
-			\\$^4$ Normalize the loss additionally by the number of channels $n$.
-			\\$^5$ This is in contrast to the \texttt{pystiche} module where the mean square error is used.
-			\\$^6$ The images are first brought to a square size with a cropping of the  upper left corner.
-		}
-	\end{table*}
-\end{landscape}
-
-\begin{table*}[!t]
-	\renewcommand{\arraystretch}{1.3}
-	\caption{An overview of the changed parameters during the training of the provided trained models in \cite{JAL2016}.}
-	\label{tab:johnson_adapted_hyperparams}
-	\centering
-	\begin{tabular}{c|c}
-		\hline
-		\bfseries Candy &  \\
-		\hline\hline
-		instance norm & True \\
-		style loss score weight & 1e1 \\
-		regularization score weight & 1e-4\\
-		style edge size$^1$ & 384\\
-		\hline
-		\bfseries composition vii & \\
-		\hline
-		instance norm & False \\
-		style edge size$^1$ & 512\\
-		number of batches & 60000\\
-		\hline
-		\bfseries feathers & \\
-		\hline
-		instance norm & True \\
-		style loss score weight & 1e1 \\
-		regularization score weight & 1e-5\\
-		style edge size$^1$ & 180\\
-		number of batches & 60000\\
-		\hline
-		\bfseries mosaic & \\
-		\hline
-		instance norm & True \\
-		style loss score weight & 1e1 \\
-		regularization score weight & 1e-5\\
-		style edge size$^1$ & 512\\
-		number of batches & 60000\\
-		\hline
-		\bfseries starry night & \\
-		\hline
-		instance norm & False \\
-		style loss score weight & 3e0 \\
-		regularization score weight & 1e-5\\
-		style edge size$^1$ & 512\\
-		\hline
-		\bfseries the scream & \\
-		\hline
-		instance norm & True \\
-		style loss score weight & 2e1 \\
-		regularization score weight & 1e-5\\
-		style edge size$^1$ & 384\\
-		number of batches & 60000\\
-		\hline
-	\end{tabular}
-	\footnotesize{
-		\\$^1$ The edge size refers to the length of the smaller image dimension of a correspondingly scaled image size.}
-\end{table*}
-
-\begin{figure}[H]
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\hfill
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/chicago.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/hoovertowernight.jpg}
-	\end{minipage}
-	\hfill \\ candy \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.7\textwidth]{images/johnson_alahi_li_2016/source/candy.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__candy__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__candy__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ composition vii \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/composition_vii.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__composition_vii__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__composition_vii__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ feathers \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/feathers.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__feathers__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__feathers__impl_params__instance_norm.jpg}
-	\end{minipage}
-	
-	\hfill \\ mosaic \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.8\textwidth]{images/johnson_alahi_li_2016/source/mosaic.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__mosaic__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__mosaic__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ starry night \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/starry_night.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__starry_night__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__starry_night__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ the scream \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\label{fig:johnson_alahi_li_2016_fig_appendix}
-	\caption{Our stylisation results of the two content images (top row) due to the transformation of the models we trained in different styles with the approach of \cite{JAL2016}. The respective style images are shown in the left column.}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\hfill
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/chicago.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/hoovertowernight.jpg}
-	\end{minipage}
-	\hfill \\ candy \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.7\textwidth]{images/johnson_alahi_li_2016/source/candy.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__candy__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__candy__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ composition vii \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/composition_vii.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__composition_vii__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__composition_vii__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ feathers \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/feathers.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__feathers__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__feathers__impl_params__instance_norm.jpg}
-	\end{minipage}
-	
-	\hfill \\ mosaic \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=0.8\textwidth]{images/johnson_alahi_li_2016/source/mosaic.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__mosaic__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__mosaic__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ starry night \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/starry_night.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__starry_night__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__starry_night__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill \\ the scream \hfill \\
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.3\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\label{fig:johnson_alahi_li_2016_author_model_appendix}
-	\caption{Our stylisation results of the two content images (top row) due to the transformation of the models in different styles provided by the authors of the original publication \cite{JAL2016}. The respective style images are shown in the left column.}
-\end{figure}
-
-\subsubsection{Ulyanov et al. 2016}
-
+%\subsection{Parameters} \label{sec:parameters_appendix}
+%\subsubsection{Gatys, Ecker and Bethge 2016}
+%
+%\begin{landscape}
+%\begin{table*}[!t]
+%	\renewcommand{\arraystretch}{1.0}
+%	\caption{The hyperparameters used from the implementation and paper of Gatys, Ecker and Bethge 2016 \cite{GEB2016}}
+%	\label{tab:GEB2016_parameters}
+%	\centering
+%	\begin{tabular}{c|c|c}
+%		\hline
+%		\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
+%		\hline\hline
+%		image size & 512 & 512 \\
+%		image resize & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
+%		starting point & "content" & "random" \\
+%		number steps & 500 & 500 \\
+%		Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
+%		Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
+%		\hline
+%		\bfseries Optimizer & &\\
+%		\hline
+%		type & LBFGS & LBFGS\\
+%		learning rate & 1.0 & 1.0\\
+%		max iter & 1 & 1 \\
+%		\hline
+%		\bfseries  Content Loss & & \\
+%		\hline
+%		layer & "relu4\_2" & "conv4\_2" \\
+%		score weight & 1e0 & 1e0 \\
+% 		score correction factor & 1e0 & 1.0 / 2.0 \\
+%		loss reduction & "mean" & "sum" \\
+%		\hline
+%		\bfseries  Style Loss & & \\
+%		\hline
+%		layer & ("relu1\_1", "relu2\_1", "relu3\_1", "relu4\_1", "relu5\_1") & ("conv1\_1", "conv2\_1", "conv3\_1", "conv4\_1", "conv5\_1") \\
+%		score weight & 1e3$^4$ & 1e3$^4$ \\
+%		score correction factor & 1e0 & 1.0 / 4.0 \\
+%		layer weights & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ & "mean" \\
+%		\hline
+%	\end{tabular}
+%\raggedright
+%	\footnotesize{
+%		\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
+%		Simonyan and Zisserman in \cite{SZ2015}.
+%	    \\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
+%        \\$^3$ The layer\_weights are computed by $1/n^2$ where $n$ denotes the number of channels of a feature map from the corresponding layer in the pretrained Encoder.
+%        \\$^4$ Different information for the content/style ratio is given for the different images, more detailed information can be found in the text of the results.
+%    }
+%\end{table*}
+%\end{landscape}
+%
+%\begin{table*}[!t]
+%	\renewcommand{\arraystretch}{1.3}
+%	\caption{An overview of the adapted parameters during the optimisation provided by the author for the approach in \cite{GEB2016}.}
+%	\label{tab:Gatys_2016_adapted_params}
+%	\centering
+%	\begin{tabular}{c|c}
+%		\hline
+%		\bfseries B &  \\
+%		\hline
+%		starting point & "random" \\
+%		number steps & 2000  \\
+%		style loss score weight & 1e6 \\
+%		content loss score weight$^1$ &  1e3\\
+%		\hline
+%		\bfseries C &  \\
+%		\hline
+%		starting point & "random" \\
+%		number steps & 2000  \\
+%		style loss score weight & 1e6 \\
+%		content loss score weight$^1$ &  8e2\\
+%		\hline
+%		\bfseries D &  \\
+%		\hline
+%		starting point & "random" \\
+%		number steps & 2000  \\
+%		style loss score weight & 1e6 \\
+%		content loss score weight$^1$ &  5e3\\
+%		\hline
+%		\bfseries E &  \\
+%		\hline
+%		starting point & "random" \\
+%		number steps & 2000  \\
+%		style loss score weight & 1e6 \\
+%		content loss score weight$^1$ &  5e2\\
+%		\hline
+%		\bfseries F &  \\
+%		\hline
+%		starting point & "random" \\
+%		number steps & 2000  \\
+%		style loss score weight & 1e6 \\
+%		content loss score weight$^1$ &  5e2\\
+%		\hline
+%	\end{tabular}
+%\footnotesize{
+%	\\$^1$ This weighting $\alpha$ results from the weight ratio $\frac{\alpha}{\beta}$ given in the paper and the style loss score weight $\beta$.
+%}
+%\end{table*}
+%
+%\begin{figure}[H]
+%	\centering
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{A}};
+%		\end{tikzpicture}  
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__B.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/shipwreck_of_the_minotaur__turner.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{B}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__C.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/starry_night__vincent_van_gogh.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{C}};
+%		\end{tikzpicture} 
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__D.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
+%		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/the_scream__edvard_munch.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{D}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__E.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
+%		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/figure_dans_un_fauteuil__pablo_ruiz_picasso.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{E}};
+%		\end{tikzpicture} 
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/fig_2__F.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/composition_vii__wassily_kandinsky.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{F}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\caption{Replication of the Figure 3 in \cite{GEB2016} with the information given in the reference implementation.}
+%	\label{fig:GEB2016_fig_2_appendix}
+%\end{figure}
+%
+%\begin{figure}[H]
+%	\centering
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{A}};
+%		\end{tikzpicture}  
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__B__impl_params__author2.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/shipwreck_of_the_minotaur__turner.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{B}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__C__impl_params__author2.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/starry_night__vincent_van_gogh.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{C}};
+%		\end{tikzpicture} 
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__D__impl_params__author2.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
+%		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/the_scream__edvard_munch.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{D}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__E__impl_params__author2.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=5mm,yshift=5mm]
+%		{\includegraphics[width=0.3\textwidth]{images/gatys_ecker_bethge_2016/source/figure_dans_un_fauteuil__pablo_ruiz_picasso.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{E}};
+%		\end{tikzpicture} 
+%	\end{minipage}
+%	\hfill
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\centering
+%		\vspace{0pt}
+%		\begin{tikzpicture}
+%		\node(a){\includegraphics[width=\textwidth]{images/gatys_ecker_bethge_2016/results/author/fig_2__F__impl_params__author2.jpg}};
+%		\node at (a.south west)[anchor=center,xshift=10mm,yshift=5mm]
+%		{\includegraphics[width=0.45\textwidth]{images/gatys_ecker_bethge_2016/source/composition_vii__wassily_kandinsky.jpg}};
+%		\node at (a.north west)[anchor=center, xshift=-2.5mm, yshift=-5mm] {\large \textbf{F}};
+%		\end{tikzpicture}
+%	\end{minipage}
+%	\caption{Replication of the Figure 3 in \cite{GEB2016} with the information provided by the author.}
+%	\label{fig:GEB2016_author_fig_2_appendix}
+%\end{figure}
+%
+%
+%\subsubsection{Gatys et al. 2017}
+%\begin{landscape}
+%	\begin{table*}[!t]
+%		\renewcommand{\arraystretch}{1.0}
+%		\caption{The hyperparameters used from the implementation and paper of Gatys et al. 2017 \cite{GEB+2017}.}
+%		\label{tab:GEB+2017_parameters}
+%		\centering
+%		\begin{tabular}{c|c|c}
+%			\hline
+%			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
+%			\hline\hline
+%			image size & 512 & (500, 1024)$^4$ \\
+%			image resize & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
+%			starting point & "content" & "content" \\
+%			number steps & 500 & (500, 200)$^4$ \\
+%			Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
+%			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
+%			\hline
+%			\bfseries Optimizer & &\\
+%			\hline
+%			type & LBFGS & LBFGS\\
+%			learning rate & 1.0 & 1.0\\
+%			max iter & 1 & 1 \\
+%			\hline
+%			\bfseries  Content Loss & & \\
+%			\hline
+%			layer & "relu4\_2" & "conv4\_2" \\
+%			score weight & 1e0 & 1e0 \\
+%			loss reduction & "mean" & "mean" \\
+%			\hline
+%			\bfseries  Style Loss & & \\
+%			\hline
+%			layer & ("relu1\_1", "relu2\_1", "relu3\_1", "relu4\_1", "relu5\_1") & ("conv1\_1", "conv2\_1", "conv3\_1", "conv4\_1", "conv5\_1") \\
+%			score weight & 1e3 & 1e3 \\
+%			score correction factor & 1e0 & 1.0 / 4.0 \\
+%			layer weights & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ & (2.4e-04, 6.1e-05, 1.5e-05, 3.8e-06, 3.8e-06)$^3$ \\
+%			\hline
+%		\end{tabular}
+%	\raggedright
+%		\footnotesize{
+%		\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
+%		Simonyan and Zisserman in \cite{SZ2015}. 
+%		\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
+%		\\$^3$ The layer\_weights are computed by $1/n^2$ where $n$ denotes the number of channels of a feature map from the corresponding layer in the pretrained Encoder.
+%		\\$^4$ An image pyramid with two levels has been used.
+%		}
+%	\end{table*}
+%\end{landscape}
+%
+%\subsubsection{Li and Wand 2016}
+%\begin{landscape}
+%	\begin{table*}[!t]
+%		\renewcommand{\arraystretch}{1.0}
+%		\caption{The hyperparameters used from the implementation and paper of Li and Wand 2016 \cite{LW2016}}
+%		\label{tab:LW2016_parameters}
+%		\centering
+%		\begin{tabular}{c|c|c}
+%			\hline
+%			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
+%			\hline\hline
+%			image size & 384 & 384 \\
+%			image resize$^3$ & Resize with bicubic interpolation (Pillow) & Resize with bicubic interpolation (Pillow)\\
+%			starting point & "content"  & "random" \\
+%			number steps &  & $^4$ \\
+%			Pretrained Encoder & VGG19 with caffe weights$^1$ & VGG19 with caffe weights$^1$ \\
+%			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
+%			\hline
+%			\bfseries Optimizer & &\\
+%			\hline
+%			type & LBFGS & LBFGS \\
+%			learning rate & 1.0 & 1.0 \\
+%			max iter & 1 & 1 \\
+%			\hline
+%			\bfseries  Content Loss & & \\
+%			\hline
+%			layer & "relu4\_1" & "relu4\_2" \\
+%			score weight & 2e1 & 1e0 \\
+%			loss reduction & "mean" & "sum" \\
+%			\hline
+%			\bfseries  Style Loss & & \\
+%			\hline
+%			layer & ("relu3\_1", "relu4\_1") & ("relu3\_1", "relu4\_1") \\
+%			score weight & 1e-4 & 1e0 \\
+%			score correction factor & 1.0 / 2.0 & 1.0 \\
+%			loss reduction & "sum" & "sum" \\
+%			patch size & 3 & 3\\
+%			stride & 2 & 1\\
+%			\hline
+%			\bfseries  Regularization Loss & & \\
+%			\hline
+%			score weight & 1e-3 & 1e-3 \\
+%			score correction factor & 1.0 / 2.0 & 1.0 \\
+%			loss reduction & "sum" & "sum" \\
+%			\hline
+%			\bfseries  Image Pyramid & & \\
+%			\hline
+%			max edge size & 384 & 384 \\
+%			min edge size & 64 & 64 \\
+%			edge & "long" & "long" \\
+%			num steps & 100 & 200 \\
+%			num levels & 3 & None$^4$ \\
+%			 
+%			\hline
+%		\end{tabular}
+%	\raggedright
+%		\footnotesize{
+%			\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
+%			Simonyan and Zisserman in \cite{SZ2015}.
+%			\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
+%			\\$^3$ For some of the images, further transformations, such as cropping and mirroring, are performed beforehand to get the same image as in the paper.
+%			\\$^4$ num levels=None implies that the number of levels is automatically calculated depending on max edge size and min edge size.
+%		}
+%	\end{table*}
+%\end{landscape}
+%
+%\subsubsection{Johnson, Alahi and Li 2016}
+%
+%\begin{landscape}
+%	\begin{table*}[!t]
+%		\renewcommand{\arraystretch}{1.0}
+%		\caption{The hyperparameters used from the implementation and paper of Johnson et al. 2016 \cite{JAL2016}.}
+%		\label{tab:JAL2016_parameters}
+%		\centering
+%		\begin{tabular}{c|c|c}
+%			\hline
+%			\bfseries Parameter & \bfseries Implementation & \bfseries Paper\\
+%			\hline\hline
+%			content image size & (256, 256)$^6$ & (256, 256)$^6$ \\
+%			style image size & 256 for the long edge & 256 for the long edge\\
+%			image resize$^3$ & Resize with bilinear interpolation (Pillow) & Resize with bilinear interpolation (Pillow)\\
+%			Pretrained Encoder & VGG16 with caffe weights$^1$ & VGG16 with caffe weights$^1$ \\
+%			Pre- and Postprocessing & Caffe$^2$ & Caffe$^2$\\
+%			\hline
+%			\bfseries Optimizer & &\\
+%			\hline
+%			type & Adam & Adam \\
+%			learning rate & 1e-3 & 1e-3 \\
+%			number batches & 40000 & 40000\\
+%			batch size & 4 & 4 \\
+%			\hline
+%			\bfseries  Content Loss & & \\
+%			\hline
+%			layer & "relu2\_2" & "relu2\_2" \\
+%			score weight & 1e0 & - \\
+%			\hline
+%			\bfseries  Style Loss & & \\
+%			\hline
+%			layers & ("relu1\_2", "relu2\_2", "relu3\_3", "relu4\_3")& ("relu1\_2", "relu2\_2", "relu3\_3", "relu4\_3")\\
+%			additional factor & 5e0 & - \\
+%			\hline
+%			\bfseries  Regularization Loss & & \\
+%			\hline
+%			score weight & 1e-6 & - \\
+%			loss function & squared error$^5$ & squared error$^5$ \\
+%			\hline
+%			\hline
+%			\bfseries  Transformer & & \\
+%			\hline
+%			value range delimiter & 150 * tanh(x) & sigmoid(2.0*x)\\
+%			\hline
+%		\end{tabular}
+%	\raggedright
+%		\footnotesize{
+%			\\$^1$ Multi-layer encoder based on the VGG architecture that was introduced by
+%			Simonyan and Zisserman in \cite{SZ2015}.
+%			\\$^2$ Pre- and Postprocessing for the caffe weights \cite{SZ2015}.
+%			\\$^3$ For some of the images, further transformations, such as cropping and mirroring, are performed beforehand to get the same image as in the paper.
+%			\\$^4$ Normalize the loss additionally by the number of channels $n$.
+%			\\$^5$ This is in contrast to the \texttt{pystiche} module where the mean square error is used.
+%			\\$^6$ The images are first brought to a square size with a cropping of the  upper left corner.
+%		}
+%	\end{table*}
+%\end{landscape}
+%
+%\begin{table*}[!t]
+%	\renewcommand{\arraystretch}{1.3}
+%	\caption{An overview of the changed parameters during the training of the provided trained models in \cite{JAL2016}.}
+%	\label{tab:johnson_adapted_hyperparams}
+%	\centering
+%	\begin{tabular}{c|c}
+%		\hline
+%		\bfseries Candy &  \\
+%		\hline\hline
+%		instance norm & True \\
+%		style loss score weight & 1e1 \\
+%		regularization score weight & 1e-4\\
+%		style edge size$^1$ & 384\\
+%		\hline
+%		\bfseries composition vii & \\
+%		\hline
+%		instance norm & False \\
+%		style edge size$^1$ & 512\\
+%		number of batches & 60000\\
+%		\hline
+%		\bfseries feathers & \\
+%		\hline
+%		instance norm & True \\
+%		style loss score weight & 1e1 \\
+%		regularization score weight & 1e-5\\
+%		style edge size$^1$ & 180\\
+%		number of batches & 60000\\
+%		\hline
+%		\bfseries mosaic & \\
+%		\hline
+%		instance norm & True \\
+%		style loss score weight & 1e1 \\
+%		regularization score weight & 1e-5\\
+%		style edge size$^1$ & 512\\
+%		number of batches & 60000\\
+%		\hline
+%		\bfseries starry night & \\
+%		\hline
+%		instance norm & False \\
+%		style loss score weight & 3e0 \\
+%		regularization score weight & 1e-5\\
+%		style edge size$^1$ & 512\\
+%		\hline
+%		\bfseries the scream & \\
+%		\hline
+%		instance norm & True \\
+%		style loss score weight & 2e1 \\
+%		regularization score weight & 1e-5\\
+%		style edge size$^1$ & 384\\
+%		number of batches & 60000\\
+%		\hline
+%	\end{tabular}
+%	\footnotesize{
+%		\\$^1$ The edge size refers to the length of the smaller image dimension of a correspondingly scaled image size.}
+%\end{table*}
+%
+%\begin{figure}[H]
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\hfill
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/chicago.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/hoovertowernight.jpg}
+%	\end{minipage}
+%	\hfill \\ candy \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.7\textwidth]{images/johnson_alahi_li_2016/source/candy.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__candy__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__candy__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ composition vii \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/composition_vii.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__composition_vii__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__composition_vii__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ feathers \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/feathers.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__feathers__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__feathers__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	
+%	\hfill \\ mosaic \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.8\textwidth]{images/johnson_alahi_li_2016/source/mosaic.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__mosaic__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__mosaic__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ starry night \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/starry_night.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__starry_night__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__starry_night__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ the scream \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/hoovertowernight__the_scream__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\label{fig:johnson_alahi_li_2016_fig_appendix}
+%	\caption{Our stylisation results of the two content images (top row) due to the transformation of the models we trained in different styles with the approach of \cite{JAL2016}. The respective style images are shown in the left column.}
+%\end{figure}
+%
+%\begin{figure}[H]
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\hfill
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/chicago.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/hoovertowernight.jpg}
+%	\end{minipage}
+%	\hfill \\ candy \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.7\textwidth]{images/johnson_alahi_li_2016/source/candy.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__candy__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__candy__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ composition vii \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/composition_vii.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__composition_vii__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__composition_vii__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ feathers \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/feathers.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__feathers__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__feathers__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	
+%	\hfill \\ mosaic \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=0.8\textwidth]{images/johnson_alahi_li_2016/source/mosaic.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__mosaic__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__mosaic__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ starry night \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/source/starry_night.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__starry_night__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__starry_night__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill \\ the scream \hfill \\
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__the_scream__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.3\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/hoovertowernight__the_scream__impl_params__instance_norm.jpg}
+%	\end{minipage}
+%	\label{fig:johnson_alahi_li_2016_author_model_appendix}
+%	\caption{Our stylisation results of the two content images (top row) due to the transformation of the models in different styles provided by the authors of the original publication \cite{JAL2016}. The respective style images are shown in the left column.}
+%\end{figure}
+%
+%\subsubsection{Ulyanov et al. 2016}
+%
 
 
