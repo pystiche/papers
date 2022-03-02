@@ -20,10 +20,17 @@ authors:
     email: pmeier@quansight.com
     affiliations: 2
     
+  - name:  Christoph-Alexander Holst
+    orcid: 0000-0002-6253-7036
+    email: christoph-alexander.holst@th-owl.de
+    affiliations: 1
+    
   - name: Volker Lohweg
     orcid: 0000-0002-3325-7887
     email: volker.lohweg@th-owl.de
     affiliations: 1
+    
+
 
 # List of affiliations with code (corresponding to author affiliations), name
 # and address. You can also use these affiliations to add text such as "Equal
