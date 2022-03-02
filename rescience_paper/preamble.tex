@@ -1,6 +1,8 @@
 \usepackage{standalone}
 \usepackage{lscape}
 \usepackage{amsfonts}
+\usepackage{xspace}
+\usepackage{hyperref}
 
 \graphicspath{{graphics/}}
 
@@ -14,4 +16,79 @@
 \newcommand*{\tabname}{Table}
 \newcommand*{\tabref}[1]{\tablename{}~\ref{#1}}
 
+\newcommand*{\appname}{Appendix}
+\newcommand*{\appref}[1]{\appname{}~\ref{#1}}
+
 \newcommand{\urlfootnote}[3]{\footnote{#1, \url{#2}, retrieved on #3.}}
+\newcommand{\urlfootnotename}[4]{\footnote{#1, \href{#2}{#3}, retrieved on #4.}}
+% glossaries
+\usepackage[acronyms]{glossaries}
+\newcommand{\newacr}[4][]{\newacronym[
+	sort={\ifthenelse{\isempty{#1}}{#2}{#1}},
+	]{#2}{#3}{#4}}
+\glsdisablehyper
+\defglsdisplayfirst[\acronymtype]{\emph{\glsentrylong{\glslabel}} (\glsentryshort{\glslabel})}
+
+\newacr{NST}{NST}{Neural Style Transfer}
+\newacr{DLF}{DLF}{Deep Learning Framework}
+\newacr{CV}{CV}{Computer Vision}
+\newacr{GAN}{GAN}{Generative Adversarial Network}
+\newacr{DL}{DL}{Deep Learning}
+\newacr{ML}{ML}{Machine Learning}
+\newacr{CNN}{CNN}{Convolutional Neural Network}
+\newacr{MSE}{MSE}{mean squared error}
+\newacr{SE}{SE}{squared error}
+\newacr{MRF}{MRF}{\textsc{Markov} random field}
+\newacr{VGG}{VGG}{Visual Geometry Group}
+\newacr{GPU}{GPU}{Graphical Processing Unit}
+
+% helpful commands
+\newcommand*{\eqq}[1]{''#1''}
+
+%math commands
+\newcommand{\realnumbers}{\ensuremath{\mathbb{R}}}
+
+\renewcommand{\matrix}[1]{\ensuremath{\boldsymbol{\mathrm{#1}}}}
+\newcommand{\tensor}[1]{\ensuremath{\boldsymbol{\mathsf{#1}}}}
+
+\newcommand{\transformer}{\ensuremath{\mathcal{T}}}
+
+\newcommand{\paper}{\texttt{Pa\-per}}
+\newcommand{\implementation}{\texttt{Im\-ple\-men\-ta\-ti\-on}}
+
+\newcommand{\image}{\tensor{I}}
+\newcommand{\contentimage}{\ensuremath{\image_\text{C}}}
+\newcommand{\styleimage}{\ensuremath{\image_\text{S}}}
+\newcommand{\loss}{\ensuremath{\mathcal{L}}}
+\newcommand{\contentloss}{\ensuremath{\mathcal{L}_{\text{C}}}}
+\newcommand{\styleloss}{\ensuremath{\mathcal{L}_{\text{S}}}}
+
+\newcommand{\mean}{\ensuremath{\overline{\sum}}}
+\newcommand{\transpose}[1]{\ensuremath{#1^T}}
+\newcommand{\argmin}[2]{\ensuremath{\underset{#1}{\text{arg min}}\:#2}}
+\newcommand{\argmax}[2]{\ensuremath{\underset{#1}{\text{arg max}}\:#2}}
+
+\newcommand{\eqspace}{\,}
+\newcommand{\Eqspace}{\quad}
+\newcommand{\eqcommasep}{,\eqspace}
+
+\newcommand{\eqtextdot}{\ensuremath{\text{.}}}
+\newcommand{\eqtextcomma}{\ensuremath{\text{,}}}
+\newcommand{\eqtextand}{\ensuremath{\text{and}}}
+\newcommand{\eqtextwith}{\ensuremath{\text{with}}}
+
+\DeclarePairedDelimiter{\@parentheses}{(}{)}
+\newcommand{\parentheses}[1]{\ensuremath{\@parentheses*{#1}}}
+\makeatletter
+\newcommand{\etal}[1]{\textsc{#1} et al.\xspace{}}
+\makeatother
+\newcommand{\of}[1]{\parentheses{#1}}
+\newcommand{\fun}[2]{\ensuremath{\text{#1}\of{#2}}}
+
+
+\newcommand{\spatvec}[1]{\fun{spatvec}{#1}}
+\newcommand{\spatvecinv}[1]{\fun{spatvec$^{-1}$}{#1}}
+\newcommand{\gram}[1]{\fun{gram}{#1}}
+
+\newcommand{\imagecredits}[3]{\bigskip#1, #2 \\\url{#3}}
+\newcommand{\imagecreditshref}[4]{\bigskip#1, #2 \\\href{#3}{#4}}
