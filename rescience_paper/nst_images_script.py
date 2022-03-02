@@ -45,53 +45,11 @@ def nst_images():
             md5="3eab0e8a32e020b40536154acdc05ab4",
             file="colorful_bird.jpg",
         ),
-        "dog": data.DownloadableImage(
-            "https://free-images.com/lg/4444/dog_animal_puppy_animals_1.jpg",
-            license=data.PublicDomainLicense(),
-            md5="2312d5003f5f96fa72d9c61dd37cd411",
-            file="dog_animal.jpg",
-        ),
-        "duck": data.DownloadableImage(
-            "https://free-images.com/md/79c0/duck_ducks_animal_pets_0.jpg",
-            license=data.PublicDomainLicense(),
-            md5="10609bb04100e9e1172d7c2202f1c05d",
-            file="duck.jpg",
-        ),
-        "bird2": data.DownloadableImage(
-            "https://free-images.com/lg/0902/parrot_bird_colorful_plumage.jpg",
-            license=data.PublicDomainLicense(),
-            md5="40e9c220154ae7462c70a1cedbd86bd4",
-            file="parrot.jpg",
-        ),
-        "bird3": data.DownloadableImage(
-            "https://free-images.com/md/4c5a/parrot_bird_ara_colorful_2.jpg",
-            license=data.PublicDomainLicense(),
-            md5="4a42c7ce24619b2c7b32526b3b42dea3",
-            file="parrot_bird.jpg",
-        ),
-        "turtle": data.DownloadableImage(
-            "https://free-images.com/md/1d4f/turtle_green_turtle_ocean.jpg",
-            license=data.PublicDomainLicense(),
-            md5="064742c2f648240c5d28fe1c421a8a90",
-            file="turtle_green.jpg",
-        ),
         "mosaic": data.DownloadableImage(
             "https://free-images.com/md/ab85/mosaic_stones_structure_pattern.jpg",
             license=data.PublicDomainLicense(),
             md5="afa9e5024aff029753a6901cdc19bedc",
             file="mosaic_stones.jpg",
-        ),
-        "stones": data.DownloadableImage(
-            "https://free-images.com/md/b156/stone_floor_pebbles_stone_1.jpg",
-            license=data.PublicDomainLicense(),
-            md5="420beb77451956828cf1bf00d6a4061f",
-            file="stone_floor.jpg",
-        ),
-        "abstract": data.DownloadableImage(
-            "https://free-images.com/md/b2ce/light_creative_abstract_colorful.jpg",
-            license=data.PublicDomainLicense(),
-            md5="ff45182232f05ee2eb63ac8881173609",
-            file="light_creative.jpg",
         ),
         "starry_night": data.DownloadableImage(
             "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1280px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
@@ -157,21 +115,16 @@ def nst(
 
 
 def full_nst(args, content, style, size=500):
-    contents = [content,] if content is not None else ["dog", "dog", "duck", "bird2", "bird3", "turtle"]
-    styles = [style,] if style is not None else ["starry_night", "abstract", "stones",]
-
     images = nst_images()
     images.download(args.image_source_dir)
-    for content in contents:
-        for style in styles:
-            content_image = images[content].read(
-                size=size, device=args.device
-            )
-            style_image = images[style].read(
-                size=size, device=args.device
-            )
-            name = f"nst_IST_paper_{content}__{style}__full.jpg"
-            nst(args, content_image, style_image, name)
+    content_image = images[content].read(
+        size=size, device=args.device
+    )
+    style_image = images[style].read(
+        size=size, device=args.device
+    )
+    name = f"nst_IST_paper_{content}__{style}__full.jpg"
+    nst(args, content_image, style_image, name)
 
 
 def layer_nst(args, content, style, size=500):
@@ -190,7 +143,7 @@ def layer_nst(args, content, style, size=500):
 
     for layer in style_layers:
         name = f"nst_IST_paper_{content}__{style}__{layer}.jpg"
-        nst(args, content_image, style_image, name, style_layers=[layer,], style_weight=1e1, starting_point="random")
+        nst(args, content_image, style_image, name, style_layers=[layer,], style_weight=1e3, starting_point="content")
 
 
 def init_nst(args, content, style, size=500):
@@ -220,7 +173,7 @@ def iteration_nst(args, content, style, size=500):
         size=size, device=args.device
     )
 
-    for num_steps in [100, 250, 500]:
+    for num_steps in [100, 500, 1000]:
         name = f"nst_IST_paper_{content}__{style}__iteration_{num_steps}.jpg"
         nst(args, content_image, style_image, name, num_steps=num_steps, starting_point="random", style_weight=1e1)
 
@@ -308,8 +261,8 @@ if __name__ == "__main__":
     style = "mosaic"
     full_nst(args, content, style)
     layer_nst(args, content, style)
-    init_nst(args, content, style)
-    iteration_nst(args, content, style)
-    image_size_nst(args, content, style)
-    weights_nst(args, content, style)
-    style_generation_nst(args)
+    # init_nst(args, content, style)
+    # iteration_nst(args, content, style)
+    # image_size_nst(args, content, style)
+    # weights_nst(args, content, style)
+    # style_generation_nst(args)
