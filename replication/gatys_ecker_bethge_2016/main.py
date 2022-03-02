@@ -80,9 +80,7 @@ def figure_3(args):
     for layers, score_weight in itertools.product(layer_configs, score_weights):
         row_label = layers[-1]
         column_label = f"{1.0 / score_weight:.0e}"
-        header = (
-            f"Replicating Figure 3 image in row {row_label} and column {column_label}  with {params} parameters"
-        )
+        header = f"Replicating Figure 3 image in row {row_label} and column {column_label}  with {params} parameters"
         with args.logger.environment(header):
             hyper_parameters.style_loss.layers = layers
             if args.impl_params:
