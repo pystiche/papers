@@ -62,7 +62,7 @@ def figure_3(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(args.impl_params)
 
     content_image = images["neckarfront"].read(
         size=hyper_parameters.nst.image_size, device=args.device
@@ -71,22 +71,21 @@ def figure_3(args):
         size=hyper_parameters.nst.image_size, device=args.device
     )
 
-    style_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    style_layers = hyper_parameters.style_loss.layers
     layer_configs = [style_layers[: idx + 1] for idx in range(len(style_layers))]
 
     score_weights = (1e5, 1e4, 1e3, 1e2)
 
+    params = "implementation" if args.impl_params else "paper"
     for layers, score_weight in itertools.product(layer_configs, score_weights):
         row_label = layers[-1]
         column_label = f"{1.0 / score_weight:.0e}"
-        header = (
-            f"Replicating Figure 3 image in row {row_label} and column {column_label}"
-        )
+        header = f"Replicating Figure 3 image in row {row_label} and column {column_label}  with {params} parameters"
         with args.logger.environment(header):
-            hyper_parameters.style_loss.layers = style_layers
+            hyper_parameters.style_loss.layers = layers
             if args.impl_params:
                 hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
-                    style_layers
+                    layers
                 )
             hyper_parameters.style_loss.score_weight = score_weight
 
@@ -145,5 +144,5 @@ def parse_input():
 if __name__ == "__main__":
     args = parse_input()
 
-    figure_2(args)
+    # figure_2(args)
     figure_3(args)
