@@ -70,9 +70,6 @@ def test_hyper_parameters_style_transform(subtests):
     with subtests.test("edge_size"):
         assert hyper_parameters.edge_size == 256
 
-    with subtests.test("edge"):
-        assert hyper_parameters.edge == "long"
-
 
 def test_hyper_parameters_batch_sampler(subtests):
     hyper_parameters = paper.hyper_parameters()

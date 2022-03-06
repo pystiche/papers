@@ -71,7 +71,7 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
 
     @staticmethod
     def _pad_size_to_pad(size: torch.Tensor) -> List[int]:
-        pad_post = size // 2
+        pad_post = torch.div(size, 2, rounding_mode="floor")
         pad_pre = size - pad_post
         return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
 
@@ -139,7 +139,12 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
         output_pad = torch.fmod(effective_kernel_size - 1, stride)
         self.output_padding = tuple(output_pad.tolist())
 
-        pad_size = (effective_kernel_size - 1 - output_pad) // stride + 1
+        pad_size = (
+            torch.div(
+                effective_kernel_size - 1 - output_pad, stride, rounding_mode="floor",
+            )
+            + 1
+        )
 
         return cast(torch.Tensor, pad_size)
 

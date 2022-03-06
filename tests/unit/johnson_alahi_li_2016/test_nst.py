@@ -6,8 +6,10 @@ import pytest
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+from torchvision.transforms import functional as F
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche.image import extract_image_size
 from pystiche_papers.utils import batch_up_image
 
 from tests import utils
@@ -101,7 +103,12 @@ def images_patch(mocker, content_image, style_image):
 
 @pytest.fixture
 def style_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
+    def rescale(image, factor=2.0):
+        return F.resize(
+            image, [int(length * factor) for length in extract_image_size(image)]
+        )
+
+    mock = make_nn_module_mock(side_effect=lambda image: rescale(image, 2.0))
     patch = patcher("_style_transform", return_value=mock)
     return patch, mock
 
@@ -127,9 +134,7 @@ def default_transformer_optim_loop_patch(patcher):
     def side_effect(_, transformer, *args, **kwargs):
         return transformer
 
-    return patcher(
-        "optim.default_transformer_optim_loop", prefix=False, side_effect=side_effect
-    )
+    return patcher("optim.model_optimization", prefix=False, side_effect=side_effect)
 
 
 @pytest.fixture
@@ -278,7 +283,7 @@ def test_training_criterion_content_image(
     args, _, _ = training()
     criterion = args[2]
 
-    assert not criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is None
 
 
 def test_training_criterion_style_image(

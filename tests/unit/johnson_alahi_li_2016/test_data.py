@@ -1,8 +1,11 @@
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.transforms import functional as F
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche import enc
 from pystiche.data import DownloadableImageCollection, ImageFolderDataset
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import make_reproducible
@@ -15,7 +18,7 @@ def test_content_transform():
     content_transform = paper.content_transform(impl_params=False)
     actual = content_transform(image)
 
-    desired = F.grayscale_to_fakegrayscale(F.resize(image[:, :, :16, :16], 256))
+    desired = F.resize(image[:, :, :16, :16], 256).repeat(1, 3, 1, 1)
 
     ptu.assert_allclose(actual, desired)
 
@@ -27,16 +30,15 @@ def test_content_transform_impl_params():
 
 
 def test_style_transform(subtests):
+    make_reproducible()
+    image = torch.rand(1, 1, 17, 32)
+
     style_transform = paper.style_transform()
-    assert isinstance(style_transform, transforms.Resize)
+    actual = style_transform(image)
 
-    hyper_parameters = paper.hyper_parameters().style_transform
+    desired = F.resize(image, [136, 256])
 
-    with subtests.test("size"):
-        assert style_transform.size == hyper_parameters.edge_size
-
-    with subtests.test("edge"):
-        assert style_transform.edge == hyper_parameters.edge
+    ptu.assert_allclose(actual, desired)
 
 
 def test_images_smoke():
