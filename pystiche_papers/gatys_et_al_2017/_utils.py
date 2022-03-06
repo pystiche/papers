@@ -59,7 +59,13 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB+2017`."""
     # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
     # Cell [3] / layers['style']
-    style_loss_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    style_loss_layers: Tuple[str, ...] = (
+        "conv1_1",
+        "conv2_1",
+        "conv3_1",
+        "conv4_1",
+        "conv5_1",
+    )
     if impl_params:
         style_loss_layers = tuple(
             layer.replace("conv", "relu") for layer in style_loss_layers

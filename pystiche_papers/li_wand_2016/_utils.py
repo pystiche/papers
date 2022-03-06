@@ -1,12 +1,13 @@
 import itertools
 import math
-from typing import Any, Dict, Optional, Sequence, Tuple, Union, cast
+from typing import Any, Optional, Sequence, Tuple, Union, cast
 
 import torch
 from torch import nn, optim
+from torchvision.transforms import functional as F
 
 import pystiche
-from pystiche import enc, misc, ops
+from pystiche import enc, loss, misc
 from pystiche.image import extract_image_size
 from pystiche_papers.utils import HyperParameters
 
@@ -173,6 +174,36 @@ def extract_normalized_patches2d(
     return pystiche.extract_patches2d(input, patch_size, stride)
 
 
+class Rotate(nn.Module):
+    def __init__(self, angle: float) -> None:
+        super().__init__()
+        self.angle = angle
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, F.rotate(image, self.angle))
+
+    def extra_repr(self) -> str:
+        return f"factor={self.angle}"
+
+
+class Scale(nn.Module):
+    def __init__(self, factor: float) -> None:
+        super().__init__()
+        self.factor = factor
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return cast(
+            torch.Tensor,
+            F.resize(
+                image,
+                [int(length * self.factor) for length in extract_image_size(image)],
+            ),
+        )
+
+    def extra_repr(self) -> str:
+        return f"factor={self.factor}"
+
+
 # Right now, this an (almost) exact port from the source. It needs to be refactored.
 # It does the following for a positive alpha (angle):
 # - create the vertices of the image
@@ -277,27 +308,24 @@ class ValidCropAfterRotate(nn.Module):
         self.clockwise = clockwise
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        origin, size = self._compute_crop(image)
-        return cast(torch.Tensor, crop(image, origin, size))
-
-    def _compute_crop(
-        self, image: torch.Tensor
-    ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         height, width = extract_image_size(image)
         alpha = math.radians(self.angle)
         if not self.clockwise:
             alpha *= -1
         bounding_box = _computeBB(width, height, alpha)
-        origin = (bounding_box[1], bounding_box[0])
-        size = (bounding_box[3] - bounding_box[1], bounding_box[2] - bounding_box[0])
-        return origin, size
+        top = bounding_box[1]
+        left = bounding_box[0]
+        height = bounding_box[3] - top
+        width = bounding_box[2] - left
+        return cast(
+            torch.Tensor, F.crop(image, top=top, left=left, height=height, width=width)
+        )
 
-    def _properties(self) -> Dict[str, Any]:
-        dct = super()._properties()
-        dct["angle"] = f"{self.angle}°"
+    def extra_repr(self) -> str:
+        extra = [f"angle={self.angle}"]
         if self.clockwise:
-            dct["clockwise"] = self.clockwise
-        return dct
+            extra.append(f"clockwise={self.clockwise}")
+        return ", ".join(extra)
 
 
 def target_transforms(
@@ -317,13 +345,13 @@ def target_transforms(
 
     .. seealso::
 
-        - :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms`
+        - :meth:`pystiche.loss.MRFLoss.scale_and_rotate_transforms`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     if not impl_params:
-        return ops.MRFOperator.scale_and_rotate_transforms(
+        return loss.MRFLoss.scale_and_rotate_transforms(
             **hyper_parameters.target_transforms
         )
 
@@ -345,9 +373,9 @@ def target_transforms(
     ):
         transforms_.append(
             nn.Sequential(
-                transforms.RotateMotif(rotation_angle),
+                Rotate(rotation_angle),
                 ValidCropAfterRotate(rotation_angle),
-                transforms.Rescale(scaling_factor),
+                Scale(scaling_factor),
             )
         )
     return transforms_

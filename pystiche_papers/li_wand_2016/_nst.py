@@ -1,8 +1,7 @@
-from typing import Callable, Optional, Union
+from typing import Optional
 
 import torch
 
-import pystiche
 from pystiche import misc, optim
 from pystiche_papers.utils import HyperParameters
 

@@ -18,7 +18,7 @@ def test_li_wand_2016_nst_smoke(subtests, mocker, content_image, style_image):
     )
     mock = mocker.patch(
         mocks.make_mock_target(
-            "li_wand_2016", "_nst", "optim", "default_image_pyramid_optim_loop"
+            "li_wand_2016", "_nst", "optim", "pyramid_image_optimization"
         )
     )
 

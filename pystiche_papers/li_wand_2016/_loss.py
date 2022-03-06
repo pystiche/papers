@@ -4,48 +4,47 @@ import torch
 from torch.nn.functional import mse_loss
 
 import pystiche
-import pystiche.ops.functional as F
-from pystiche import enc, loss, ops
+import pystiche.loss.functional as F
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import extract_normalized_patches2d
 from ._utils import hyper_parameters as _hyper_parameters
 from ._utils import multi_layer_encoder as _multi_layer_encoder
-from ._utils import target_transforms as _target_transforms
 
 __all__ = [
-    "FeatureReconstructionOperator",
+    "FeatureReconstructionLoss",
     "content_loss",
-    "MRFOperator",
+    "MRFLoss",
     "style_loss",
-    "TotalVariationOperator",
+    "TotalVariationLoss",
     "regularization",
     "perceptual_loss",
 ]
 
 
-class FeatureReconstructionOperator(ops.FeatureReconstructionOperator):
-    r"""Feature reconstruction operator from :cite:`LW2016`.
+class FeatureReconstructionLoss(loss.FeatureReconstructionLoss):
+    r"""Feature reconstruction loss from :cite:`LW2016`.
 
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``False``, calculate the score with the squared error (SE)
             instead of the mean squared error (MSE).
-        **feature_reconstruction_op_kwargs: Additional parameters of a
-            :class:`pystiche.ops.FeatureReconstructionOperator`.
+        **feature_reconstruction_loss_kwargs: Additional parameters of a
+            :class:`pystiche.loss.FeatureReconstructionLoss`.
 
     .. seealso::
 
-        :class:`pystiche.ops.FeatureReconstructionOperator`
+        :class:`pystiche.loss.FeatureReconstructionLoss`
     """
 
     def __init__(
         self,
         encoder: enc.Encoder,
         impl_params: bool = True,
-        **feature_reconstruction_op_kwargs: Any,
+        **feature_reconstruction_loss_kwargs: Any,
     ):
-        super().__init__(encoder, **feature_reconstruction_op_kwargs)
+        super().__init__(encoder, **feature_reconstruction_loss_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/content.lua#L15
         # nn.MSECriterion() was used as criterion to calculate the content loss, which
@@ -65,7 +64,7 @@ def content_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> FeatureReconstructionOperator:
+) -> FeatureReconstructionLoss:
     r"""Content loss from :cite:`LW2016`.
 
     Args:
@@ -79,7 +78,7 @@ def content_loss(
 
     .. seealso::
 
-        :class:`pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
+        :class:`pystiche_papers.li_wand_2016.FeatureReconstructionLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -87,29 +86,29 @@ def content_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
-    return FeatureReconstructionOperator(
+    return FeatureReconstructionLoss(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
         impl_params=impl_params,
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
-class MRFOperator(ops.MRFOperator):
-    r"""MRF operator from :cite:`LW2016`.
+class MRFLoss(loss.MRFLoss):
+    r"""MRF loss from :cite:`LW2016`.
 
     Args:
         encoder: Encoder used to encode the input.
         patch_size: Spatial size of the neural patches.
         impl_params: If ``True``, normalize the gradient of the neural patches. If
             ``False``, use a score correction factor of 1/2.
-        **mrf_op_kwargs: Additional parameters of a :class:`pystiche.ops.MRFOperator`.
+        **mrf_loss_kwargs: Additional parameters of a :class:`pystiche.loss.MRFLoss`.
 
-    In contrast to :class:`pystiche.ops.MRFOperator`, the the score is calculated
-    with the squared error (SE) instead of the mean squared error (MSE).
+    In contrast to :class:`pystiche.loss.MRFLoss`, the score is calculated with the
+    squared error (SE) instead of the mean squared error (MSE).
 
     .. seealso::
 
-        - :class:`pystiche.ops.MRFOperator`
+        - :class:`pystiche.loss.MRFLoss`
         - :func:`pystiche_papers.li_wand_2016.extract_normalized_patches2d`
     """
 
@@ -118,9 +117,9 @@ class MRFOperator(ops.MRFOperator):
         encoder: enc.Encoder,
         patch_size: Union[int, Tuple[int, int]],
         impl_params: bool = True,
-        **mrf_op_kwargs: Any,
+        **mrf_loss_kwargs: Any,
     ):
-        super().__init__(encoder, patch_size, **mrf_op_kwargs)
+        super().__init__(encoder, patch_size, **mrf_loss_kwargs)
 
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L221
         # https://github.com/pmeier/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/mylib/mrf.lua#L224
@@ -152,7 +151,9 @@ class MRFOperator(ops.MRFOperator):
         target_repr: torch.Tensor,
         ctx: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        score = F.mrf_loss(input_repr, target_repr, reduction=self.loss_reduction)
+        score = F.mrf_loss(
+            input_repr, target_repr, reduction=self.loss_reduction, batched_input=True
+        )
         return score * self.score_correction_factor
 
 
@@ -160,7 +161,7 @@ def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.MultiLayerEncodingOperator:
+) -> loss.MultiLayerEncodingLoss:
     r"""Style loss from :cite:`LW2016`.
 
     Args:
@@ -174,7 +175,7 @@ def style_loss(
 
     .. seealso::
 
-        - :class:`pystiche_papers.li_wand_2016.MRFOperator`
+        - :class:`pystiche_papers.li_wand_2016.MRFLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -182,45 +183,45 @@ def style_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
-    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> MRFOperator:
-        return MRFOperator(
+    def encoding_loss_fn(encoder: enc.Encoder, layer_weight: float) -> MRFLoss:
+        return MRFLoss(
             encoder,
             hyper_parameters.style_loss.patch_size,  # type: ignore[union-attr]
             impl_params=impl_params,
             stride=hyper_parameters.style_loss.stride,  # type: ignore[union-attr]
-            target_transforms=_target_transforms(
-                impl_params=impl_params, hyper_parameters=hyper_parameters
-            ),
+            # target_transforms=_target_transforms(
+            #     impl_params=impl_params, hyper_parameters=hyper_parameters
+            # ),
             score_weight=layer_weight,
         )
 
-    return ops.MultiLayerEncodingOperator(
+    return loss.MultiLayerEncodingLoss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
-        get_encoding_op,
+        encoding_loss_fn,
         layer_weights=hyper_parameters.style_loss.layer_weights,
         score_weight=hyper_parameters.style_loss.score_weight,
     )
 
 
-class TotalVariationOperator(ops.TotalVariationOperator):
-    r"""Total variation operator from :cite:`LW2016`.
+class TotalVariationLoss(loss.TotalVariationLoss):
+    r"""Total variation loss from :cite:`LW2016`.
 
     Args:
         impl_params: If ``False``, use a score correction factor of 1/2.
-        **total_variation_op_kwargs: Additional parameters of a
-            :class:`pystiche.ops.TotalVariationOperator`.
+        **total_variation_loss_kwargs: Additional parameters of a
+            :class:`pystiche.loss.TotalVariationLoss`.
 
-    In contrast to :class:`pystiche.ops.TotalVariationOperator`, the the score is
+    In contrast to :class:`pystiche.loss.TotalVariationLoss`, the the score is
     calculated with the squared error (SE) instead of the mean squared error (MSE).
 
     .. seealso::
 
-        - :class:`pystiche.ops.TotalVariationOperator`
+        - :class:`pystiche.loss.TotalVariationLoss`
     """
 
-    def __init__(self, impl_params: bool = True, **total_variation_op_kwargs: Any):
-        super().__init__(**total_variation_op_kwargs)
+    def __init__(self, impl_params: bool = True, **total_variation_loss_kwargs: Any):
+        super().__init__(**total_variation_loss_kwargs)
 
         self.loss_reduction = "sum"
 
@@ -240,7 +241,7 @@ class TotalVariationOperator(ops.TotalVariationOperator):
 
 def regularization(
     impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
-) -> TotalVariationOperator:
+) -> TotalVariationLoss:
     r"""Regularization from :cite:`LW2016`.
 
     Args:
@@ -252,12 +253,12 @@ def regularization(
 
     .. seealso::
 
-        - :class:`pystiche_papers.li_wand_2016.TotalVariationOperator`
+        - :class:`pystiche_papers.li_wand_2016.TotalVariationLoss`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return TotalVariationOperator(
+    return TotalVariationLoss(
         impl_params=impl_params,
         score_weight=hyper_parameters.regularization.score_weight,
     )
