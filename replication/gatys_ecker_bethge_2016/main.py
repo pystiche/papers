@@ -63,7 +63,7 @@ def figure_3(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    hyper_parameters = paper.hyper_parameters()
+    hyper_parameters = paper.hyper_parameters(args.impl_params)
 
     content_image = images["neckarfront"].read(
         size=hyper_parameters.nst.image_size, device=args.device
@@ -72,8 +72,7 @@ def figure_3(args):
         size=hyper_parameters.nst.image_size, device=args.device
     )
 
-    # TODO: this should use the layers from the hyper_parameters
-    style_layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    style_layers = hyper_parameters.style_loss.layers
     layer_configs = [style_layers[: idx + 1] for idx in range(len(style_layers))]
 
     score_weights = (1e5, 1e4, 1e3, 1e2)
@@ -84,8 +83,7 @@ def figure_3(args):
         print(
             f"Replicating Figure 3 image in row {row_label} and column {column_label}"
         )
-        # FIXME: this should be layers
-        hyper_parameters.style_loss.layers = style_layers
+        hyper_parameters.style_loss.layers = layers
         if args.impl_params:
             hyper_parameters.style_loss.layer_weights = paper.compute_layer_weights(
                 layers
