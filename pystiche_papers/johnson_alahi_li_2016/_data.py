@@ -1,10 +1,11 @@
-from typing import List, Optional, Sized, Tuple
+from typing import List, Optional, Sized
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
+from torchvision.transforms import functional as F
 
 from pystiche import image
 from pystiche.data import (
@@ -12,6 +13,7 @@ from pystiche.data import (
     DownloadableImageCollection,
     ImageFolderDataset,
 )
+from pystiche.image import extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
@@ -34,15 +36,12 @@ class TopLeftCropToMultiple(nn.Module):
         super().__init__()
         self.multiple = multiple
 
-    def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
         old_height, old_width = image.extract_image_size(input_image)
         new_height = old_height - old_height % self.multiple
         new_width = old_width - old_width % self.multiple
-        return new_height, new_width
 
-    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-        size = self.calculate_size(input_image)
-        return F.top_left_crop(input_image, size)
+        return input_image[..., :new_height, :new_width]
 
 
 def content_transform(
@@ -75,9 +74,26 @@ def content_transform(
     return nn.Sequential(*transforms_)
 
 
+class LongEdgeResize(nn.Module):
+    def __init__(self, edge_size: int) -> None:
+        super().__init__()
+        self.edge_size = edge_size
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = extract_image_size(image)
+        if old_height > old_width:
+            new_height = self.edge_size
+            new_width = int(new_height / old_height * old_width)
+        else:
+            new_width = self.edge_size
+            new_height = int(new_width / old_width * old_height)
+
+        return F.resize(image, [new_height, new_width])
+
+
 def style_transform(
     hyper_parameters: Optional[HyperParameters] = None,
-) -> transforms.Resize:
+) -> LongEdgeResize:
     r"""Style image transformation from :cite:`JAL2016`.
 
     Args:
@@ -87,10 +103,7 @@ def style_transform(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return transforms.Resize(
-        hyper_parameters.style_transform.edge_size,
-        edge=hyper_parameters.style_transform.edge,
-    )
+    return LongEdgeResize(hyper_parameters.style_transform.edge_size)
 
 
 def images() -> DownloadableImageCollection:

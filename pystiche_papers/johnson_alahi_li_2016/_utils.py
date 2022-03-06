@@ -37,7 +37,7 @@ def hyper_parameters() -> HyperParameters:
             score_weight=1e-6,
         ),
         content_transform=HyperParameters(image_size=(256, 256)),
-        style_transform=HyperParameters(edge_size=256, edge="long"),
+        style_transform=HyperParameters(edge_size=256),
         batch_sampler=HyperParameters(num_batches=40000, batch_size=4),
     )
 

@@ -14,4 +14,6 @@ class OptionalGrayscaleToFakegrayscale(nn.Module):
         if not is_grayscale:
             return input_image
 
-        return input_image.repeat(1, 3, 1, 1)
+        repeats = [1] * input_image.ndim
+        repeats[-3] = 3
+        return input_image.repeat(repeats)

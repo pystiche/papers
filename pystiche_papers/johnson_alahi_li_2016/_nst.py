@@ -1,10 +1,9 @@
-from typing import Callable, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-import pystiche
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
