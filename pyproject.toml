@@ -40,7 +40,7 @@ sections= ["FUTURE", "STDLIB", "THIRDPARTY", "PYTORCH", "FIRSTPARTY", "LOCALFOLD
 # https://github.com/psf/black#configuration-format
 
 line-length = 88
-target-version = ["py36"]
+target-version = ["py37"]
 exclude = '''
 /(
     \.git
