@@ -56,7 +56,7 @@ class GramLoss(loss.GramLoss):
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the Gram matrix additionally by the number
             of channels.
-        **gram_op_kwargs: Additional parameters of a :class:`pystiche.loss.GramOperator`.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.loss.GramLoss`.
 
     .. seealso::
 

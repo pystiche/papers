@@ -1,9 +1,11 @@
-from typing import List, Optional, Sized
+from typing import Optional, Sized, Tuple, Union, cast
 from urllib.parse import urljoin
 
+import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, Sampler
 from torchvision import transforms
+from torchvision.transforms import functional as F
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -12,6 +14,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
+from pystiche.image import extract_image_size
 from pystiche_papers.data.utils import FiniteCycleBatchSampler
 from pystiche_papers.utils import HyperParameters
 
@@ -26,6 +29,38 @@ __all__ = [
     "batch_sampler",
     "image_loader",
 ]
+
+
+class ValidRandomCrop(nn.Module):
+    def __init__(self, size: Union[Tuple[int, int], int]):
+        super().__init__()
+        self.size = (size, size) if isinstance(size, int) else size
+
+    @staticmethod
+    def get_params(
+        image_size: Tuple[int, int], crop_size: Tuple[int, int]
+    ) -> Tuple[int, int]:
+        image_height, image_width = image_size
+        crop_height, crop_width = crop_size
+
+        def randint(range: int) -> int:
+            if range < 0:
+                raise RuntimeError(
+                    "The crop size has to be smaller or equal to the image size."
+                )
+            return int(torch.randint(range + 1, (), dtype=torch.long))
+
+        top = randint(image_height - crop_height)
+        left = randint(image_width - crop_width)
+        return top, left
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        top, left = self.get_params(extract_image_size(image), self.size)
+        height, width = self.size
+        return cast(
+            torch.Tensor,
+            F.crop(image, top=top, left=left, height=height, width=width,),
+        )
 
 
 def content_transform(
@@ -51,17 +86,20 @@ def content_transform(
         )
     edge_size = hyper_parameters.content_transform.edge_size
 
-    transforms_: List[transforms.Transform] = []
+    transforms_ = []
     if impl_params:
         if instance_norm:
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/style.lua#L83
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/transforms.lua#L62-L92
-            transforms_.append(transforms.ValidRandomCrop(edge_size))
+            transforms_.append(ValidRandomCrop(edge_size))
         else:
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
             # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-width-height-mode
             transforms_.append(
-                transforms.Resize((edge_size, edge_size), interpolation_mode="bilinear")
+                transforms.Resize(
+                    (edge_size, edge_size),
+                    interpolation=transforms.InterpolationMode.BILINEAR,
+                )
             )
     else:
         transforms_.append(transforms.CenterCrop(edge_size))
@@ -70,11 +108,36 @@ def content_transform(
     return nn.Sequential(*transforms_)
 
 
+# TODO: refactor to a common transform
+class LongEdgeResize(nn.Module):
+    def __init__(
+        self,
+        edge_size: int,
+        interpolation: transforms.InterpolationMode = transforms.InterpolationMode.BILINEAR,
+    ) -> None:
+        super().__init__()
+        self.edge_size = edge_size
+        self.interpolation = interpolation
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = extract_image_size(image)
+        if old_height > old_width:
+            new_height = self.edge_size
+            new_width = int(new_height / old_height * old_width)
+        else:
+            new_width = self.edge_size
+            new_height = int(new_width / old_width * old_height)
+
+        return F.resize(
+            image, [new_height, new_width], interpolation=self.interpolation
+        )
+
+
 def style_transform(
     impl_params: bool = True,
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> transforms.Resize:
+) -> LongEdgeResize:
     r"""Style transform from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -92,10 +155,10 @@ def style_transform(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
-    return transforms.Resize(
+    # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
+    return LongEdgeResize(
         hyper_parameters.style_transform.edge_size,
-        edge=hyper_parameters.style_transform.edge,
-        interpolation_mode=hyper_parameters.style_transform.interpolation_mode,
+        interpolation=hyper_parameters.style_transform.interpolation,
     )
 
 
@@ -244,7 +307,7 @@ def image_loader(
 ) -> DataLoader:
     if batch_sampler is None:
         batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm,
+            dataset, impl_params=impl_params, instance_norm=instance_norm
         )
 
     return DataLoader(

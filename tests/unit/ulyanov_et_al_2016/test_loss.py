@@ -1,13 +1,20 @@
 import pytest
 
 import pytorch_testing_utils as ptu
+import torch
 from torch.nn.functional import mse_loss
 
 import pystiche
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import loss, ops
+from pystiche import loss
 
 from .utils import impl_params_and_instance_norm
+
+
+@pytest.fixture(autouse=True)
+def disable_autograd():
+    with torch.autograd.no_grad():
+        yield
 
 
 @impl_params_and_instance_norm

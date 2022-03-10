@@ -3,7 +3,7 @@ from argparse import Namespace
 from os import path
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import image, misc, optim
+from pystiche import image, misc
 from pystiche_papers import utils
 
 
@@ -42,8 +42,6 @@ def training(args):
             style_image,
             impl_params=args.impl_params,
             instance_norm=args.instance_norm,
-            quiet=args.quiet,
-            logger=args.logger,
         )
 
         model_name = f"ulyanov_et_al_2016__{style}"
@@ -80,7 +78,6 @@ def parse_input():
     device = None
     impl_params = True
     instance_norm = False
-    quiet = False
 
     def process_dir(dir):
         dir = path.abspath(path.expanduser(dir))
@@ -106,7 +103,6 @@ def parse_input():
     model_dir = process_dir(model_dir)
 
     device = misc.get_device(device=device)
-    logger = optim.OptimLogger()
 
     return Namespace(
         image_source_dir=image_source_dir,
@@ -116,8 +112,6 @@ def parse_input():
         device=device,
         impl_params=impl_params,
         instance_norm=instance_norm,
-        logger=logger,
-        quiet=quiet,
     )
 
 

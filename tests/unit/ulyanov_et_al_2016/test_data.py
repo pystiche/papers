@@ -1,5 +1,7 @@
 import pytorch_testing_utils as ptu
 from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.transforms import functional as F
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche.data import DownloadableImageCollection, ImageFolderDataset
@@ -29,11 +31,11 @@ def test_content_transform(subtests, content_image, impl_params, instance_norm):
 
     if impl_params:
         if instance_norm:
-            transform = transforms.ValidRandomCrop(edge_size)
-            utils.make_reproducible()
-            desired = transform(content_image)
-        else:
-            desired = F.resize(content_image, edge_size)
+            # Since the transform involves an uncontrollable random component, we can't
+            # do a reference test here
+            return
+
+        desired = F.resize(content_image, edge_size)
     else:
         transform = transforms.CenterCrop(edge_size)
         desired = transform(content_image)
@@ -64,16 +66,16 @@ def test_content_transform_grayscale_image(
 
     if impl_params:
         if instance_norm:
-            transform = transforms.ValidRandomCrop(edge_size)
-            utils.make_reproducible()
-            transform_image = transform(content_image)
-        else:
-            transform_image = F.resize(content_image, edge_size)
+            # Since the transform involves an uncontrollable random component, we can't
+            # do a reference test here
+            return
+
+        transform_image = F.resize(content_image, edge_size)
     else:
         transform = transforms.CenterCrop(edge_size)
         transform_image = transform(content_image)
 
-    desired = F.grayscale_to_fakegrayscale(transform_image)
+    desired = transform_image.repeat(1, 3, 1, 1)
 
     ptu.assert_allclose(actual, desired)
 
@@ -88,16 +90,11 @@ def test_style_transform(subtests, impl_params, instance_norm):
         impl_params=impl_params, instance_norm=instance_norm
     )
 
-    assert isinstance(style_transform, transforms.Resize)
-
     with subtests.test("edge_size"):
-        assert style_transform.size == hyper_parameters.edge_size
+        assert style_transform.edge_size == hyper_parameters.edge_size
 
-    with subtests.test("edge"):
-        assert style_transform.edge == hyper_parameters.edge
-
-    with subtests.test("interpolation_mode"):
-        assert style_transform.interpolation_mode == hyper_parameters.interpolation_mode
+    with subtests.test("interpolation"):
+        assert style_transform.interpolation == hyper_parameters.interpolation
 
 
 def test_images_smoke():

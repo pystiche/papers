@@ -2,7 +2,7 @@ from typing import Any, Optional, Tuple
 
 import torch
 
-from pystiche import enc, loss, ops
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import _hyper_parameters
@@ -10,7 +10,7 @@ from ._utils import multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
     "content_loss",
-    "GramOperator",
+    "GramLoss",
     "style_loss",
     "perceptual_loss",
 ]
@@ -39,7 +39,7 @@ def content_loss(
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.FeatureReconstructionOperator:
+) -> loss.FeatureReconstructionLoss:
     r"""Content loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -67,23 +67,23 @@ def content_loss(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
-    return ops.FeatureReconstructionOperator(
+    return loss.FeatureReconstructionLoss(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
-class GramOperator(ops.GramOperator):
+class GramLoss(loss.GramLoss):
     r"""Gram operator from :cite:`ULVL2016,UVL2017`.
 
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the score twice by the batch size.
-        **gram_op_kwargs: Additional parameters of a :class:`pystiche.ops.GramOperator`.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.loss.GramLoss`.
 
     .. seealso::
 
-        - :class:`pystiche.ops.GramOperator`
+        - :class:`pystiche.loss.GramLoss`
     """
 
     def __init__(
@@ -116,7 +116,7 @@ def style_loss(
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.MultiLayerEncodingOperator:
+) -> loss.MultiLayerEncodingLoss:
     r"""Style loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -144,10 +144,10 @@ def style_loss(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
-    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramLoss:
+        return GramLoss(encoder, impl_params=impl_params, score_weight=layer_weight)
 
-    return ops.MultiLayerEncodingOperator(
+    return loss.MultiLayerEncodingLoss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,

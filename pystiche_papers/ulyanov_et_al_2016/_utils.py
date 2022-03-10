@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.optimizer import Optimizer
+from torchvision.transforms import InterpolationMode
 
 from pystiche import enc
 from pystiche_papers.utils import HyperParameters
@@ -51,13 +52,11 @@ def hyper_parameters(
         content_transform=HyperParameters(edge_size=256,),
         style_transform=HyperParameters(
             edge_size=256,
-            # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
-            edge="long",
-            interpolation_mode="bicubic"
+            interpolation=InterpolationMode.BICUBIC
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
             if impl_params and instance_norm
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
-            else "bilinear",
+            else InterpolationMode.BILINEAR,
         ),
         batch_sampler=HyperParameters(
             # The number of iterations is split up into multiple epochs with
