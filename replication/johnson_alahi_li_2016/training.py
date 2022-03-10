@@ -159,7 +159,5 @@ def parse_args(args=None):
 
 
 if __name__ == "__main__":
-    # import sys
-    # sys.argv
-    args = parse_args(["--dataset-dir=~/datasets/coco/train2017"])
+    args = parse_args()
     main(args)

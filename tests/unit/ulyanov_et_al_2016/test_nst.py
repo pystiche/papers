@@ -7,8 +7,10 @@ import pytorch_testing_utils as ptu
 import torch
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, TensorDataset
+from torchvision.transforms import functional as F
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
+from pystiche.image import extract_image_size
 from pystiche_papers import utils
 
 from tests.utils import is_callable
@@ -108,7 +110,12 @@ def images_patch(mocker, content_image, style_image):
 
 @pytest.fixture
 def style_transforms_mocks(make_nn_module_mock, patcher):
-    mock = make_nn_module_mock(side_effect=lambda image: F.rescale(image, 2.0))
+    def rescale(image, factor=2.0):
+        return F.resize(
+            image, [int(length * factor) for length in extract_image_size(image)]
+        )
+
+    mock = make_nn_module_mock(side_effect=lambda image: rescale(image, 2.0))
     patch = patcher("_style_transform", return_value=mock)
     return patch, mock
 
@@ -135,9 +142,7 @@ def default_transformer_epoch_optim_loop_patch(patcher):
         return transformer
 
     return patcher(
-        "optim.default_transformer_epoch_optim_loop",
-        prefix=False,
-        side_effect=side_effect,
+        "optim.multi_epoch_model_optimization", prefix=False, side_effect=side_effect,
     )
 
 
@@ -289,7 +294,7 @@ def test_training_criterion_content_image(
     args, _, _ = training()
     criterion = args[2]
 
-    assert not criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is None
 
 
 def test_training_criterion_style_image(
@@ -309,7 +314,7 @@ def test_training_criterion_style_image(
     criterion = args[2]
 
     ptu.assert_allclose(
-        criterion.style_loss.get_target_image(),
+        criterion.style_loss.target_image,
         preprocessor(
             style_transform(utils.batch_up_image(style_image, image_loader.batch_size))
         ),
@@ -328,10 +333,10 @@ def test_training_criterion_update_fn(
     args, _, _ = training()
     _, _, criterion, criterion_update_fn, _ = args
 
-    assert not criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is None
 
     criterion_update_fn(content_image, criterion)
-    assert criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is not None
     ptu.assert_allclose(criterion.content_loss.target_image, content_image - 0.5)
 
 

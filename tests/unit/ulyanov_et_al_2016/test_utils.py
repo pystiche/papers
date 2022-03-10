@@ -2,6 +2,7 @@ import pytest
 
 import pytorch_testing_utils as ptu
 from torch import nn, optim
+from torchvision.transforms import InterpolationMode
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import enc
@@ -88,12 +89,11 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
     with subtests.test("edge_size"):
         assert hyper_parameters.edge_size == 256
 
-    with subtests.test("edge"):
-        assert hyper_parameters.edge == "long"
-
     with subtests.test("interpolation_mode"):
         assert hyper_parameters.interpolation_mode == (
-            "bicubic" if impl_params and instance_norm else "bilinear"
+            InterpolationMode.BICUBIC
+            if impl_params and instance_norm
+            else InterpolationMode.BILINEAR
         )
 
 

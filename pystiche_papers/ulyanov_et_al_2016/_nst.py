@@ -3,6 +3,7 @@ from typing import Callable, Optional, Union, cast
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from torchvision import transforms
 
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
