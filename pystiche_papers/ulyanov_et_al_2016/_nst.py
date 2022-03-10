@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import torch
 from torch import nn

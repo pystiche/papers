@@ -1,5 +1,3 @@
-import pytest
-
 import pytorch_testing_utils as ptu
 from torch.utils.data import DataLoader
 from torchvision import transforms

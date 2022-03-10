@@ -1,7 +1,6 @@
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader
-from torchvision import transforms
 from torchvision.transforms import functional as F
 
 import pystiche_papers.johnson_alahi_li_2016 as paper

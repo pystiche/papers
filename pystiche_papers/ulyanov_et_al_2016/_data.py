@@ -1,4 +1,4 @@
-from typing import List, Optional, Sized, Tuple, Union, cast
+from typing import Optional, Sized, Tuple, Union, cast
 from urllib.parse import urljoin
 
 import torch

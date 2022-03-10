@@ -2,7 +2,7 @@ from typing import Any, Optional, Tuple
 
 import torch
 
-from pystiche import enc, loss, ops
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import _hyper_parameters
