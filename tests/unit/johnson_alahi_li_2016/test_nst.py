@@ -302,7 +302,7 @@ def test_training_criterion_style_image(
     criterion = args[2]
 
     ptu.assert_allclose(
-        criterion.style_loss.get_target_image(),
+        criterion.style_loss.target_image,
         preprocessor(
             style_transform(batch_up_image(style_image, image_loader.batch_size))
         ),
@@ -320,10 +320,10 @@ def test_training_criterion_update_fn(
     args, _, _ = training()
     _, _, criterion, criterion_update_fn = args
 
-    assert not criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is None
 
     criterion_update_fn(content_image, criterion)
-    assert criterion.content_loss.has_target_image
+    assert criterion.content_loss.target_image is not None
     ptu.assert_allclose(criterion.content_loss.target_image, content_image)
 
 

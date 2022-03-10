@@ -33,8 +33,9 @@ def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
             the ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
+    # TODO: check if the encoder used inplace ops
     multi_layer_encoder_ = enc.vgg19_multi_layer_encoder(
-        framework="caffe", internal_preprocessing=False, allow_inplace=False
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
     if impl_params:
         return multi_layer_encoder_

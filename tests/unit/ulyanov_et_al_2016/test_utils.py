@@ -89,8 +89,8 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
     with subtests.test("edge_size"):
         assert hyper_parameters.edge_size == 256
 
-    with subtests.test("interpolation_mode"):
-        assert hyper_parameters.interpolation_mode == (
+    with subtests.test("interpolation"):
+        assert hyper_parameters.interpolation == (
             InterpolationMode.BICUBIC
             if impl_params and instance_norm
             else InterpolationMode.BILINEAR
