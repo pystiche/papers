@@ -1,4 +1,4 @@
-from typing import List, Optional, Sized
+from typing import List, Optional, Sized, cast
 from urllib.parse import urljoin
 
 import torch
@@ -88,7 +88,7 @@ class LongEdgeResize(nn.Module):
             new_width = self.edge_size
             new_height = int(new_width / old_width * old_height)
 
-        return F.resize(image, [new_height, new_width])
+        return cast(torch.Tensor, F.resize(image, [new_height, new_width]))
 
 
 def style_transform(

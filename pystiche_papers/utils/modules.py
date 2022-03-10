@@ -139,14 +139,12 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
         output_pad = torch.fmod(effective_kernel_size - 1, stride)
         self.output_padding = tuple(output_pad.tolist())
 
-        pad_size = (
+        return (
             torch.div(
                 effective_kernel_size - 1 - output_pad, stride, rounding_mode="floor",
             )
             + 1
         )
-
-        return cast(torch.Tensor, pad_size)
 
 
 class AutoPadConvTranspose2d(  # type: ignore[misc]

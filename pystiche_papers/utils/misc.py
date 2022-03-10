@@ -8,7 +8,9 @@ from collections import OrderedDict
 from copy import copy
 from distutils.util import strtobool
 from os import path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import OrderedDict as OrderedDictType
+from typing import Tuple, Union, cast
 
 import numpy as np
 
@@ -147,7 +149,7 @@ def load_state_dict_from_url(
     map_location: Optional[Union[torch.device, str]] = None,
     file_name: Optional[str] = None,
     **kwargs: Any,
-) -> Dict[str, torch.Tensor]:
+) -> OrderedDict[str, torch.Tensor]:
     # This is just for compatibility with torch==1.6.0 until
     # https://github.com/pytorch/pytorch/issues/42596 is resolved
     if model_dir is None:
@@ -157,7 +159,7 @@ def load_state_dict_from_url(
 
     try:
         return cast(
-            Dict[str, torch.Tensor],
+            OrderedDictType[str, torch.Tensor],
             hub.load_state_dict_from_url(
                 url, model_dir=model_dir, file_name=file_name, **kwargs
             ),
@@ -168,7 +170,8 @@ def load_state_dict_from_url(
 
         cached_file = path.join(model_dir, file_name)
         return cast(
-            Dict[str, torch.Tensor], torch.load(cached_file, map_location=map_location)
+            OrderedDictType[str, torch.Tensor],
+            torch.load(cached_file, map_location=map_location),
         )
 
 

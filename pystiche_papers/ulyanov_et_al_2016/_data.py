@@ -1,4 +1,4 @@
-from typing import Optional, Sized, Tuple, Union, cast
+from typing import List, Optional, Sized, Tuple, Union, cast
 from urllib.parse import urljoin
 
 import torch
@@ -86,7 +86,7 @@ def content_transform(
         )
     edge_size = hyper_parameters.content_transform.edge_size
 
-    transforms_ = []
+    transforms_: List[nn.Module] = []
     if impl_params:
         if instance_norm:
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/style.lua#L83
@@ -128,8 +128,9 @@ class LongEdgeResize(nn.Module):
             new_width = self.edge_size
             new_height = int(new_width / old_width * old_height)
 
-        return F.resize(
-            image, [new_height, new_width], interpolation=self.interpolation
+        return cast(
+            torch.Tensor,
+            F.resize(image, [new_height, new_width], interpolation=self.interpolation),
         )
 
 
