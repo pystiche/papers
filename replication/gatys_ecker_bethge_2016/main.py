@@ -77,11 +77,13 @@ def figure_3(args):
 
     score_weights = (1e5, 1e4, 1e3, 1e2)
 
+    params = "implementation" if args.impl_params else "paper"
     for layers, score_weight in itertools.product(layer_configs, score_weights):
         row_label = layers[-1]
         column_label = f"{1.0 / score_weight:.0e}"
         print(
-            f"Replicating Figure 3 image in row {row_label} and column {column_label}"
+            f"Replicating Figure 3 image in row {row_label} and column {column_label} "
+            f"with {params} parameters."
         )
         hyper_parameters.style_loss.layers = layers
         if args.impl_params:
@@ -140,5 +142,5 @@ def parse_input():
 if __name__ == "__main__":
     args = parse_input()
 
-    figure_2(args)
+    # figure_2(args)
     figure_3(args)
