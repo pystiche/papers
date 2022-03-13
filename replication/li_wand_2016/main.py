@@ -5,7 +5,7 @@ from os import path
 import pystiche_papers.li_wand_2016 as paper
 from pystiche.image import write_image
 from pystiche.misc import get_device
-from pystiche_papers.utils import abort_if_cuda_memory_exausts
+from pystiche_papers.utils import abort_if_cuda_memory_exausts, make_output_filename
 
 
 @abort_if_cuda_memory_exausts
@@ -40,8 +40,11 @@ def figure_6(args):
             impl_params=args.impl_params,
             hyper_parameters=hyper_parameters,
         )
-
-        output_file = path.join(args.image_results_dir, f"fig_6__{position}.jpg")
+        filename = make_output_filename(
+            ["li_wand_2016", "fig_6", position],
+            impl_params=args.impl_params
+        )
+        output_file = path.join(args.image_results_dir, filename)
         print(f"Saving result to {output_file}")
         write_image(output_image, output_file)
         print("#" * int(os.environ.get("COLUMNS", "80")))
