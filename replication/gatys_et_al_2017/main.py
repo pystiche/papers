@@ -8,7 +8,7 @@ from torchvision.transforms.functional import resize, rgb_to_grayscale
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche.image import write_image
 from pystiche.misc import get_device
-from pystiche_papers.utils import abort_if_cuda_memory_exausts
+from pystiche_papers.utils import abort_if_cuda_memory_exausts, make_output_filename
 
 
 def read_image_and_guides(image, **read_kwargs):
@@ -30,8 +30,10 @@ def figure_2(args):
             style_image,
             impl_params=args.impl_params,
         )
+        filename = make_output_filename(["gatys_et_al_2017", "fig_2", "d"],
+                                        impl_params=args.impl_params)
 
-        output_file = path.join(args.image_results_dir, "fig_2__d.jpg")
+        output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
@@ -58,8 +60,12 @@ def figure_2(args):
             style_images_and_guides,
             impl_params=args.impl_params,
         )
+        filename = make_output_filename(
+            ["gatys_et_al_2017", "fig_2", label],
+            impl_params=args.impl_params
+        )
 
-        output_file = path.join(args.image_results_dir, f"fig_2__{label}.jpg")
+        output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 
     images = paper.images()
@@ -147,8 +153,12 @@ def figure_3(args):
             style_image,
             impl_params=args.impl_params,
         )
+        filename = make_output_filename(
+            ["gatys_et_al_2017", "fig_3", "c"],
+            impl_params=args.impl_params
+        )
 
-        output_file = path.join(args.image_results_dir, "fig_3__c.jpg")
+        output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
@@ -169,8 +179,11 @@ def figure_3(args):
         output_chromaticity = resize(content_chromaticity, output_luminance.size()[2:])
         output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
         output_image = yuv_to_rgb(output_image_yuv)
-
-        output_file = path.join(args.image_results_dir, "fig_3__d.jpg")
+        filename = make_output_filename(
+            ["gatys_et_al_2017", "fig_3", "d"],
+            impl_params=args.impl_params
+        )
+        output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
@@ -183,8 +196,11 @@ def figure_3(args):
             style_image,
             impl_params=args.impl_params,
         )
-
-        output_file = path.join(args.image_results_dir, "fig_3__e.jpg")
+        filename = make_output_filename(
+            ["gatys_et_al_2017", "fig_3", "e"],
+            impl_params=args.impl_params
+        )
+        output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 
     images = paper.images()
