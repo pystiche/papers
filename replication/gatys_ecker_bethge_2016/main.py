@@ -51,10 +51,14 @@ def figure_2(args):
             impl_params=args.impl_params,
             hyper_parameters=hyper_parameters,
         )
+        filename = utils.make_output_filename(
+            ["gatys_ecker_betghe_2016", "fig_2", style_image.label],
+            impl_params=args.impl_params
+        )
 
         save_result(
             output_image,
-            path.join(args.image_results_dir, f"fig_2__{style_image.label}.jpg"),
+            path.join(args.image_results_dir, filename),
         )
 
 
@@ -99,10 +103,14 @@ def figure_3(args):
             hyper_parameters=hyper_parameters,
         )
 
+        filename = utils.make_output_filename(
+            ["gatys_ecker_betghe_2016", "fig_3", row_label, column_label],
+            impl_params=args.impl_params
+        )
         save_result(
             output_image,
             path.join(
-                args.image_results_dir, f"fig_3__{row_label}__{column_label}.jpg"
+                args.image_results_dir, filename
             ),
         )
 
@@ -142,5 +150,5 @@ def parse_input():
 if __name__ == "__main__":
     args = parse_input()
 
-    # figure_2(args)
+    figure_2(args)
     figure_3(args)
