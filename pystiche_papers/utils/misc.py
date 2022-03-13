@@ -241,7 +241,9 @@ def select_url_from_csv(
         raise RuntimeError(msg) from error
 
 
-def make_output_filename(name_parts: List[str], impl_params: bool = True, extension: str = ".jpg") -> str:
+def make_output_filename(
+    name_parts: List[str], impl_params: bool = True, extension: str = ".jpg"
+) -> str:
     if impl_params:
         name_parts.append("impl_params")
     return "__".join(name_parts) + extension

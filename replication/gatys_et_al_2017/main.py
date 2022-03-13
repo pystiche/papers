@@ -157,7 +157,6 @@ def figure_3(args):
             ["gatys_et_al_2017", "fig_3", "c"],
             impl_params=args.impl_params
         )
-
         output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
 

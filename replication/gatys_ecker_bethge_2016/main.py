@@ -55,7 +55,6 @@ def figure_2(args):
             ["gatys_ecker_betghe_2016", "fig_2", style_image.label],
             impl_params=args.impl_params
         )
-
         save_result(
             output_image,
             path.join(args.image_results_dir, filename),
