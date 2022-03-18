@@ -2,7 +2,7 @@
 In this chapter, the results of the replications are presented. For this purpose, the results for each replicated approach from the \secref{sec:replicated_paper} are presented in a figure. This figure contains, in addition to the content and style images, the results of the \gls{NST} created with \paper{} and \implementation{}. For a direct comparison, the results from the original publication are also shown, provided we have obtained permission from the copyright holder. Alternatively, results are shown with further information from the authors, or the results produced with the published models. We have also made a replica of the image in the original paper for the respective results from \paper{} and \implementation{}. Where appropriate, individual content or style images have been replaced in cases where copyright could not be traced. The replicas can be found in the appendix. 
 
 \subsection{Gatys, Ecker, and Bethge 2016} \label{sec:Gatys1results}
-The result of the replicated paper \cite{GEB2016} are shown in \figref{fig:GEB2016_fig_2}. The results with \paper{} did not visibly change the content image and therefore did not yield a meaningful stylised result. The reason for this is the different weighting between content and style, because in this case we have omitted an additional standardisation by the number of channels due to the missing specification in the paper. This standardisation factor corresponds to a value of $1/n^2$, where $n$ stands for the number of channels and take values of $n \in \{128, 256, 512\}$. A missing factor in such an order of magnitude can therefore lead to a lack of stylisation with this approach.
+The result of the replicated paper \cite{GEB2016} are shown in \figref{fig:GEB2016_fig_2}. The results with \paper{} did not visibly change the content image and therefore did not yield a meaningful stylised result. The reason for this is the different weighting between content and style, because in this case we have omitted an additional standardisation by the number of channels due to the missing specification in \paper{}. This standardisation factor corresponds to a value of $1/n^2$, where $n$ stands for the number of channels and take values of $n \in \{128, 256, 512\}$. A missing factor in such an order of magnitude can therefore lead to a lack of stylisation with this approach.
 
 However, there are also differences compared to the original release with \implementation{}, which are not only due to rounding errors on the \gls{GPU} or initialisation conditions. We assume this because we do not use random initialisation as a starting point and there are clear differences in the dominance of the style compared to the original release, which are comparable to the experience in \figref{fig:weighting_nst} with different weightings between content and style.
 
@@ -149,7 +149,7 @@ For this reason, we contacted the authors of the original release to get informa
 		\centering
 		Author
 	\end{minipage}
-	\caption{Our stylised results with \paper{} and \implementation{} according to the method from \cite{GEB2016}. The content image of the Neckarfront in Tübingen, Germany, on which the style transfer was applied is in the first column. Below it, in the left column, are the respective style images, followed by the result with \paper{} and \implementation{}. In the last column are our results created with the information provided by the author of the original approach.}
+	\caption{Our stylised results with \paper{} and \implementation{} according to the method from \cite{GEB2016}. The content image of the Neckarfront in Tübingen, Germany, on which the style transfer was applied, is in the first column. Below it, in the left column, are the respective style images, followed by the result with \paper{} and \implementation{}. In the last column are our results created with the information provided by the author of the original approach.}
 	\label{fig:GEB2016_fig_2}
 \end{figure}
 
@@ -176,7 +176,7 @@ For this reason, we contacted the authors of the original release to get informa
 
 
 \subsection{Li and Wand 2016}
-\figref{fig:LW2016_fig6} shows our results from Figure 6 of the original publication in \cite{LW2016}. We use a different content image in the the lower row, as the original image was not freely available. However, it can be seen that there are significant differences between \paper{} and \implementation{}. While the parameters from the implementation create useful stylised images, the style dominates when the parameters from the paper are used. This example shows how big the difference in the results can be due to the differences between \paper{} and \implementation{}.
+\figref{fig:LW2016_fig6} shows our results from Figure 6 of the original publication in \cite{LW2016}. We use a different content image in the lower row, as the original image was not freely available. However, it can be seen that there are significant differences between \paper{} and \implementation{}. While the parameters from \implementation{} create useful stylised images, the style dominates when the parameters from the paper are used. This example shows how big the difference in the results can be due to the differences between \paper{} and \implementation{}. 
 
 There are also significant differences to the original release. If the image from the top row is compared with the corresponding image from the original work, the result shows less darker artefacts, which in the original result appear mainly in the hair and background. We therefore contacted the author, who provided helpful explanations and said that subsequent changes to the code may result in differences from the release. Therefore, we suspect that the difference from the original implementation is due to these changes and that this is a successful replication of the stylised results.
 
@@ -321,11 +321,11 @@ The result also shows that the differences in \secref{sec:Gatys1results} arise d
 	\centering
 	Implementation
 \end{minipage}
-\caption{Replication of Figure 2 from \cite{GEB+2017}. In the upper row the used content image, the first style image and a second style image for the sky region. The results in the left column are with the parameters from the paper and the right column with the parameters from the reference implementation.  The results are presented using the original method of \cite{GEB2016}, the new approach with a guided variant in which the style transfer from sky to sky and house to house is achieved by masks and a third variant in which a second stylistic image is used for the sky area.}
+\caption{Replication of Figure 2 from \cite{GEB+2017}. In the upper row the used content image, the first style image and a second style image for the sky region. The results in the left column are with  \paper{} and the right column with \implementation{}.  The results are presented using the original method of \cite{GEB2016}, the new approach with a guided variant in which the style transfer from sky to sky and house to house is achieved by masks and a third variant in which a second stylistic image is used for the sky area.}
 \label{fig:GEB+2017_fig2}
 \end{figure}
 
-Another approach from the paper is the colour control, the replicated results of this method are shown in \figref{fig:GEB+2017_fig3}. The figure shows that in some cases it may be useful to want to preserve the colour of the original image. In order to achieve this, two different methods have been investigated. On the one hand, the transmission of luminance, which will preserve the colour of the content image perfectly, but individual strokes can change the colour unnatural (images in third row in \figref{fig:GEB+2017_fig3}). On the other hand, a colour histogram matching was used (images last row in \figref{fig:GEB+2017_fig3}).
+Another approach from the paper is the colour control, the replicated results of this method are shown in \figref{fig:GEB+2017_fig3}. The figure shows that in some cases it may be useful to want to preserve the colour of the original image. In order to achieve this, two different methods have been investigated \cite{GEB+2017}. On the one hand, the transmission of luminance, which will preserve the colour of the content image perfectly, but individual strokes can change the colour unnatural \cite{GEB+2017} (images in third row in \figref{fig:GEB+2017_fig3}). On the other hand, a colour histogram matching was used \cite{GEB+2017}(images last row in \figref{fig:GEB+2017_fig3}).
 
 \begin{figure}[H]
 	\centering
@@ -380,12 +380,12 @@ Another approach from the paper is the colour control, the replicated results of
 	\centering
 	\implementation{}
 \end{minipage}
-	\caption{Replication of Figure 3 in \etal{Gatys} \cite{GEB+2017}. In the upper row the used content image and the style image. The results in  left column are with \paper{} and the right column with \implementation{}.}
+	\caption{Replication of Figure 3 in \etal{Gatys} \cite{GEB+2017}. In the upper row, the used content image and the style image. The results in the left column are with \paper{} and the right column with \implementation{}.}
 	\label{fig:GEB+2017_fig3}
 \end{figure}
 
 \subsection{Johnson et al. 2016}
-The authors of the original publication provide models with the hyperparameters used during the training in their github repository. However, the hyperparameters differ not only from the data in \paper{} but also from the default values from \implementation{}. This information also depends on the style used and whether instance norm has been used or not. The following hyperparameters may be affected:
+The authors of the original publication provide models with the hyperparameters used during the training in their GitHub repository. However, the hyperparameters differ not only from the data in \paper{} but also from the default values from \implementation{}. This information also depends on the style used and whether instance norm has been used or not. The following hyperparameters may be affected:
 
 \begin{itemize}
 	\item the score weight for content loss, style loss and regularization loss
@@ -397,7 +397,7 @@ An overview of the adapted parameters that we also used for the replication with
 
 Our results for some sample results are shown in \figref{fig:johnson_alahi_li_2016_fig}. Since the optimisation is based on random initial conditions of the transformer weights, we do not expect an exact reproduction of the images, but qualitative and meaningful stylised results. For comparison, the right column in \figref{fig:johnson_alahi_li_2016_fig} shows the results we have produced using the models provided by the authors. All of our trained models as well as scripts to use the pre-trained model weights of the original authors for the stylisation are available online.
 
-Our results with \paper{} show that no stylised images are generated. The reason for this is the specified value range delimiter in \paper{}, which transforms the transformed images into a wrong value range and thus makes a training impossible. This looks different with the results in \implementation{}. As can be seen in the results, we can achieve similar results with our models to those published by the authors. An exception is the style in the last column where the style of our model appears much smaller. However, contacting the author to get further information for this style via hyperparameters or other preprocessing steps for the style image has not been successful so far. However, we suspect that this difference is due to a different image size for the style image, as the difference is comparable to the results in \figref{fig:diff_size_nst}.
+Our results with \paper{} show that no stylised images are generated. The reason for this is the specified value range delimiter in \paper{}, which transforms the transformed images into a wrong value range and thus makes a training impossible. This looks different with the results in \implementation{}. As can be seen in the results, we can achieve similar results with our models to those published by the authors. An exception is the style in the last column, where the style of our model appears much smaller. However, contacting the author to get further information for this style via hyperparameters or other preprocessing steps for the style image has not been successful so far. However, we suspect that this difference is due to a different image size for the style image, as the difference is comparable to the results in \figref{fig:diff_size_nst}.
 \begin{figure}[H]
 	\centering
 	\begin{minipage}[t]{0.24\textwidth}
