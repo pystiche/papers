@@ -26,7 +26,24 @@ IMAGES_AND_IDS.extend(
     ]
 )
 
-IMAGE_PARAMETRIZE_KWARGS = dict(zip(("argvalues", "ids"), zip(*IMAGES_AND_IDS)))
+
+image_parametrization = pytest.mark.parametrize(
+    "image",
+    [
+        pytest.param(
+            image,
+            id=id,
+            marks=[
+                pytest.mark.xfail(
+                    reason="See https://github.com/pystiche/papers/issues/281"
+                )
+            ]
+            if "watertown" in id
+            else [],
+        )
+        for image, id in IMAGES_AND_IDS
+    ],
+)
 
 
 def assert_image_is_downloadable(image, **kwargs):
@@ -34,7 +51,7 @@ def assert_image_is_downloadable(image, **kwargs):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("image", **IMAGE_PARAMETRIZE_KWARGS)
+@image_parametrization
 def test_image_download_smoke(subtests, image):
     retry(lambda: assert_image_is_downloadable(image), times=2, wait=5.0)
 
@@ -49,6 +66,6 @@ def assert_image_downloads_correctly(image, **kwargs):
 
 @pytest.mark.large_download
 @pytest.mark.slow
-@pytest.mark.parametrize("image", **IMAGE_PARAMETRIZE_KWARGS)
+@image_parametrization
 def test_image_download(image):
     assert_image_downloads_correctly(image)
