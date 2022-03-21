@@ -327,7 +327,5 @@ def test_image_loader(subtests):
 
     assert isinstance(image_loader, DataLoader)
 
-    with subtests.test("batch_sampler"):
-        assert isinstance(
-            image_loader.batch_sampler, type(paper.batch_sampler(dataset)),
-        )
+    with subtests.test("sampler"):
+        assert isinstance(image_loader.sampler, type(paper.sampler(dataset)),)

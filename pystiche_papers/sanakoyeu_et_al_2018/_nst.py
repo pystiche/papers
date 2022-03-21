@@ -1,3 +1,4 @@
+import time
 from typing import Callable, Optional, Tuple, Union, cast
 
 import torch
@@ -6,7 +7,7 @@ from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
-from pystiche import loss, misc
+from pystiche import LossDict, loss, misc, optim
 from pystiche.image.transforms import functional as F
 
 from ._data import content_dataset, image_loader, style_dataset
@@ -85,6 +86,10 @@ def gan_optim_loop(
     style_transform = _maybe_extract_transform(style_image_loader)
 
     device = misc.get_device()
+
+    logger = optim.OptimLogger()
+    log_fn = optim.default_transformer_optim_log_fn(logger, len(content_image_loader))
+    quiet = False
     style_image_loader = iter(style_image_loader)
 
     if isinstance(content_transform, nn.Module):
@@ -106,15 +111,29 @@ def gan_optim_loop(
             "discriminator_success", init_val=target_win_rate
         )
 
+    def logging(
+        loss: LossDict, batch_size: int, loading_time: float, processing_time: float
+    ) -> None:
+        image_loading_velocity = batch_size / max(loading_time, 1e-6)
+        image_processing_velocity = batch_size / max(processing_time, 1e-6)
+        # See https://github.com/pmeier/pystiche/pull/264#discussion_r430205029
+        log_fn(batch, loss, image_loading_velocity, image_processing_velocity)
+
     def train_discriminator_one_step(
         output_image: torch.Tensor,
         style_image: torch.Tensor,
         input_image: Optional[torch.Tensor] = None,
     ) -> None:
         def closure() -> float:
+            processing_time_start = time.time()
+
             cast(Optimizer, discriminator_optimizer).zero_grad()
             loss = discriminator_criterion(output_image, style_image, input_image)
             loss.backward()
+
+            processing_time = time.time() - processing_time_start
+
+            logging(loss, output_image.size()[0], loading_time, processing_time)
             return cast(float, loss.item())
 
         cast(Optimizer, discriminator_optimizer).step(closure)
@@ -122,10 +141,16 @@ def gan_optim_loop(
 
     def train_transformer_one_step(output_image: torch.Tensor) -> None:
         def closure() -> float:
+            processing_time_start = time.time()
+
             cast(Optimizer, transformer_optimizer).zero_grad()
             cast(MultiLayerPredictionOperator, transformer_criterion.style_loss).real()
             loss = transformer_criterion(output_image)
             loss.backward()
+
+            processing_time = time.time() - processing_time_start
+
+            logging(loss, output_image.size()[0], loading_time, processing_time)
             return cast(float, loss.item())
 
         cast(Optimizer, transformer_optimizer).step(closure)
@@ -134,19 +159,24 @@ def gan_optim_loop(
         ).get_accuracy()
         discriminator_success.update(1.0 - accuracy)
 
-    for content_image in content_image_loader:
+    loading_time_start = time.time()
+    for batch, content_image in enumerate(content_image_loader, 1):
+        content_image = content_image.squeeze(1)
         input_image = content_image.to(device)
         if content_transform is not None:
             input_image = content_transform(input_image)
         input_image = preprocessor(input_image)
 
+        loading_time = time.time() - loading_time_start
+
         output_image = transformer(input_image)
 
-        if discriminator_success.local_avg < target_win_rate:
+        if discriminator_success.global_avg < target_win_rate:
             style_image = next(style_image_loader)
-            style_image = style_image.to(device)
+            style_image = style_image.to(device).squeeze(1)
             if style_transform is not None:
                 style_image = style_transform(style_image)
+
             style_image = preprocessor(style_image)
 
             train_discriminator_one_step(
@@ -157,6 +187,8 @@ def gan_optim_loop(
         else:
             transformer_criterion_update_fn(input_image, transformer_criterion)
             train_transformer_one_step(output_image)
+
+        loading_time_start = time.time()
 
     return transformer
 
@@ -298,15 +330,17 @@ def training(
     transformer = transformer.to(device)
 
     prediction_operator = prediction_loss(impl_params=impl_params)
+    # TODO: Change this in MultiLayerEncoder
+    prediction_operator.train()
+    prediction_operator.requires_grad_(True)
 
     discriminator_criterion = DiscriminatorLoss(prediction_operator)
-    discriminator_criterion = discriminator_criterion.eval()
     discriminator_criterion = discriminator_criterion.to(device)
 
     transformer_criterion = transformer_loss(
-        transformer.encoder, impl_params=impl_params
+        transformer.encoder, prediction_operator, impl_params=impl_params
     )
-    transformer_criterion = transformer_criterion.eval()
+    transformer_criterion = transformer_criterion.train()
     transformer_criterion = transformer_criterion.to(device)
 
     get_optimizer = optimizer

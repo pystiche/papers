@@ -99,10 +99,34 @@ def test_style_aware_content_loss(subtests, multi_layer_encoder_with_layer):
                 assert content_loss.score_weight == pytest.approx(score_weight)
 
 
+class TestOperator(paper.EncodingDiscriminatorOperator):
+    def input_enc_to_repr(self, image):
+        return image * 2.0
+
+    def calculate_score(self, input_repr):
+        self.accuracy = self.calculate_accuracy(input_repr)
+        return torch.mean(input_repr)
+
+    def calculate_accuracy(self, input_repr: torch.Tensor) -> torch.Tensor:
+        comparator = torch.ge if self.real_images else torch.lt
+        return torch.mean(comparator(input_repr, 0.0).float())
+
+
 def test_transformer_loss(subtests, multi_layer_encoder_with_layer):
+    def get_encoding_op(encoder, score_weight):
+        return TestOperator(encoder, score_weight)
+
+    layers = [str(index) for index in range(3)]
+    modules = [(layer, nn.Conv2d(3, 3, 1)) for layer in layers]
+    multi_layer_encoder = enc.MultiLayerEncoder(modules)
+
+    multi_layer_prediction_op = paper.MultiLayerPredictionOperator(
+        multi_layer_encoder, layers, get_encoding_op
+    )
+
     multi_layer_encoder, layer = multi_layer_encoder_with_layer
     encoder = multi_layer_encoder.extract_encoder(layer)
-    transformer_loss = paper.transformer_loss(encoder)
+    transformer_loss = paper.transformer_loss(encoder, multi_layer_prediction_op)
     assert isinstance(transformer_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):

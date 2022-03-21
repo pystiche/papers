@@ -299,26 +299,6 @@ def test_training_transformer_train(
     transformer.train.assert_called_once_with()
 
 
-def test_training_criterion_eval(
-    subtests,
-    optimizer_mocks,
-    lr_scheduler_mocks,
-    transformer_mocks,
-    prediction_operator_mocks,
-    transformer_loss_mocks,
-    discriminator_loss_mocks,
-    training,
-):
-    args, _, _ = training()
-    discriminator_criterion = args[4]
-    transformer_criterion = args[5]
-    with subtests.test("discriminator_criterion"):
-        discriminator_criterion.eval.assert_called_once_with()
-
-    with subtests.test("transformer_criterion"):
-        transformer_criterion.eval.assert_called_once_with()
-
-
 def test_training_num_epochs(
     subtests,
     optimizer_mocks,
@@ -385,7 +365,7 @@ def test_training_transformer_lr_scheduler_optimizer(
 
 
 def test_training_discriminator_lr_scheduler_optimizer(
-    prediction_operator_mocks, training,
+    prediction_operator_mocks, transformer_loss_mocks, training,
 ):
     parameter = torch.empty(1)
     _, prediction_operator = prediction_operator_mocks

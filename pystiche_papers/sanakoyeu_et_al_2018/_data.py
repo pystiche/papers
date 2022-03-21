@@ -27,6 +27,7 @@ from pystiche_papers.data.utils import (
     SequentialNumIterationsBatchSampler,
 )
 
+from ..utils import OptionalGrayscaleToFakegrayscale
 from ._augmentation import (
     AugmentationBase2d,
     _adapted_uniform,
@@ -243,6 +244,7 @@ def image_transform(impl_params: bool = True, edge_size: int = 768) -> nn.Sequen
     transforms_: List[nn.Module] = [
         ClampSize() if impl_params else OptionalUpsample(edge_size),
     ]
+    transforms_.append(OptionalGrayscaleToFakegrayscale())
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L286-L287
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L291-L292
     # https://github.com/pmeier/adaptive-style-transfer/blob/07a3b3fcb2eeed2bf9a22a9de59c0aea7de44181/model.py#L271-L276
