@@ -1,13 +1,15 @@
 version: 2
 
-sphinx:
-  configuration: docs/source/conf.py
-
-formats: all
-
 python:
-  version: 3.6
+  version: "3.7"
   install:
-    - requirements: docs/requirements-rtd.txt
+    - requirements: requirements-dev.txt
+    - requirements: requirements-pytorch-rtd.txt
     - method: pip
       path: .
+
+sphinx:
+  configuration: docs/source/conf.py
+  fail_on_warning: true
+
+formats: all

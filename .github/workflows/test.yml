@@ -30,13 +30,18 @@ jobs:
       PYTHON_VERSION: ${{ matrix.python-version }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Setup development environment
         uses: ./.github/actions/setup-dev-env
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Run unit tests
-        run: doit test --skip-large-download --subset=unit
+        run: doit test --subset=unit
 
       - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0
@@ -64,7 +69,7 @@ jobs:
         uses: ./.github/actions/setup-dev-env
 
       - name: Run tests
-        run: doit test --skip-large-download --subset=replication
+        run: doit test --subset=replication
 
   doc:
     runs-on: ubuntu-latest
@@ -79,7 +84,7 @@ jobs:
         uses: ./.github/actions/setup-dev-env
 
       - name: Run tests
-        run: doit test --skip-large-download --subset=doc
+        run: doit test --subset=doc
 
   download:
     runs-on: ubuntu-latest
