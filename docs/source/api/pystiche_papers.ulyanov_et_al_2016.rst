@@ -198,7 +198,6 @@ API
 
 ..
   _loss.py
-.. autoclass:: FeatureReconstructionOperator
 .. autofunction:: content_loss
 .. autoclass:: GramOperator
 .. autofunction:: style_loss

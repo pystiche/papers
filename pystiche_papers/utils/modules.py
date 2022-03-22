@@ -1,6 +1,6 @@
 import functools
 from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, cast, Dict, List, Optional, Tuple, Union
 
 import more_itertools
 
@@ -60,7 +60,7 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if "padding" in kwargs:
             raise RuntimeError
-        super().__init__(*args, **kwargs)  # type: ignore[call-arg]
+        super().__init__(*args, **kwargs)
 
         self._pad = self._pad_size_to_pad(self._compute_pad_size())
 
@@ -149,7 +149,8 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
 
 
 class AutoPadConvTranspose2d(  # type: ignore[misc]
-    _AutoPadConvTransposeNdMixin, nn.ConvTranspose2d,
+    _AutoPadConvTransposeNdMixin,
+    nn.ConvTranspose2d,
 ):
     pass
 

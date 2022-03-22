@@ -6,8 +6,10 @@ import pystiche.ops.functional as F
 from pystiche import enc, loss, ops
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import (
+    hyper_parameters as _hyper_parameters,
+    multi_layer_encoder as _multi_layer_encoder,
+)
 
 __all__ = [
     "content_loss",
@@ -64,7 +66,10 @@ class GramOperator(ops.GramOperator):
     """
 
     def __init__(
-        self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
+        self,
+        encoder: enc.Encoder,
+        impl_params: bool = True,
+        **gram_op_kwargs: Any,
     ) -> None:
         super().__init__(encoder, **gram_op_kwargs)
         self.normalize_by_num_channels = impl_params
@@ -192,5 +197,7 @@ def perceptual_loss(
             multi_layer_encoder=multi_layer_encoder,
             hyper_parameters=hyper_parameters,
         ),
-        regularization(hyper_parameters=hyper_parameters,),
+        regularization(
+            hyper_parameters=hyper_parameters,
+        ),
     )

@@ -2,6 +2,8 @@ from collections import OrderedDict
 
 import pytest
 
+from tests.utils import generate_param_combinations
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
@@ -9,8 +11,6 @@ from torch import nn
 from pystiche.image import extract_image_size, extract_num_channels
 from pystiche.misc import to_2d_arg
 from pystiche_papers import utils
-
-from tests.utils import generate_param_combinations
 
 
 def test_Identity():
@@ -165,7 +165,8 @@ def test_AutoPadConvTranspose2d_state_dict():
 def auto_pad_pool_params():
     return tuple(
         generate_param_combinations(
-            kernel_size=(3, 4, (3, 4), (4, 3)), stride=(1, 2, (1, 2), (2, 1)),
+            kernel_size=(3, 4, (3, 4), (4, 3)),
+            stride=(1, 2, (1, 2), (2, 1)),
         )
     )
 
@@ -210,7 +211,12 @@ def test_AutoPadAvgPool1d_count_include_pad():
     from pystiche_papers.utils.modules import _AutoPadAvgPoolNdMixin
 
     class AutoPadAvgPool1d(_AutoPadAvgPoolNdMixin, nn.AvgPool1d):
-        def __init__(self, kernel_size, stride=None, **kwargs,) -> None:
+        def __init__(
+            self,
+            kernel_size,
+            stride=None,
+            **kwargs,
+        ) -> None:
             kernel_size = to_1d_arg(kernel_size)
             stride = kernel_size if stride is None else to_1d_arg(stride)
             super().__init__(kernel_size, stride=stride, **kwargs)
@@ -231,7 +237,12 @@ def test_AutoPadAvgPool3d_count_include_pad(input_image):
     from pystiche_papers.utils.modules import _AutoPadAvgPoolNdMixin
 
     class AutoPadAvgPool3d(_AutoPadAvgPoolNdMixin, nn.AvgPool3d):
-        def __init__(self, kernel_size, stride=None, **kwargs,) -> None:
+        def __init__(
+            self,
+            kernel_size,
+            stride=None,
+            **kwargs,
+        ) -> None:
             kernel_size = to_3d_arg(kernel_size)
             stride = kernel_size if stride is None else to_3d_arg(stride)
             super().__init__(kernel_size, stride=stride, **kwargs)
@@ -241,5 +252,8 @@ def test_AutoPadAvgPool3d_count_include_pad(input_image):
 
 
 def test_AutoPadAvgPool2d_repr_smoke():
-    auto_pad_conv = utils.AutoPadAvgPool2d(kernel_size=1, stride=1,)
+    auto_pad_conv = utils.AutoPadAvgPool2d(
+        kernel_size=1,
+        stride=1,
+    )
     assert isinstance(repr(auto_pad_conv), str)

@@ -3,6 +3,8 @@ import unittest.mock
 
 import pytest
 
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 import torch
 from torch.optim.lr_scheduler import ExponentialLR
@@ -11,8 +13,6 @@ from torch.utils.data import DataLoader, TensorDataset
 import pystiche.image.transforms.functional as F
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche_papers import utils
-
-from tests.utils import is_callable
 
 
 def make_patch_target(name):
@@ -337,7 +337,10 @@ def test_training_criterion_update_fn(
 
 
 def test_training_lr_scheduler_optimizer(
-    preprocessor_mocks, style_transforms_mocks, transformer_mocks, training,
+    preprocessor_mocks,
+    style_transforms_mocks,
+    transformer_mocks,
+    training,
 ):
     parameter = torch.empty(1)
     _, transformer_mock = transformer_mocks
@@ -391,7 +394,11 @@ def test_stylization_smoke(stylization, postprocessor_mocks, input_image):
 
 
 def test_stylization_device(
-    subtests, postprocessor_mocks, transformer_mocks, stylization, input_image,
+    subtests,
+    postprocessor_mocks,
+    transformer_mocks,
+    stylization,
+    input_image,
 ):
     stylization(input_image)
 

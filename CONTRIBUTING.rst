@@ -65,7 +65,7 @@ To run the full lint check locally, run
 Tests
 -----
 
-``pystiche_papers`` uses `pytest <https://docs.pytest.org/en/stable/>`_ to run the test 
+``pystiche_papers`` uses `pytest <https://docs.pytest.org/en/stable/>`_ to run the test
 suite. You can run it locally with
 
 .. code-block:: sh

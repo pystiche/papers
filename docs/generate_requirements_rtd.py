@@ -12,7 +12,8 @@ except (ImportError, AssertionError):
 
 
 def main(
-    root=".", file=path.join("docs", "requirements-rtd.txt"),
+    root=".",
+    file=path.join("docs", "requirements-rtd.txt"),
 ):
     python_version = extract_python_version_from_rtd_config(root)
 
@@ -37,7 +38,10 @@ def extract_docs_deps_from_tox_config(root, file="tox.ini", section="docs-common
 
 
 def find_pytorch_wheel_links(
-    root, python_version, computation_backend="cpu", platform="linux_x86_64",
+    root,
+    python_version,
+    computation_backend="cpu",
+    platform="linux_x86_64",
 ):
     return ltt.find_links(
         [root],

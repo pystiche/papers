@@ -1,5 +1,7 @@
 import pytest
 
+from tests import utils
+
 import pytorch_testing_utils as ptu
 from torch.nn.functional import mse_loss
 
@@ -7,8 +9,6 @@ import pystiche
 import pystiche.ops.functional as F
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import loss, misc, ops
-
-from tests import utils
 
 
 def test_FeatureReconstructionOperator(
@@ -22,7 +22,10 @@ def test_FeatureReconstructionOperator(
     configs = ((True, "mean"), (False, "sum"))
     for impl_params, loss_reduction in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
+            op = paper.FeatureReconstructionOperator(
+                encoder,
+                impl_params=impl_params,
+            )
             op.set_target_image(target_image)
             actual = op(input_image)
 
@@ -56,7 +59,10 @@ def test_MRFOperator(
     patch_size = 3
     stride = 1
     configs = ((True, 1.0 / 2.0), (False, 1.0))
-    for (impl_params, score_correction_factor,) in configs:
+    for (
+        impl_params,
+        score_correction_factor,
+    ) in configs:
         with subtests.test(impl_params=impl_params):
 
             op = paper.MRFOperator(
@@ -117,7 +123,9 @@ def test_TotalVariationOperator(subtests, input_image):
     configs = ((True, 1.0 / 2.0), (False, 1.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.TotalVariationOperator(impl_params=impl_params,)
+            op = paper.TotalVariationOperator(
+                impl_params=impl_params,
+            )
             actual = op(input_image)
 
             score = F.total_variation_loss(
@@ -148,7 +156,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
+            perceptual_loss.content_loss,
+            paper.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):

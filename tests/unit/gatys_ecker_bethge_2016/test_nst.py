@@ -2,12 +2,12 @@ from typing import Callable
 
 import numpy as np
 
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 import torch
 
 import pystiche_papers.gatys_ecker_bethge_2016 as paper
-
-from tests.utils import is_callable
 
 
 def test_nst_smoke(subtests, mocker, content_image, style_image):

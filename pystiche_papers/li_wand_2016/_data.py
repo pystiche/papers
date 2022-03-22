@@ -57,7 +57,8 @@ def images() -> data.DownloadableImageCollection:
             license=data.CreativeCommonsLicense(("by", "sa"), "2.0"),
             transform=make_image_transform("jenny"),
             note=image_note(
-                "https://www.flickr.com/photos/lydhode/16426686859/", mirror=True,
+                "https://www.flickr.com/photos/lydhode/16426686859/",
+                mirror=True,
             ),
             md5="387eeb2d8cd1bf19d14c263e078bb0a1",
         ),

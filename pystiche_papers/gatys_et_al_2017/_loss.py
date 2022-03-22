@@ -7,8 +7,10 @@ import pystiche
 from pystiche import enc, loss, ops
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import (
+    hyper_parameters as _hyper_parameters,
+    multi_layer_encoder as _multi_layer_encoder,
+)
 
 __all__ = [
     "content_loss",
@@ -200,7 +202,8 @@ def perceptual_loss(
 
     return loss.PerceptualLoss(
         content_loss(
-            multi_layer_encoder=multi_layer_encoder, hyper_parameters=hyper_parameters,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
         ),
         style_loss(
             impl_params=impl_params,
@@ -238,7 +241,8 @@ def guided_perceptual_loss(
 
     return loss.GuidedPerceptualLoss(
         content_loss(
-            multi_layer_encoder=multi_layer_encoder, hyper_parameters=hyper_parameters,
+            multi_layer_encoder=multi_layer_encoder,
+            hyper_parameters=hyper_parameters,
         ),
         guided_style_loss(
             regions,

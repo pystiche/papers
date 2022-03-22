@@ -1,5 +1,7 @@
 import pytest
 
+from tests import mocks, utils
+
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
@@ -7,8 +9,6 @@ import pystiche_papers.gatys_ecker_bethge_2016 as paper
 from pystiche import enc, meta
 from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
-
-from tests import mocks, utils
 
 
 def test_preprocessor():
@@ -83,7 +83,7 @@ def test_compute_layer_weights():
     layer_weights = paper.compute_layer_weights(
         layers, multi_layer_encoder=multi_layer_encoder
     )
-    assert layer_weights == pytest.approx([1 / n ** 2 for n in out_channels])
+    assert layer_weights == pytest.approx([1 / n**2 for n in out_channels])
 
 
 def test_get_layer_weights_wrong_layers(subtests):
@@ -139,7 +139,7 @@ def test_hyper_parameters_style_loss(subtests, impl_params):
             ("relu4_1", 512),
             ("relu5_1", 512),
         )
-        layer_weights = pytest.approx([1 / n ** 2 for n in num_channels])
+        layer_weights = pytest.approx([1 / n**2 for n in num_channels])
     else:
         layers = ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
         layer_weights = "mean"

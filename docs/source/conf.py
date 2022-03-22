@@ -9,8 +9,9 @@
 import os
 from datetime import datetime
 from distutils.util import strtobool
-from importlib_metadata import metadata
 from os import path
+
+from importlib_metadata import metadata
 
 # -- Run config ------------------------------------------------------------------------
 

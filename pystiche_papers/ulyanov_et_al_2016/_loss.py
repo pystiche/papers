@@ -5,8 +5,7 @@ import torch
 from pystiche import enc, loss, ops
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import _hyper_parameters, multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
     "content_loss",
@@ -87,7 +86,10 @@ class GramOperator(ops.GramOperator):
     """
 
     def __init__(
-        self, encoder: enc.Encoder, impl_params: bool = True, **gram_op_kwargs: Any,
+        self,
+        encoder: enc.Encoder,
+        impl_params: bool = True,
+        **gram_op_kwargs: Any,
     ):
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L38
         # In the reference implementation the gram_matrix is only divided by the
