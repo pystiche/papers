@@ -84,7 +84,9 @@ def test_MRFLoss(subtests, multi_layer_encoder_with_layer, target_image, input_i
             target_repr = extract_patches2d(target_enc, patch_size, stride)
             input_repr = extract_patches2d(input_enc, patch_size, stride)
 
-            score = F.mrf_loss(input_repr, target_repr, reduction="sum")
+            score = F.mrf_loss(
+                input_repr, target_repr, reduction="sum", batched_input=True
+            )
             desired = score * score_correction_factor
 
             assert actual == ptu.approx(desired)

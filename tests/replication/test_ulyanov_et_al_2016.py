@@ -79,8 +79,6 @@ def args(tmpdir):
         device=misc.get_device(),
         impl_params=bool,
         instance_norm=bool,
-        logger=optim.OptimLogger(),
-        quiet=True,
     )
 
 
@@ -109,12 +107,6 @@ def test_training_parse_input_smoke(subtests, main, args):
 
     with subtests.test("instance_norm"):
         assert isinstance(actual_args.instance_norm, bool)
-
-    with subtests.test("logger"):
-        assert isinstance(actual_args.logger, optim.OptimLogger)
-
-    with subtests.test("quiet"):
-        assert isinstance(actual_args.quiet, bool)
 
 
 def test_training_smoke(subtests, images, dataset, training, stylization, main, args):

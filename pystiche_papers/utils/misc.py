@@ -158,7 +158,7 @@ def load_state_dict_from_url(
     map_location: Optional[Union[torch.device, str]] = None,
     file_name: Optional[str] = None,
     **kwargs: Any,
-) -> OrderedDict[str, torch.Tensor]:
+) -> OrderedDictType[str, torch.Tensor]:
     # This is just for compatibility with torch==1.6.0 until
     # https://github.com/pytorch/pytorch/issues/42596 is resolved
     if model_dir is None:

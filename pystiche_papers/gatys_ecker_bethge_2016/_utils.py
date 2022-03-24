@@ -72,8 +72,11 @@ def compute_layer_weights(
         layers = list(modules.keys())
         layers = reversed(layers[: layers.index(layer) + 1])
         for layer_ in layers:
+            module = modules[layer_]
+            if module is None:
+                continue
             with contextlib.suppress(AttributeError):
-                return cast(int, modules[layer_].out_channels)
+                return cast(int, module.out_channels)
 
         raise RuntimeError(
             f"Neither '{layer}' nor any previous layer has an 'out_channels' "
