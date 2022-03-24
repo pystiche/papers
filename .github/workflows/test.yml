@@ -48,7 +48,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0
         with:
-          flags: unit, {{ matrix.os }}
+          flags: unit
           env_vars: OS,PYTHON_VERSION
 
   replication:
