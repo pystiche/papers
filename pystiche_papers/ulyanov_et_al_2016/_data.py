@@ -70,15 +70,15 @@ class ValidRandomCrop(nn.Module):
 def license_info(original: Optional[str] = None, repository: str = "ulyanov") -> str:
     if repository == "ulyanov":
         license_text = (
-            "The image is part of a repository that is published for personal and "
-            "research use only "
-            "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
-        )
-    else:  # repository == "johnson"
-        license_text = (
             "The image is part of a repository that is published under the Apache "
             "License"
             "(https://github.com/DmitryUlyanov/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/LICENSE#L1)."
+        )
+    else:  # repository == "johnson"
+        license_text = (
+            "The image is part of a repository that is published for personal and "
+            "research use only "
+            "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
         )
     return license(license_text, original=original)
 
