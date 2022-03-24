@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import TensorDataset
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
-from pystiche import misc, optim
+from pystiche import misc
 
 from . import utils
 from .asserts import assert_dir_exists
