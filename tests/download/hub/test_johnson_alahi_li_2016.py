@@ -16,7 +16,10 @@ def test_hub_johnson_alahi_li_2016_transformer(subtests, github):
         file = path.join(
             pystiche_papers.__path__[0], "johnson_alahi_li_2016", "model_urls.csv"
         )
-        with open(file, "r",) as fh:
+        with open(
+            file,
+            "r",
+        ) as fh:
             for row in csv.DictReader(fh):
                 row["impl_params"] = str_to_bool(row["impl_params"])
                 row["instance_norm"] = str_to_bool(row["instance_norm"])

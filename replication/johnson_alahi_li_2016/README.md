@@ -110,14 +110,14 @@ optional arguments:
 
 # `LuaTorch` to `PyTorch`
 
-Download and convert the weights provided by Johnson, Alahi, and Li from LuaTorch to 
+Download and convert the weights provided by Johnson, Alahi, and Li from LuaTorch to
 PyTorch.
 
 ```sh
 python luatorch_to_pytorch.py
 ```
 
-The conversion requires `torch < 1`. You can use `ltt install` with the `--force-cpu` 
+The conversion requires `torch < 1`. You can use `ltt install` with the `--force-cpu`
 for a minimal installation:
 
 ```sh

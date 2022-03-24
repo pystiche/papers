@@ -5,9 +5,9 @@ from time import sleep
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from torchvision.datasets.utils import calculate_md5
-
 from tests.utils import get_tempdir
+
+from torchvision.datasets.utils import calculate_md5
 
 __all__ = [
     "retry",

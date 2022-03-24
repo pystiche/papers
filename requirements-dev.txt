@@ -1,2 +1,26 @@
-tox >= 3.2
+# format & lint
 pre-commit
+mccabe ==0.6.1
+pycodestyle ==2.8.0
+pydocstyle ==6.1.1
+pyflakes ==2.4.0
+flake8
+flake8-docstrings
+mypy ==0.941
+# test
+# TODO: move to a released version
+git+https://github.com/pmeier/pytorch_testing_utils
+pytest >= 6
+pytest-mock >= 3.1
+pytest-subtests >= 0.3.2
+pytest-cov
+# docs
+importlib_metadata
+sphinx >= 2
+sphinx_rtd_theme
+sphinx_autodoc_typehints >= 1.11
+sphinxcontrib-bibtex == 2
+# publish
+build
+twine
+check-wheel-contents

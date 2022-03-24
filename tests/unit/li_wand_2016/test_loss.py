@@ -1,5 +1,7 @@
 import pytest
 
+from tests import utils
+
 import pytorch_testing_utils as ptu
 import torch
 from torch.nn.functional import mse_loss
@@ -8,8 +10,6 @@ import pystiche
 import pystiche.loss.functional as F
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import loss, misc
-
-from tests import utils
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +29,10 @@ def test_FeatureReconstructionLoss(
     configs = ((True, "mean"), (False, "sum"))
     for impl_params, loss_reduction in configs:
         with subtests.test(impl_params=impl_params):
-            loss = paper.FeatureReconstructionLoss(encoder, impl_params=impl_params,)
+            loss = paper.FeatureReconstructionLoss(
+                encoder,
+                impl_params=impl_params,
+            )
             loss.set_target_image(target_image)
             actual = loss(input_image)
 
@@ -61,7 +64,10 @@ def test_MRFLoss(subtests, multi_layer_encoder_with_layer, target_image, input_i
     patch_size = 3
     stride = 1
     configs = ((True, 1.0 / 2.0), (False, 1.0))
-    for (impl_params, score_correction_factor,) in configs:
+    for (
+        impl_params,
+        score_correction_factor,
+    ) in configs:
         with subtests.test(impl_params=impl_params):
 
             loss = paper.MRFLoss(
@@ -122,7 +128,9 @@ def test_TotalVariationLoss(subtests, input_image):
     configs = ((True, 1.0 / 2.0), (False, 1.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            loss = paper.TotalVariationLoss(impl_params=impl_params,)
+            loss = paper.TotalVariationLoss(
+                impl_params=impl_params,
+            )
             actual = loss(input_image)
 
             score = F.total_variation_loss(
@@ -153,7 +161,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionLoss,
+            perceptual_loss.content_loss,
+            paper.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):

@@ -77,7 +77,9 @@ def postprocessor(impl_params: bool = True) -> nn.Module:
     return enc.CaffePostprocessing() if impl_params else Identity()
 
 
-def multi_layer_encoder(impl_params: bool = True,) -> enc.VGGMultiLayerEncoder:
+def multi_layer_encoder(
+    impl_params: bool = True,
+) -> enc.VGGMultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`JAL2016`.
 
     Args:

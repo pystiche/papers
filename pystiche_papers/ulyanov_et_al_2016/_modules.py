@@ -1,12 +1,11 @@
 from collections import OrderedDict
 from math import sqrt
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
 from torch import nn
 
-from pystiche import meta as meta_
-from pystiche import misc
+from pystiche import meta as meta_, misc
 
 from ..utils import AutoPadConv2d, SequentialWithOutChannels
 
@@ -39,7 +38,9 @@ class AddNoiseChannels(nn.Module):
     """
 
     def __init__(
-        self, in_channels: int, num_noise_channels: int = 3,
+        self,
+        in_channels: int,
+        num_noise_channels: int = 3,
     ):
         super().__init__()
         self.num_noise_channels = num_noise_channels
@@ -58,7 +59,10 @@ class AddNoiseChannels(nn.Module):
         return torch.Size(size)
 
 
-def noise(in_channels: int = 3, num_noise_channels: int = 3,) -> AddNoiseChannels:
+def noise(
+    in_channels: int = 3,
+    num_noise_channels: int = 3,
+) -> AddNoiseChannels:
     return AddNoiseChannels(in_channels, num_noise_channels=num_noise_channels)
 
 
@@ -369,7 +373,8 @@ def level(
 
         if use_noise:
             noise_module = noise(
-                in_channels=in_channels, num_noise_channels=num_noise_channels,
+                in_channels=in_channels,
+                num_noise_channels=num_noise_channels,
             )
             in_channels = noise_module.out_channels
             modules.append(("noise", noise_module))
@@ -429,7 +434,9 @@ class Transformer(nn.Sequential):
         pyramid = None
         for _ in range(levels):
             pyramid = level(
-                pyramid, impl_params=impl_params, instance_norm=instance_norm,
+                pyramid,
+                impl_params=impl_params,
+                instance_norm=instance_norm,
             )
 
         if impl_params:

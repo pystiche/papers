@@ -1,6 +1,6 @@
 import functools
 from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, cast, Dict, List, Optional, Tuple, Union
 
 import more_itertools
 
@@ -141,7 +141,9 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
 
         pad_size = (
             torch.div(
-                effective_kernel_size - 1 - output_pad, stride, rounding_mode="floor",
+                effective_kernel_size - 1 - output_pad,
+                stride,
+                rounding_mode="floor",
             )
             + 1
         )
@@ -150,7 +152,8 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
 
 
 class AutoPadConvTranspose2d(  # type: ignore[misc]
-    _AutoPadConvTransposeNdMixin, nn.ConvTranspose2d,
+    _AutoPadConvTransposeNdMixin,
+    nn.ConvTranspose2d,
 ):
     pass
 

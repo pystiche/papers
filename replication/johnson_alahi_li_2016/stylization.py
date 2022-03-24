@@ -3,12 +3,6 @@ import re
 import sys
 from os import path
 
-import torch
-import torchvision.transforms.functional as F
-
-import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche.image import extract_edge_size, write_image
-
 from utils import (
     ArgumentParser,
     make_description,
@@ -16,6 +10,13 @@ from utils import (
     make_transformer_name,
     read_local_or_builtin_image,
 )
+
+import torch
+import torchvision.transforms.functional as F
+
+import pystiche.image.transforms.functional as F
+import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche.image import extract_edge_size, write_image
 
 
 def main(args):
@@ -52,7 +53,9 @@ def main(args):
 def load_transformer(model_dir, style, impl_params, instance_norm):
     def load(style=None):
         return paper.transformer(
-            style, impl_params=impl_params, instance_norm=instance_norm,
+            style,
+            impl_params=impl_params,
+            instance_norm=instance_norm,
         )
 
     state_dict = load_local_weights(model_dir, style, impl_params, instance_norm)

@@ -3,6 +3,9 @@ import unittest.mock
 
 import pytest
 
+from tests import utils
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -11,9 +14,6 @@ from torchvision.transforms import functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche.image import extract_image_size
 from pystiche_papers.utils import batch_up_image
-
-from tests import utils
-from tests.utils import is_callable
 
 
 def make_patch_target(name):
@@ -328,7 +328,10 @@ def test_training_criterion_update_fn(
 
 
 def test_training_optimizer(
-    preprocessor_mocks, style_transforms_mocks, transformer_mocks, training,
+    preprocessor_mocks,
+    style_transforms_mocks,
+    transformer_mocks,
+    training,
 ):
     parameter = torch.empty(1)
     _, transformer_mock = transformer_mocks
@@ -434,7 +437,11 @@ def test_stylization_transformer_eval(
 
 
 def test_stylization_transformer_str(
-    subtests, preprocessor_mocks, postprocessor_mocks, transformer_mocks, stylization,
+    subtests,
+    preprocessor_mocks,
+    postprocessor_mocks,
+    transformer_mocks,
+    stylization,
 ):
     patch, mock = transformer_mocks
 

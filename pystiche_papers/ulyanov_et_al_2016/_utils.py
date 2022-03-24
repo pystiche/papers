@@ -49,7 +49,9 @@ def hyper_parameters(
             ),
             score_weight=1e0,
         ),
-        content_transform=HyperParameters(edge_size=256,),
+        content_transform=HyperParameters(
+            edge_size=256,
+        ),
         style_transform=HyperParameters(
             edge_size=256,
             interpolation=InterpolationMode.BICUBIC
@@ -178,7 +180,7 @@ class DelayedExponentialLR(ExponentialLR):
     def get_lr(self) -> List[float]:  # type: ignore[override]
         exp = self.last_epoch - self.delay + 1
         if exp > 0:
-            return [base_lr * self.gamma ** exp for base_lr in self.base_lrs]
+            return [base_lr * self.gamma**exp for base_lr in self.base_lrs]
         else:
             return self.base_lrs
 

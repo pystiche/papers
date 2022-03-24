@@ -4,6 +4,8 @@ from os import path
 
 import pytest
 
+from tests import assets, utils as utils_
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import hub, nn
@@ -11,9 +13,6 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche_papers import utils
-
-from tests import assets
-from tests import utils as utils_
 
 
 def test_batch_up_image(image):
@@ -126,7 +125,7 @@ def test_make_reproducible_cudnn(mocker):
 
 
 def test_make_reproducible_uint32_seed():
-    uint32_max = 2 ** 32 - 1
+    uint32_max = 2**32 - 1
 
     assert utils.make_reproducible(uint32_max) == uint32_max
     assert utils.make_reproducible(uint32_max + 1) == 0
@@ -185,7 +184,7 @@ def test_save_state_dict_file(subtests, tmpdir, conv2d_module):
     )
 
     match = re.match(
-        fr"^{name}-(?P<hash>[0-9a-f]{{{hash_len}}})[.]{ext[1:]}$", path.basename(file)
+        rf"^{name}-(?P<hash>[0-9a-f]{{{hash_len}}})[.]{ext[1:]}$", path.basename(file)
     )
     assert match is not None
 
@@ -193,6 +192,7 @@ def test_save_state_dict_file(subtests, tmpdir, conv2d_module):
     assert hash == utils.get_sha256_hash(file)[:hash_len]
 
 
+@pytest.mark.xfail
 def test_load_state_dict_from_url_torch_1_5_1(subtests, tmpdir):
     url = "https://download.pystiche.org/models/conv2d-1.5.1.pth"
     file = path.join(tmpdir, path.basename(url))
@@ -211,6 +211,7 @@ def test_load_state_dict_from_url_torch_1_5_1(subtests, tmpdir):
         )
 
 
+@pytest.mark.xfail
 def test_load_state_dict_from_url_torch_1_6_0(subtests, tmpdir):
     url = "https://download.pystiche.org/models/conv2d-1.6.0.pth"
     file = path.join(tmpdir, path.basename(url))

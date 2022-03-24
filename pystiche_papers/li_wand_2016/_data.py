@@ -84,7 +84,8 @@ def make_image_transform(image: str) -> nn.Sequential:
     elif image == "jenny":
 
         image_transform = nn.Sequential(
-            Crop(top=211, left=462, height=1843, width=1386), MirrorHorizontally(),
+            Crop(top=211, left=462, height=1843, width=1386),
+            MirrorHorizontally(),
         )
     elif image == "s":
         image_transform = Crop(top=159, left=486, height=2157, width=1642)
@@ -117,7 +118,8 @@ def images() -> data.DownloadableImageCollection:
             license=data.CreativeCommonsLicense(("by", "sa"), "2.0"),
             transform=make_image_transform("jenny"),
             note=image_note(
-                "https://www.flickr.com/photos/lydhode/16426686859/", mirror=True,
+                "https://www.flickr.com/photos/lydhode/16426686859/",
+                mirror=True,
             ),
             md5="387eeb2d8cd1bf19d14c263e078bb0a1",
         ),

@@ -1,7 +1,7 @@
+from tests import utils
+
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import pyramid
-
-from tests import utils
 
 
 @utils.impl_params
