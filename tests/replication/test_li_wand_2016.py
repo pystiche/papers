@@ -3,6 +3,8 @@ import functools
 from os import path
 
 import pytest
+from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
+from tests.utils import call_args_list_to_dict
 
 import pytorch_testing_utils as ptu
 
@@ -11,8 +13,6 @@ from pystiche import misc
 
 from . import utils
 from .asserts import assert_dir_exists
-from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
-from tests.utils import call_args_list_to_dict
 
 PAPER = "li_wand_2016"
 

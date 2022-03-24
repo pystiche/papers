@@ -1,4 +1,4 @@
-from typing import List, Optional, Sized, cast
+from typing import cast, List, Optional, Sized
 from urllib.parse import urljoin
 
 import torch
@@ -18,8 +18,7 @@ from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import preprocessor as _preprocessor
+from ._utils import hyper_parameters as _hyper_parameters, preprocessor as _preprocessor
 
 __all__ = [
     "content_transform",
@@ -45,7 +44,8 @@ class TopLeftCropToMultiple(nn.Module):
 
 
 def content_transform(
-    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+    impl_params: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> nn.Sequential:
     r"""Content image transformation from :cite:`JAL2016`.
 
@@ -157,11 +157,13 @@ def images() -> DownloadableImageCollection:
             file="the_wave.jpg",
         ),
     }
-    return DownloadableImageCollection({**content_images, **style_images},)
+    return DownloadableImageCollection({**content_images, **style_images})
 
 
 def dataset(
-    root: str, impl_params: bool = True, transform: Optional[nn.Module] = None,
+    root: str,
+    impl_params: bool = True,
+    transform: Optional[nn.Module] = None,
 ) -> ImageFolderDataset:
     if transform is None:
         transform = content_transform(impl_params=impl_params)
@@ -170,7 +172,8 @@ def dataset(
 
 
 def batch_sampler(
-    data_source: Sized, hyper_parameters: Optional[HyperParameters] = None,
+    data_source: Sized,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> FiniteCycleBatchSampler:
     r"""Batch sampler from :cite:`JAL2016`.
 

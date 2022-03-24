@@ -68,7 +68,10 @@ class HyperParameters(Mapping, pystiche.ComplexObject):
         )
         return type(self)(**params)
 
-    def __deepcopy__(self, memo: Optional[Dict[int, Any]] = None,) -> "HyperParameters":
+    def __deepcopy__(
+        self,
+        memo: Optional[Dict[int, Any]] = None,
+    ) -> "HyperParameters":
         params = copy.deepcopy(self.__params__, memo=memo)
         params.update(
             {

@@ -41,7 +41,7 @@ For installation instructions and usage examples please consult the documentatio
   image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
     :alt: black
-   
+
 .. |mypy|
   image:: http://www.mypy-lang.org/static/mypy_badge.svg
     :target: http://mypy-lang.org/
@@ -56,7 +56,7 @@ For installation instructions and usage examples please consult the documentatio
   image:: https://github.com/pmeier/pystiche_papers/workflows/tests/badge.svg
     :target: https://github.com/pmeier/pystiche_papers/actions?query=workflow%3Atests+branch%3Amaster
     :alt: Test status via GitHub Actions
-   
+
 .. |coverage|
   image:: https://codecov.io/gh/pmeier/pystiche_papers/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/pmeier/pystiche_papers

@@ -2,6 +2,8 @@ from typing import Callable
 
 import numpy as np
 
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 import torch
 

@@ -1,0 +1,137 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+
+  pull_request:
+
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  unit:
+    strategy:
+      matrix:
+        python-version:
+          - "3.7"
+          - "3.8"
+        os:
+          - ubuntu-latest
+        include:
+          - python-version: "3.7"
+            os: windows-latest
+          - python-version: "3.7"
+            os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup development environment
+        uses: ./.github/actions/setup-dev-env
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: doit test --subset=unit
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2.1.0
+        with:
+          flags: unit
+          env_vars: OS,PYTHON_VERSION
+
+  replication:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup development environment
+        uses: ./.github/actions/setup-dev-env
+
+      - name: Run tests
+        run: doit test --subset=replication
+
+  doc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup development environment
+        uses: ./.github/actions/setup-dev-env
+
+      - name: Run tests
+        run: doit test --subset=doc
+
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup development environment
+        uses: ./.github/actions/setup-dev-env
+
+      - name: Get torch.hub checkpoints cache directory
+        id: torch-hub-checkpoints-cache
+        run:
+          echo "::set-output name=dir::$(python -c 'from torch import hub;
+          print(hub.get_dir())')/checkpoints"
+
+      - name: Load torch.hub checkpoints from cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.torch-hub-checkpoints-cache.outputs.dir }}
+          key: torch-hub-checkpoints-${{ hashFiles('hubconf.py') }}
+          restore-keys: torch-hub-checkpoints-
+
+      - name: Run tests without large download
+        if: github.event_name != 'schedule'
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: doit test --subset=download
+
+      - name: Run tests with large download
+        if: github.event_name == 'schedule'
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: doit test --large-download --subset=download
+
+      - uses: JasonEtco/create-an-issue@v2.4.0
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          JOB: ${{ github.job }}
+          ID: ${{ github.run_id }}
+        with:
+          filename: .github/failed_schedule_issue_template.md

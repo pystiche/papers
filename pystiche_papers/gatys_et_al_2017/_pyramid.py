@@ -9,7 +9,8 @@ __all__ = ["image_pyramid"]
 
 
 def image_pyramid(
-    hyper_parameters: Optional[HyperParameters] = None, **image_pyramid_kwargs: Any,
+    hyper_parameters: Optional[HyperParameters] = None,
+    **image_pyramid_kwargs: Any,
 ) -> pyramid.ImagePyramid:
     r"""Image pyramid from :cite:`GEB+2017`.
 

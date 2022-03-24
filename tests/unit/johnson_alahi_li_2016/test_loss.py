@@ -35,12 +35,18 @@ def test_GramLoss(subtests, multi_layer_encoder_with_layer, target_image, input_
     configs = ((True, target_repr.size()[1]), (False, 1.0))
     for impl_params, extra_num_channels_normalization in configs:
         with subtests.test(impl_params=impl_params):
-            loss = paper.GramLoss(encoder, impl_params=impl_params,)
+            loss = paper.GramLoss(
+                encoder,
+                impl_params=impl_params,
+            )
             loss.set_target_image(target_image)
             actual = loss(input_image)
 
-            score = mse_loss(input_repr, target_repr,)
-            desired = score / extra_num_channels_normalization ** 2
+            score = mse_loss(
+                input_repr,
+                target_repr,
+            )
+            desired = score / extra_num_channels_normalization**2
 
             assert actual == ptu.approx(desired, rel=1e-3)
 
@@ -96,7 +102,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, pystiche.loss.FeatureReconstructionLoss,
+            perceptual_loss.content_loss,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
@@ -105,4 +112,7 @@ def test_perceptual_loss(subtests):
         )
 
     with subtests.test("regularization"):
-        assert isinstance(perceptual_loss.regularization, paper.TotalVariationLoss,)
+        assert isinstance(
+            perceptual_loss.regularization,
+            paper.TotalVariationLoss,
+        )

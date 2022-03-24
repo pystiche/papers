@@ -1,14 +1,15 @@
 import sys
 
-import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche_papers.utils import save_state_dict
-
 from utils import (
     ArgumentParser,
     make_description,
     make_transformer_name,
     read_local_or_builtin_image,
 )
+
+import pystiche_papers.johnson_alahi_li_2016 as paper
+from pystiche import optim
+from pystiche_papers.utils import save_state_dict
 
 
 # The original authors provided models together with the used hyper-parameters during
@@ -87,7 +88,8 @@ def adapted_hyper_parameters(impl_params, instance_norm, style):
 def main(args):
     dataset = paper.dataset(args.dataset_dir, impl_params=args.impl_params)
     content_image_loader = paper.image_loader(
-        dataset, pin_memory=str(args.device).startswith("cuda"),
+        dataset,
+        pin_memory=str(args.device).startswith("cuda"),
     )
 
     for style in args.style:

@@ -3,6 +3,7 @@ import functools
 from os import path
 
 import pytest
+from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 import torch
 from torch.utils.data import TensorDataset
@@ -12,7 +13,6 @@ from pystiche import misc, optim
 
 from . import utils
 from .asserts import assert_dir_exists
-from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 PAPER = "ulyanov_et_al_2016"
 

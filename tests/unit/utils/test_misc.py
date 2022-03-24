@@ -4,6 +4,8 @@ from os import path
 
 import pytest
 
+from tests import assets, utils as utils_
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
@@ -11,9 +13,6 @@ from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
 from pystiche.image import extract_batch_size, make_single_image
 from pystiche_papers import utils
-
-from tests import assets
-from tests import utils as utils_
 
 
 def test_batch_up_image(image):
@@ -126,7 +125,7 @@ def test_make_reproducible_cudnn(mocker):
 
 
 def test_make_reproducible_uint32_seed():
-    uint32_max = 2 ** 32 - 1
+    uint32_max = 2**32 - 1
 
     assert utils.make_reproducible(uint32_max) == uint32_max
     assert utils.make_reproducible(uint32_max + 1) == 0
@@ -185,7 +184,7 @@ def test_save_state_dict_file(subtests, tmpdir, conv2d_module):
     )
 
     match = re.match(
-        fr"^{name}-(?P<hash>[0-9a-f]{{{hash_len}}})[.]{ext[1:]}$", path.basename(file)
+        rf"^{name}-(?P<hash>[0-9a-f]{{{hash_len}}})[.]{ext[1:]}$", path.basename(file)
     )
     assert match is not None
 

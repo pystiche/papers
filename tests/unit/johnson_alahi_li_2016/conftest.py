@@ -1,8 +1,8 @@
 import pytest
 
-import pystiche_papers.johnson_alahi_li_2016 as paper
-
 from tests import mocks
+
+import pystiche_papers.johnson_alahi_li_2016 as paper
 
 
 @pytest.fixture(scope="package")

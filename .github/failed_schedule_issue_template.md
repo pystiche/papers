@@ -4,7 +4,7 @@ assignees: pmeier
 labels: bug
 ---
 
-Oh no, something went wrong in the scheduled workflow {{ env.WORKFLOW }}/{{ env.JOB }}. 
+Oh no, something went wrong in the scheduled workflow {{ env.WORKFLOW }}/{{ env.JOB }}.
 Please look into it:
 
 https://github.com/{{ env.REPO}}/actions/runs/{{ env.ID }}

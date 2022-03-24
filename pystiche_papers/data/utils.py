@@ -1,6 +1,6 @@
 import itertools
 from abc import ABC, abstractmethod
-from typing import Iterator, List, Sized, Tuple, cast
+from typing import cast, Iterator, List, Sized, Tuple
 
 import more_itertools
 

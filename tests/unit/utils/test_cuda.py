@@ -13,7 +13,7 @@ def create_too_large_cuda_tensor():
             device_idx = torch.cuda.current_device()
             device_properties = torch.cuda.get_device_properties(device_idx)
             max_memory_in_bytes = device_properties.total_memory
-            max_memory_in_gibibytes = max_memory_in_bytes / 1024 ** 3
+            max_memory_in_gibibytes = max_memory_in_bytes / 1024**3
             requested_memory_in_gibibytes = int(2 * max_memory_in_gibibytes)
             size = (requested_memory_in_gibibytes, *[1024] * 3)
             return torch.empty(

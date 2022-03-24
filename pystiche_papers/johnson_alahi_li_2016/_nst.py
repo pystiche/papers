@@ -1,4 +1,4 @@
-from typing import Optional, Union, cast
+from typing import cast, Optional, Union
 
 import torch
 from torch import nn
@@ -8,14 +8,15 @@ from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import images as _images
-from ._data import style_transform as _style_transform
+from ._data import images as _images, style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import optimizer as _optimizer
-from ._utils import postprocessor as _postprocessor
-from ._utils import preprocessor as _preprocessor
+from ._utils import (
+    hyper_parameters as _hyper_parameters,
+    optimizer as _optimizer,
+    postprocessor as _postprocessor,
+    preprocessor as _preprocessor,
+)
 
 __all__ = ["training", "stylization"]
 

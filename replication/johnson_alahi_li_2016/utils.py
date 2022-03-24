@@ -66,7 +66,9 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument(*name_or_flags, type=type, default=default, help=help)
 
     def add_images_source_dir_argument(self):
-        self.add_data_dir_argument(path.join("images", "source"),)
+        self.add_data_dir_argument(
+            path.join("images", "source"),
+        )
 
     def add_images_results_dir_argument(self):
         self.add_data_dir_argument(path.join("images", "results"))

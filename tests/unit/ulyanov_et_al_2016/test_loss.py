@@ -24,7 +24,8 @@ def test_content_loss(subtests, impl_params, instance_norm):
     ).content_loss
 
     content_loss = paper.content_loss(
-        impl_params=impl_params, instance_norm=instance_norm,
+        impl_params=impl_params,
+        instance_norm=instance_norm,
     )
     assert isinstance(content_loss, pystiche.loss.FeatureReconstructionLoss)
 
@@ -69,7 +70,10 @@ def test_style_loss(subtests, impl_params, instance_norm):
         impl_params=impl_params, instance_norm=instance_norm
     ).style_loss
 
-    style_loss = paper.style_loss(impl_params=impl_params, instance_norm=instance_norm,)
+    style_loss = paper.style_loss(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+    )
     assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     with subtests.test("encoding_ops"):
@@ -94,7 +98,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, pystiche.loss.FeatureReconstructionLoss,
+            perceptual_loss.content_loss,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):

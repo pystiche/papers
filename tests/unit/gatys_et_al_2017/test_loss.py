@@ -46,7 +46,10 @@ def test_MultiLayerEncodingLoss(
             loss.set_target_image(target_image)
             actual = loss(input_image)
 
-            score = mse_loss(input_repr, target_repr,)
+            score = mse_loss(
+                input_repr,
+                target_repr,
+            )
             desired = score * score_correction_factor
 
             assert actual == ptu.approx(desired)
@@ -104,7 +107,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, pystiche.loss.FeatureReconstructionLoss,
+            perceptual_loss.content_loss,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
@@ -118,7 +122,8 @@ def test_guided_perceptual_loss(subtests, content_guides):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, pystiche.loss.FeatureReconstructionLoss,
+            perceptual_loss.content_loss,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):

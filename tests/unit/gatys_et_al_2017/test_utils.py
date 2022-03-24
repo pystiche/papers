@@ -1,5 +1,7 @@
 import pytest
 
+from tests import utils
+
 import pytorch_testing_utils as ptu
 from torch import nn, optim
 
@@ -7,8 +9,6 @@ import pystiche_papers.gatys_ecker_bethge_2016
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche import enc
 from pystiche_papers.utils import HyperParameters
-
-from tests import utils
 
 
 def test_preprocessor():
@@ -102,7 +102,7 @@ def test_hyper_parameters_style_loss(subtests, impl_params):
         ("relu4_1" if impl_params else "conv4_1", 512),
         ("relu5_1" if impl_params else "conv5_1", 512),
     )
-    layer_weights = [1 / n ** 2 for n in num_channels]
+    layer_weights = [1 / n**2 for n in num_channels]
 
     with subtests.test("layers"):
         assert parameters.layers == layers
@@ -129,7 +129,7 @@ def test_hyper_parameters_guided_style_loss(subtests, impl_params):
         ("relu4_1" if impl_params else "conv4_1", 512),
         ("relu5_1" if impl_params else "conv5_1", 512),
     )
-    layer_weights = [1 / n ** 2 for n in num_channels]
+    layer_weights = [1 / n**2 for n in num_channels]
 
     with subtests.test("layers"):
         assert parameters.layers == layers

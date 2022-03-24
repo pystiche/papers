@@ -1,8 +1,8 @@
 import pytest
 
-import pystiche_papers.gatys_et_al_2017 as paper
-
 from tests import mocks
+
+import pystiche_papers.gatys_et_al_2017 as paper
 
 
 @pytest.fixture(scope="package", autouse=True)

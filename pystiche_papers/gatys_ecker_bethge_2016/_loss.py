@@ -7,8 +7,10 @@ import pystiche
 from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import (
+    hyper_parameters as _hyper_parameters,
+    multi_layer_encoder as _multi_layer_encoder,
+)
 
 __all__ = [
     "FeatureReconstructionLoss",

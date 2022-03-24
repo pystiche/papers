@@ -1,6 +1,6 @@
 from math import sqrt
 from os import path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, cast, Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from torch import nn
@@ -102,7 +102,9 @@ def conv_block(
 
 
 def residual_block(
-    channels: int, inplace: bool = True, instance_norm: bool = True,
+    channels: int,
+    inplace: bool = True,
+    instance_norm: bool = True,
 ) -> ResidualBlock:
     in_channels = out_channels = channels
     kernel_size = 3
@@ -140,7 +142,9 @@ def maybe_fix_num_channels(num_channels: int, instance_norm: bool) -> int:
     return num_channels if not instance_norm else num_channels // 2
 
 
-def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
+def encoder(
+    instance_norm: bool = True,
+) -> pystiche.SequentialModule:
     r"""Encoder part of the :class:`Transformer` from :cite:`JAL2016` .
 
     Args:
@@ -180,7 +184,8 @@ def encoder(instance_norm: bool = True,) -> pystiche.SequentialModule:
 
 
 def decoder(
-    impl_params: bool = True, instance_norm: bool = True,
+    impl_params: bool = True,
+    instance_norm: bool = True,
 ) -> pystiche.SequentialModule:
     r"""Decoder part of the :class:`Transformer` from :cite:`JAL2016`.
 

@@ -12,8 +12,8 @@ from pystiche import image, misc
 from pystiche_papers.ulyanov_et_al_2016._modules import (
     AddNoiseChannels,
     HourGlassBlock,
-    SequentialWithOutChannels,
     join_channelwise,
+    SequentialWithOutChannels,
 )
 
 from .utils import impl_params_and_instance_norm
@@ -307,7 +307,8 @@ def test_Transformer(subtests, input_image):
 
             with subtests.test("output_conv"):
                 assert isinstance(
-                    transformer[1], nn.Conv2d if impl_params else paper.ConvBlock,
+                    transformer[1],
+                    nn.Conv2d if impl_params else paper.ConvBlock,
                 )
                 output_conv = transformer[1] if impl_params else transformer[1][0]
                 assert output_conv.out_channels == 3
