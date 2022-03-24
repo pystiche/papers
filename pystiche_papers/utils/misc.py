@@ -40,6 +40,7 @@ __all__ = [
     "str_to_bool",
     "load_urls_from_csv",
     "select_url_from_csv",
+    "license",
 ]
 
 
@@ -238,3 +239,18 @@ def select_url_from_csv(
             f"{fieldname}: {value}" for fieldname, value in zip(fieldnames, config)
         )
         raise RuntimeError(msg) from error
+
+
+def license(original_license: str, original: Optional[str] = None) -> str:
+    license = (
+        f"The image is part of a repository that is published for academic and "
+        f"non-commercial use only "
+        f"({original_license})."
+    )
+    if original:
+        license = (
+            f"{license} The original was probably downloaded from {original}. "
+            f"Proceed at your own risk."
+        )
+
+    return license
