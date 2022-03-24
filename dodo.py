@@ -32,53 +32,19 @@ def do(*cmd, cwd=HERE):
     return CmdAction(cmd, shell=False, cwd=cwd)
 
 
-def _install_dev_requirements(bin_root=None):
-    return [
-        do(
-            f"{bin_root / 'pip' if bin_root else 'python -m pip'} install -r requirements-dev.txt"
-        )
-    ]
-
-
-def _install_project(bin_root=None):
-    return [
-        do(
-            f"{bin_root / 'pip' if bin_root else 'python -m pip'} install --pre light-the-torch"
-        ),
-        do(
-            f"{bin_root / 'ltt' if bin_root else 'python -m light_the_torch'} install -e ."
-        ),
-    ]
-
-
 def task_install():
     """Installs all development requirements and pystiche-papers in development mode"""
     yield dict(
         name="dev",
         file_dep=[HERE / "requirements-dev.txt"],
-        actions=_install_dev_requirements(),
+        actions=[do(f"pip install -r requirements-dev.txt")],
     )
     yield dict(
         name="project",
-        actions=_install_project(),
-    )
-
-
-def task_setup():
-    """Sets up a development environment for pystiche-papers"""
-    dev_env = HERE / ".venv"
-    bin_root = dev_env / "bin"
-    return dict(
         actions=[
-            do(f"virtualenv {dev_env} --prompt='(pystiche-papers-dev) '"),
-            *_install_dev_requirements(bin_root),
-            *_install_project(bin_root),
-            lambda: print(
-                f"run `source {bin_root / 'activate'}` the virtual environment"
-            ),
+            do(f"pip install --pre light-the-torch"),
+            do(f"ltt install -e ."),
         ],
-        clean=[do(f"rm -rf {dev_env}")],
-        uptodate=[lambda: dev_env.exists()],
     )
 
 
