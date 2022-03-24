@@ -14,7 +14,7 @@ from pystiche.data import (
     ImageFolderDataset,
 )
 from pystiche.image import extract_image_size
-from pystiche_papers.utils import HyperParameters
+from pystiche_papers.utils import HyperParameters, license
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
@@ -30,7 +30,16 @@ __all__ = [
 ]
 
 
-class TopLeftCropToMultiple(nn.Module):
+def license_info(original: Optional[str] = None) -> str:
+    license_text = (
+        "The image is part of a repository that is published for personal and "
+        "research use only "
+        "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
+    )
+    return license(license_text, original=original)
+
+
+class TopLeftCropToMultiple(transforms.Transform):
     def __init__(self, multiple: int = 16):
         super().__init__()
         self.multiple = multiple
@@ -114,10 +123,13 @@ def images() -> DownloadableImageCollection:
     content_root = urljoin(root, "content/")
     content_images = {
         "chicago": DownloadableImage(
-            urljoin(content_root, "chicago.jpg"), md5="16ea186230a8a5131b224ddde01d0dd5"
+            urljoin(content_root, "chicago.jpg"),
+            license=license_info(),
+            md5="16ea186230a8a5131b224ddde01d0dd5"
         ),
         "hoovertowernight": DownloadableImage(
             urljoin(content_root, "hoovertowernight.jpg"),
+            license=license_info(),
             md5="97f7bab04e1f4c852fd2499356163b15",
         ),
     }
@@ -125,34 +137,48 @@ def images() -> DownloadableImageCollection:
     style_root = urljoin(root, "styles/")
     style_images = {
         "candy": DownloadableImage(
-            urljoin(style_root, "candy.jpg"), md5="00a0e3aa9775546f98abf6417e3cb478"
+            urljoin(style_root, "candy.jpg"),
+            license=license_info(),
+            md5="00a0e3aa9775546f98abf6417e3cb478"
         ),
         "composition_vii": DownloadableImage(
             urljoin(style_root, "composition_vii.jpg"),
+            license=license_info(),
             md5="8d4f97cb0e8b1b07dee923599ee86cbd",
         ),
         "feathers": DownloadableImage(
-            urljoin(style_root, "feathers.jpg"), md5="461c8a1704b59af1cf686883b16feec6"
+            urljoin(style_root, "feathers.jpg"),
+            license=license_info(),
+            md5="461c8a1704b59af1cf686883b16feec6"
         ),
         "la_muse": DownloadableImage(
-            urljoin(style_root, "la_muse.jpg"), md5="77262ef6985cc427f84d78784ab5c1d8"
+            urljoin(style_root, "la_muse.jpg"),
+            license=license_info(),
+            md5="77262ef6985cc427f84d78784ab5c1d8"
         ),
         "mosaic": DownloadableImage(
-            urljoin(style_root, "mosaic.jpg"), md5="67b11e9cb1a69df08d70d9c2c7778fba"
+            urljoin(style_root, "mosaic.jpg"),
+            license=license_info(),
+            md5="67b11e9cb1a69df08d70d9c2c7778fba"
         ),
         "starry_night": DownloadableImage(
             urljoin(style_root, "starry_night.jpg"),
+            license=license_info(),
             md5="ff217acb6db32785b8651a0e316aeab3",
         ),
         "the_scream": DownloadableImage(
             urljoin(style_root, "the_scream.jpg"),
+            license=license_info(),
             md5="619b4f42c84d2b62d3518fb20fa619c2",
         ),
         "udnie": DownloadableImage(
-            urljoin(style_root, "udnie.jpg"), md5="6f3fa51706b21580a4b77f232d3b8ba9"
+            urljoin(style_root, "udnie.jpg"),
+            license=license_info(),
+            md5="6f3fa51706b21580a4b77f232d3b8ba9"
         ),
         "the_wave": DownloadableImage(
             urljoin(style_root, "wave.jpg"),
+            license=license_info(),
             md5="b06acee16641a2a04fb87bade8cee529",
             file="the_wave.jpg",
         ),
