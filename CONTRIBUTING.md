@@ -4,10 +4,11 @@ We appreciate all contributions! If you are planning to contribute bug-fixes or
 documentation improvements, please go ahead and open a
 [pull request (PR)](https://github.com/pystiche/papers/pulls). If you are planning to
 contribute new features, please open an
-[issue](https://github.com/pystiche/papers/issues) and discuss the feature with
-us first.
+[issue](https://github.com/pystiche/papers/issues) and discuss the feature with us
+first.
 
-To start working on `pystiche-papers` clone the repository from GitHub and set up the development environment
+To start working on `pystiche-papers` clone the repository from GitHub and set up the
+development environment
 
 ```shell
 git clone https://github.com/pystiche/papers
@@ -19,13 +20,13 @@ doit install
 ```
 
 Every PR is subjected to multiple checks that it has to pass before it can be merged.
-The checks are performed through [doit](https://pydoit.org/). Below you can
-find details and instructions how to run the checks locally.
+The checks are performed through [doit](https://pydoit.org/). Below you can find details
+and instructions how to run the checks locally.
 
 ## Code format and linting
 
-`pystiche-papers` uses [ufmt](https://ufmt.omnilib.dev/en/stable/) to format Python code, and
-[flake8](https://flake8.pycqa.org/en/stable/) to enforce
+`pystiche-papers` uses [ufmt](https://ufmt.omnilib.dev/en/stable/) to format Python
+code, and [flake8](https://flake8.pycqa.org/en/stable/) to enforce
 [PEP8](https://www.python.org/dev/peps/pep-0008/) compliance.
 
 Furthermore, `pystiche-papers` is [PEP561](https://www.python.org/dev/peps/pep-0561/)
@@ -37,7 +38,8 @@ To automatically format the code, run
 doit format
 ```
 
-Instead of running the formatting manually, you can also add [pre-commit](https://pre-commit.com/) hooks. By running
+Instead of running the formatting manually, you can also add
+[pre-commit](https://pre-commit.com/) hooks. By running
 
 ```shell
 pre-commit install

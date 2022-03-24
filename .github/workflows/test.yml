@@ -102,7 +102,9 @@ jobs:
 
       - name: Get torch.hub checkpoints cache directory
         id: torch-hub-checkpoints-cache
-        run: echo "::set-output name=dir::$(python -c 'from torch import hub; print(hub.get_dir())')/checkpoints"
+        run:
+          echo "::set-output name=dir::$(python -c 'from torch import hub;
+          print(hub.get_dir())')/checkpoints"
 
       - name: Load torch.hub checkpoints from cache
         uses: actions/cache@v2
