@@ -37,13 +37,13 @@ def task_install():
     yield dict(
         name="dev",
         file_dep=[HERE / "requirements-dev.txt"],
-        actions=[do(f"pip install -r requirements-dev.txt")],
+        actions=[do("pip install -r requirements-dev.txt")],
     )
     yield dict(
         name="project",
         actions=[
-            do(f"pip install --pre light-the-torch"),
-            do(f"ltt install -e ."),
+            do("pip install --pre light-the-torch"),
+            do("ltt install -e ."),
         ],
     )
 
