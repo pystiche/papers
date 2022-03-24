@@ -17,7 +17,6 @@ from pystiche.data import (
 from pystiche.image import extract_edge_size, extract_image_size
 from pystiche_papers.utils import HyperParameters
 
-from pystiche_papers.utils import license
 from ..utils import OptionalGrayscaleToFakegrayscale
 from ._utils import hyper_parameters as _hyper_parameters
 
@@ -75,7 +74,7 @@ def license_info(original: Optional[str] = None, repository: str = "ulyanov") ->
             "research use only "
             "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
         )
-    else: # repository == "johnson"
+    else:  # repository == "johnson"
         license_text = (
             "The image is part of a repository that is published under the Apache "
             "License"

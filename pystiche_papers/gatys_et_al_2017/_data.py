@@ -6,7 +6,7 @@ from pystiche_papers.utils import license
 __all__ = ["images"]
 
 
-def license_info(original: Optional[str] = None)-> str:
+def license_info(original: Optional[str] = None) -> str:
     license_text = (
         "The image is part of a repository that is published for academic and "
         "non-commercial use only "
@@ -38,7 +38,7 @@ def images() -> data.DownloadableImageCollection:
                             "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style1_sky.jpg?raw=true",
                             file="sky.jpg",
                             author="Gatys et al.",
-                            license=license(),
+                            license=license_info(),
                             md5="3c21f0d573cc73a6b58b9d559117805b",
                         ),
                     }
@@ -47,9 +47,7 @@ def images() -> data.DownloadableImageCollection:
             "watertown": data.DownloadableImage(
                 "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style1.jpg?raw=true",
                 file="watertown.jpg",
-                license=license(
-                    "https://de.aliexpress.com/item/1705231003.html"
-                ),
+                license=license("https://de.aliexpress.com/item/1705231003.html"),
                 md5="4cc98a503da5ce6eab0649b09fd3cf77",
                 guides=data.DownloadableImageCollection(
                     {
@@ -57,14 +55,14 @@ def images() -> data.DownloadableImageCollection:
                             "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style1_nosky.jpg?raw=true",
                             file="building.jpg",
                             author="Gatys et al.",
-                            license=license(),
+                            license=license_info(),
                             md5="1fa945871244cf1cefc5e08f8da83fdf",
                         ),
                         "sky": data.DownloadableImage(
                             "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style1_sky.jpg?raw=true",
                             file="sky.jpg",
                             author="Gatys et al.",
-                            license=license(),
+                            license=license_info(),
                             md5="3c21f0d573cc73a6b58b9d559117805b",
                         ),
                     }
@@ -73,7 +71,7 @@ def images() -> data.DownloadableImageCollection:
             "wheat_field": data.DownloadableImage(
                 "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style2.jpg?raw=true",
                 file="wheat_field.jpg",
-                license=license(
+                license=license_info(
                     "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Wheat-Field-with-Cypresses-%281889%29-Vincent-van-Gogh-Met.jpg/1920px-Wheat-Field-with-Cypresses-%281889%29-Vincent-van-Gogh-Met.jpg",
                 ),
                 md5="4af9e64534c055bf7db5ee3ab7daf608",
@@ -83,14 +81,14 @@ def images() -> data.DownloadableImageCollection:
                             "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style2_nosky.jpg?raw=true",
                             file="foreground.jpg",
                             author="Gatys et al.",
-                            license=license(),
+                            license=license_info(),
                             md5="67c6e653f4aa629140cb2fc53a3406d9",
                         ),
                         "sky": data.DownloadableImage(
                             "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style2_nosky.jpg?raw=true",
                             file="sky.jpg",
                             author="Gatys et al.",
-                            license=license(),
+                            license=license_info(),
                             md5="67c6e653f4aa629140cb2fc53a3406d9",
                         ),
                     }
@@ -99,7 +97,7 @@ def images() -> data.DownloadableImageCollection:
             "schultenhof": data.DownloadableImage(
                 "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig3_content.jpg?raw=true",
                 file="schultenhof.jpg",
-                license=license(
+                license=license_info(
                     "https://upload.wikimedia.org/wikipedia/commons/8/82/Schultenhof_Mettingen_Bauerngarten_8.jpg",
                 ),
                 md5="23f75f148b7b94d932e599bf0c5e4c8e",
@@ -107,7 +105,7 @@ def images() -> data.DownloadableImageCollection:
             "starry_night": data.DownloadableImage(
                 "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig3_style1.jpg?raw=true",
                 file="starry_night_over_the_rhone.jpg",
-                license=license(
+                license=license_info(
                     "https://upload.wikimedia.org/wikipedia/commons/9/94/Starry_Night_Over_the_Rhone.jpg",
                 ),
                 md5="e67c25e4aa6070cc4e5ab7f3ce91c218",

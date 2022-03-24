@@ -125,7 +125,7 @@ def images() -> DownloadableImageCollection:
         "chicago": DownloadableImage(
             urljoin(content_root, "chicago.jpg"),
             license=license_info(),
-            md5="16ea186230a8a5131b224ddde01d0dd5"
+            md5="16ea186230a8a5131b224ddde01d0dd5",
         ),
         "hoovertowernight": DownloadableImage(
             urljoin(content_root, "hoovertowernight.jpg"),
@@ -139,7 +139,7 @@ def images() -> DownloadableImageCollection:
         "candy": DownloadableImage(
             urljoin(style_root, "candy.jpg"),
             license=license_info(),
-            md5="00a0e3aa9775546f98abf6417e3cb478"
+            md5="00a0e3aa9775546f98abf6417e3cb478",
         ),
         "composition_vii": DownloadableImage(
             urljoin(style_root, "composition_vii.jpg"),
@@ -149,17 +149,17 @@ def images() -> DownloadableImageCollection:
         "feathers": DownloadableImage(
             urljoin(style_root, "feathers.jpg"),
             license=license_info(),
-            md5="461c8a1704b59af1cf686883b16feec6"
+            md5="461c8a1704b59af1cf686883b16feec6",
         ),
         "la_muse": DownloadableImage(
             urljoin(style_root, "la_muse.jpg"),
             license=license_info(),
-            md5="77262ef6985cc427f84d78784ab5c1d8"
+            md5="77262ef6985cc427f84d78784ab5c1d8",
         ),
         "mosaic": DownloadableImage(
             urljoin(style_root, "mosaic.jpg"),
             license=license_info(),
-            md5="67b11e9cb1a69df08d70d9c2c7778fba"
+            md5="67b11e9cb1a69df08d70d9c2c7778fba",
         ),
         "starry_night": DownloadableImage(
             urljoin(style_root, "starry_night.jpg"),
@@ -174,7 +174,7 @@ def images() -> DownloadableImageCollection:
         "udnie": DownloadableImage(
             urljoin(style_root, "udnie.jpg"),
             license=license_info(),
-            md5="6f3fa51706b21580a4b77f232d3b8ba9"
+            md5="6f3fa51706b21580a4b77f232d3b8ba9",
         ),
         "the_wave": DownloadableImage(
             urljoin(style_root, "wave.jpg"),
