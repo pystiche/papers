@@ -37,7 +37,7 @@ def task_install():
     yield dict(
         name="dev",
         file_dep=[HERE / "requirements-dev.txt"],
-        actions=[do("pip install -r requirements-dev.txt")],
+        actions=[do("pip install --upgrade -r requirements-dev.txt")],
     )
     yield dict(
         name="project",

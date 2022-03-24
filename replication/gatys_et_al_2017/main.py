@@ -26,7 +26,9 @@ def figure_2(args):
     def figure_2_d(content_image, style_image):
         print("Replicating Figure 2 (d)")
         output_image = paper.nst(
-            content_image, style_image, impl_params=args.impl_params,
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
         )
 
         output_file = path.join(args.image_results_dir, "fig_2__d.jpg")
@@ -141,7 +143,9 @@ def figure_3(args):
     def figure_3_c(content_image, style_image):
         print("Replicating Figure 3 (c)")
         output_image = paper.nst(
-            content_image, style_image, impl_params=args.impl_params,
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
         )
 
         output_file = path.join(args.image_results_dir, "fig_3__c.jpg")
@@ -157,7 +161,9 @@ def figure_3(args):
 
         print("Replicating Figure 3 (d)")
         output_luminance = paper.nst(
-            content_luminance, style_luminance, impl_params=args.impl_params,
+            content_luminance,
+            style_luminance,
+            impl_params=args.impl_params,
         )
         output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
         output_chromaticity = resize(content_chromaticity, output_luminance.size()[2:])
@@ -173,7 +179,9 @@ def figure_3(args):
 
         print("Replicating Figure 3 (e)")
         output_image = paper.nst(
-            content_image, style_image, impl_params=args.impl_params,
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
         )
 
         output_file = path.join(args.image_results_dir, "fig_3__e.jpg")
@@ -212,14 +220,22 @@ def transform_channels_affinely(x: torch.Tensor, matrix, bias=None):
 
 def rgb_to_yuv(x: torch.Tensor) -> torch.Tensor:
     transformation_matrix = torch.tensor(
-        ((0.299, 0.587, 0.114), (-0.147, -0.289, 0.436), (0.615, -0.515, -0.100),),
+        (
+            (0.299, 0.587, 0.114),
+            (-0.147, -0.289, 0.436),
+            (0.615, -0.515, -0.100),
+        ),
     )
     return transform_channels_affinely(x, transformation_matrix.to(x))
 
 
 def yuv_to_rgb(x: torch.Tensor) -> torch.Tensor:
     transformation_matrix = torch.tensor(
-        ((1.000, 0.000, 1.140), (1.000, -0.395, -0.581), (1.000, 2.032, 0.000),),
+        (
+            (1.000, 0.000, 1.140),
+            (1.000, -0.395, -0.581),
+            (1.000, 2.032, 0.000),
+        ),
     )
     return transform_channels_affinely(x, transformation_matrix.to(x))
 

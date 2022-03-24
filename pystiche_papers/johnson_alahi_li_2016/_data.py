@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
@@ -192,14 +192,14 @@ def batch_sampler(
 
 
 def image_loader(
-    dataset: Dataset,
+    dataset: Sized,
     hyper_parameters: Optional[HyperParameters] = None,
     pin_memory: bool = True,
 ) -> DataLoader:
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
     return DataLoader(
-        dataset,
+        dataset,  # type: ignore[arg-type]
         batch_sampler=batch_sampler(dataset),
         num_workers=hyper_parameters.batch_sampler.batch_size,
         pin_memory=pin_memory,

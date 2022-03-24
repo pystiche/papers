@@ -8,7 +8,6 @@ from utils import (
 )
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche import optim
 from pystiche_papers.utils import save_state_dict
 
 

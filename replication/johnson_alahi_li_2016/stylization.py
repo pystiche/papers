@@ -14,7 +14,6 @@ from utils import (
 import torch
 import torchvision.transforms.functional as F
 
-import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche.image import extract_edge_size, write_image
 

@@ -1,9 +1,9 @@
-from typing import List, Optional, Sized, Tuple, Union, cast
+from typing import cast, List, Optional, Sized, Tuple, Union
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader, Sampler
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
@@ -59,7 +59,13 @@ class ValidRandomCrop(nn.Module):
         height, width = self.size
         return cast(
             torch.Tensor,
-            F.crop(image, top=top, left=left, height=height, width=width,),
+            F.crop(
+                image,
+                top=top,
+                left=left,
+                height=height,
+                width=width,
+            ),
         )
 
 
@@ -299,7 +305,7 @@ batch_sampler_ = batch_sampler
 
 
 def image_loader(
-    dataset: Dataset,
+    dataset: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
     batch_sampler: Optional[Sampler] = None,
@@ -312,7 +318,7 @@ def image_loader(
         )
 
     return DataLoader(
-        dataset,
+        dataset,  # type: ignore[arg-type]
         batch_sampler=batch_sampler,
         num_workers=num_workers,
         pin_memory=pin_memory,
