@@ -241,12 +241,7 @@ def select_url_from_csv(
         raise RuntimeError(msg) from error
 
 
-def license(original_license: str, original: Optional[str] = None) -> str:
-    license = (
-        f"The image is part of a repository that is published for academic and "
-        f"non-commercial use only "
-        f"({original_license})."
-    )
+def license(license: str, original: Optional[str] = None) -> str:
     if original:
         license = (
             f"{license} The original was probably downloaded from {original}. "
