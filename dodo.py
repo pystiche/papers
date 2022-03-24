@@ -42,7 +42,7 @@ def task_install():
     yield dict(
         name="project",
         actions=[
-            do("pip install git+https://github.com/pmeier/light-the-torch@fix-rocm"),
+            do("pip install --upgrade --pre light-the-torch"),
             do("ltt install -e ."),
         ],
     )
