@@ -11,7 +11,7 @@ from doit.action import CmdAction
 HERE = pathlib.Path(__file__).parent
 PACKAGE_NAME = "pystiche_papers"
 
-CI = os.environ.get("CI") == "1"
+CI = os.environ.get("CI") == "true"
 
 DOIT_CONFIG = dict(
     verbosity=2,
