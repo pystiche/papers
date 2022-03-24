@@ -243,7 +243,9 @@ def image_loader(
 ) -> DataLoader:
     if batch_sampler is None:
         batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm,
+            dataset,
+            impl_params=impl_params,
+            instance_norm=instance_norm,
         )
 
     return DataLoader(

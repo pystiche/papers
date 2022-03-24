@@ -1,13 +1,13 @@
 import pytest
 
+from tests import mocks, utils
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 
 import pystiche_papers.li_wand_2016 as paper
 from pystiche.image import extract_image_size
 from pystiche.misc import get_input_image
-
-from tests import mocks, utils
-from tests.utils import is_callable
 
 
 @pytest.mark.slow

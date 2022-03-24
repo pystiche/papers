@@ -1,10 +1,10 @@
 import pytest
 
+from tests import mocks
+
 import torch
 
 from pystiche_papers.data import utils
-
-from tests import mocks
 
 
 @pytest.fixture(scope="module")

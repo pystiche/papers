@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple, cast
+from typing import cast, Optional, Sequence, Tuple
 
 import torch
 from torch import nn, optim
@@ -25,7 +25,9 @@ def postprocessor() -> nn.Module:
     return transforms.CaffePostprocessing()
 
 
-def multi_layer_encoder(impl_params: bool = True,) -> enc.MultiLayerEncoder:
+def multi_layer_encoder(
+    impl_params: bool = True,
+) -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`GEB2016`.
 
     Args:
@@ -61,7 +63,8 @@ multi_layer_encoder_ = multi_layer_encoder
 
 
 def compute_layer_weights(
-    layers: Sequence[str], multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
+    layers: Sequence[str],
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
 ) -> Tuple[float, ...]:
     def find_out_channels(multi_layer_encoder: nn.Module, layer: str) -> int:
         modules = multi_layer_encoder._modules
@@ -88,7 +91,7 @@ def compute_layer_weights(
 
         num_channels.append(find_out_channels(multi_layer_encoder, layer))
 
-    return tuple(1.0 / n ** 2.0 for n in num_channels)
+    return tuple(1.0 / n**2.0 for n in num_channels)
 
 
 def hyper_parameters(impl_params: bool = True) -> HyperParameters:

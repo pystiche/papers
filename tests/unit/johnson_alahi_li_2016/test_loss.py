@@ -30,12 +30,18 @@ def test_GramOperator(
     configs = ((True, target_repr.size()[1]), (False, 1.0))
     for impl_params, extra_num_channels_normalization in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.GramOperator(encoder, impl_params=impl_params,)
+            op = paper.GramOperator(
+                encoder,
+                impl_params=impl_params,
+            )
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            score = mse_loss(input_repr, target_repr,)
-            desired = score / extra_num_channels_normalization ** 2
+            score = mse_loss(
+                input_repr,
+                target_repr,
+            )
+            desired = score / extra_num_channels_normalization**2
 
             assert actual == ptu.approx(desired, rel=1e-3)
 
@@ -89,11 +95,15 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, ops.FeatureReconstructionOperator,
+            perceptual_loss.content_loss,
+            ops.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
         assert isinstance(perceptual_loss.style_loss, ops.MultiLayerEncodingOperator)
 
     with subtests.test("regularization"):
-        assert isinstance(perceptual_loss.regularization, paper.TotalVariationOperator,)
+        assert isinstance(
+            perceptual_loss.regularization,
+            paper.TotalVariationOperator,
+        )

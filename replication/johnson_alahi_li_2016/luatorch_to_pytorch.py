@@ -334,7 +334,12 @@ def save_transformer(state_dict, style, instance_norm, root):
 
 
 def save_state_dict(
-    state_dict, name, root, to_cpu: bool = True, hash_len: int = 8, ext: str = ".pth",
+    state_dict,
+    name,
+    root,
+    to_cpu: bool = True,
+    hash_len: int = 8,
+    ext: str = ".pth",
 ) -> str:
     if to_cpu:
         state_dict = OrderedDict(

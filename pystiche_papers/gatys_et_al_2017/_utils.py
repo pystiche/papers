@@ -49,7 +49,8 @@ multi_layer_encoder_ = multi_layer_encoder
 
 
 def compute_layer_weights(
-    layers: Sequence[str], multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
+    layers: Sequence[str],
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
 ) -> Tuple[float, ...]:
     if multi_layer_encoder is None:
         multi_layer_encoder = multi_layer_encoder_()

@@ -79,5 +79,6 @@ def test_image_loader(subtests):
 
     with subtests.test("batch_sampler"):
         assert isinstance(
-            image_loader.batch_sampler, type(paper.batch_sampler(dataset)),
+            image_loader.batch_sampler,
+            type(paper.batch_sampler(dataset)),
         )

@@ -1,6 +1,6 @@
 import itertools
 import math
-from typing import Any, Dict, Optional, Sequence, Tuple, Union, cast
+from typing import Any, cast, Dict, Optional, Sequence, Tuple, Union
 
 import torch
 from torch import optim
@@ -302,7 +302,8 @@ class ValidCropAfterRotate(transforms.Transform):
 
 
 def target_transforms(
-    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+    impl_params: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> Sequence[transforms.Transform]:
     r"""MRF target transformations from :cite:`LW2016`.
 

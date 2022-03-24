@@ -8,10 +8,12 @@ import pystiche.ops.functional as F
 from pystiche import enc, loss, ops
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import extract_normalized_patches2d
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
-from ._utils import target_transforms as _target_transforms
+from ._utils import (
+    extract_normalized_patches2d,
+    hyper_parameters as _hyper_parameters,
+    multi_layer_encoder as _multi_layer_encoder,
+    target_transforms as _target_transforms,
+)
 
 __all__ = [
     "FeatureReconstructionOperator",
@@ -239,7 +241,8 @@ class TotalVariationOperator(ops.TotalVariationOperator):
 
 
 def regularization(
-    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+    impl_params: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> TotalVariationOperator:
     r"""Regularization from :cite:`LW2016`.
 

@@ -3,6 +3,7 @@ import functools
 from os import path
 
 import pytest
+from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 import pytorch_testing_utils as ptu
 import torch
@@ -13,7 +14,6 @@ from pystiche_papers.utils import HyperParameters
 
 from . import utils
 from .asserts import assert_dir_exists
-from tests.mocks import make_mock_target, mock_images, patch_multi_layer_encoder_loader
 
 PAPER = "gatys_ecker_bethge_2016"
 

@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union, cast
+from typing import Callable, cast, Optional, Union
 
 import torch
 from torch import nn
@@ -10,15 +10,16 @@ from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import images as _images
-from ._data import style_transform as _style_transform
+from ._data import images as _images, style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import lr_scheduler as _lr_scheduler
-from ._utils import optimizer as _optimizer
-from ._utils import postprocessor as _postprocessor
-from ._utils import preprocessor as _preprocessor
+from ._utils import (
+    hyper_parameters as _hyper_parameters,
+    lr_scheduler as _lr_scheduler,
+    optimizer as _optimizer,
+    postprocessor as _postprocessor,
+    preprocessor as _preprocessor,
+)
 
 __all__ = ["training", "stylization"]
 
@@ -73,7 +74,10 @@ def training(
         style_image = style
         device = style_image.device
 
-    transformer = _transformer(impl_params=impl_params, instance_norm=instance_norm,)
+    transformer = _transformer(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+    )
     transformer = transformer.train()
     transformer = transformer.to(device)
 
@@ -160,7 +164,9 @@ def stylization(
     if isinstance(transformer, str):
         style = transformer
         transformer = _transformer(
-            style=style, impl_params=impl_params, instance_norm=instance_norm,
+            style=style,
+            impl_params=impl_params,
+            instance_norm=instance_norm,
         )
         if not (impl_params and not instance_norm):
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L32

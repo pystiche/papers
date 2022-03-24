@@ -1,5 +1,7 @@
 import pytest
 
+from tests import utils
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn, optim
@@ -9,8 +11,6 @@ import pystiche_papers.li_wand_2016 as paper
 from pystiche import enc
 from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
-
-from tests import utils
 
 
 def test_hyper_parameters(subtests):
@@ -192,7 +192,9 @@ def test_extract_normalized_patches2d_no_overlap(subtests):
 
 
 @utils.parametrize_data(
-    ("impl_params", "num_transforms"), pytest.param(True, 1), pytest.param(False, 35),
+    ("impl_params", "num_transforms"),
+    pytest.param(True, 1),
+    pytest.param(False, 35),
 )
 def test_target_transforms_smoke(impl_params, num_transforms):
     target_transforms = paper.target_transforms(impl_params=impl_params)

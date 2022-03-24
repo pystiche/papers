@@ -2,12 +2,12 @@ import unittest.mock
 
 import pytest
 
+from tests.utils import is_callable
+
 import pytorch_testing_utils as ptu
 
 import pystiche.image.transforms.functional as F
 import pystiche_papers.gatys_et_al_2017 as paper
-
-from tests.utils import is_callable
 
 
 def make_patch_target(name):
@@ -165,7 +165,8 @@ def test_guided_nst_smoke(
 
     with subtests.test("criterion"):
         assert isinstance(
-            criterion, type(paper.guided_perceptual_loss(content_guides.keys())),
+            criterion,
+            type(paper.guided_perceptual_loss(content_guides.keys())),
         )
 
     with subtests.test("image_pyramid"):

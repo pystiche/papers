@@ -3,6 +3,9 @@ import unittest.mock
 
 import pytest
 
+from tests.mocks import make_mock_target
+from tests.utils import call_args_to_kwargs_only, generate_param_combinations
+
 import pytorch_testing_utils as ptu
 import torch
 from torch import nn
@@ -12,9 +15,6 @@ import pystiche_papers.johnson_alahi_li_2016 as paper
 from pystiche import misc
 from pystiche_papers import utils
 from pystiche_papers.johnson_alahi_li_2016._modules import select_url
-
-from tests.mocks import make_mock_target
-from tests.utils import call_args_to_kwargs_only, generate_param_combinations
 
 
 @pytest.fixture(scope="module")

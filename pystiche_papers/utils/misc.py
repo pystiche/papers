@@ -8,7 +8,7 @@ from collections import OrderedDict
 from copy import copy
 from distutils.util import strtobool
 from os import path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -102,7 +102,7 @@ def make_reproducible(
             torch.backends.cudnn.benchmark = False
 
     # the numpy random generator only accepts uint32 values
-    seed = hash(seed) % 2 ** 32
+    seed = hash(seed) % 2**32
 
     maybe_seed_standard_library(seed)
     seed_numpy(seed)

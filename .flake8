@@ -17,7 +17,13 @@ exclude =
     hubconf.py,
     build,
     docs/build,
-ignore = E203, E501, W503
+ignore =
+    E203, E501, W503
+    ;D10*: Missing Docstrings
+    ;otherwise: Google docstring convention
+    ignore =
+      D100, D101, D102, D103, D104, D105, D107,
+      D203, D204, D213, D215, D400, D401, D404, D406, D407, D408, D409, D413
 max-line-length = 88
 max-doc-length = 88
 per-file-ignores =

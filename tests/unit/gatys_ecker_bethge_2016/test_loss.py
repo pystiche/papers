@@ -19,7 +19,10 @@ def test_FeatureReconstructionOperator(
     configs = ((True, "mean", 1.0), (False, "sum", 1.0 / 2.0))
     for impl_params, loss_reduction, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.FeatureReconstructionOperator(encoder, impl_params=impl_params,)
+            op = paper.FeatureReconstructionOperator(
+                encoder,
+                impl_params=impl_params,
+            )
             op.set_target_image(target_image)
             actual = op(input_image)
 
@@ -64,7 +67,10 @@ def test_MultiLayerEncodingOperator(
             op.set_target_image(target_image)
             actual = op(input_image)
 
-            score = mse_loss(input_repr, target_repr,)
+            score = mse_loss(
+                input_repr,
+                target_repr,
+            )
             desired = score * score_correction_factor
 
             assert actual == ptu.approx(desired)
@@ -98,7 +104,8 @@ def test_perceptual_loss(subtests):
 
     with subtests.test("content_loss"):
         assert isinstance(
-            perceptual_loss.content_loss, paper.FeatureReconstructionOperator,
+            perceptual_loss.content_loss,
+            paper.FeatureReconstructionOperator,
         )
 
     with subtests.test("style_loss"):
