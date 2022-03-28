@@ -3,9 +3,10 @@ from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Sampler
 from torchvision import transforms
 from torchvision.transforms import functional as F
+from torch.utils.data import DataLoader, Sampler
+from torch.utils.data.dataloader import _BaseDataLoaderIter, _utils, _DatasetKind
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -304,6 +305,40 @@ def batch_sampler(
 batch_sampler_ = batch_sampler
 
 
+class _SkippingSingleProcessDataLoaderIter(_BaseDataLoaderIter):
+    def __init__(self, loader):
+        super(_SkippingSingleProcessDataLoaderIter, self).__init__(loader)
+        assert self._timeout == 0
+        assert self._num_workers == 0
+
+        self._dataset_fetcher = _DatasetKind.create_fetcher(
+            self._dataset_kind, self._dataset, self._auto_collation, self._collate_fn, self._drop_last)
+
+    def _next_data(self):
+        while True:
+            index = self._next_index()  # may raise StopIteration
+            # Images that are too small are skipped by the original DataLoader and the
+            # next image# is used. This adaptation solves this problem by skipping the
+            # error caused by too small images.
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
+            try:
+                data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+                break #
+            except RuntimeError:
+                print('Skip this data.')
+        if self._pin_memory:
+            data = _utils.pin_memory.pin_memory(data)
+        return data
+
+
+class SkipDataLoader(DataLoader):
+    def _get_iterator(self) -> '_BaseDataLoaderIter':
+        if self.num_workers == 0:
+            return _SkippingSingleProcessDataLoaderIter(self)
+        else:
+            raise ValueError('Skipping MultiProcessingDataLoaderIter is not supported.')
+
+
 def image_loader(
     dataset: Sized,
     impl_params: bool = True,
@@ -316,10 +351,10 @@ def image_loader(
         batch_sampler = batch_sampler_(
             dataset, impl_params=impl_params, instance_norm=instance_norm
         )
-
-    return DataLoader(
-        dataset,  # type: ignore[arg-type]
+    dataloader = SkipDataLoader(
+        dataset,
         batch_sampler=batch_sampler,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
+    return dataloader
