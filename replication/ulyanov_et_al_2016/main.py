@@ -20,7 +20,7 @@ def training(args):
     )
 
     dataset = paper.dataset(
-        path.join(args.dataset_dir, "content"),
+        args.dataset_dir,
         impl_params=args.impl_params,
         instance_norm=args.instance_norm,
     )
@@ -95,7 +95,7 @@ def parse_input():
     image_results_dir = process_dir(image_results_dir)
 
     if dataset_dir is None:
-        dataset_dir = path.join(here, "data", "images", "dataset")
+        dataset_dir = path.join(here, "data", "images", "dataset", "coco", "train2014")
     dataset_dir = process_dir(dataset_dir)
 
     if model_dir is None:
