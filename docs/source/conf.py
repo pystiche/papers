@@ -6,6 +6,7 @@
 
 # -- Imports ---------------------------------------------------------------------------
 
+import importlib
 import os
 from datetime import datetime
 from distutils.util import strtobool
@@ -77,11 +78,26 @@ extensions = [
 # -- Config for intersphinx  -----------------------------------------------------------
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.6", None),
-    "torch": ("https://pytorch.org/docs/stable/", None),
-    "torchvision": ("https://pytorch.org/docs/stable/", None),
-    "pystiche": ("https://pystiche.readthedocs.io/en/stable/", None),
+    "python": ("https://docs.python.org/3", None),
+    "torch": ("https://pytorch.org/docs/master/", None),
+    "torchvision": ("https://pytorch.org/vision/main/", None),
+    "pystiche": ("https://docs.pystiche.org/en/latest/", None),
 }
+
+# TODO: remove this is there is a proper fix
+# see https://github.com/pytorch/pytorch/pull/70309
+for cls in (
+    "torch.nn.Module",
+    "torch.nn.Sequential",
+    "torch.utils.data.DataLoader",
+    "torch.optim.Optimizer",
+    "torch.optim.LBFGS",
+    "torch.optim.Adam",
+):
+    module_name, cls_name = cls.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    # check if this is already the case and warn if it is
+    getattr(module, cls_name).__module__ = module_name
 
 
 # -- Options for Latex / MathJax  ------------------------------------------------------

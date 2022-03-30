@@ -14,11 +14,11 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Model optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionLoss`          |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramLoss`                           |
+| Style loss               | :class:`~pystiche.loss.GramLoss`                          |
 +--------------------------+-----------------------------------------------------------+
-| Regularization           | :class:`~pystiche.ops.TotalVariationLoss`                 |
+| Regularization           | :class:`~pystiche.loss.TotalVariationLoss`                |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -160,6 +160,8 @@ API
 
 ..
   _modules.py
+.. autofunction:: encoder
+.. autofunction:: decoder
 .. autoclass:: Transformer
 .. autofunction:: transformer
 

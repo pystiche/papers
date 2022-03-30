@@ -144,7 +144,7 @@ def style_transform(
     impl_params: bool = True,
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> LongEdgeResize:
+) -> nn.Module:
     r"""Style transform from :cite:`ULVL2016,UVL2017`.
 
     Args:

@@ -76,7 +76,7 @@ def test_style_loss(subtests, impl_params, instance_norm):
     )
     assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
-    with subtests.test("encoding_ops"):
+    with subtests.test("losses"):
         assert all(isinstance(loss, paper.GramLoss) for loss in style_loss.children())
 
     layers, layer_weights = zip(

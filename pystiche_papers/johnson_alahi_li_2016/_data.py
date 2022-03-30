@@ -93,7 +93,7 @@ class LongEdgeResize(nn.Module):
 
 def style_transform(
     hyper_parameters: Optional[HyperParameters] = None,
-) -> LongEdgeResize:
+) -> nn.Module:
     r"""Style image transformation from :cite:`JAL2016`.
 
     Args:

@@ -14,9 +14,9 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Image optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionLoss`          |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramLoss`                           |
+| Style loss               | :class:`~pystiche.loss.GramLoss`                          |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -136,6 +136,10 @@ API
   _nst.py
 .. autofunction:: nst
 .. autofunction:: guided_nst
+
+..
+  _pyramid.py
+.. autofunction:: image_pyramid
 
 ..
   _utils.py

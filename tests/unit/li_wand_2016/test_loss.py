@@ -99,7 +99,7 @@ def test_style_loss(subtests, impl_params):
 
     hyper_parameters = paper.hyper_parameters(impl_params=impl_params).style_loss
 
-    with subtests.test("ops"):
+    with subtests.test("losses"):
         assert all(isinstance(loss, paper.MRFLoss) for loss in style_loss.children())
 
     layers, layer_weights, patch_size, stride = zip(

@@ -14,11 +14,11 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Image optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionLoss`          |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.MRFLoss`                            |
+| Style loss               | :class:`~pystiche.loss.MRFLoss`                           |
 +--------------------------+-----------------------------------------------------------+
-| Regularization           | :class:`~pystiche.ops.TotalVariationLoss`                 |
+| Regularization           | :class:`~pystiche.loss.TotalVariationLoss`                |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository

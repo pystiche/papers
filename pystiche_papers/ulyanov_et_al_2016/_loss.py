@@ -15,24 +15,6 @@ __all__ = [
 ]
 
 
-# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
-class ManipulateGradient(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx: Any, input_tensor: torch.Tensor, score_weight: float) -> torch.Tensor:  # type: ignore[override]
-        ctx.score_weight = score_weight
-        return input_tensor
-
-    @staticmethod
-    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:  # type: ignore[override]
-        grad_output = grad_output / ctx.score_weight
-        grad_input = grad_output / (torch.norm(grad_output, p=1) + 1e-8)
-        grad_input = grad_input * ctx.score_weight
-        return grad_input, None
-
-
-manipulate_gradient = ManipulateGradient.apply
-
-
 def content_loss(
     impl_params: bool = True,
     instance_norm: bool = True,
@@ -56,7 +38,7 @@ def content_loss(
 
     .. seealso::
 
-        - :class:`pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`
+        - :class:`pystiche.loss.FeatureReconstructionLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -72,8 +54,26 @@ def content_loss(
     )
 
 
+# https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
+class ManipulateGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx: Any, input_tensor: torch.Tensor, score_weight: float) -> torch.Tensor:  # type: ignore[override]
+        ctx.score_weight = score_weight
+        return input_tensor
+
+    @staticmethod
+    def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:  # type: ignore[override]
+        grad_output = grad_output / ctx.score_weight
+        grad_input = grad_output / (torch.norm(grad_output, p=1) + 1e-8)
+        grad_input = grad_input * ctx.score_weight
+        return grad_input, None
+
+
+manipulate_gradient = ManipulateGradient.apply
+
+
 class GramLoss(loss.GramLoss):
-    r"""Gram operator from :cite:`ULVL2016,UVL2017`.
+    r"""Gram loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
         encoder: Encoder used to encode the input.
@@ -136,7 +136,7 @@ def style_loss(
 
     .. seealso::
 
-        - :class:`pystiche_papers.ulyanov_et_al_2016.GramOperator`
+        - :class:`pystiche_papers.ulyanov_et_al_2016.GramLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
