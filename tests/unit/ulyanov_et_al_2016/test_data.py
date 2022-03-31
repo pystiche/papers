@@ -110,7 +110,9 @@ def test_dataset(subtests, mocker, impl_params, instance_norm):
         "pystiche_papers.ulyanov_et_al_2016._data.ImageFolderDataset._collect_image_files",
         return_value=[],
     )
-    dataset = paper.dataset("root")
+    dataset = paper.dataset(
+        "root", impl_params=impl_params, instance_norm=instance_norm
+    )
 
     assert isinstance(dataset, torch.utils.data.IterableDataset)
 
