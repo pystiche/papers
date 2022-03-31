@@ -196,7 +196,7 @@ class Scale(nn.Module):
             torch.Tensor,
             F.resize(
                 image,
-                [int(length * self.factor) for length in extract_image_size(image)],
+                [round(length * self.factor) for length in extract_image_size(image)],
             ),
         )
 

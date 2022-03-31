@@ -12,6 +12,7 @@ from ._utils import (
     extract_normalized_patches2d,
     hyper_parameters as _hyper_parameters,
     multi_layer_encoder as _multi_layer_encoder,
+    target_transforms as _target_transforms,
 )
 
 __all__ = [
@@ -191,9 +192,9 @@ def style_loss(
             hyper_parameters.style_loss.patch_size,  # type: ignore[union-attr]
             impl_params=impl_params,
             stride=hyper_parameters.style_loss.stride,  # type: ignore[union-attr]
-            # target_transforms=_target_transforms(
-            #     impl_params=impl_params, hyper_parameters=hyper_parameters
-            # ),
+            target_transforms=_target_transforms(
+                impl_params=impl_params, hyper_parameters=hyper_parameters
+            ),
             score_weight=layer_weight,
         )
 
