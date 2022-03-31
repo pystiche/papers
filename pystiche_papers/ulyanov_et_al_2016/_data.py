@@ -259,12 +259,14 @@ def images() -> DownloadableImageCollection:
 
 
 class SkipSmallIterableImageFolderDataset(torch.utils.data.IterableDataset):
-    def __init__(self,
-                 root: str,
-                 min_size: int,
-                 num_samples: int,
-                 transform: Optional[nn.Module] = None,
-                 importer: Optional[Callable[[str], Any]] = None):
+    def __init__(
+        self,
+        root: str,
+        min_size: int,
+        num_samples: int,
+        transform: Optional[nn.Module] = None,
+        importer: Optional[Callable[[str], Any]] = None,
+    ) -> None:
         self.root = os.path.abspath(os.path.expanduser(root))
         self.min_size = min_size
         self.num_samples = num_samples
@@ -292,10 +294,10 @@ class SkipSmallIterableImageFolderDataset(torch.utils.data.IterableDataset):
 
         return image_files
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples
 
-    def __iter__(self):
+    def __iter__(self) -> torch.Tensor:
         num_samples = 0
         while num_samples < self.num_samples:
             file = next(self.files)
@@ -324,8 +326,12 @@ def dataset(
             impl_params=impl_params, instance_norm=instance_norm
         )
     min_size = hyper_parameters.content_transform.edge_size
-    num_samples = hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
-    return SkipSmallIterableImageFolderDataset(root, min_size, num_samples, transform=transform)
+    num_samples = (
+        hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
+    )
+    return SkipSmallIterableImageFolderDataset(
+        root, min_size, num_samples, transform=transform
+    )
 
 
 def image_loader(
