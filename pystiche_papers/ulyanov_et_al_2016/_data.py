@@ -1,14 +1,12 @@
 from typing import List, Sized, Optional,  Tuple, Callable, Any, cast, Union
 from urllib.parse import urljoin
 import itertools
-import os
 
 import torch
 from torch import nn
 from torchvision import transforms
 from torchvision.transforms import functional as F
-from torch.utils.data import DataLoader, Sampler
-from torch.utils.data.dataloader import _BaseDataLoaderIter, _utils, _DatasetKind
+from torch.utils.data import DataLoader
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -16,9 +14,9 @@ from pystiche.data import (
     DownloadableImageCollection,
     ExpiredCopyrightLicense,
 )
-from pystiche.image import transforms, extract_image_size, read_image
-from torchvision.datasets.folder import is_image_file
+from pystiche.image import transforms, extract_image_size
 from pystiche_papers.utils import HyperParameters
+from pystiche.data import ImageFolderDataset
 
 from ..utils import OptionalGrayscaleToFakegrayscale
 from ._utils import hyper_parameters as _hyper_parameters
@@ -27,6 +25,7 @@ __all__ = [
     "content_transform",
     "style_transform",
     "images",
+    "SkipSmallIterableDataset",
     "dataset",
     "image_loader",
 ]
@@ -258,54 +257,24 @@ def images() -> DownloadableImageCollection:
     return DownloadableImageCollection({**content_images, **style_images})
 
 
-class SkipSmallIterableImageFolderDataset(torch.utils.data.IterableDataset):
+class SkipSmallIterableDataset(torch.utils.data.IterableDataset):
     def __init__(
-        self,
-        root: str,
-        min_size: int,
-        num_samples: int,
-        transform: Optional[nn.Module] = None,
-        importer: Optional[Callable[[str], Any]] = None,
-    ) -> None:
-        self.root = os.path.abspath(os.path.expanduser(root))
+        self, dataset, min_size: int, num_samples: int, transform: transforms.Transform
+    ):
+        self.dataset = dataset
         self.min_size = min_size
         self.num_samples = num_samples
         self.transform = transform
-        self.image_files = self._collect_image_files()
+        self.data_samples = itertools.cycle(self.dataset)
 
-        if importer is None:
-
-            def importer(file: str) -> torch.Tensor:
-                return read_image(file, make_batched=False)
-
-        self.importer = cast(Callable[[str], Any], importer)
-        self.files = itertools.cycle(self.image_files)
-
-    def _collect_image_files(self) -> Tuple[str, ...]:
-        image_files = tuple(
-            os.path.join(self.root, file)
-            for file in os.listdir(self.root)
-            if is_image_file(file)
-        )
-
-        if not image_files:
-            msg = f"The directory {self.root} does not contain any image files."
-            raise RuntimeError(msg)
-
-        return image_files
-
-    def __len__(self) -> int:
+    def __len__(self):
         return self.num_samples
 
-    def __iter__(self) -> torch.Tensor:
+    def __iter__(self):
         num_samples = 0
         while num_samples < self.num_samples:
-            file = next(self.files)
-            sample = self.importer(file)
+            sample = next(self.data_samples)
             if all(size >= self.min_size for size in extract_image_size(sample)):
-                # Images that are too small are skipped by the original DataLoader and
-                # the next image is used.
-                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
                 yield self.transform(sample)
                 num_samples += 1
 
@@ -316,7 +285,7 @@ def dataset(
     instance_norm: bool = True,
     transform: Optional[transforms.Transform] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> SkipSmallIterableImageFolderDataset:
+) -> SkipSmallIterableDataset:
     if transform is None:
         transform = content_transform(
             impl_params=impl_params, instance_norm=instance_norm
@@ -329,8 +298,8 @@ def dataset(
     num_samples = (
         hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
     )
-    return SkipSmallIterableImageFolderDataset(
-        root, min_size, num_samples, transform=transform
+    return SkipSmallIterableDataset(
+        ImageFolderDataset(root), min_size, num_samples, transform
     )
 
 
