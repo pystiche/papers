@@ -6,7 +6,6 @@ from torchvision.transforms import functional as F
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche.data import DownloadableImageCollection, ImageFolderDataset
 from pystiche_papers import utils
-from pystiche_papers.data.utils import FiniteCycleBatchSampler
 
 from .utils import impl_params_and_instance_norm
 
@@ -101,47 +100,42 @@ def test_images_smoke():
     assert isinstance(paper.images(), DownloadableImageCollection)
 
 
-def test_dataset(subtests, mocker):
+@impl_params_and_instance_norm
+def test_dataset(subtests, mocker, impl_params, instance_norm):
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    )
     mocker.patch(
         "pystiche_papers.ulyanov_et_al_2016._data.ImageFolderDataset._collect_image_files",
         return_value=[],
     )
     dataset = paper.dataset("root")
 
-    assert isinstance(dataset, ImageFolderDataset)
+    assert isinstance(dataset, paper.SkipSmallIterableDataset)
+
+    with subtests.test("dataset"):
+        assert isinstance(dataset.dataset, ImageFolderDataset)
 
     with subtests.test("content_transform"):
         assert isinstance(dataset.transform, type(paper.content_transform()))
 
+    with subtests.test("min_size"):
+        assert dataset.min_size == hyper_parameters.content_transform.edge_size
+
+    with subtests.test("num_samples"):
+        assert dataset.num_batches == hyper_parameters.sampler.num_samples
+
 
 @impl_params_and_instance_norm
-def test_batch_sampler(subtests, impl_params, instance_norm):
-    data_source = ()
+def test_image_loader(subtests, impl_params, instance_norm):
     hyper_parameters = paper.hyper_parameters(
         impl_params=impl_params, instance_norm=instance_norm
-    ).batch_sampler
+    ).sampler
 
-    batch_sampler = paper.batch_sampler(
-        data_source, impl_params=impl_params, instance_norm=instance_norm
-    )
-
-    assert isinstance(batch_sampler, FiniteCycleBatchSampler)
-
-    with subtests.test("num_batches"):
-        assert batch_sampler.num_batches == hyper_parameters.num_batches
-
-    with subtests.test("num_size"):
-        assert batch_sampler.batch_size == hyper_parameters.batch_size
-
-
-def test_image_loader(subtests):
     dataset = ()
     image_loader = paper.image_loader(dataset)
 
     assert isinstance(image_loader, DataLoader)
 
-    with subtests.test("batch_sampler"):
-        assert isinstance(
-            image_loader.batch_sampler,
-            type(paper.batch_sampler(dataset)),
-        )
+    with subtests.test("batch_size"):
+        assert image_loader.batch_size == hyper_parameters.batch_size
