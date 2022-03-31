@@ -1,4 +1,4 @@
-from typing import List, Sized, Optional,  Tuple, cast, Union, Generator
+from typing import List, Sized, Optional,  Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
 import itertools
 
@@ -274,7 +274,7 @@ class Dataset(IterableDataset):
     def __len__(self) -> int:
         return self.num_samples
 
-    def __iter__(self) -> Generator:
+    def __iter__(self) -> Iterator:
         num_samples = 0
         while num_samples < self.num_samples:
             sample = next(self.data_samples)
@@ -306,8 +306,7 @@ def dataset(
     return Dataset(
         ImageFolderDataset(root),
         min_size=hyper_parameters.content_transform.edge_size,
-        num_samples=hyper_parameters.num_batches.num_samples
-        * hyper_parameters.batch_size,
+        num_samples=hyper_parameters.num_batches * hyper_parameters.batch_size,
         transform=transform,
     )
 
