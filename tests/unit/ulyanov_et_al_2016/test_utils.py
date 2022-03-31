@@ -98,12 +98,12 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
 
 
 @impl_params_and_instance_norm
-def test_hyper_parameters_batch_sampler(subtests, impl_params, instance_norm):
+def test_hyper_parameters_sampler(subtests, impl_params, instance_norm):
     hyper_parameters = paper.hyper_parameters(
         impl_params=impl_params, instance_norm=instance_norm
     )
 
-    sub_params = "batch_sampler"
+    sub_params = "sampler"
     assert sub_params in hyper_parameters
     hyper_parameters = getattr(hyper_parameters, sub_params)
 

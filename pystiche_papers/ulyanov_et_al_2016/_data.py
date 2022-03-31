@@ -1,4 +1,4 @@
-from typing import List, Sized, Optional,  Tuple, Callable, Any, cast, Union
+from typing import List, Sized, Optional,  Tuple, Callable, Any, cast, Union, Generator
 from urllib.parse import urljoin
 import itertools
 
@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torchvision import transforms
 from torchvision.transforms import functional as F
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, IterableDataset
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -25,7 +25,6 @@ __all__ = [
     "content_transform",
     "style_transform",
     "images",
-    "SkipSmallIterableDataset",
     "dataset",
     "image_loader",
 ]
@@ -257,10 +256,10 @@ def images() -> DownloadableImageCollection:
     return DownloadableImageCollection({**content_images, **style_images})
 
 
-class SkipSmallIterableDataset(torch.utils.data.IterableDataset):
+class SkipSmallIterableDataset(IterableDataset):
     def __init__(
         self,
-        dataset: torch.utils.data.Dataset,
+        dataset: Dataset,
         min_size: int,
         num_samples: int,
         transform: transforms.Transform,
@@ -274,11 +273,14 @@ class SkipSmallIterableDataset(torch.utils.data.IterableDataset):
     def __len__(self) -> int:
         return self.num_samples
 
-    def __iter__(self) -> torch.Tensor:
+    def __iter__(self) -> Generator:
         num_samples = 0
         while num_samples < self.num_samples:
             sample = next(self.data_samples)
             if all(size >= self.min_size for size in extract_image_size(sample)):
+                # Images that are too small are skipped by the original DataLoader and
+                # the next image is used.
+                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
                 yield self.transform(sample)
                 num_samples += 1
 

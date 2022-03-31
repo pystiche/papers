@@ -123,7 +123,7 @@ def test_dataset(subtests, mocker, impl_params, instance_norm):
         assert dataset.min_size == hyper_parameters.content_transform.edge_size
 
     with subtests.test("num_samples"):
-        assert dataset.num_batches == hyper_parameters.sampler.num_samples
+        assert dataset.num_samples == hyper_parameters.sampler.num_samples
 
 
 @impl_params_and_instance_norm
@@ -133,7 +133,9 @@ def test_image_loader(subtests, impl_params, instance_norm):
     ).sampler
 
     dataset = ()
-    image_loader = paper.image_loader(dataset)
+    image_loader = paper.image_loader(
+        dataset, impl_params=impl_params, instance_norm=instance_norm
+    )
 
     assert isinstance(image_loader, DataLoader)
 
