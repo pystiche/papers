@@ -1,5 +1,7 @@
-from typing import cast, List, Optional, Sized, Tuple, Union
+from typing import List, Sized, Optional,  Tuple, Callable, Any, cast, Union
 from urllib.parse import urljoin
+import itertools
+import os
 
 import torch
 from torch import nn
@@ -13,10 +15,9 @@ from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
     ExpiredCopyrightLicense,
-    ImageFolderDataset,
 )
-from pystiche.image import extract_image_size
-from pystiche_papers.data.utils import FiniteCycleBatchSampler
+from pystiche.image import transforms, extract_image_size, read_image
+from torchvision.datasets.folder import is_image_file
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import OptionalGrayscaleToFakegrayscale
@@ -27,7 +28,6 @@ __all__ = [
     "style_transform",
     "images",
     "dataset",
-    "batch_sampler",
     "image_loader",
 ]
 
@@ -258,103 +258,91 @@ def images() -> DownloadableImageCollection:
     return DownloadableImageCollection({**content_images, **style_images})
 
 
+class SkipSmallIterableImageFolderDataset(torch.utils.data.IterableDataset):
+    def __init__(self,
+                 root: str,
+                 min_size: int,
+                 num_samples: int,
+                 transform: Optional[nn.Module] = None,
+                 importer: Optional[Callable[[str], Any]] = None):
+        self.root = os.path.abspath(os.path.expanduser(root))
+        self.min_size = min_size
+        self.num_samples = num_samples
+        self.transform = transform
+        self.image_files = self._collect_image_files()
+
+        if importer is None:
+
+            def importer(file: str) -> torch.Tensor:
+                return read_image(file, make_batched=False)
+
+        self.importer = cast(Callable[[str], Any], importer)
+        self.files = itertools.cycle(self.image_files)
+
+    def _collect_image_files(self) -> Tuple[str, ...]:
+        image_files = tuple(
+            os.path.join(self.root, file)
+            for file in os.listdir(self.root)
+            if is_image_file(file)
+        )
+
+        if not image_files:
+            msg = f"The directory {self.root} does not contain any image files."
+            raise RuntimeError(msg)
+
+        return image_files
+
+    def __len__(self):
+        return self.num_samples
+
+    def __iter__(self):
+        num_samples = 0
+        while num_samples < self.num_samples:
+            file = next(self.files)
+            sample = self.importer(file)
+            if all(size >= self.min_size for size in extract_image_size(sample)):
+                # Images that are too small are skipped by the original DataLoader and
+                # the next image is used.
+                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
+                yield self.transform(sample)
+                num_samples += 1
+
+
 def dataset(
     root: str,
     impl_params: bool = True,
     instance_norm: bool = True,
-    transform: Optional[nn.Module] = None,
-) -> ImageFolderDataset:
+    transform: Optional[transforms.Transform] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
+) -> SkipSmallIterableImageFolderDataset:
     if transform is None:
         transform = content_transform(
             impl_params=impl_params, instance_norm=instance_norm
         )
-    return ImageFolderDataset(root, transform=transform)
-
-
-def batch_sampler(
-    data_source: Sized,
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    hyper_parameters: Optional[HyperParameters] = None,
-) -> FiniteCycleBatchSampler:
-    r"""Batch sampler from :cite:`ULVL2016,UVL2017`.
-
-    Args:
-        data_source: Dataset to sample from.
-        impl_params: Switch the behavior and hyper-parameters between the reference
-            implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <li_wand_2016-impl_params>`.
-        instance_norm: Switch the behavior and hyper-parameters between both
-            publications of the original authors. For details see
-            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
-        hyper_parameters: Hyper parameters. If omitted,
-            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
-    """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
         )
-
-    return FiniteCycleBatchSampler(
-        data_source,
-        num_batches=hyper_parameters.batch_sampler.num_batches,
-        batch_size=hyper_parameters.batch_sampler.batch_size,
-    )
-
-
-batch_sampler_ = batch_sampler
-
-
-class _SkippingSingleProcessDataLoaderIter(_BaseDataLoaderIter):
-    def __init__(self, loader):
-        super(_SkippingSingleProcessDataLoaderIter, self).__init__(loader)
-        assert self._timeout == 0
-        assert self._num_workers == 0
-
-        self._dataset_fetcher = _DatasetKind.create_fetcher(
-            self._dataset_kind, self._dataset, self._auto_collation, self._collate_fn, self._drop_last)
-
-    def _next_data(self):
-        while True:
-            index = self._next_index()  # may raise StopIteration
-            # Images that are too small are skipped by the original DataLoader and the
-            # next image# is used. This adaptation solves this problem by skipping the
-            # error caused by too small images.
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
-            try:
-                data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
-                break #
-            except RuntimeError:
-                print('Skip this data.')
-        if self._pin_memory:
-            data = _utils.pin_memory.pin_memory(data)
-        return data
-
-
-class SkipDataLoader(DataLoader):
-    def _get_iterator(self) -> '_BaseDataLoaderIter':
-        if self.num_workers == 0:
-            return _SkippingSingleProcessDataLoaderIter(self)
-        else:
-            raise ValueError('Skipping MultiProcessingDataLoaderIter is not supported.')
+    min_size = hyper_parameters.content_transform.edge_size
+    num_samples = hyper_parameters.batch_sampler.num_batches
+    return SkipSmallIterableImageFolderDataset(root, min_size, num_samples, transform=transform)
 
 
 def image_loader(
     dataset: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
-    batch_sampler: Optional[Sampler] = None,
     num_workers: int = 0,
     pin_memory: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> DataLoader:
-    if batch_sampler is None:
-        batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
         )
-    dataloader = SkipDataLoader(
+    return DataLoader(
         dataset,
-        batch_sampler=batch_sampler,
+        batch_size=hyper_parameters.batch_sampler.batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
-    return dataloader
