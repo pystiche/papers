@@ -1,4 +1,5 @@
 import pytorch_testing_utils as ptu
+import torch.utils.data
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import functional as F
@@ -111,7 +112,7 @@ def test_dataset(subtests, mocker, impl_params, instance_norm):
     )
     dataset = paper.dataset("root")
 
-    assert isinstance(dataset, paper.SkipSmallIterableDataset)
+    assert isinstance(dataset, torch.utils.data.IterableDataset)
 
     with subtests.test("dataset"):
         assert isinstance(dataset.dataset, ImageFolderDataset)
@@ -123,14 +124,14 @@ def test_dataset(subtests, mocker, impl_params, instance_norm):
         assert dataset.min_size == hyper_parameters.content_transform.edge_size
 
     with subtests.test("num_samples"):
-        assert dataset.num_samples == hyper_parameters.sampler.num_samples
+        assert dataset.num_samples == hyper_parameters.num_samples
 
 
 @impl_params_and_instance_norm
 def test_image_loader(subtests, impl_params, instance_norm):
     hyper_parameters = paper.hyper_parameters(
         impl_params=impl_params, instance_norm=instance_norm
-    ).sampler
+    )
 
     dataset = ()
     image_loader = paper.image_loader(

@@ -98,19 +98,25 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
 
 
 @impl_params_and_instance_norm
-def test_hyper_parameters_sampler(subtests, impl_params, instance_norm):
+def test_hyper_parameters_batch_size(impl_params, instance_norm):
     hyper_parameters = paper.hyper_parameters(
         impl_params=impl_params, instance_norm=instance_norm
     )
 
-    sub_params = "sampler"
-    assert sub_params in hyper_parameters
-    hyper_parameters = getattr(hyper_parameters, sub_params)
+    assert hyper_parameters.batch_size == (
+        (1 if instance_norm else 4) if impl_params else 16
+    )
 
-    with subtests.test("batch_size"):
-        assert hyper_parameters.batch_size == (
-            (1 if instance_norm else 4) if impl_params else 16
-        )
+
+@impl_params_and_instance_norm
+def test_hyper_parameters_num_batches(impl_params, instance_norm):
+    hyper_parameters = paper.hyper_parameters(
+        impl_params=impl_params, instance_norm=instance_norm
+    )
+
+    assert hyper_parameters.num_batches == (
+        (2000 if instance_norm else 300) if impl_params else 200
+    )
 
 
 @impl_params_and_instance_norm

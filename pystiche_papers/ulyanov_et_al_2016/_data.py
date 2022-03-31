@@ -13,10 +13,10 @@ from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
     ExpiredCopyrightLicense,
+    ImageFolderDataset,
 )
 from pystiche.image import transforms, extract_image_size
 from pystiche_papers.utils import HyperParameters
-from pystiche.data import ImageFolderDataset
 
 from ..utils import OptionalGrayscaleToFakegrayscale
 from ._utils import hyper_parameters as _hyper_parameters
@@ -292,24 +292,23 @@ def dataset(
     instance_norm: bool = True,
     transform: Optional[transforms.Transform] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> SkipSmallIterableDataset:
-    if transform is None:
-        transform = content_transform(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
+) -> Dataset:
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
         )
-    min_size = hyper_parameters.content_transform.edge_size
-    num_samples = (
-        hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
-    )
-    return SkipSmallIterableDataset(
-        ImageFolderDataset(root), 
-        min_size=hyper_parameters.content_transform.edge_size, 
-        num_samples=hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size, 
-        transform=content_transform(impl_params=impl_params, instance_norm=instance_norm, hyper_parameters=hyper_parameters),
+    if transform is None:
+        transform = content_transform(
+            impl_params=impl_params,
+            instance_norm=instance_norm,
+            hyper_parameters=hyper_parameters,
+        )
+    return Dataset(
+        ImageFolderDataset(root),
+        min_size=hyper_parameters.content_transform.edge_size,
+        num_samples=hyper_parameters.num_batches.num_samples
+        * hyper_parameters.batch_size,
+        transform=transform,
     )
 
 
@@ -327,7 +326,7 @@ def image_loader(
         )
     return DataLoader(
         dataset,
-        batch_size=hyper_parameters.sampler.batch_size,
+        batch_size=hyper_parameters.batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
