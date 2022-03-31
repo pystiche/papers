@@ -60,10 +60,10 @@ def hyper_parameters(
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
             else InterpolationMode.BILINEAR,
         ),
-        batch_sampler=HyperParameters(
+        sampler=HyperParameters(
             # The number of iterations is split up into multiple epochs with
             # corresponding num_batches:
-            num_batches=(
+            num_samples=(
                 # 50000 = 25 * 2000
                 # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
                 2000

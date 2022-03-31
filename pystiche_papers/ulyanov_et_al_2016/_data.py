@@ -324,7 +324,7 @@ def dataset(
             impl_params=impl_params, instance_norm=instance_norm
         )
     min_size = hyper_parameters.content_transform.edge_size
-    num_samples = hyper_parameters.batch_sampler.num_batches
+    num_samples = hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
     return SkipSmallIterableImageFolderDataset(root, min_size, num_samples, transform=transform)
 
 
@@ -342,7 +342,7 @@ def image_loader(
         )
     return DataLoader(
         dataset,
-        batch_size=hyper_parameters.batch_sampler.batch_size,
+        batch_size=hyper_parameters.sampler.batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
