@@ -15,7 +15,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
-from pystiche.image import transforms, extract_image_size
+from pystiche.image import transforms, extract_edge_size, extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import OptionalGrayscaleToFakegrayscale
@@ -278,7 +278,7 @@ class Dataset(IterableDataset):
         num_samples = 0
         while num_samples < self.num_samples:
             sample = next(self.data_samples)
-            if all(size >= self.min_size for size in extract_image_size(sample)):
+            if extract_edge_size(sample, edge="short") >= self.min_size:
                 # Images that are too small are skipped by the original DataLoader and
                 # the next image is used.
                 # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
