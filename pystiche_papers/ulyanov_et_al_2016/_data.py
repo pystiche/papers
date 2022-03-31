@@ -259,7 +259,11 @@ def images() -> DownloadableImageCollection:
 
 class SkipSmallIterableDataset(torch.utils.data.IterableDataset):
     def __init__(
-        self, dataset, min_size: int, num_samples: int, transform: transforms.Transform
+        self,
+        dataset: torch.utils.data.Dataset,
+        min_size: int,
+        num_samples: int,
+        transform: transforms.Transform,
     ):
         self.dataset = dataset
         self.min_size = min_size
@@ -267,10 +271,10 @@ class SkipSmallIterableDataset(torch.utils.data.IterableDataset):
         self.transform = transform
         self.data_samples = itertools.cycle(self.dataset)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples
 
-    def __iter__(self):
+    def __iter__(self) -> torch.Tensor:
         num_samples = 0
         while num_samples < self.num_samples:
             sample = next(self.data_samples)
