@@ -153,7 +153,7 @@ def test_hyper_parameters_num_images(impl_params, instance_norm):
         impl_params=impl_params, instance_norm=instance_norm
     )
 
-    num_batches_per_epoch = hyper_parameters.batch_sampler.num_batches
+    num_batches_per_epoch = hyper_parameters.num_batches
     num_epochs = hyper_parameters.num_epochs
 
     num_images = num_batches_per_epoch * num_epochs
@@ -167,7 +167,7 @@ def test_hyper_parameters_lr_decay_delay(impl_params, instance_norm):
         impl_params=impl_params, instance_norm=instance_norm
     )
 
-    num_batches = hyper_parameters.batch_sampler.num_batches
+    num_batches = hyper_parameters.num_batches
     delay = hyper_parameters.lr_scheduler.delay
 
     num_batches_before_first_decay = num_batches * (delay + 1)
