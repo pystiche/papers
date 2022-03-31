@@ -1,4 +1,4 @@
-from typing import List, Sized, Optional,  Tuple, Callable, Any, cast, Union, Generator
+from typing import List, Sized, Optional,  Tuple, cast, Union, Generator
 from urllib.parse import urljoin
 import itertools
 
