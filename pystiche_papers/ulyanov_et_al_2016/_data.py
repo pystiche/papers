@@ -256,10 +256,11 @@ def images() -> DownloadableImageCollection:
     return DownloadableImageCollection({**content_images, **style_images})
 
 
-class SkipSmallIterableDataset(IterableDataset):
+class Dataset(IterableDataset):
     def __init__(
         self,
         dataset: Dataset,
+        *
         min_size: int,
         num_samples: int,
         transform: transforms.Transform,
@@ -305,7 +306,10 @@ def dataset(
         hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size
     )
     return SkipSmallIterableDataset(
-        ImageFolderDataset(root), min_size, num_samples, transform
+        ImageFolderDataset(root), 
+        min_size=hyper_parameters.content_transform.edge_size, 
+        num_samples=hyper_parameters.sampler.num_samples * hyper_parameters.sampler.batch_size, 
+        transform=content_transform(impl_params=impl_params, instance_norm=instance_norm, hyper_parameters=hyper_parameters),
     )
 
 
