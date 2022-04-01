@@ -269,7 +269,7 @@ class Dataset(IterableDataset):
         self.min_size = min_size
         self.num_samples = num_samples
         self.transform = transform
-        self.data_samples = itertools.cycle(self.dataset)
+        self.data_samples = itertools.cycle(self.dataset)  # type:ignore [var-annotated, arg-type]
 
     def __len__(self) -> int:
         return self.num_samples

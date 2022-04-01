@@ -125,9 +125,9 @@ def test_dataset(subtests, mocker, impl_params, instance_norm):
     with subtests.test("min_size"):
         assert dataset.min_size == hyper_parameters.content_transform.edge_size
 
-    with subtests.test("num_samples"):
+    with subtests.test("length"):
         assert (
-            dataset.num_samples
+            len(dataset)
             == hyper_parameters.num_batches * hyper_parameters.batch_size
         )
 
