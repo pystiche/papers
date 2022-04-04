@@ -11,7 +11,7 @@ def github():
     def format(owner, repository, branch):
         return f"{owner}/{repository}:{branch}"
 
-    default = format("pmeier", "pystiche_papers", "master")
+    default = format("pystiche", "papers", "main")
 
     if os.getenv("GITHUB_ACTIONS", False):
         context = json.loads(os.getenv("GITHUB_CONTEXT"))
