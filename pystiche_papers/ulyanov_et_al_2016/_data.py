@@ -276,6 +276,7 @@ class Dataset(IterableDataset):
             while True:
                 for x in data_iter:
                     yield x
+
         self.data_samples = iter(cycle(self.dataset))
 
     def __len__(self) -> int:
