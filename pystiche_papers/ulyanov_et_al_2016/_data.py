@@ -1,6 +1,5 @@
 from typing import List, Sized, Optional,  Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
-import itertools
 
 import torch
 from torch import nn
@@ -269,7 +268,15 @@ class Dataset(IterableDataset):
         self.min_size = min_size
         self.num_samples = num_samples
         self.transform = transform
-        self.data_samples = itertools.cycle(self.dataset)  # type:ignore [var-annotated, arg-type]
+
+        # Use this function instead of itertools.cycle to avoid creating a memory leak.
+        # itertools.cycle attempts to save all outputs in order to re-cycle through them
+        # see https://github.com/DeepLearnPhysics/lartpc_mlreco3d/pull/77
+        def cycle(data_iter):
+            while True:
+                for x in data_iter:
+                    yield x
+        self.data_samples = iter(cycle(self.dataset))
 
     def __len__(self) -> int:
         return self.num_samples
