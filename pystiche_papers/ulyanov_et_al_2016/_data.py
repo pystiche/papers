@@ -270,7 +270,7 @@ class Dataset(IterableDataset):
         self.transform = transform
 
         # Like itertools.cycle but without caching
-        def cycle(iterable):
+        def cycle(iterable: _Dataset) -> Iterator:
             while True:
                 for item in iterable:
                     yield item
