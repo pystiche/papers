@@ -269,13 +269,11 @@ class Dataset(IterableDataset):
         self.num_samples = num_samples
         self.transform = transform
 
-        # Use this function instead of itertools.cycle to avoid creating a memory leak.
-        # itertools.cycle attempts to save all outputs in order to re-cycle through them
-        # see https://github.com/DeepLearnPhysics/lartpc_mlreco3d/pull/77
-        def cycle(data_iter):
+        # Like itertools.cycle but without caching
+        def cycle(iterable):
             while True:
-                for x in data_iter:
-                    yield x
+                for item in iterable:
+                    yield item
 
         self.data_samples = iter(cycle(self.dataset))
 
