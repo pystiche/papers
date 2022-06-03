@@ -45,15 +45,11 @@ class SequentialWithOutChannels(nn.Sequential):
     def __init__(self, *args: Any, out_channel_name: Optional[Union[str, int]] = None):
         super().__init__(*args)
         if out_channel_name is None:
-            out_channel_name = tuple(cast(Dict[str, nn.Module], self._modules).keys())[
-                -1
-            ]
+            out_channel_name = tuple(self._modules.keys())[-1]
         elif isinstance(out_channel_name, int):
             out_channel_name = str(out_channel_name)
 
-        self.out_channels = cast(Dict[str, nn.Module], self._modules)[
-            out_channel_name
-        ].out_channels
+        self.out_channels = self._modules[out_channel_name].out_channels
 
 
 class _AutoPadNdMixin(pystiche.ComplexObject):
@@ -75,7 +71,7 @@ class _AutoPadNdMixin(pystiche.ComplexObject):
 
     @staticmethod
     def _pad_size_to_pad(size: torch.Tensor) -> List[int]:
-        pad_post = size // 2
+        pad_post = torch.div(size, 2, rounding_mode="floor")
         pad_pre = size - pad_post
         return torch.stack((pad_pre, pad_post), dim=1).view(-1).flip(0).tolist()
 
@@ -143,9 +139,14 @@ class _AutoPadConvTransposeNdMixin(_AutoPadConvNdMixin):
         output_pad = torch.fmod(effective_kernel_size - 1, stride)
         self.output_padding = tuple(output_pad.tolist())
 
-        pad_size = (effective_kernel_size - 1 - output_pad) // stride + 1
-
-        return cast(torch.Tensor, pad_size)
+        return (
+            torch.div(
+                effective_kernel_size - 1 - output_pad,
+                stride,
+                rounding_mode="floor",
+            )
+            + 1
+        )
 
 
 class AutoPadConvTranspose2d(  # type: ignore[misc]

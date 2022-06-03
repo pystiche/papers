@@ -14,11 +14,11 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Image optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.MRFOperator`                        |
+| Style loss               | :class:`~pystiche.loss.MRFLoss`                           |
 +--------------------------+-----------------------------------------------------------+
-| Regularization           | :class:`~pystiche.ops.TotalVariationOperator`             |
+| Regularization           | :class:`~pystiche.loss.TotalVariationLoss`                |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -37,9 +37,9 @@ Behavioral changes
 
 The following parts are affected:
 
-- :class:`~pystiche_papers.li_wand_2016.FeatureReconstructionOperator`
-- :class:`~pystiche_papers.li_wand_2016.MRFOperator`
-- :class:`~pystiche_papers.li_wand_2016.TotalVariationOperator`
+- :class:`~pystiche_papers.li_wand_2016.FeatureReconstructionLoss`
+- :class:`~pystiche_papers.li_wand_2016.MRFLoss`
+- :class:`~pystiche_papers.li_wand_2016.TotalVariationLoss`
 - :class:`~pystiche_papers.li_wand_2016.target_transforms`
 
 Hyper parameters
@@ -149,11 +149,11 @@ API
 
 ..
   _loss.py
-.. autoclass:: FeatureReconstructionOperator
+.. autoclass:: FeatureReconstructionLoss
 .. autofunction:: content_loss
-.. autoclass:: MRFOperator
+.. autoclass:: MRFLoss
 .. autofunction:: style_loss
-.. autoclass:: TotalVariationOperator
+.. autoclass:: TotalVariationLoss
 .. autofunction:: regularization
 .. autofunction:: perceptual_loss
 

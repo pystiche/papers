@@ -8,7 +8,6 @@ from utils import (
 )
 
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche import optim
 from pystiche_papers.utils import save_state_dict
 
 
@@ -107,8 +106,6 @@ def main(args):
             impl_params=args.impl_params,
             instance_norm=args.instance_norm,
             hyper_parameters=hyper_parameters,
-            quiet=args.quiet,
-            logger=optim.OptimLogger(),
         )
 
         model_name = make_transformer_name(style, args.impl_params, args.instance_norm)
@@ -137,11 +134,6 @@ def make_parser():
     parser.add_dataset_dir_argument()
     parser.add_impl_params_and_instance_norm_arguments()
     parser.add_device_argument()
-    parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Do not print training information to STDOUT.",
-    )
 
     return parser
 

@@ -4,7 +4,6 @@ import torch
 from torch import optim
 
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.gatys_ecker_bethge_2016 import (
     compute_layer_weights as _compute_layer_weights,
 )
@@ -20,18 +19,18 @@ __all__ = [
 ]
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
-    return transforms.CaffePreprocessing()
+def preprocessor() -> enc.CaffePreprocessing:
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
-    return transforms.CaffePostprocessing()
+def postprocessor() -> enc.CaffePostprocessing:
+    return enc.CaffePostprocessing()
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`GEB+2017`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 
@@ -61,11 +60,17 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB+2017`."""
     # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb
     # Cell [3] / layers['style']
-    style_loss_layers = (
-        ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
-        if impl_params
-        else ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    style_loss_layers: Tuple[str, ...] = (
+        "conv1_1",
+        "conv2_1",
+        "conv3_1",
+        "conv4_1",
+        "conv5_1",
     )
+    if impl_params:
+        style_loss_layers = tuple(
+            layer.replace("conv", "relu") for layer in style_loss_layers
+        )
     style_loss = HyperParameters(
         layers=style_loss_layers,
         # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/ExampleNotebooks/BasicStyleTransfer.ipynb

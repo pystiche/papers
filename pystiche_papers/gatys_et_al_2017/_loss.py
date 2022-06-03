@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Sequence
 import torch
 
 import pystiche
-from pystiche import enc, loss, ops
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import (
@@ -14,7 +14,7 @@ from ._utils import (
 
 __all__ = [
     "content_loss",
-    "MultiLayerEncodingOperator",
+    "MultiLayerEncodingLoss",
     "style_loss",
     "guided_style_loss",
     "perceptual_loss",
@@ -25,15 +25,15 @@ __all__ = [
 def content_loss(
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.FeatureReconstructionOperator:
+) -> loss.FeatureReconstructionLoss:
     r"""Content_loss from :cite:`GEB+2017`.
 
     Args:
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
@@ -41,43 +41,43 @@ def content_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return ops.FeatureReconstructionOperator(
+    return loss.FeatureReconstructionLoss(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
-class MultiLayerEncodingOperator(ops.MultiLayerEncodingOperator):
-    r"""Multi-layer encoding operator from :cite:`GEB2016`.
+class MultiLayerEncodingLoss(loss.MultiLayerEncodingLoss):
+    r"""Multi-layer encoding Loss from :cite:`GEB+2017`.
 
     Args:
         multi_layer_encoder: Multi-layer encoder.
-        layers: Layers of the ``multi_layer_encoder`` that the children operators
+        layers: Layers of the ``multi_layer_encoder`` that the children losses
             operate on.
-        get_encoding_op: Callable that returns a children operator given a
+        get_encoding_op: Callable that returns a children Loss given a
             :class:`pystiche.enc.SingleLayerEncoder` extracted from the
             ``multi_layer_encoder`` and its corresponding layer weight.
         impl_params: If ``False``, use a score correction factor of 1/4.
         **multi_layer_encoding_op_kwargs: Additional parameters of a
-            :class:`pystiche.ops.MultiLayerEncodingOperator`.
+            :class:`pystiche.loss.MultiLayerEncodingLoss`.
 
     .. seealso::
 
-        - :class:`pystiche.ops.MultiLayerEncodingOperator`
+        - :class:`pystiche.loss.MultiLayerEncodingLoss`
     """
 
     def __init__(
         self,
         multi_layer_encoder: enc.MultiLayerEncoder,
         layers: Sequence[str],
-        get_encoding_op: Callable[[enc.Encoder, float], ops.EncodingOperator],
+        encoding_loss_fn: Callable[[enc.Encoder, float], loss.Loss],
         impl_params: bool = True,
         **multi_layer_encoding_op_kwargs: Any,
     ) -> None:
         super().__init__(
             multi_layer_encoder,
             layers,
-            get_encoding_op,
+            encoding_loss_fn,
             **multi_layer_encoding_op_kwargs,
         )
         # https://github.com/pmeier/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/LossLayers.lua#L63
@@ -86,15 +86,15 @@ class MultiLayerEncodingOperator(ops.MultiLayerEncodingOperator):
         # include the factor 1/4 given in the paper
         self.score_correction_factor = 1.0 if impl_params else 1.0 / 4.0
 
-    def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:
-        return super().process_input_image(input_image) * self.score_correction_factor
+    def forward(self, input_image: torch.Tensor) -> pystiche.LossDict:
+        return super().forward(input_image) * self.score_correction_factor
 
 
 def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> MultiLayerEncodingOperator:
+) -> MultiLayerEncodingLoss:
     r"""Style_loss from :cite:`GEB+2017`.
 
     Args:
@@ -102,24 +102,24 @@ def style_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     .. seealso::
 
-        - :class:`pystiche_papers.gatys_et_al_2017.MultiLayerEncodingOperator`
+        - :class:`pystiche_papers.gatys_et_al_2017.MultiLayerEncodingLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> ops.GramOperator:
-        return ops.GramOperator(encoder, score_weight=layer_weight)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> loss.GramLoss:
+        return loss.GramLoss(encoder, score_weight=layer_weight)
 
-    return MultiLayerEncodingOperator(
+    return MultiLayerEncodingLoss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,
@@ -134,7 +134,7 @@ def guided_style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.MultiRegionOperator:
+) -> loss.MultiRegionLoss:
     r"""Guided style_loss from :cite:`GEB+2017`.
 
     Args:
@@ -143,14 +143,14 @@ def guided_style_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     .. seealso::
 
-        - :class:`pystiche_papers.gatys_et_al_2017.MultiLayerEncodingOperator`
+        - :class:`pystiche_papers.gatys_et_al_2017.MultiLayerEncodingLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -160,7 +160,7 @@ def guided_style_loss(
         _hyper_parameters() if hyper_parameters is None else copy(hyper_parameters)
     )
 
-    def get_region_op(region: str, region_weight: float) -> MultiLayerEncodingOperator:
+    def get_region_op(region: str, region_weight: float) -> MultiLayerEncodingLoss:
         hyper_parameters.style_loss.score_weight = region_weight  # type: ignore[union-attr]
         return style_loss(
             impl_params=impl_params,
@@ -168,7 +168,7 @@ def guided_style_loss(
             hyper_parameters=hyper_parameters.new_similar(),  # type: ignore[union-attr]
         )
 
-    return ops.MultiRegionOperator(
+    return loss.MultiRegionLoss(
         regions,
         get_region_op,
         region_weights=hyper_parameters.guided_style_loss.region_weights,
@@ -188,10 +188,10 @@ def perceptual_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
@@ -218,7 +218,7 @@ def guided_perceptual_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> loss.GuidedPerceptualLoss:
+) -> loss.PerceptualLoss:
     r"""Guided perceptual loss from :cite:`GEB+2017`.
 
     Args:
@@ -227,10 +227,10 @@ def guided_perceptual_loss(
             implementation of the original authors and what is described in the paper.
             For details see :ref:`here <gatys_et_al_2017-impl_params>`.
         multi_layer_encoder: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.multi_layer_encoder` is
+            :func:`~pystiche_papers.gatys_et_al_2017.multi_layer_encoder` is
             used.
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
 
     """
     if multi_layer_encoder is None:
@@ -239,7 +239,7 @@ def guided_perceptual_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return loss.GuidedPerceptualLoss(
+    return loss.PerceptualLoss(
         content_loss(
             multi_layer_encoder=multi_layer_encoder,
             hyper_parameters=hyper_parameters,

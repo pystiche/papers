@@ -8,7 +8,18 @@ from collections import OrderedDict
 from copy import copy
 from distutils.util import strtobool
 from os import path
-from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    OrderedDict as OrderedDictType,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 
@@ -18,11 +29,9 @@ from torch.hub import _get_torch_home
 from torch.utils.data.dataloader import DataLoader
 
 from pystiche.image import extract_batch_size, is_single_image, make_batched_image
-from pystiche.optim import OptimLogger
 
 __all__ = [
     "batch_up_image",
-    "paper_replication",
     "make_reproducible",
     "get_tmp_dir",
     "get_sha256_hash",
@@ -40,12 +49,12 @@ def batch_up_image(
     loader: Optional[DataLoader] = None,
 ) -> torch.Tensor:
     def extract_batch_size_from_loader(loader: DataLoader) -> int:
-        batch_size = cast(Optional[int], loader.batch_size)
+        batch_size = loader.batch_size
         if batch_size is not None:
             return batch_size
 
         try:
-            batch_size = loader.batch_sampler.batch_size  # type: ignore[attr-defined]
+            batch_size = loader.batch_sampler.batch_size  # type: ignore[union-attr]
             assert isinstance(batch_size, int)
             return batch_size
         except (AttributeError, AssertionError):
@@ -63,24 +72,6 @@ def batch_up_image(
         raise RuntimeError
 
     return image.repeat(desired_batch_size, 1, 1, 1)
-
-
-@contextlib.contextmanager
-def paper_replication(
-    optim_logger: OptimLogger, title: str, url: str, author: str, year: Union[str, int]
-) -> Iterator:
-    header = "\n".join(
-        (
-            "Replication of the paper",
-            f"'{title}'",
-            url,
-            "authored by",
-            author,
-            f"in {str(year)}",
-        )
-    )
-    with optim_logger.environment(header):
-        yield
 
 
 def make_reproducible(
@@ -167,7 +158,7 @@ def load_state_dict_from_url(
     map_location: Optional[Union[torch.device, str]] = None,
     file_name: Optional[str] = None,
     **kwargs: Any,
-) -> Dict[str, torch.Tensor]:
+) -> OrderedDictType[str, torch.Tensor]:
     # This is just for compatibility with torch==1.6.0 until
     # https://github.com/pytorch/pytorch/issues/42596 is resolved
     if model_dir is None:
@@ -177,7 +168,7 @@ def load_state_dict_from_url(
 
     try:
         return cast(
-            Dict[str, torch.Tensor],
+            OrderedDictType[str, torch.Tensor],
             hub.load_state_dict_from_url(
                 url, model_dir=model_dir, file_name=file_name, **kwargs
             ),
@@ -188,7 +179,8 @@ def load_state_dict_from_url(
 
         cached_file = path.join(model_dir, file_name)
         return cast(
-            Dict[str, torch.Tensor], torch.load(cached_file, map_location=map_location)
+            OrderedDictType[str, torch.Tensor],
+            torch.load(cached_file, map_location=map_location),
         )
 
 

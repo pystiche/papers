@@ -91,7 +91,6 @@ def training_args(tmpdir, patch_argv):
         impl_params=bool,
         instance_norm=bool,
         device=misc.get_device(),
-        quiet=True,
     )
 
 
@@ -142,9 +141,6 @@ def test_training_parse_args_smoke(subtests, training_script, training_args):
 
     with subtests.test("device"):
         assert actual_args.device == training_args.device
-
-    with subtests.test("quiet"):
-        assert isinstance(actual_args.quiet, bool)
 
 
 def test_training_main_smoke(

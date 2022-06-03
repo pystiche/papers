@@ -2,17 +2,56 @@ from typing import Any, Optional, Tuple
 
 import torch
 
-from pystiche import enc, loss, ops
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import _hyper_parameters, multi_layer_encoder as _multi_layer_encoder
 
 __all__ = [
     "content_loss",
-    "GramOperator",
+    "GramLoss",
     "style_loss",
     "perceptual_loss",
 ]
+
+
+def content_loss(
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
+    hyper_parameters: Optional[HyperParameters] = None,
+) -> loss.FeatureReconstructionLoss:
+    r"""Content loss from :cite:`ULVL2016,UVL2017`.
+
+    Args:
+        impl_params: Switch the behavior and hyper-parameters between the reference
+            implementation of the original authors and what is described in the paper.
+            For details see :ref:`here <li_wand_2016-impl_params>`.
+        instance_norm: Switch the behavior and hyper-parameters between both
+            publications of the original authors. For details see
+            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
+        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
+            omitted, :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder`
+            is used.
+        hyper_parameters: Hyper parameters. If omitted,
+            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
+
+    .. seealso::
+
+        - :class:`pystiche.loss.FeatureReconstructionLoss`
+    """
+    if multi_layer_encoder is None:
+        multi_layer_encoder = _multi_layer_encoder()
+
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
+    return loss.FeatureReconstructionLoss(
+        multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
+        score_weight=hyper_parameters.content_loss.score_weight,
+    )
 
 
 # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/texture_loss.lua#L57
@@ -33,56 +72,17 @@ class ManipulateGradient(torch.autograd.Function):
 manipulate_gradient = ManipulateGradient.apply
 
 
-def content_loss(
-    impl_params: bool = True,
-    instance_norm: bool = True,
-    multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
-    hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.FeatureReconstructionOperator:
-    r"""Content loss from :cite:`ULVL2016,UVL2017`.
-
-    Args:
-        impl_params: Switch the behavior and hyper-parameters between the reference
-            implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <li_wand_2016-impl_params>`.
-        instance_norm: Switch the behavior and hyper-parameters between both
-            publications of the original authors. For details see
-            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
-        multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
-            omitted, :func:`~pystiche_papers.ulyanov_et_al_2016.multi_layer_encoder`
-            is used.
-        hyper_parameters: Hyper parameters. If omitted,
-            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
-
-    .. seealso::
-
-        - :class:`pystiche_papers.ulyanov_et_al_2016.FeatureReconstructionOperator`
-    """
-    if multi_layer_encoder is None:
-        multi_layer_encoder = _multi_layer_encoder()
-
-    if hyper_parameters is None:
-        hyper_parameters = _hyper_parameters(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
-
-    return ops.FeatureReconstructionOperator(
-        multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
-        score_weight=hyper_parameters.content_loss.score_weight,
-    )
-
-
-class GramOperator(ops.GramOperator):
-    r"""Gram operator from :cite:`ULVL2016,UVL2017`.
+class GramLoss(loss.GramLoss):
+    r"""Gram loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the score twice by the batch size.
-        **gram_op_kwargs: Additional parameters of a :class:`pystiche.ops.GramOperator`.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.loss.GramLoss`.
 
     .. seealso::
 
-        - :class:`pystiche.ops.GramOperator`
+        - :class:`pystiche.loss.GramLoss`
     """
 
     def __init__(
@@ -118,7 +118,7 @@ def style_loss(
     instance_norm: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.MultiLayerEncodingOperator:
+) -> loss.MultiLayerEncodingLoss:
     r"""Style loss from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -136,7 +136,7 @@ def style_loss(
 
     .. seealso::
 
-        - :class:`pystiche_papers.ulyanov_et_al_2016.GramOperator`
+        - :class:`pystiche_papers.ulyanov_et_al_2016.GramLoss`
     """
     if multi_layer_encoder is None:
         multi_layer_encoder = _multi_layer_encoder()
@@ -146,10 +146,10 @@ def style_loss(
             impl_params=impl_params, instance_norm=instance_norm
         )
 
-    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramLoss:
+        return GramLoss(encoder, impl_params=impl_params, score_weight=layer_weight)
 
-    return ops.MultiLayerEncodingOperator(
+    return loss.MultiLayerEncodingLoss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,

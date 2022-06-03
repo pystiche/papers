@@ -2,10 +2,10 @@ import pytest
 
 import pytorch_testing_utils as ptu
 from torch import nn, optim
+from torchvision.transforms import InterpolationMode
 
 import pystiche_papers.ulyanov_et_al_2016 as paper
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 from .utils import impl_params_and_instance_norm
@@ -89,12 +89,11 @@ def test_hyper_parameters_style_transform(subtests, impl_params, instance_norm):
     with subtests.test("edge_size"):
         assert hyper_parameters.edge_size == 256
 
-    with subtests.test("edge"):
-        assert hyper_parameters.edge == "long"
-
-    with subtests.test("interpolation_mode"):
-        assert hyper_parameters.interpolation_mode == (
-            "bicubic" if impl_params and instance_norm else "bilinear"
+    with subtests.test("interpolation"):
+        assert hyper_parameters.interpolation == (
+            InterpolationMode.BICUBIC
+            if impl_params and instance_norm
+            else InterpolationMode.BILINEAR
         )
 
 
@@ -198,11 +197,11 @@ def test_ulyanov_et_al_2016_multi_layer_encoder(subtests):
 
 
 def test_ulyanov_et_al_2016_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), enc.CaffePreprocessing)
 
 
 def test_ulyanov_et_al_2016_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), enc.CaffePostprocessing)
 
 
 @impl_params_and_instance_norm

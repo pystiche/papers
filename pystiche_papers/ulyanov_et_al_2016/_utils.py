@@ -3,9 +3,9 @@ from typing import Any, List, Optional
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.optimizer import Optimizer
+from torchvision.transforms import InterpolationMode
 
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 __all__ = [
@@ -39,10 +39,10 @@ def hyper_parameters(
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L44
             layers=style_loss_layers,
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L23
-            # The backward pass of the GramOperators in style_loss is manipulated and
+            # The backward pass of the GramLoss'es in style_loss is manipulated and
             # this is not independent of the score_weight. For this reason the
             # layer_weights are set here to have the correct score_weight in the
-            # individual GramOperators.
+            # individual GramLoss'es.
             layer_weights=(
                 [1e3 if impl_params and not instance_norm else 1e0]
                 * len(style_loss_layers)
@@ -54,13 +54,11 @@ def hyper_parameters(
         ),
         style_transform=HyperParameters(
             edge_size=256,
-            # https://github.com/torch/image/blob/master/doc/simpletransform.md#res-imagescalesrc-size-mode
-            edge="long",
-            interpolation_mode="bicubic"
+            interpolation=InterpolationMode.BICUBIC
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L152
             if impl_params and instance_norm
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
-            else "bilinear",
+            else InterpolationMode.BILINEAR,
         ),
         batch_sampler=HyperParameters(
             # The number of iterations is split up into multiple epochs with
@@ -120,16 +118,16 @@ _hyper_parameters = hyper_parameters
 def multi_layer_encoder() -> enc.VGGMultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`ULVL2016,UVL2017`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
-    return transforms.CaffePreprocessing()
+def preprocessor() -> enc.CaffePreprocessing:
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
-    return transforms.CaffePostprocessing()
+def postprocessor() -> enc.CaffePostprocessing:
+    return enc.CaffePostprocessing()
 
 
 def optimizer(

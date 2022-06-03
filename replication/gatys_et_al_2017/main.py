@@ -1,56 +1,38 @@
-import contextlib
 import os
 from argparse import Namespace
 from os import path
 
 import torch
+from torchvision.transforms.functional import resize, rgb_to_grayscale
 
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche.image import write_image
-from pystiche.image.transforms.functional import (
-    grayscale_to_fakegrayscale,
-    resize,
-    rgb_to_grayscale,
-    rgb_to_yuv,
-    transform_channels_affinely,
-    yuv_to_rgb,
-)
 from pystiche.misc import get_device
-from pystiche.optim import OptimLogger
 from pystiche_papers.utils import abort_if_cuda_memory_exausts
-
-
-@contextlib.contextmanager
-def replicate_figure(logger, figure, impl_params):
-    params = "implementation" if impl_params else "paper"
-    header = f"Replicating {figure} with {params} parameters"
-    with logger.environment(header):
-        yield
-
-
-def log_saving_info(logger, output_file):
-    logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
 
 
 def read_image_and_guides(image, **read_kwargs):
     return image.read(**read_kwargs), image.guides.read(**read_kwargs)
 
 
+def save_result(output_image, output_file):
+    print(f"Saving result to {output_file}")
+    write_image(output_image, output_file)
+    print("#" * int(os.environ.get("COLUMNS", "80")))
+
+
 def figure_2(args):
     @abort_if_cuda_memory_exausts
     def figure_2_d(content_image, style_image):
-        with replicate_figure(args.logger, "2 (d)", args.impl_params):
-            output_image = paper.nst(
-                content_image,
-                style_image,
-                impl_params=args.impl_params,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
+        print("Replicating Figure 2 (d)")
+        output_image = paper.nst(
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
+        )
 
-            output_file = path.join(args.image_results_dir, "fig_2__d.jpg")
-            log_saving_info(args.logger, output_file)
-            write_image(output_image, output_file)
+        output_file = path.join(args.image_results_dir, "fig_2__d.jpg")
+        save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_2_ef(
@@ -68,20 +50,17 @@ def figure_2(args):
             "building": (style_building_image, style_building_guide),
             "sky": (style_sky_image, style_sky_guide),
         }
-        with replicate_figure(args.logger, f"2 ({label})", args.impl_params):
 
-            output_image = paper.guided_nst(
-                content_image,
-                content_guides,
-                style_images_and_guides,
-                impl_params=args.impl_params,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
+        print(f"Replicating Figure 2 ({label})")
+        output_image = paper.guided_nst(
+            content_image,
+            content_guides,
+            style_images_and_guides,
+            impl_params=args.impl_params,
+        )
 
-            output_file = path.join(args.image_results_dir, f"fig_2__{label}.jpg")
-            log_saving_info(args.logger, output_file)
-            write_image(output_image, output_file)
+        output_file = path.join(args.image_results_dir, f"fig_2__{label}.jpg")
+        save_result(output_image, output_file)
 
     images = paper.images()
 
@@ -148,7 +127,8 @@ def figure_3(args):
             matrix = torch.mm(msqrt(target_cov), torch.inverse(msqrt(input_cov)))
         elif method == "cholesky":
             matrix = torch.mm(
-                torch.cholesky(target_cov), torch.inverse(torch.cholesky(input_cov))
+                torch.linalg.cholesky(target_cov),
+                torch.inverse(torch.linalg.cholesky(input_cov)),
             )
         else:
             # FIXME: add error message
@@ -161,62 +141,51 @@ def figure_3(args):
 
     @abort_if_cuda_memory_exausts
     def figure_3_c(content_image, style_image):
-        with replicate_figure(args.logger, "3 (c)", args.impl_params):
-            output_image = paper.nst(
-                content_image,
-                style_image,
-                impl_params=args.impl_params,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
+        print("Replicating Figure 3 (c)")
+        output_image = paper.nst(
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
+        )
 
-            output_file = path.join(args.image_results_dir, "fig_3__c.jpg")
-            log_saving_info(args.logger, output_file)
-            write_image(output_image, output_file)
+        output_file = path.join(args.image_results_dir, "fig_3__c.jpg")
+        save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_3_d(content_image, style_image):
         content_image_yuv = rgb_to_yuv(content_image)
-        content_luminance = grayscale_to_fakegrayscale(content_image_yuv[:, :1])
+        content_luminance = content_image_yuv[:, :1].repeat(1, 3, 1, 1)
         content_chromaticity = content_image_yuv[:, 1:]
 
-        style_luminance = grayscale_to_fakegrayscale(rgb_to_grayscale(style_image))
+        style_luminance = rgb_to_grayscale(style_image, num_output_channels=3)
 
-        with replicate_figure(args.logger, "3 (d)", args.impl_params):
-            output_luminance = paper.nst(
-                content_luminance,
-                style_luminance,
-                impl_params=args.impl_params,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
-            output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
-            output_chromaticity = resize(
-                content_chromaticity, output_luminance.size()[2:]
-            )
-            output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
-            output_image = yuv_to_rgb(output_image_yuv)
+        print("Replicating Figure 3 (d)")
+        output_luminance = paper.nst(
+            content_luminance,
+            style_luminance,
+            impl_params=args.impl_params,
+        )
+        output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
+        output_chromaticity = resize(content_chromaticity, output_luminance.size()[2:])
+        output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
+        output_image = yuv_to_rgb(output_image_yuv)
 
-            output_file = path.join(args.image_results_dir, "fig_3__d.jpg")
-            log_saving_info(args.logger, output_file)
-            write_image(output_image, output_file)
+        output_file = path.join(args.image_results_dir, "fig_3__d.jpg")
+        save_result(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_3_e(content_image, style_image, method="cholesky"):
         style_image = match_channelwise_statistics(style_image, content_image, method)
 
-        with replicate_figure(args.logger, "3 (e)", args.impl_params):
-            output_image = paper.nst(
-                content_image,
-                style_image,
-                impl_params=args.impl_params,
-                quiet=args.quiet,
-                logger=args.logger,
-            )
+        print("Replicating Figure 3 (e)")
+        output_image = paper.nst(
+            content_image,
+            style_image,
+            impl_params=args.impl_params,
+        )
 
-            output_file = path.join(args.image_results_dir, "fig_3__e.jpg")
-            log_saving_info(args.logger, output_file)
-            write_image(output_image, output_file)
+        output_file = path.join(args.image_results_dir, "fig_3__e.jpg")
+        save_result(output_image, output_file)
 
     images = paper.images()
     content_image = images["schultenhof"].read(
@@ -231,14 +200,52 @@ def figure_3(args):
     figure_3_e(content_image, style_image)
 
 
+def transform_channels_affinely(x: torch.Tensor, matrix, bias=None):
+    batch_size, _, *spatial_size = x.size()
+    x = torch.flatten(x, 2)
+
+    if matrix.dim() == 2:
+        matrix = matrix.unsqueeze(0).repeat(batch_size, 1, 1)
+    num_channels = matrix.size()[1]
+
+    x = torch.bmm(matrix, x)
+
+    if bias is not None:
+        if bias.dim() == 2:
+            bias = bias.unsqueeze(0)
+        x += bias
+
+    return x.view(batch_size, num_channels, *spatial_size)
+
+
+def rgb_to_yuv(x: torch.Tensor) -> torch.Tensor:
+    transformation_matrix = torch.tensor(
+        (
+            (0.299, 0.587, 0.114),
+            (-0.147, -0.289, 0.436),
+            (0.615, -0.515, -0.100),
+        ),
+    )
+    return transform_channels_affinely(x, transformation_matrix.to(x))
+
+
+def yuv_to_rgb(x: torch.Tensor) -> torch.Tensor:
+    transformation_matrix = torch.tensor(
+        (
+            (1.000, 0.000, 1.140),
+            (1.000, -0.395, -0.581),
+            (1.000, 2.032, 0.000),
+        ),
+    )
+    return transform_channels_affinely(x, transformation_matrix.to(x))
+
+
 def parse_input():
     # TODO: write CLI
     image_source_dir = None
     image_guides_dir = None
     image_results_dir = None
-    device = None
     impl_params = True
-    quiet = False
 
     def process_dir(dir):
         dir = path.abspath(path.expanduser(dir))
@@ -260,7 +267,6 @@ def parse_input():
     image_results_dir = process_dir(image_results_dir)
 
     device = get_device()
-    logger = OptimLogger()
 
     return Namespace(
         image_source_dir=image_source_dir,
@@ -268,8 +274,6 @@ def parse_input():
         image_results_dir=image_results_dir,
         device=device,
         impl_params=impl_params,
-        logger=logger,
-        quiet=quiet,
     )
 
 

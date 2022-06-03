@@ -1,14 +1,14 @@
 import itertools
 import math
-from typing import Any, cast, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, cast, Optional, Sequence, Tuple, Union
 
 import torch
-from torch import optim
+from torch import nn, optim
+from torchvision.transforms import functional as F
 
 import pystiche
-from pystiche import enc, misc, ops
-from pystiche.image import extract_image_size, transforms
-from pystiche.image.transforms.functional import crop
+from pystiche import enc, loss, misc
+from pystiche.image import extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 __all__ = [
@@ -174,6 +174,36 @@ def extract_normalized_patches2d(
     return pystiche.extract_patches2d(input, patch_size, stride)
 
 
+class Rotate(nn.Module):
+    def __init__(self, angle: float) -> None:
+        super().__init__()
+        self.angle = angle
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, F.rotate(image, self.angle))
+
+    def extra_repr(self) -> str:
+        return f"factor={self.angle}"
+
+
+class Scale(nn.Module):
+    def __init__(self, factor: float) -> None:
+        super().__init__()
+        self.factor = factor
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return cast(
+            torch.Tensor,
+            F.resize(
+                image,
+                [round(length * self.factor) for length in extract_image_size(image)],
+            ),
+        )
+
+    def extra_repr(self) -> str:
+        return f"factor={self.factor}"
+
+
 # Right now, this an (almost) exact port from the source. It needs to be refactored.
 # It does the following for a positive alpha (angle):
 # - create the vertices of the image
@@ -271,40 +301,37 @@ def _computeBB(width: int, height: int, alpha: float) -> Tuple[int, int, int, in
     )
 
 
-class ValidCropAfterRotate(transforms.Transform):
+class ValidCropAfterRotate(nn.Module):
     def __init__(self, angle: float, clockwise: bool = False):
         super().__init__()
         self.angle = angle
         self.clockwise = clockwise
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        origin, size = self._compute_crop(image)
-        return cast(torch.Tensor, crop(image, origin, size))
-
-    def _compute_crop(
-        self, image: torch.Tensor
-    ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         height, width = extract_image_size(image)
         alpha = math.radians(self.angle)
         if not self.clockwise:
             alpha *= -1
         bounding_box = _computeBB(width, height, alpha)
-        origin = (bounding_box[1], bounding_box[0])
-        size = (bounding_box[3] - bounding_box[1], bounding_box[2] - bounding_box[0])
-        return origin, size
+        top = bounding_box[1]
+        left = bounding_box[0]
+        height = bounding_box[3] - top
+        width = bounding_box[2] - left
+        return cast(
+            torch.Tensor, F.crop(image, top=top, left=left, height=height, width=width)
+        )
 
-    def _properties(self) -> Dict[str, Any]:
-        dct = super()._properties()
-        dct["angle"] = f"{self.angle}°"
+    def extra_repr(self) -> str:
+        extra = [f"angle={self.angle}"]
         if self.clockwise:
-            dct["clockwise"] = self.clockwise
-        return dct
+            extra.append(f"clockwise={self.clockwise}")
+        return ", ".join(extra)
 
 
 def target_transforms(
     impl_params: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> Sequence[transforms.Transform]:
+) -> Sequence[nn.Module]:
     r"""MRF target transformations from :cite:`LW2016`.
 
     Args:
@@ -319,13 +346,13 @@ def target_transforms(
 
     .. seealso::
 
-        - :meth:`pystiche.ops.MRFOperator.scale_and_rotate_transforms`
+        - :meth:`pystiche.loss.MRFLoss.scale_and_rotate_transforms`
     """
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(impl_params=impl_params)
 
     if not impl_params:
-        return ops.MRFOperator.scale_and_rotate_transforms(
+        return loss.MRFLoss.scale_and_rotate_transforms(
             **hyper_parameters.target_transforms
         )
 
@@ -346,29 +373,29 @@ def target_transforms(
         scaling_factors, rotation_angles
     ):
         transforms_.append(
-            transforms.ComposedTransform(
-                transforms.RotateMotif(rotation_angle),
+            nn.Sequential(
+                Rotate(rotation_angle),
                 ValidCropAfterRotate(rotation_angle),
-                transforms.Rescale(scaling_factor),
+                Scale(scaling_factor),
             )
         )
     return transforms_
 
 
-def preprocessor() -> transforms.CaffePreprocessing:
+def preprocessor() -> enc.CaffePreprocessing:
     r"""Preprocessor from :cite:`LW2016`."""
-    return transforms.CaffePreprocessing()
+    return enc.CaffePreprocessing()
 
 
-def postprocessor() -> transforms.CaffePostprocessing:
+def postprocessor() -> enc.CaffePostprocessing:
     r"""Postprocessor from :cite:`LW2016`."""
-    return transforms.CaffePostprocessing()
+    return enc.CaffePostprocessing()
 
 
 def multi_layer_encoder() -> enc.MultiLayerEncoder:
     r"""Multi-layer encoder from :cite:`LW2016`."""
     return enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
 
 

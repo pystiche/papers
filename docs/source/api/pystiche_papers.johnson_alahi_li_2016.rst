@@ -14,11 +14,11 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Model optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramOperator`                       |
+| Style loss               | :class:`~pystiche.loss.GramLoss`                          |
 +--------------------------+-----------------------------------------------------------+
-| Regularization           | :class:`~pystiche.ops.TotalVariationOperator`             |
+| Regularization           | :class:`~pystiche.loss.TotalVariationLoss`                |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -38,8 +38,8 @@ Behavioral changes
 The following parts are affected:
 
 - :func:`~pystiche_papers.johnson_alahi_li_2016.content_transform`
-- :class:`~pystiche_papers.johnson_alahi_li_2016.GramOperator`
-- :class:`~pystiche_papers.johnson_alahi_li_2016.TotalVariationOperator`
+- :class:`~pystiche_papers.johnson_alahi_li_2016.GramLoss`
+- :class:`~pystiche_papers.johnson_alahi_li_2016.TotalVariationLoss`
 - :func:`~pystiche_papers.johnson_alahi_li_2016.decoder`
 - :func:`~pystiche_papers.johnson_alahi_li_2016.preprocessor`
 - :func:`~pystiche_papers.johnson_alahi_li_2016.postprocessor`
@@ -152,14 +152,16 @@ API
 ..
   _loss.py
 .. autofunction:: content_loss
-.. autoclass:: GramOperator
+.. autoclass:: GramLoss
 .. autofunction:: style_loss
-.. autoclass:: TotalVariationOperator
+.. autoclass:: TotalVariationLoss
 .. autofunction:: regularization
 .. autofunction:: perceptual_loss
 
 ..
   _modules.py
+.. autofunction:: encoder
+.. autofunction:: decoder
 .. autoclass:: Transformer
 .. autofunction:: transformer
 

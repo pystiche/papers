@@ -1,10 +1,10 @@
+import contextlib
 from typing import cast, Optional, Sequence, Tuple
 
 import torch
 from torch import nn, optim
 
 from pystiche import enc, meta
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 __all__ = [
@@ -18,11 +18,11 @@ __all__ = [
 
 
 def preprocessor() -> nn.Module:
-    return transforms.CaffePreprocessing()
+    return enc.CaffePreprocessing()
 
 
 def postprocessor() -> nn.Module:
-    return transforms.CaffePostprocessing()
+    return enc.CaffePostprocessing()
 
 
 def multi_layer_encoder(
@@ -35,8 +35,9 @@ def multi_layer_encoder(
             the ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
+    # TODO: check if the encoder used inplace ops
     multi_layer_encoder_ = enc.vgg19_multi_layer_encoder(
-        weights="caffe", internal_preprocessing=False, allow_inplace=True
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
     if impl_params:
         return multi_layer_encoder_
@@ -71,10 +72,11 @@ def compute_layer_weights(
         layers = list(modules.keys())
         layers = reversed(layers[: layers.index(layer) + 1])
         for layer_ in layers:
-            try:
-                return cast(int, modules[layer_].out_channels)
-            except AttributeError:
-                pass
+            module = modules[layer_]
+            if module is None:
+                continue
+            with contextlib.suppress(AttributeError):
+                return cast(int, module.out_channels)
 
         raise RuntimeError(
             f"Neither '{layer}' nor any previous layer has an 'out_channels' "
@@ -98,11 +100,17 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
     r"""Hyper parameters from :cite:`GEB2016`."""
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     # Cell [8]
-    style_loss_layers = (
-        ("relu1_1", "relu2_1", "relu3_1", "relu4_1", "relu5_1")
-        if impl_params
-        else ("conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1")
+    style_loss_layers: Tuple[str, ...] = (
+        "conv1_1",
+        "conv2_1",
+        "conv3_1",
+        "conv4_1",
+        "conv5_1",
     )
+    if impl_params:
+        style_loss_layers = tuple(
+            layer.replace("conv", "relu") for layer in style_loss_layers
+        )
     # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
     # Cell [8]
     style_loss_layer_weights = (
@@ -113,7 +121,7 @@ def hyper_parameters(impl_params: bool = True) -> HyperParameters:
         content_loss=HyperParameters(
             # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
             # Cell [8]
-            layer="relu4_2" if impl_params else "conv4_2",
+            layer=f"{'relu' if impl_params else 'conv'}4_2",
             # https://github.com/pmeier/PytorchNeuralStyleTransfer/blob/master/NeuralStyleTransfer.ipynb
             # Cell [8]
             score_weight=1e0,

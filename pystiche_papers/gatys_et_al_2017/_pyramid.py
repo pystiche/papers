@@ -16,7 +16,7 @@ def image_pyramid(
 
     Args:
         hyper_parameters: If omitted,
-            :func:`~pystiche_papers.gatys_ecker_bethge_2016.hyper_parameters` is used.
+            :func:`~pystiche_papers.gatys_et_al_2017.hyper_parameters` is used.
         **image_pyramid_kwargs: Additional parameters of a
             :class:`pystiche.pyramid.ImagePyramid`.
 

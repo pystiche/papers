@@ -1,18 +1,19 @@
-from typing import List, Optional, Sized, Tuple
+from typing import cast, List, Optional, Sized
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.transforms import functional as F
 
-import pystiche.image.transforms.functional as F
 from pystiche import image
 from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
     ImageFolderDataset,
 )
-from pystiche.image import transforms
+from pystiche.image import extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
@@ -29,20 +30,17 @@ __all__ = [
 ]
 
 
-class TopLeftCropToMultiple(transforms.Transform):
+class TopLeftCropToMultiple(nn.Module):
     def __init__(self, multiple: int = 16):
         super().__init__()
         self.multiple = multiple
 
-    def calculate_size(self, input_image: torch.Tensor) -> Tuple[int, int]:
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
         old_height, old_width = image.extract_image_size(input_image)
         new_height = old_height - old_height % self.multiple
         new_width = old_width - old_width % self.multiple
-        return new_height, new_width
 
-    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-        size = self.calculate_size(input_image)
-        return F.top_left_crop(input_image, size)
+        return input_image[..., :new_height, :new_width]
 
 
 def content_transform(
@@ -76,9 +74,26 @@ def content_transform(
     return nn.Sequential(*transforms_)
 
 
+class LongEdgeResize(nn.Module):
+    def __init__(self, edge_size: int) -> None:
+        super().__init__()
+        self.edge_size = edge_size
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = extract_image_size(image)
+        if old_height > old_width:
+            new_height = self.edge_size
+            new_width = int(new_height / old_height * old_width)
+        else:
+            new_width = self.edge_size
+            new_height = int(new_width / old_width * old_height)
+
+        return cast(torch.Tensor, F.resize(image, [new_height, new_width]))
+
+
 def style_transform(
     hyper_parameters: Optional[HyperParameters] = None,
-) -> transforms.Resize:
+) -> nn.Module:
     r"""Style image transformation from :cite:`JAL2016`.
 
     Args:
@@ -88,10 +103,7 @@ def style_transform(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return transforms.Resize(
-        hyper_parameters.style_transform.edge_size,
-        edge=hyper_parameters.style_transform.edge,
-    )
+    return LongEdgeResize(hyper_parameters.style_transform.edge_size)
 
 
 def images() -> DownloadableImageCollection:
@@ -180,14 +192,14 @@ def batch_sampler(
 
 
 def image_loader(
-    dataset: Dataset,
+    dataset: Sized,
     hyper_parameters: Optional[HyperParameters] = None,
     pin_memory: bool = True,
 ) -> DataLoader:
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
     return DataLoader(
-        dataset,
+        dataset,  # type: ignore[arg-type]
         batch_sampler=batch_sampler(dataset),
         num_workers=hyper_parameters.batch_sampler.batch_size,
         pin_memory=pin_memory,

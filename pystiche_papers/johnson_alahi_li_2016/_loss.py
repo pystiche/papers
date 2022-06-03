@@ -2,8 +2,8 @@ from typing import Any, Optional
 
 import torch
 
-import pystiche.ops.functional as F
-from pystiche import enc, loss, ops
+import pystiche.loss.functional as F
+from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
 from ._utils import (
@@ -13,9 +13,9 @@ from ._utils import (
 
 __all__ = [
     "content_loss",
-    "GramOperator",
+    "GramLoss",
     "style_loss",
-    "TotalVariationOperator",
+    "TotalVariationLoss",
     "regularization",
     "perceptual_loss",
 ]
@@ -25,7 +25,7 @@ def content_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.FeatureReconstructionOperator:
+) -> loss.FeatureReconstructionLoss:
     r"""Content loss from :cite:`JAL2016`.
 
     Args:
@@ -45,24 +45,24 @@ def content_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return ops.FeatureReconstructionOperator(
+    return loss.FeatureReconstructionLoss(
         multi_layer_encoder.extract_encoder(hyper_parameters.content_loss.layer),
         score_weight=hyper_parameters.content_loss.score_weight,
     )
 
 
-class GramOperator(ops.GramOperator):
-    r"""Gram operator from :cite:`JAL2016`.
+class GramLoss(loss.GramLoss):
+    r"""Gram loss from :cite:`JAL2016`.
 
     Args:
         encoder: Encoder used to encode the input.
         impl_params: If ``True``, normalize the Gram matrix additionally by the number
             of channels.
-        **gram_op_kwargs: Additional parameters of a :class:`pystiche.ops.GramOperator`.
+        **gram_op_kwargs: Additional parameters of a :class:`pystiche.loss.GramLoss`.
 
     .. seealso::
 
-        - :class:`pystiche.ops.GramOperator`
+        - :class:`pystiche.loss.GramLoss`
     """
 
     def __init__(
@@ -87,7 +87,7 @@ def style_loss(
     impl_params: bool = True,
     multi_layer_encoder: Optional[enc.MultiLayerEncoder] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> ops.MultiLayerEncodingOperator:
+) -> loss.MultiLayerEncodingLoss:
     r"""Style loss from :cite:`JAL2016`.
 
     Args:
@@ -106,10 +106,10 @@ def style_loss(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramOperator:
-        return GramOperator(encoder, impl_params=impl_params, score_weight=layer_weight)
+    def get_encoding_op(encoder: enc.Encoder, layer_weight: float) -> GramLoss:
+        return GramLoss(encoder, impl_params=impl_params, score_weight=layer_weight)
 
-    return ops.MultiLayerEncodingOperator(
+    return loss.MultiLayerEncodingLoss(
         multi_layer_encoder,
         hyper_parameters.style_loss.layers,
         get_encoding_op,
@@ -118,19 +118,19 @@ def style_loss(
     )
 
 
-class TotalVariationOperator(ops.TotalVariationOperator):
-    r"""Total variation operator from :cite:`LW2016`.
+class TotalVariationLoss(loss.TotalVariationLoss):
+    r"""Total variation loss from :cite:`LW2016`.
 
     Args:
         **total_variation_op_kwargs: Additional parameters of a
-            :class:`pystiche.ops.TotalVariationOperator`.
+            :class:`pystiche.loss.TotalVariationLoss`.
 
-    In contrast to :class:`pystiche.ops.TotalVariationOperator`, the the score is
-    calculated with the squared error (SE) instead of the mean squared error (MSE).
+    In contrast to :class:`pystiche.loss.TotalVariationLoss`, the score is calculated
+    with the squared error (SE) instead of the mean squared error (MSE).
 
     .. seealso::
 
-        - :class:`pystiche.ops.TotalVariationOperator`
+        - :class:`pystiche.loss.TotalVariationLoss`
     """
 
     def __init__(self, **total_variation_op_kwargs: Any) -> None:
@@ -146,7 +146,7 @@ class TotalVariationOperator(ops.TotalVariationOperator):
 
 def regularization(
     hyper_parameters: Optional[HyperParameters] = None,
-) -> TotalVariationOperator:
+) -> TotalVariationLoss:
     r"""Regularization from :cite:`JAL2016`.
 
     Args:
@@ -157,9 +157,7 @@ def regularization(
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters()
 
-    return TotalVariationOperator(
-        score_weight=hyper_parameters.regularization.score_weight
-    )
+    return TotalVariationLoss(score_weight=hyper_parameters.regularization.score_weight)
 
 
 def perceptual_loss(
@@ -175,7 +173,7 @@ def perceptual_loss(
             For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
             is used.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.

@@ -16,9 +16,9 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Model optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramOperator`                       |
+| Style loss               | :class:`~pystiche.loss.GramLoss`                          |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -60,7 +60,7 @@ Behavioral changes
 The following parts are affected:
 
   - :func:`~pystiche_papers.ulyanov_et_al_2016.content_transform`,
-  - :func:`~pystiche_papers.ulyanov_et_al_2016.GramOperator`,
+  - :func:`~pystiche_papers.ulyanov_et_al_2016.GramLoss`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.ConvBlock`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.level`,
   - :func:`~pystiche_papers.ulyanov_et_al_2016.Transformer`.
@@ -199,7 +199,7 @@ API
 ..
   _loss.py
 .. autofunction:: content_loss
-.. autoclass:: GramOperator
+.. autoclass:: GramLoss
 .. autofunction:: style_loss
 .. autofunction:: perceptual_loss
 

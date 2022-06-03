@@ -9,7 +9,6 @@ from torch import nn, optim
 import pystiche
 import pystiche_papers.li_wand_2016 as paper
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 
@@ -212,11 +211,11 @@ def test_target_transforms_call_smoke(target_image):
 
 
 def test_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), enc.CaffePreprocessing)
 
 
 def test_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), enc.CaffePostprocessing)
 
 
 @pytest.mark.slow

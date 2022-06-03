@@ -1,9 +1,73 @@
+from typing import cast
+
 import torch
+from torch import nn
+from torchvision import transforms
+from torchvision.transforms import functional as F
 
 from pystiche import data
-from pystiche.image import transforms
 
 __all__ = ["images"]
+
+
+class MirrorHorizontally(nn.Module):
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return image.flip(2)
+
+
+class Crop(nn.Module):
+    def __init__(self, *, top: int, left: int, height: int, width: int) -> None:
+        super().__init__()
+        self.top = top
+        self.left = left
+        self.height = height
+        self.width = width
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        return cast(
+            torch.Tensor,
+            F.crop(
+                image,
+                top=self.top,
+                left=self.left,
+                height=self.height,
+                width=self.width,
+            ),
+        )
+
+    def extra_repr(self) -> str:
+        return ", ".join(
+            [
+                f"top={self.top}",
+                f"left={self.left}",
+                f"height={self.height}",
+                f"width={self.width}",
+            ]
+        )
+
+
+class ResizeToVertEdge(nn.Module):
+    def __init__(
+        self,
+        size: int,
+        *,
+        interpolation: transforms.InterpolationMode = transforms.InterpolationMode.BILINEAR,
+    ) -> None:
+        super().__init__()
+        self.size = size
+        self.interpolation = interpolation
+
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = image.shape[-2:]
+        new_height = self.size
+        new_width = int(new_height / old_height * old_width)
+        return cast(
+            torch.Tensor,
+            F.resize(image, [new_height, new_width], interpolation=self.interpolation),
+        )
+
+    def extra_repr(self) -> str:
+        return f"size={self.size}"
 
 
 def image_note(url: str, mirror: bool = False) -> str:
@@ -13,27 +77,24 @@ def image_note(url: str, mirror: bool = False) -> str:
     return f"{note}. The unprocessed image can be downloaded from {url}"
 
 
-def make_image_transform(image: str) -> transforms.ComposedTransform:
-    image_transform: transforms.Transform
+def make_image_transform(image: str) -> nn.Sequential:
+    image_transform: nn.Module
     if image == "emma":
-        image_transform = transforms.Crop(origin=(30, 12), size=(930, 682))
+        image_transform = Crop(top=30, left=12, height=930, width=682)
     elif image == "jenny":
 
-        class MirrorHorizontally(transforms.Transform):
-            def forward(self, image: torch.Tensor) -> torch.Tensor:
-                return image.flip(2)
-
-        image_transform = transforms.ComposedTransform(
-            transforms.Crop(origin=(211, 462), size=(1843, 1386)), MirrorHorizontally()
+        image_transform = nn.Sequential(
+            Crop(top=211, left=462, height=1843, width=1386),
+            MirrorHorizontally(),
         )
     elif image == "s":
-        image_transform = transforms.Crop(origin=(159, 486), size=(2157, 1642))
+        image_transform = Crop(top=159, left=486, height=2157, width=1642)
     else:
         raise RuntimeError
 
-    return transforms.ComposedTransform(
+    return nn.Sequential(
         image_transform,
-        transforms.Resize(384, edge="vert", interpolation_mode="bicubic"),
+        ResizeToVertEdge(384, interpolation=transforms.InterpolationMode.BICUBIC),
     )
 
 

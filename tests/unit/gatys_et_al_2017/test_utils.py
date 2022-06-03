@@ -8,16 +8,15 @@ from torch import nn, optim
 import pystiche_papers.gatys_ecker_bethge_2016
 import pystiche_papers.gatys_et_al_2017 as paper
 from pystiche import enc
-from pystiche.image import transforms
 from pystiche_papers.utils import HyperParameters
 
 
 def test_preprocessor():
-    assert isinstance(paper.preprocessor(), transforms.CaffePreprocessing)
+    assert isinstance(paper.preprocessor(), enc.CaffePreprocessing)
 
 
 def test_postprocessor():
-    assert isinstance(paper.postprocessor(), transforms.CaffePostprocessing)
+    assert isinstance(paper.postprocessor(), enc.CaffePostprocessing)
 
 
 @pytest.mark.slow
@@ -57,7 +56,7 @@ def test_optimizer(subtests, input_image):
 
 def test_compute_layer_weights():
     multi_layer_encoder = paper.multi_layer_encoder()
-    layers = tuple(multi_layer_encoder.children_names())
+    layers = tuple(dict(multi_layer_encoder.named_children()).keys())
 
     actual = paper.compute_layer_weights(layers)
     expected = pystiche_papers.gatys_ecker_bethge_2016.compute_layer_weights(

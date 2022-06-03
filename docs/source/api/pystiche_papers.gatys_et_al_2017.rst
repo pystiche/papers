@@ -14,9 +14,9 @@
 +--------------------------+-----------------------------------------------------------+
 | Variant                  | Image optimization                                        |
 +--------------------------+-----------------------------------------------------------+
-| Content loss             | :class:`~pystiche.ops.FeatureReconstructionOperator`      |
+| Content loss             | :class:`~pystiche.loss.FeatureReconstructionLoss`         |
 +--------------------------+-----------------------------------------------------------+
-| Style loss               | :class:`~pystiche.ops.GramOperator`                       |
+| Style loss               | :class:`~pystiche.loss.GramLoss`                          |
 +--------------------------+-----------------------------------------------------------+
 
 .. |repo| replace:: Repository
@@ -35,7 +35,7 @@ Behavioral changes
 
 The following parts are affected:
 
-- :class:`~pystiche_papers.gatys_et_al_2017.MultiLayerEncodingOperator`
+- :class:`~pystiche_papers.gatys_et_al_2017.MultiLayerEncodingLoss`
 
 
 Hyper parameters
@@ -126,7 +126,7 @@ API
 ..
   _loss.py
 .. autofunction:: content_loss
-.. autoclass:: MultiLayerEncodingOperator
+.. autoclass:: MultiLayerEncodingLoss
 .. autofunction:: style_loss
 .. autofunction:: guided_style_loss
 .. autofunction:: perceptual_loss
@@ -136,6 +136,10 @@ API
   _nst.py
 .. autofunction:: nst
 .. autofunction:: guided_nst
+
+..
+  _pyramid.py
+.. autofunction:: image_pyramid
 
 ..
   _utils.py

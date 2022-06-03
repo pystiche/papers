@@ -5,12 +5,12 @@ from torch.nn.functional import mse_loss
 
 import pystiche
 import pystiche_papers.gatys_et_al_2017 as paper
-from pystiche import loss, ops
+from pystiche import loss
 
 
 def test_content_loss(subtests):
     content_loss = paper.content_loss()
-    assert isinstance(content_loss, ops.FeatureReconstructionOperator)
+    assert isinstance(content_loss, pystiche.loss.FeatureReconstructionLoss)
 
     hyper_parameters = paper.hyper_parameters().content_loss
 
@@ -21,7 +21,7 @@ def test_content_loss(subtests):
         assert content_loss.score_weight == pytest.approx(hyper_parameters.score_weight)
 
 
-def test_MultiLayerEncodingOperator(
+def test_MultiLayerEncodingLoss(
     subtests, multi_layer_encoder_with_layer, target_image, input_image
 ):
 
@@ -33,18 +33,18 @@ def test_MultiLayerEncodingOperator(
     configs = ((True, 1.0), (False, 1.0 / 4.0))
     for impl_params, score_correction_factor in configs:
         with subtests.test(impl_params=impl_params):
-            op = paper.MultiLayerEncodingOperator(
+            loss = paper.MultiLayerEncodingLoss(
                 multi_layer_encoder,
                 (layer,),
-                lambda encoder, layer_weight: ops.GramOperator(
+                lambda encoder, layer_weight: pystiche.loss.GramLoss(
                     encoder, score_weight=layer_weight
                 ),
                 impl_params=impl_params,
                 layer_weights="sum",
             )
 
-            op.set_target_image(target_image)
-            actual = op(input_image)
+            loss.set_target_image(target_image)
+            actual = loss(input_image)
 
             score = mse_loss(
                 input_repr,
@@ -57,15 +57,17 @@ def test_MultiLayerEncodingOperator(
 
 def test_style_loss(subtests):
     style_loss = paper.style_loss()
-    assert isinstance(style_loss, ops.MultiLayerEncodingOperator)
+    assert isinstance(style_loss, pystiche.loss.MultiLayerEncodingLoss)
 
     hyper_parameters = paper.hyper_parameters().style_loss
 
-    with subtests.test("encoding_ops"):
-        assert all(isinstance(op, ops.GramOperator) for op in style_loss.operators())
+    with subtests.test("losses"):
+        assert all(
+            isinstance(loss, pystiche.loss.GramLoss) for loss in style_loss.children()
+        )
 
     layers, layer_weights = zip(
-        *[(op.encoder.layer, op.score_weight) for op in style_loss.operators()]
+        *[(loss.encoder.layer, loss.score_weight) for loss in style_loss.children()]
     )
     with subtests.test("layers"):
         assert layers == hyper_parameters.layers
@@ -79,16 +81,16 @@ def test_style_loss(subtests):
 
 def test_guided_style_loss(subtests, content_guides):
     style_loss = paper.guided_style_loss(content_guides.keys())
-    assert isinstance(style_loss, ops.MultiRegionOperator)
+    assert isinstance(style_loss, pystiche.loss.MultiRegionLoss)
 
-    with subtests.test("encoding_ops"):
+    with subtests.test("encoding_losses"):
         assert all(
-            isinstance(op, paper.MultiLayerEncodingOperator)
-            for op in style_loss.operators()
+            isinstance(loss, paper.MultiLayerEncodingLoss)
+            for loss in style_loss.children()
         )
 
     regions, region_weights = zip(
-        *[(name, op.score_weight) for name, op in style_loss.named_operators()]
+        *[(name, loss.score_weight) for name, loss in style_loss.named_children()]
     )
 
     with subtests.test("regions"):
@@ -106,23 +108,23 @@ def test_perceptual_loss(subtests):
     with subtests.test("content_loss"):
         assert isinstance(
             perceptual_loss.content_loss,
-            ops.FeatureReconstructionOperator,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingOperator)
+        assert isinstance(perceptual_loss.style_loss, paper.MultiLayerEncodingLoss)
 
 
 def test_guided_perceptual_loss(subtests, content_guides):
 
     perceptual_loss = paper.guided_perceptual_loss(content_guides.keys())
-    assert isinstance(perceptual_loss, loss.GuidedPerceptualLoss)
+    assert isinstance(perceptual_loss, loss.PerceptualLoss)
 
     with subtests.test("content_loss"):
         assert isinstance(
             perceptual_loss.content_loss,
-            ops.FeatureReconstructionOperator,
+            pystiche.loss.FeatureReconstructionLoss,
         )
 
     with subtests.test("style_loss"):
-        assert isinstance(perceptual_loss.style_loss, ops.MultiRegionOperator)
+        assert isinstance(perceptual_loss.style_loss, pystiche.loss.MultiRegionLoss)

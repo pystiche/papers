@@ -29,7 +29,22 @@ first_party = ["pystiche", "pystiche_papers"]
 # See https://black.readthedocs.io/en/stable/usage_and_configuration/index.html for
 # available options
 
+line-length = 88
 target-version = ["py37"]
+exclude = '''
+/(
+    \.git
+  | \.github
+  | \.venv
+  | \.eggs
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | __pycache__
+  | build
+  | docs/build
+)/
+'''
 
 [tool.check-wheel-contents]
 # See https://github.com/jwodder/check-wheel-contents/issues/2

@@ -12,10 +12,10 @@ from utils import (
 )
 
 import torch
+import torchvision.transforms.functional as F
 
-import pystiche.image.transforms.functional as F
 import pystiche_papers.johnson_alahi_li_2016 as paper
-from pystiche.image import write_image
+from pystiche.image import extract_edge_size, write_image
 
 
 def main(args):
@@ -91,7 +91,12 @@ def read_content_image(root, content, size=None, edge="short", **read_image_kwar
     image = read_local_or_builtin_image(
         root, content, paper.images(), **read_image_kwargs
     )
-    return F.resize(image, size, edge=edge)
+    if edge == "long":
+        short = extract_edge_size(image, edge="short")
+        long = extract_edge_size(image, edge="long")
+        size = int(short / long * size)
+
+    return F.resize(image, size)
 
 
 def save_ouput_image(image, root, content, style, impl_params, instance_norm):
