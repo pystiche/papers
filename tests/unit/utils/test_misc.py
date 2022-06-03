@@ -8,7 +8,7 @@ from tests import assets, utils as utils_
 
 import pytorch_testing_utils as ptu
 import torch
-from torch import hub, nn
+from torch import nn
 from torch.utils.data import BatchSampler, DataLoader, SequentialSampler
 
 from pystiche.image import extract_batch_size, make_single_image
@@ -190,43 +190,6 @@ def test_save_state_dict_file(subtests, tmpdir, conv2d_module):
 
     hash = match.group("hash")
     assert hash == utils.get_sha256_hash(file)[:hash_len]
-
-
-@pytest.mark.xfail
-def test_load_state_dict_from_url_torch_1_5_1(subtests, tmpdir):
-    url = "https://download.pystiche.org/models/conv2d-1.5.1.pth"
-    file = path.join(tmpdir, path.basename(url))
-
-    hub.download_url_to_file(url, file, progress=False)
-    state_dict = torch.load(file)
-
-    with subtests.test("hub"):
-        ptu.assert_allclose(
-            hub.load_state_dict_from_url(url, model_dir=tmpdir), state_dict
-        )
-
-    with subtests.test("compat"):
-        ptu.assert_allclose(
-            utils.load_state_dict_from_url(url, model_dir=tmpdir), state_dict
-        )
-
-
-@pytest.mark.xfail
-def test_load_state_dict_from_url_torch_1_6_0(subtests, tmpdir):
-    url = "https://download.pystiche.org/models/conv2d-1.6.0.pth"
-    file = path.join(tmpdir, path.basename(url))
-
-    hub.download_url_to_file(url, file, progress=False)
-    state_dict = torch.load(file)
-
-    with subtests.test("hub"):
-        with pytest.raises(RuntimeError):
-            hub.load_state_dict_from_url(url, model_dir=tmpdir)
-
-    with subtests.test("compat"):
-        ptu.assert_allclose(
-            utils.load_state_dict_from_url(url, model_dir=tmpdir), state_dict
-        )
 
 
 def test_str_to_bool(subtests):

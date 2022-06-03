@@ -35,8 +35,9 @@ def multi_layer_encoder(
             the ``multi_layer_encoder`` are exchanged for :class:`~torch.nn.AvgPool2d`.
 
     """
+    # TODO: check if the encoder used inplace ops
     multi_layer_encoder_ = enc.vgg19_multi_layer_encoder(
-        framework="caffe", internal_preprocessing=False, allow_inplace=False
+        framework="caffe", internal_preprocessing=False, allow_inplace=True
     )
     if impl_params:
         return multi_layer_encoder_
@@ -71,10 +72,11 @@ def compute_layer_weights(
         layers = list(modules.keys())
         layers = reversed(layers[: layers.index(layer) + 1])
         for layer_ in layers:
+            module = modules[layer_]
+            if module is None:
+                continue
             with contextlib.suppress(AttributeError):
-                return cast(
-                    int, modules[layer_].out_channels  # type: ignore[union-attr]
-                )
+                return cast(int, module.out_channels)
 
         raise RuntimeError(
             f"Neither '{layer}' nor any previous layer has an 'out_channels' "

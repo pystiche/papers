@@ -52,7 +52,7 @@ def content_loss(
 
 
 class GramLoss(loss.GramLoss):
-    r"""Gram operator from :cite:`JAL2016`.
+    r"""Gram loss from :cite:`JAL2016`.
 
     Args:
         encoder: Encoder used to encode the input.
@@ -62,7 +62,7 @@ class GramLoss(loss.GramLoss):
 
     .. seealso::
 
-        - :class:`pystiche.loss.GramOperator`
+        - :class:`pystiche.loss.GramLoss`
     """
 
     def __init__(
@@ -119,18 +119,18 @@ def style_loss(
 
 
 class TotalVariationLoss(loss.TotalVariationLoss):
-    r"""Total variation operator from :cite:`LW2016`.
+    r"""Total variation loss from :cite:`LW2016`.
 
     Args:
         **total_variation_op_kwargs: Additional parameters of a
-            :class:`pystiche.loss.TotalVariationOperator`.
+            :class:`pystiche.loss.TotalVariationLoss`.
 
-    In contrast to :class:`pystiche.loss.TotalVariationOperator`, the the score is
-    calculated with the squared error (SE) instead of the mean squared error (MSE).
+    In contrast to :class:`pystiche.loss.TotalVariationLoss`, the score is calculated
+    with the squared error (SE) instead of the mean squared error (MSE).
 
     .. seealso::
 
-        - :class:`pystiche.loss.TotalVariationOperator`
+        - :class:`pystiche.loss.TotalVariationLoss`
     """
 
     def __init__(self, **total_variation_op_kwargs: Any) -> None:
@@ -173,7 +173,7 @@ def perceptual_loss(
             For details see :ref:`here <johnson_alahi_li_2016-impl_params>`.
         multi_layer_encoder: Pretrained :class:`~pystiche.enc.MultiLayerEncoder`. If
             omitted, the default
-            :func:`~pystiche_papers.johnson_alahi_li_2016._utils.multi_layer_encoder`
+            :func:`~pystiche_papers.johnson_alahi_li_2016.multi_layer_encoder`
             is used.
         hyper_parameters: If omitted,
             :func:`~pystiche_papers.johnson_alahi_li_2016.hyper_parameters` is used.

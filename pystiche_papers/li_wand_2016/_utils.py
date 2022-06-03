@@ -1,6 +1,6 @@
 import itertools
 import math
-from typing import Any, Optional, Sequence, Tuple, Union, cast
+from typing import Any, cast, Optional, Sequence, Tuple, Union
 
 import torch
 from torch import nn, optim
@@ -196,7 +196,7 @@ class Scale(nn.Module):
             torch.Tensor,
             F.resize(
                 image,
-                [int(length * self.factor) for length in extract_image_size(image)],
+                [round(length * self.factor) for length in extract_image_size(image)],
             ),
         )
 
@@ -329,7 +329,8 @@ class ValidCropAfterRotate(nn.Module):
 
 
 def target_transforms(
-    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+    impl_params: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> Sequence[nn.Module]:
     r"""MRF target transformations from :cite:`LW2016`.
 

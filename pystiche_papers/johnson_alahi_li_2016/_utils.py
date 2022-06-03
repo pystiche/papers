@@ -52,7 +52,7 @@ def preprocessor(impl_params: bool = True) -> nn.Module:
 
     .. seealso::
 
-        - :class:`pystiche.image.enc.CaffePreprocessing`
+        - :class:`pystiche.enc.CaffePreprocessing`
     """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L57-L62
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/DataLoader.lua#L92
@@ -70,7 +70,7 @@ def postprocessor(impl_params: bool = True) -> nn.Module:
 
     .. seealso::
 
-        - :class:`pystiche.image.enc.CaffePostprocessing`
+        - :class:`pystiche.enc.CaffePostprocessing`
     """
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style/preprocess.lua#L66-L71
     # https://github.com/pmeier/fast-neural-style/blob/813c83441953ead2adb3f65f4cc2d5599d735fa7/fast_neural_style.lua#L89

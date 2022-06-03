@@ -1,9 +1,9 @@
-from typing import Optional, Sized, Tuple, Union, cast
+from typing import cast, List, Optional, Sized, Tuple, Union
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader, Sampler
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
@@ -59,7 +59,13 @@ class ValidRandomCrop(nn.Module):
         height, width = self.size
         return cast(
             torch.Tensor,
-            F.crop(image, top=top, left=left, height=height, width=width,),
+            F.crop(
+                image,
+                top=top,
+                left=left,
+                height=height,
+                width=width,
+            ),
         )
 
 
@@ -86,7 +92,7 @@ def content_transform(
         )
     edge_size = hyper_parameters.content_transform.edge_size
 
-    transforms_ = []
+    transforms_: List[nn.Module] = []
     if impl_params:
         if instance_norm:
             # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/datasets/style.lua#L83
@@ -128,8 +134,9 @@ class LongEdgeResize(nn.Module):
             new_width = self.edge_size
             new_height = int(new_width / old_width * old_height)
 
-        return F.resize(
-            image, [new_height, new_width], interpolation=self.interpolation
+        return cast(
+            torch.Tensor,
+            F.resize(image, [new_height, new_width], interpolation=self.interpolation),
         )
 
 
@@ -137,7 +144,7 @@ def style_transform(
     impl_params: bool = True,
     instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> LongEdgeResize:
+) -> nn.Module:
     r"""Style transform from :cite:`ULVL2016,UVL2017`.
 
     Args:
@@ -298,7 +305,7 @@ batch_sampler_ = batch_sampler
 
 
 def image_loader(
-    dataset: Dataset,
+    dataset: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
     batch_sampler: Optional[Sampler] = None,
@@ -311,7 +318,7 @@ def image_loader(
         )
 
     return DataLoader(
-        dataset,
+        dataset,  # type: ignore[arg-type]
         batch_sampler=batch_sampler,
         num_workers=num_workers,
         pin_memory=pin_memory,

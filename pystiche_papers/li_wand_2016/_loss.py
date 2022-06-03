@@ -8,9 +8,12 @@ import pystiche.loss.functional as F
 from pystiche import enc, loss
 from pystiche_papers.utils import HyperParameters
 
-from ._utils import extract_normalized_patches2d
-from ._utils import hyper_parameters as _hyper_parameters
-from ._utils import multi_layer_encoder as _multi_layer_encoder
+from ._utils import (
+    extract_normalized_patches2d,
+    hyper_parameters as _hyper_parameters,
+    multi_layer_encoder as _multi_layer_encoder,
+    target_transforms as _target_transforms,
+)
 
 __all__ = [
     "FeatureReconstructionLoss",
@@ -189,9 +192,9 @@ def style_loss(
             hyper_parameters.style_loss.patch_size,  # type: ignore[union-attr]
             impl_params=impl_params,
             stride=hyper_parameters.style_loss.stride,  # type: ignore[union-attr]
-            # target_transforms=_target_transforms(
-            #     impl_params=impl_params, hyper_parameters=hyper_parameters
-            # ),
+            target_transforms=_target_transforms(
+                impl_params=impl_params, hyper_parameters=hyper_parameters
+            ),
             score_weight=layer_weight,
         )
 
@@ -240,7 +243,8 @@ class TotalVariationLoss(loss.TotalVariationLoss):
 
 
 def regularization(
-    impl_params: bool = True, hyper_parameters: Optional[HyperParameters] = None,
+    impl_params: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> TotalVariationLoss:
     r"""Regularization from :cite:`LW2016`.
 
