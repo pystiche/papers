@@ -41,8 +41,7 @@ def figure_6(args):
             hyper_parameters=hyper_parameters,
         )
         filename = make_output_filename(
-            ["li_wand_2016", "fig_6", position],
-            impl_params=args.impl_params
+            ["li_wand_2016", "fig_6", position], impl_params=args.impl_params
         )
         output_file = path.join(args.image_results_dir, filename)
         print(f"Saving result to {output_file}")

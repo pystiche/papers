@@ -53,7 +53,7 @@ def figure_2(args):
         )
         filename = utils.make_output_filename(
             ["gatys_ecker_betghe_2016", "fig_2", style_image.label],
-            impl_params=args.impl_params
+            impl_params=args.impl_params,
         )
         save_result(
             output_image,
@@ -104,13 +104,11 @@ def figure_3(args):
 
         filename = utils.make_output_filename(
             ["gatys_ecker_betghe_2016", "fig_3", row_label, column_label],
-            impl_params=args.impl_params
+            impl_params=args.impl_params,
         )
         save_result(
             output_image,
-            path.join(
-                args.image_results_dir, filename
-            ),
+            path.join(args.image_results_dir, filename),
         )
 
 
