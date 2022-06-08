@@ -39,7 +39,7 @@ def license_info(original: Optional[str] = None) -> str:
     return license(license_text, original=original)
 
 
-class TopLeftCropToMultiple(transforms.Transform):
+class TopLeftCropToMultiple(nn.Module):
     def __init__(self, multiple: int = 16):
         super().__init__()
         self.multiple = multiple
