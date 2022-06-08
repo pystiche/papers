@@ -242,8 +242,14 @@ def select_url_from_csv(
 
 
 def make_output_filename(
-    name_parts: List[str], impl_params: bool = True, extension: str = ".jpg"
+    name_parts: List[str],
+    impl_params: bool = True,
+    instance_norm: bool = False,
+    extension: str = ".jpg",
 ) -> str:
     if impl_params:
         name_parts.append("impl_params")
+
+    if instance_norm:
+        name_parts.append("instance_norm")
     return "__".join(name_parts) + extension
