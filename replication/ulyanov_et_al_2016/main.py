@@ -59,13 +59,12 @@ def training(args):
                 impl_params=args.impl_params,
                 instance_norm=args.instance_norm,
             )
-
-            output_name = f"{style}_{content}"
-            if args.impl_params:
-                output_name += "__impl_params"
-            if args.instance_norm:
-                output_name += "__instance_norm"
-            output_file = path.join(args.image_results_dir, f"{output_name}.png")
+            filename = utils.make_output_filename(
+                ["ulyanov_et_al_2016", style, content],
+                impl_params=args.impl_params,
+                instance_norm=args.instance_norm,
+            )
+            output_file = path.join(args.image_results_dir, filename)
             image.write_image(output_image, output_file)
 
 
