@@ -1,11 +1,11 @@
-from typing import List, Sized, Optional,  Tuple, cast, Union, Iterator
+from typing import List, Sized, Optional, Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
 from torchvision import transforms
 from torchvision.transforms import functional as F
-from torch.utils.data import DataLoader, Dataset, IterableDataset
+from torch.utils.data import DataLoader, IterableDataset
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -14,7 +14,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
-from pystiche.image import transforms, extract_edge_size, extract_image_size
+from pystiche.image import extract_edge_size, extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import OptionalGrayscaleToFakegrayscale
@@ -258,11 +258,11 @@ def images() -> DownloadableImageCollection:
 class Dataset(IterableDataset):
     def __init__(
         self,
-        dataset: Dataset,
-        *
+        dataset: Sized,
+        *,
         min_size: int,
         num_samples: int,
-        transform: transforms.Transform,
+        transform: Optional[nn.Module],
     ):
         self.dataset = dataset
         self.min_size = min_size
@@ -270,7 +270,7 @@ class Dataset(IterableDataset):
         self.transform = transform
 
         # Like itertools.cycle but without caching
-        def cycle(iterable: _Dataset) -> Iterator:
+        def cycle(iterable: Sized) -> Iterator:
             while True:
                 for item in iterable:
                     yield item
@@ -296,9 +296,9 @@ def dataset(
     root: str,
     impl_params: bool = True,
     instance_norm: bool = True,
-    transform: Optional[transforms.Transform] = None,
+    transform: Optional[nn.Module] = None,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> Dataset:
+) -> Sized:
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
@@ -330,7 +330,7 @@ def image_loader(
             impl_params=impl_params, instance_norm=instance_norm
         )
     return DataLoader(
-        dataset,
+        dataset,  # type: ignore[arg-type]
         batch_size=hyper_parameters.batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
