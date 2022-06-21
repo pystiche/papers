@@ -1,7 +1,6 @@
 from typing import Optional
 
 from pystiche import data
-from pystiche_papers.utils import license
 
 __all__ = ["images"]
 
@@ -12,7 +11,12 @@ def license_info(original: Optional[str] = None) -> str:
         "non-commercial use only "
         "(https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/README.md?plain=1#L48)."
     )
-    return license(license_text, original=original)
+    if original:
+        license_text = (
+            f"{license_text} The original was probably downloaded from {original}. "
+            f"Proceed at your own risk."
+        )
+    return license_text
 
 
 def images() -> data.DownloadableImageCollection:
@@ -47,7 +51,7 @@ def images() -> data.DownloadableImageCollection:
             "watertown": data.DownloadableImage(
                 "https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/Images/ControlPaper/fig2_style1.jpg?raw=true",
                 file="watertown.jpg",
-                license=license("https://de.aliexpress.com/item/1705231003.html"),
+                license=license_info("https://de.aliexpress.com/item/1705231003.html"),
                 md5="4cc98a503da5ce6eab0649b09fd3cf77",
                 guides=data.DownloadableImageCollection(
                     {

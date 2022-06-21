@@ -14,7 +14,7 @@ from pystiche.data import (
     ImageFolderDataset,
 )
 from pystiche.image import extract_image_size
-from pystiche_papers.utils import HyperParameters, license
+from pystiche_papers.utils import HyperParameters
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
@@ -30,13 +30,13 @@ __all__ = [
 ]
 
 
-def license_info(original: Optional[str] = None) -> str:
+def license_info() -> str:
     license_text = (
         "The image is part of a repository that is published for personal and "
         "research use only "
         "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
     )
-    return license(license_text, original=original)
+    return license_text
 
 
 class TopLeftCropToMultiple(nn.Module):

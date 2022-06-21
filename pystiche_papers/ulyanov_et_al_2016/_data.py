@@ -67,7 +67,7 @@ class ValidRandomCrop(nn.Module):
         )
 
 
-def license_info(original: Optional[str] = None, repository: str = "ulyanov") -> str:
+def license_info(repository: str = "ulyanov") -> str:
     if repository == "ulyanov":
         license_text = (
             "The image is part of a repository that is published under the Apache "
@@ -80,7 +80,7 @@ def license_info(original: Optional[str] = None, repository: str = "ulyanov") ->
             "research use only "
             "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
         )
-    return license(license_text, original=original)
+    return license_text
 
 
 def content_transform(

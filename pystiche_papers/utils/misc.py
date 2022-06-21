@@ -239,13 +239,3 @@ def select_url_from_csv(
             f"{fieldname}: {value}" for fieldname, value in zip(fieldnames, config)
         )
         raise RuntimeError(msg) from error
-
-
-def license(license: str, original: Optional[str] = None) -> str:
-    if original:
-        license = (
-            f"{license} The original was probably downloaded from {original}. "
-            f"Proceed at your own risk."
-        )
-
-    return license

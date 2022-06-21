@@ -7,8 +7,6 @@ from torchvision.transforms import functional as F
 
 from pystiche import data
 
-from pystiche_papers.utils import license
-
 __all__ = ["images"]
 
 
@@ -78,7 +76,12 @@ def license_info(original: Optional[str] = None) -> str:
         "(MIT) "
         "(https://github.com/chuanli11/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/License#L1)."
     )
-    return license(license_text, original=original)
+    if original:
+        license_text = (
+            f"{license_text} The original was probably downloaded from {original}. "
+            f"Proceed at your own risk."
+        )
+    return license_text
 
 
 def image_note(url: str, mirror: bool = False) -> str:
