@@ -284,20 +284,20 @@ def test_select_url_from_csv_converter(urls_csv):
 
 def test_make_output_filename():
     name_parts = ["A", "B", "C"]
-    actual_filename = utils.make_output_filename(name_parts)
+    actual_filename = utils.make_output_filename(*name_parts)
     expected_filename = "A__B__C__impl_params.jpg"
     assert actual_filename == expected_filename
 
 
 def test_make_output_filename_extension():
     name_parts = ["A", "B", "C"]
-    actual_filename = utils.make_output_filename(name_parts, extension=".png")
+    actual_filename = utils.make_output_filename(*name_parts, extension=".png")
     expected_filename = "A__B__C__impl_params.png"
     assert actual_filename == expected_filename
 
 
 def test_make_output_filename_no_impl_params():
     name_parts = ["A", "B", "C"]
-    actual_filename = utils.make_output_filename(name_parts, impl_params=False)
+    actual_filename = utils.make_output_filename(*name_parts, impl_params=False)
     expected_filename = "A__B__C.jpg"
     assert actual_filename == expected_filename
