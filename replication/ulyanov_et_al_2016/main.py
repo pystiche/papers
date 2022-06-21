@@ -60,7 +60,9 @@ def training(args):
                 instance_norm=args.instance_norm,
             )
             filename = utils.make_output_filename(
-                ["ulyanov_et_al_2016", style, content],
+                "ulyanov_et_al_2016",
+                style,
+                content,
                 impl_params=args.impl_params,
                 instance_norm=args.instance_norm,
             )

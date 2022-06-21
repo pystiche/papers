@@ -52,7 +52,9 @@ def figure_2(args):
             hyper_parameters=hyper_parameters,
         )
         filename = utils.make_output_filename(
-            "gatys_ecker_betghe_2016", "fig_2", style_image.label,
+            "gatys_ecker_betghe_2016",
+            "fig_2",
+            style_image.label,
             impl_params=args.impl_params,
         )
         save_result(
@@ -103,7 +105,10 @@ def figure_3(args):
         )
 
         filename = utils.make_output_filename(
-            ["gatys_ecker_betghe_2016", "fig_3", row_label, column_label],
+            "gatys_ecker_betghe_2016",
+            "fig_3",
+            row_label,
+            column_label,
             impl_params=args.impl_params,
         )
         save_result(
