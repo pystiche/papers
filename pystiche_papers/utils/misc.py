@@ -40,7 +40,6 @@ __all__ = [
     "str_to_bool",
     "load_urls_from_csv",
     "select_url_from_csv",
-    "license",
 ]
 
 
