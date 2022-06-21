@@ -1,4 +1,4 @@
-from typing import List, Sized, Optional, Tuple, cast, Union, Iterator
+from typing import List, Iterable, Optional, Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
 
 import torch
@@ -262,7 +262,7 @@ class Dataset(IterableDataset):
         *,
         min_size: int,
         num_samples: int,
-        transform: Optional[nn.Module],
+        transform: nn.Module,
     ):
         self.dataset = dataset
         self.min_size = min_size
@@ -270,7 +270,7 @@ class Dataset(IterableDataset):
         self.transform = transform
 
         # Like itertools.cycle but without caching
-        def cycle(iterable: Sized) -> Iterator:
+        def cycle(iterable: Iterable) -> Iterator:
             while True:
                 for item in iterable:
                     yield item
