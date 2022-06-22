@@ -1,11 +1,11 @@
-from typing import cast, List, Optional, Sized, Tuple, Union
+from typing import List, Iterable, Sized, Optional, Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Sampler
 from torchvision import transforms
 from torchvision.transforms import functional as F
+from torch.utils.data import DataLoader, IterableDataset
 
 from pystiche.data import (
     CreativeCommonsLicense,
@@ -14,8 +14,7 @@ from pystiche.data import (
     ExpiredCopyrightLicense,
     ImageFolderDataset,
 )
-from pystiche.image import extract_image_size
-from pystiche_papers.data.utils import FiniteCycleBatchSampler
+from pystiche.image import extract_edge_size, extract_image_size
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import OptionalGrayscaleToFakegrayscale
@@ -26,7 +25,6 @@ __all__ = [
     "style_transform",
     "images",
     "dataset",
-    "batch_sampler",
     "image_loader",
 ]
 
@@ -257,69 +255,83 @@ def images() -> DownloadableImageCollection:
     return DownloadableImageCollection({**content_images, **style_images})
 
 
+class Dataset(IterableDataset):
+    def __init__(
+        self,
+        dataset: Sized,
+        *,
+        min_size: int,
+        num_samples: int,
+        transform: nn.Module,
+    ):
+        self.dataset = dataset
+        self.min_size = min_size
+        self.num_samples = num_samples
+        self.transform = transform
+
+        # Like itertools.cycle but without caching
+        def cycle(iterable: Iterable) -> Iterator:
+            while True:
+                for item in iterable:
+                    yield item
+
+        self.data_samples = iter(cycle(cast(Iterable, self.dataset)))
+
+    def __len__(self) -> int:
+        return self.num_samples
+
+    def __iter__(self) -> Iterator:
+        num_samples = 0
+        while num_samples < self.num_samples:
+            sample = next(self.data_samples)
+            if extract_edge_size(sample, edge="short") >= self.min_size:
+                # Images that are too small are skipped by the original DataLoader and
+                # the next image is used.
+                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/dataloader.lua#L91-L100
+                yield self.transform(sample)
+                num_samples += 1
+
+
 def dataset(
     root: str,
     impl_params: bool = True,
     instance_norm: bool = True,
     transform: Optional[nn.Module] = None,
-) -> ImageFolderDataset:
-    if transform is None:
-        transform = content_transform(
-            impl_params=impl_params, instance_norm=instance_norm
-        )
-    return ImageFolderDataset(root, transform=transform)
-
-
-def batch_sampler(
-    data_source: Sized,
-    impl_params: bool = True,
-    instance_norm: bool = True,
     hyper_parameters: Optional[HyperParameters] = None,
-) -> FiniteCycleBatchSampler:
-    r"""Batch sampler from :cite:`ULVL2016,UVL2017`.
-
-    Args:
-        data_source: Dataset to sample from.
-        impl_params: Switch the behavior and hyper-parameters between the reference
-            implementation of the original authors and what is described in the paper.
-            For details see :ref:`here <li_wand_2016-impl_params>`.
-        instance_norm: Switch the behavior and hyper-parameters between both
-            publications of the original authors. For details see
-            :ref:`here <ulyanov_et_al_2016-instance_norm>`.
-        hyper_parameters: Hyper parameters. If omitted,
-            :func:`~pystiche_papers.ulyanov_et_al_2016.hyper_parameters` is used.
-    """
+) -> Sized:
     if hyper_parameters is None:
         hyper_parameters = _hyper_parameters(
             impl_params=impl_params, instance_norm=instance_norm
         )
-
-    return FiniteCycleBatchSampler(
-        data_source,
-        num_batches=hyper_parameters.batch_sampler.num_batches,
-        batch_size=hyper_parameters.batch_sampler.batch_size,
+    if transform is None:
+        transform = content_transform(
+            impl_params=impl_params,
+            instance_norm=instance_norm,
+            hyper_parameters=hyper_parameters,
+        )
+    return Dataset(
+        ImageFolderDataset(root),
+        min_size=hyper_parameters.content_transform.edge_size,
+        num_samples=hyper_parameters.num_batches * hyper_parameters.batch_size,
+        transform=transform,
     )
-
-
-batch_sampler_ = batch_sampler
 
 
 def image_loader(
     dataset: Sized,
     impl_params: bool = True,
     instance_norm: bool = True,
-    batch_sampler: Optional[Sampler] = None,
     num_workers: int = 0,
     pin_memory: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
 ) -> DataLoader:
-    if batch_sampler is None:
-        batch_sampler = batch_sampler_(
-            dataset, impl_params=impl_params, instance_norm=instance_norm
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
         )
-
     return DataLoader(
         dataset,  # type: ignore[arg-type]
-        batch_sampler=batch_sampler,
+        batch_size=hyper_parameters.batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )

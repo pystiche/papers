@@ -60,31 +60,29 @@ def hyper_parameters(
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/src/descriptor_net.lua#L17
             else InterpolationMode.BILINEAR,
         ),
-        batch_sampler=HyperParameters(
-            # The number of iterations is split up into multiple epochs with
-            # corresponding num_batches:
-            num_batches=(
-                # 50000 = 25 * 2000
-                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
-                2000
+        # The number of iterations is split up into multiple epochs with
+        # corresponding num_batches:
+        num_batches=(
+            # 50000 = 25 * 2000
+            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L48
+            2000
+            if instance_norm
+            # 3000 = 10 * 300
+            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
+            else 300
+        )
+        if impl_params
+        else 200,
+        batch_size=(
+            (
+                # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L50
+                1
                 if instance_norm
-                # 3000 = 10 * 300
-                # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L30
-                else 300
+                # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L32
+                else 4
             )
             if impl_params
-            else 200,
-            batch_size=(
-                (
-                    # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/train.lua#L50
-                    1
-                    if instance_norm
-                    # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L32
-                    else 4
-                )
-                if impl_params
-                else 16
-            ),
+            else 16
         ),
         optimizer=HyperParameters(
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_train.lua#L29

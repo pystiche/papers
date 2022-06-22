@@ -193,7 +193,6 @@ API
 .. autofunction:: style_transform
 .. autofunction:: images
 .. autofunction:: dataset
-.. autofunction:: batch_sampler
 .. autofunction:: image_loader
 
 ..
