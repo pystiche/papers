@@ -31,9 +31,9 @@ def figure_2(args):
             impl_params=args.impl_params,
         )
         filename = make_output_filename(
-            "gatys_et_al_2017", 
-            "fig_2", 
-            "d", 
+            "gatys_et_al_2017",
+            "fig_2",
+            "d",
             impl_params=args.impl_params,
         )
 
@@ -65,7 +65,10 @@ def figure_2(args):
             impl_params=args.impl_params,
         )
         filename = make_output_filename(
-            "gatys_et_al_2017", "fig_2", label, impl_params=args.impl_params
+            "gatys_et_al_2017",
+            "fig_2",
+            label,
+            impl_params=args.impl_params,
         )
         output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
@@ -156,7 +159,10 @@ def figure_3(args):
             impl_params=args.impl_params,
         )
         filename = make_output_filename(
-            "gatys_et_al_2017", "fig_3", "c", impl_params=args.impl_params
+            "gatys_et_al_2017",
+            "fig_3",
+            "c",
+            impl_params=args.impl_params,
         )
         output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
@@ -180,7 +186,10 @@ def figure_3(args):
         output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
         output_image = yuv_to_rgb(output_image_yuv)
         filename = make_output_filename(
-            "gatys_et_al_2017", "fig_3", "d", impl_params=args.impl_params
+            "gatys_et_al_2017",
+            "fig_3",
+            "d",
+            impl_params=args.impl_params,
         )
         output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
@@ -196,7 +205,10 @@ def figure_3(args):
             impl_params=args.impl_params,
         )
         filename = make_output_filename(
-            "gatys_et_al_2017", "fig_3", "e", impl_params=args.impl_params
+            "gatys_et_al_2017",
+            "fig_3",
+            "e",
+            impl_params=args.impl_params,
         )
         output_file = path.join(args.image_results_dir, filename)
         save_result(output_image, output_file)
