@@ -79,9 +79,8 @@ def license(original: Optional[str] = None) -> str:
     if original:
         license_text = (
             f"{license_text} The original was probably downloaded from {original}. "
-            f"Proceed at your own risk."
         )
-    return license_text
+    return f"{license_text} Proceed at your own risk."
 
 
 def image_note(url: str, mirror: bool = False) -> str:

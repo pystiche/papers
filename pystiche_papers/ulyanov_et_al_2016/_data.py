@@ -32,12 +32,14 @@ LICENSE_ULYANOV = (
     "The image is part of a repository that is published under the Apache "
     "License"
     "(https://github.com/DmitryUlyanov/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/LICENSE#L1)."
+    "Proceed at your own risk."
 )
 
 LICENSE_JOHNSON = (
     "The image is part of a repository that is published for personal and "
     "research use only "
     "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
+    "Proceed at your own risk."
 )
 
 

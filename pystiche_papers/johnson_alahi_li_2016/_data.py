@@ -33,6 +33,7 @@ LICENSE = (
     "The image is part of a repository that is published for personal and "
     "research use only "
     "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
+    "Proceed at your own risk."
 )
 
 
