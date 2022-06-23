@@ -77,9 +77,7 @@ def license(original: Optional[str] = None) -> str:
         "(https://github.com/chuanli11/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/License#L1)."
     )
     if original:
-        license_text = (
-            f"{license} The original was probably downloaded from {original}. "
-        )
+        license = f"{license} The original was probably downloaded from {original}. "
     return f"{license} Proceed at your own risk."
 
 
