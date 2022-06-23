@@ -70,7 +70,7 @@ class ResizeToVertEdge(nn.Module):
         return f"size={self.size}"
 
 
-def license_info(original: Optional[str] = None) -> str:
+def license(original: Optional[str] = None) -> str:
     license_text = (
         "The image is part of a repository that is published under the MIT License "
         "(MIT) "
@@ -142,7 +142,7 @@ def images() -> data.DownloadableImageCollection:
             title="Blue Bottle",
             author="Christopher Michel (cmichel67)",
             date="02.09.2014",
-            license=license_info("https://www.flickr.com/photos/cmichel67/15112861945"),
+            license=license("https://www.flickr.com/photos/cmichel67/15112861945"),
             note=image_note("https://www.flickr.com/photos/cmichel67/15112861945"),
             md5="cb29d11ef6e1be7e074aa58700110e4f",
         ),
