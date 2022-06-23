@@ -282,11 +282,17 @@ def test_select_url_from_csv_converter(urls_csv):
     assert actual_url == expected_url
 
 
-def test_make_output_filename():
-    name_parts = ["A", "B", "C"]
-    actual_filename = utils.make_output_filename(*name_parts)
-    expected_filename = "A__B__C__impl_params.jpg"
-    assert actual_filename == expected_filename
+@pytest.mark.parametrize(
+    ("args", "kwargs", "expected"),
+    [
+        (("A", "B", "C"), dict(), "A__B__C.jpg"),
+        (("A", "B", "C"), dict(extension=".png"), "A__B__C.png"),
+        (("A", "B", "C"), dict(impl_params=True), "A__B__C__impl_params.jpg"),
+        (("A", "B", "C"), dict(impl_params=False), "A__B__C.jpg"),
+    ],
+)
+def test_make_output_filename(args, kwargs, expected):
+    assert utils.make_output_filename(*args, **kwargs) == expected
 
 
 def test_make_output_filename_extension():

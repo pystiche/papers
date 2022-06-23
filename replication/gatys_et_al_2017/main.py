@@ -31,7 +31,10 @@ def figure_2(args):
             impl_params=args.impl_params,
         )
         filename = make_output_filename(
-            "gatys_et_al_2017", "fig_2", "d", impl_params=args.impl_params
+            "gatys_et_al_2017", 
+            "fig_2", 
+            "d", 
+            impl_params=args.impl_params,
         )
 
         output_file = path.join(args.image_results_dir, filename)
