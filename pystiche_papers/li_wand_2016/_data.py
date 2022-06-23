@@ -71,16 +71,16 @@ class ResizeToVertEdge(nn.Module):
 
 
 def license(original: Optional[str] = None) -> str:
-    license_text = (
+    license = (
         "The image is part of a repository that is published under the MIT License "
         "(MIT) "
         "(https://github.com/chuanli11/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/License#L1)."
     )
     if original:
         license_text = (
-            f"{license_text} The original was probably downloaded from {original}. "
+            f"{license} The original was probably downloaded from {original}. "
         )
-    return f"{license_text} Proceed at your own risk."
+    return f"{license} Proceed at your own risk."
 
 
 def image_note(url: str, mirror: bool = False) -> str:
