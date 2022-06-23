@@ -30,13 +30,11 @@ __all__ = [
 ]
 
 
-def license_info() -> str:
-    license_text = (
-        "The image is part of a repository that is published for personal and "
-        "research use only "
-        "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
+LICENSE = (
+    "The image is part of a repository that is published for personal and "
+    "research use only "
+    "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
     )
-    return license_text
 
 
 class TopLeftCropToMultiple(nn.Module):
