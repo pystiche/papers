@@ -40,6 +40,7 @@ __all__ = [
     "str_to_bool",
     "load_urls_from_csv",
     "select_url_from_csv",
+    "make_output_filename",
 ]
 
 
@@ -238,3 +239,11 @@ def select_url_from_csv(
             f"{fieldname}: {value}" for fieldname, value in zip(fieldnames, config)
         )
         raise RuntimeError(msg) from error
+
+
+def make_output_filename(
+    *parts: str,
+    extension: str = ".jpg",
+    **flags: bool,
+) -> str:
+    return "__".join([*parts, *[name for name, flag in flags.items() if flag]]) + extension

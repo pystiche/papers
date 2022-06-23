@@ -280,3 +280,16 @@ def test_select_url_from_csv_converter(urls_csv):
         file, config, converters={fieldname: utils.str_to_bool}
     )
     assert actual_url == expected_url
+
+
+@pytest.mark.parametrize(
+    ("args", "kwargs", "expected"),
+    [
+        (("A", "B", "C"), dict(), "A__B__C.jpg"),
+        (("A", "B", "C"), dict(extension=".png"), "A__B__C.png"),
+        (("A", "B", "C"), dict(impl_params=True), "A__B__C__impl_params.jpg"),
+        (("A", "B", "C"), dict(impl_params=False), "A__B__C.jpg"),
+    ],
+)
+def test_make_output_filename(args, kwargs, expected):
+    assert utils.make_output_filename(*args, **kwargs) == expected
