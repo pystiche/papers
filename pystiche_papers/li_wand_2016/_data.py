@@ -70,17 +70,6 @@ class ResizeToVertEdge(nn.Module):
         return f"size={self.size}"
 
 
-def license(original: Optional[str] = None) -> str:
-    license = (
-        "The image is part of a repository that is published under the MIT License "
-        "(MIT) "
-        "(https://github.com/chuanli11/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/License#L1)."
-    )
-    if original:
-        license = f"{license} The original was probably downloaded from {original}. "
-    return f"{license} Proceed at your own risk."
-
-
 def image_note(url: str, mirror: bool = False) -> str:
     note = "The image is cropped"
     if mirror:
@@ -139,7 +128,12 @@ def images() -> data.DownloadableImageCollection:
             title="Blue Bottle",
             author="Christopher Michel (cmichel67)",
             date="02.09.2014",
-            license=license("https://www.flickr.com/photos/cmichel67/15112861945"),
+            license="The image is part of a repository that is published under the MIT "
+            "License (MIT) "
+            "(https://github.com/chuanli11/CNNMRF/blob/fddcf4d01e2a6ce201059d8bc38597f74a09ba3f/License#L1)."
+            "The original was probably downloaded from "
+            "https://www.flickr.com/photos/cmichel67/15112861945. "
+            "Proceed at your own risk.",
             note=image_note("https://www.flickr.com/photos/cmichel67/15112861945"),
             md5="cb29d11ef6e1be7e074aa58700110e4f",
         ),
