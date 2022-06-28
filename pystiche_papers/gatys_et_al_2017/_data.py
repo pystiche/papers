@@ -12,12 +12,8 @@ def license(original: Optional[str] = None) -> str:
         "(https://github.com/leongatys/NeuralImageSynthesis/blob/cced0b978fe603569033b2c7f04460839e4d82c4/README.md?plain=1#L48)."
     )
     if original:
-        license = (
-            f"{license} The original was probably downloaded from {original}. "
-            f"Proceed at your own risk."
-        )
-
-    return license
+        license = f"{license} The original was probably downloaded from {original}. "
+    return f"{license} Proceed at your own risk."
 
 
 def images() -> data.DownloadableImageCollection:

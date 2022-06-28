@@ -28,6 +28,20 @@ __all__ = [
     "image_loader",
 ]
 
+LICENSE_ULYANOV = (
+    "The image is part of a repository that is published under the Apache "
+    "License"
+    "(https://github.com/DmitryUlyanov/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/LICENSE#L1)."
+    "Proceed at your own risk."
+)
+
+LICENSE_JOHNSON = (
+    "The image is part of a repository that is published for personal and "
+    "research use only "
+    "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
+    "Proceed at your own risk."
+)
+
 
 class ValidRandomCrop(nn.Module):
     def __init__(self, size: Union[Tuple[int, int], int]):
@@ -178,10 +192,12 @@ def images() -> DownloadableImageCollection:
     content_images = {
         "karya": DownloadableImage(
             urljoin(content_base_ulyanov, "karya.jpg"),
+            license=LICENSE_ULYANOV,
             md5="232b2f03a5d20c453a41a0e6320f27be",
         ),
         "tiger": DownloadableImage(
             urljoin(content_base_ulyanov, "tiger.jpg"),
+            license=LICENSE_ULYANOV,
             md5="e82bf374da425fb2c2e2a35a5a751989",
         ),
         "neckarfront": DownloadableImage(
@@ -203,10 +219,12 @@ def images() -> DownloadableImageCollection:
         ),
         "bird": DownloadableImage(
             urljoin(base_ulyanov_suppl, "bird.jpg"),
+            license=LICENSE_ULYANOV,
             md5="74dde9fad4749e7ff3cd4eca6cb43d0d",
         ),
         "kitty": DownloadableImage(
             urljoin(readme_ulyanov, "kitty.jpg"),
+            license=LICENSE_ULYANOV,
             md5="98262bd8f5ae25f8329158d2c2c66ad0",
         ),
     }
@@ -220,10 +238,12 @@ def images() -> DownloadableImageCollection:
     style_images = {
         "candy": DownloadableImage(
             urljoin(style_base_johnson, "candy.jpg"),
+            license=LICENSE_JOHNSON,
             md5="00a0e3aa9775546f98abf6417e3cb478",
         ),
         "the_scream": DownloadableImage(
             urljoin(style_base_johnson, "the_scream.jpg"),
+            license=LICENSE_JOHNSON,
             md5="619b4f42c84d2b62d3518fb20fa619c2",
         ),
         "jean_metzinger": DownloadableImage(
@@ -237,18 +257,22 @@ def images() -> DownloadableImageCollection:
         ),
         "mosaic": DownloadableImage(
             urljoin(base_ulyanov_suppl_style, "mosaic.jpg"),
+            license=LICENSE_ULYANOV,
             md5="4f05f1e12961cebf41bd372d909342b3",
         ),
         "pleades": DownloadableImage(
             urljoin(base_ulyanov_suppl_style, "pleades.jpg"),
+            license=LICENSE_ULYANOV,
             md5="6fc41ac30c2852a5454a0ead2f479dc9",
         ),
         "starry": DownloadableImage(
             urljoin(base_ulyanov_suppl_style, "starry.jpg"),
+            license=LICENSE_ULYANOV,
             md5="c6d94f7962466b2e80a64ae82523242a",
         ),
         "turner": DownloadableImage(
             urljoin(base_ulyanov_suppl_style, "turner.jpg"),
+            license=LICENSE_ULYANOV,
             md5="7fdd9603a5182dcef23d7fb1c5217888",
         ),
     }
