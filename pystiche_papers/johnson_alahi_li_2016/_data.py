@@ -224,7 +224,7 @@ def image_loader(
         hyper_parameters = _hyper_parameters()
     return DataLoader(
         dataset,  # type: ignore[arg-type]
-        batch_sampler=batch_sampler(dataset),
+        batch_sampler=batch_sampler(dataset, hyper_parameters=hyper_parameters),
         num_workers=hyper_parameters.batch_sampler.batch_size,
         pin_memory=pin_memory,
     )
