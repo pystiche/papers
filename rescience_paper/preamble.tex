@@ -4,6 +4,10 @@
 \usepackage{xspace}
 \usepackage{hyperref}
 \usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{adjustbox}
+
+\usepackage{rotating,capt-of}
 
 \graphicspath{{graphics/}}
 
@@ -93,3 +97,24 @@
 
 \newcommand{\imagecredits}[3]{\bigskip#1, #2 \\\url{#3}}
 \newcommand{\imagecreditshref}[4]{\bigskip#1, #2 \\\href{#3}{#4}}
+
+
+% footnote referenz multiple times
+\newcommand{\footlabel}[2]{%
+	\addtocounter{footnote}{1}%
+	\footnotetext[\thefootnote]{%
+		\addtocounter{footnote}{-1}%
+		\refstepcounter{footnote}\label{#1}%
+		#2%
+	}%
+	$^{\ref{#1}}$%
+}
+
+\newcommand{\footnoteref}[1]{%
+	$^{\ref{#1}}$%
+}
+
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\tcmark}{(\ding{51})}%
+\newcommand{\xmark}{\ding{55}}%

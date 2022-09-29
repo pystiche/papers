@@ -4,7 +4,7 @@ In this study, we have implemented the \gls{NST} approaches presented in \secref
 As mentioned earlier, we found differences between the approach published in the paper and the reference implementation in all replications. In most replications, these differences have an impact on the result, either without stylisation at all, the result looks visually different, or only unusable images are created. For this reason, the next section explains which differences were found. It also explains how we dealt with these differences. Then the information on the images and datasets used for each approach is given. Finally, we discuss the computational requirements we used for this study. 
 
 \subsection{Parameter deviations} \label{sec:replicability}
-We replicated each approach once with the information from the paper and once with the default values from the reference implementation. An overview of the parameters used can be found in the tables in the \appref{sec:parameters_appendix}. The tables contain the information of the authors published in their paper and the default values from the implementation. Furthermore, a detailed documentation of the hyperparameters used can be found in the documentation of \texttt{pystiche\_papers}\footnote{\url{https://pystiche-papers.readthedocs.io}}. 
+We replicated each approach once with the information from the paper and once with the default values from the reference implementation. An overview of the parameters used can be found in the tables in the \appref{sec:parameters_appendix}. The tables contain the information of the authors published in their paper and the default values from the implementation. Furthermore, a detailed documentation of the hyperparameters used can be found in the documentation of \texttt{pystiche/papers}\footnoteref{docs}. 
 
 The deviations between the parameters described in the paper and the original implementation are marked by comments. In addition, links are provided with the location of the deviation in an archived version of the original implementation at the time of this replication study. The following designation is chosen to distinguish between the original paper and the reference implementation: 
 \begin{itemize}
@@ -19,15 +19,13 @@ Another influencing factor for this category is the high number of different hyp
 In the following, we describe these categories and subcategories in more detail and explain how we deal with them. The examples do not appear in all replications, but serve only to illustrate the observed deviations in this replication study.
 
 \subsubsection{Behavioral changes}
-The behavioral changes are modified parameters that result from different specifications in \paper{} and \implementation{}. However, there should be no influence on these parameters to change the actual style transfer.  
+The behavioral changes are modified parameters that result from different specifications in \paper{} and \implementation{}. However, there should be no influence on these parameters to change the actual style transfer.
 
 This type of error includes for example the use of the \gls{MSE} in \implementation{}, while the \gls{SE} is specified in \paper{}. This category also includes additional norms, such as a division of the number of channels, as well as additional pre-factors. The latter is mainly due to the specification of additional factors in the paper in the loss function which makes the expression of the gradient prettier, but are not integrated by default in the loss functions of the \gls{DLF} used in \implementation{}. 
 
 An example of this is a factor $1/2$, which cancels out the $2$ from the square term in the gradient of the \gls{MSE} loss function. All these examples have an influence on the calculation of the loss functions. This changes the weighting between the content and the style, which can result in differences, as shown in \figref{fig:weighting_nst}. 
 
-Another example of the behavioral changes are changes to the transformer structure in the model-based approaches. This can be different indications of the value range delimiter for the transformer output or different activation functions (LeakyReLU instead of ReLU). 
-
-There may also be differences in the basic structure of the transformer by using additional or fewer blocks than specified in \paper{}. These differences influence what kind of transformation is learned in the transformer. This changes thus have an influence on the behaviour of the algorithm, but are not intended to have a direct influence on the style transfer.
+Another example of the behavioral changes are changes to the transformer structure in the model-based approaches. This can be different indications of the value range delimiter for the transformer output or different activation functions (LeakyReLU instead of ReLU). There may also be differences in the basic structure of the transformer by using additional or fewer blocks than specified in \paper{}. These differences influence what kind of transformation is learned in the transformer. This changes thus have an influence on the behaviour of the algorithm, but are not intended to have a direct influence on the style transfer.
 
 All these behavioural changes are binary, whether from \paper{} or \implementation{}. We have therefore implemented both variants for the respective replication, and it is possible to switch between them.
 
@@ -36,15 +34,15 @@ In contrast to the behavioral changes, the changes of the category Hyperparamete
 
 Unfortunately, there are different information about the parameters used in \paper{} and \implementation{}. The differences range from different values, different information about the used interpolation or layers, to no specific information about the value at all. However, these parameters are essential for accurate replication, as shown in \secref{sec:preliminaries}. 
 
-One reason for the differences is that it is difficult to properly document all these parameters and know exactly which parameters were used for a particular image/model, as the code is constantly changing before and sometimes after release. It can also become complex to correctly document all standardisations and mean calculations in the formulas in the paper, which may result in additional or missing factors. 
+One reason for the differences is that it is difficult to properly document all these parameters and know exactly which parameters were used for a particular image/model, as the code is constantly changing before and sometimes after release. It can also become complex to correctly document all standardisations and mean calculations in the formulas in \paper{}, which may result in additional or missing factors. 
 
 An example of this category are the layers used from the pre-trained networks. There are different statements about the depth of the layers, the number of the layers used and the feature map, i.e. whether the features before or after the activation function are selected. The fact that the choice of layers has an influence on the result has already been shown in \figref{fig:diff_depth_nst}. 
 
-Another observed point of this category of changes are different information about important settings, such as the choice of starting point and the number of iteration steps. These are essential parameters for accurate replication, as shown in \figref{fig:iteration_nst} and \figref{fig:diff_init_nst}. However, it could be that such an important parameter is not specified in the paper and can only be taken from the implementation or two fundamentally different information are given.  
+Another observed point of this category of changes are different information about important settings, such as the choice of starting point and the number of iteration steps. These are essential parameters for accurate replication, as shown in \figref{fig:iteration_nst} and \figref{fig:diff_init_nst}. However, it could be that such an important parameter is not specified in \paper{} and can only be taken from \implementation{} or two fundamentally different information are given.  
 
-All these parameters have an influence on the final result and are necessary to determine if the replication is correct and if differences are due to rounding errors or different initialisations. For this reason, similar to the behavioral changes, we have used the information given in \paper{} and \implementation{} as default values. An overview of the parameters used for the respective replications can be found in the tables in \appref{sec:parameters_appendix}. 
+All these parameters have an influence on the final result and are necessary to determine if the replication is correct and if differences are due to rounding errors or different initialisations. For this reason, similar to the behavioral changes, we have used the information given in \paper{} and \implementation{} as default values. An overview of the parameters used for the respective replications can be found in the tables in \appref{sec:parameters_appendix}. In the case of missing information, we have used the available information for both variants. 
 
-In the case of missing information, we have used the available information for both variants. Since these parameters are intended to improve the stylisation, it is also possible that different parameters have been used for a given style image. These variations from the default values are indicated for the respective images or model trainings.
+Since these parameters are intended to improve the stylisation, it is also possible that different parameters have been used for a given style image. These variations from the default values are indicated for the respective images or model trainings.
 
 \subsubsection{Pre-trained Encoder}
 Another important point for the replication of \gls{NST} approaches is the choice of the pre-trained encoder $E$. There are different architectures that can be used for the calculation of the loss functions. The most commonly used models are those of the \gls{VGG} \cite{SZ2015}. Some \gls{DLF} provide their own pre-trained weights for these networks. It is therefore important to choose the same settings as in the original approach. Otherwise, the features used for the optimisation for the images do not match and the optimisation process can no longer match.
@@ -58,7 +56,7 @@ The images in the datasets or the images used in the image-based methods often d
 
 However, in \paper{} there is often little or no information about these steps available. But in \implementation{}, the images are resized to the final image size by several transformations, such as resizing and cropping. This also applies to training time. The training images used are modified during the training by numerous image augmentation. This means that the used dataset is not only resized to the right size, but also artificially enlarged by random transformations, such as rotation, translation and scaling, but also random changes in the light level or brightness of the images. Especially the latter may have an influence on the way the style is presented, as it is available in different sizes and orientations for the training. The effects of different image sizes have already been shown in \figref{fig:diff_size_nst}. As a result, it is not possible to trace exactly how the used image was created. In addition, the training in the model-based methods is altered by the artificial enlargement of the dataset, which may also have an influence on the result.
 
-For this replication study, we have re-implemented these transformations and use them for the reference implementation. However, since this is a comprehensible step even without information, we use a minimally necessary process, in the case that no further information is given. This means that if no further information is given, the images are resized to the required image size by resizing with a bilinear interpolation.
+For this replication study, we have re-implemented these transformations and use them for \implementation{}. However, since this is a comprehensible step even without information, we use a minimally necessary process, in the case that no further information is given. This means that if no further information is given, the images are resized to the required image size by resizing with a bilinear interpolation.
 
 \subsection{Data} \label{sec:data}
 The authors of the original approaches use different content and style images, as well as different datasets for the training of the models in the model-based methods. In order to compare the replicated images, we use the images used in the original papers for the verification of the replication. 
@@ -95,7 +93,7 @@ The following datasets are required for this replication study:
 
 \subsection{Computional requirements}
 
-All our final replication scripts were performed on a machine having a Titan RTX CUDA GPU with 24 GB memory. A GPU with a lot of memory is particularly needed for model-based approaches. Our CUDA version is $11.0$ and the Nvidia driver version is $450.51.06$. The implementation also requires different libraries, which are listed in the  \tabref{tab:libraries} with the version used. In addition, the datasets used must be available. 
+All our final replication scripts were performed on a machine having a Titan RTX CUDA GPU with 24 GB memory. A GPU with a lot of memory is particularly needed for model-based approaches. Our CUDA version is $11.7$ and the Nvidia driver version is $515.43.04$. The implementation also requires different libraries, which are listed in the  \tabref{tab:libraries} with the version used. In addition, the datasets used must be available. 
 
 \begin{table*}[h]
 	\caption{Overview of the libraries used with the version used at the time of replication.}
@@ -105,13 +103,12 @@ All our final replication scripts were performed on a machine having a Titan RTX
 	\begin{tabular}{c|c}
 		\hline
 		\bfseries Library & \bfseries Version\\
-		torch & 1.7.0+cu101\\
-		torchvision &  0.8.0+cu101\\
-		pystiche & 1.0.0\\
-		pillow & 8.0.1\\
-		numpy & 1.19.4\\
-		more-itertools & 8.6.0\\
-		kornia & 0.4.1 \\
+		torch & 1.12.1\\
+		torchvision &  0.13.1\\
+		pystiche & 1.0.1\\
+		pillow & 9.2.0\\
+		numpy & 1.21.6\\
+		more-itertools & 8.14.0\\
 		\hline
 	\end{tabular}
 \end{table*}

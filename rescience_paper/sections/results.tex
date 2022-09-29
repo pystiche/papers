@@ -1,5 +1,7 @@
 \section{Results}
-In this chapter, the results of the replications are presented. For this purpose, the results for each replicated approach from the \secref{sec:replicated_paper} are presented in a figure. This figure contains, in addition to the content and style images, the results of the \gls{NST} created with \paper{} and \implementation{}. For a direct comparison, the results from the original publication are also shown, provided we have obtained permission from the copyright holder. Alternatively, results are shown with further information from the authors, or the results produced with the published models. We have also made a replica of the image in the original paper for the respective results from \paper{} and \implementation{}. Where appropriate, individual content or style images have been replaced in cases where copyright could not be traced. The replicas can be found in the appendix. 
+In this chapter, the results of the replications are presented. For this purpose, the results for each replicated approach from the \secref{sec:replicated_paper} are presented in a figure. This figure contains, in addition to the content and style images, the results of the \gls{NST} created with \paper{} and \implementation{}. For a direct comparison, the results from the original publication are also shown, provided we have obtained permission from the copyright holder. Alternatively, results are shown with further information from the authors, or the results produced with the published models.
+
+We have also made a replica of the image in the original paper for the respective results from \paper{} and \implementation{}. Where appropriate, individual content or style images have been replaced in cases where copyright could not be traced. The replicas can be found in the appendix. 
 
 \subsection{Gatys, Ecker, and Bethge 2016} \label{sec:Gatys1results}
 The result of the replicated paper \cite{GEB2016} are shown in \figref{fig:GEB2016_fig_2}. The results with \paper{} did not visibly change the content image and therefore did not yield a meaningful stylised result. The reason for this is the different weighting between content and style, because in this case we have omitted an additional standardisation by the number of channels due to the missing specification in \paper{}. This standardisation factor corresponds to a value of $1/n^2$, where $n$ stands for the number of channels and take values of $n \in \{128, 256, 512\}$. A missing factor in such an order of magnitude can therefore lead to a lack of stylisation with this approach.
@@ -255,7 +257,7 @@ The result also shows that the differences in \secref{sec:Gatys1results} arise d
 		\centering
 		\vspace{0pt}
 		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/house_concept_tillamook.jpg}};
+		\node(a){\includegraphics[width=0.9\textwidth]{images/gatys_et_al_2017/source/house_concept_tillamook.jpg}};
 		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
 		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/house_concept_tillamook/building.png}};
 		\end{tikzpicture}\\
@@ -266,23 +268,25 @@ The result also shows that the differences in \secref{sec:Gatys1results} arise d
 		\centering
 		\vspace{0pt}
 		\begin{tikzpicture}
-		\node(a){\includegraphics[width=\textwidth]{images/gatys_et_al_2017/source/watertown__shop602835_store.jpg}};
+		\node(a){\includegraphics[width=0.9\textwidth]{images/gatys_et_al_2017/source/watertown__shop602835_store.jpg}};
 		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
 		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/watertown__shop602835_store/building.png}};
-		\end{tikzpicture}
+		\end{tikzpicture}\\
+	\centering
 		Style image I
 	\end{minipage}\hfill%
 	\begin{minipage}[t]{0.25\textwidth}
 		\centering
 		\vspace{0pt}
 		\begin{tikzpicture}
-		\node(a){\includegraphics[width=0.83\textwidth]{images/gatys_et_al_2017/source/wheat_field_with_cypresses__vincent_van_gogh.jpg}};
+		\node(a){\includegraphics[width=0.75\textwidth]{images/gatys_et_al_2017/source/wheat_field_with_cypresses__vincent_van_gogh.jpg}};
 		\node at (a.north east)[anchor=north east,xshift=0mm,yshift=0mm]
 		{\includegraphics[width=0.2\textwidth]{images/gatys_et_al_2017/source/wheat_field_with_cypresses__vincent_van_gogh/foreground.png}};
 		\end{tikzpicture}
 		Style image II
 	\end{minipage}
 \hfill%
+\vspace{0.5cm}
 \begin{minipage}[t]{0.45\textwidth}
 	\centering
 	\includegraphics[width=0.8\textwidth]{images/gatys_et_al_2017/results/fig_2__d_paper.jpg} 
@@ -315,12 +319,12 @@ The result also shows that the differences in \secref{sec:Gatys1results} arise d
 	\hfill%
 \begin{minipage}[t]{0.45\textwidth}
 	\centering
-	Paper
+	\paper{}
 \end{minipage}
 \hfill%
 \begin{minipage}[t]{0.45\textwidth}
 	\centering
-	Implementation
+	\implementation{}
 \end{minipage}
 \caption{Replication of Figure 2 from \cite{GEB+2017}. In the upper row the used content image, the first style image and a second style image for the sky region. The results in the left column are with  \paper{} and the right column with \implementation{}.  The results are presented using the original method of \cite{GEB2016}, the new approach with a guided variant in which the style transfer from sky to sky and house to house is achieved by masks and a third variant in which a second stylistic image is used for the sky area.}
 \label{fig:GEB+2017_fig2}
@@ -481,26 +485,26 @@ Our results with \paper{} show that no stylised images are generated. The reason
 		\centering
 		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__candy__impl_params__instance_norm.jpg}
 	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__the_scream__impl_params__instance_norm.jpg}
-	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.24\textwidth}
+%		\centering
+%		\includegraphics[width=0.5\textwidth]{images/johnson_alahi_li_2016/source/the_scream.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.24\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__instance_norm.jpg}
+%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.24\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/chicago__the_scream__impl_params__instance_norm.jpg}
+%%	\end{minipage}
+%	\hfill%
+%	\begin{minipage}[t]{0.24\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{images/johnson_alahi_li_2016/results/author_models/chicago__the_scream__impl_params__instance_norm.jpg}
+%	\end{minipage}
     \hfill%
     \begin{minipage}[t]{0.24\textwidth}
     	\centering
@@ -545,11 +549,18 @@ Our results with \paper{} show that no stylised images are generated. The reason
 	\label{fig:johnson_alahi_li_2016_fig}
 \end{figure}
 
-\subsection{Ulyanov et al. 2016}
+\subsection{Ulyanov et al. 2016} \label{sec:ulyanov_2016}
+In contrast to the publication of \etal{Johnson}, no models are available online for \etal{Ulyanov}. Furthermore, no detailed information is available on the individual style images used. It is therefore to be expected that there will be discrepancies between the results of \etal{Ulyanov} and the results with \paper{} and \implementation{}. For this reason, the results are evaluated for plausibility. Changes are then due to the fact that the correct hyperparameters are not available. In addition, the result is shown here using the content image \emph{Tuebingen Neckarfront} from Andreas Praefcke as an example. The reason for this is that many of the images used in the original paper are no longer freely available.
 
-Our stylisation results for some exemplary style images are shown in \figref{fig:ulyanov_et_al_2016_impl}. 
-
+Our stylisation results for some exemplary style images are shown in \figref{fig:ulyanov_et_al_2016_results}. It can be seen that with \paper{} there is stylisation, but the content of the image is lost. In addition, the style elements are very small. The reason for this is that no image size is specified for the stylisation. Without this image pre-processing of the images, unusable images are created. In contrast, usable result images can be achieved with \implementation{}. But the style dominates in these images. Thus, the results differ from the original images. However, the results are comparable to the example in \figref{fig:weighting_nst}. For this reason, we suspect that by adjusting the weights, similar images to the original publication can be created with our replication.
 \begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}\\
+		content image
+	\end{minipage}
+	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
 		\hfill
@@ -557,77 +568,12 @@ Our stylisation results for some exemplary style images are shown in \figref{fig
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}
+		\hfill
 	\end{minipage}
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/kitty.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/bird.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/turner.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_neckarfront_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_kitty_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/turner_bird_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/pleades.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_neckarfront_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_kitty_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/pleades_bird_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/mosaic.jpg}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_neckarfront_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_kitty_coco__impl_params.png}
-	\end{minipage}
-	\hfill%
-	\begin{minipage}[t]{0.24\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/mosaic_bird_coco__impl_params.png}
+		\hfill
 	\end{minipage}
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
@@ -637,22 +583,187 @@ Our stylisation results for some exemplary style images are shown in \figref{fig
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_neckarfront_coco__impl_params.png}
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__candy__neckarfront.jpg}
 	\end{minipage}
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_kitty_coco__impl_params.png}
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__candy__neckarfront__impl_params.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/ulyanov_et_al_2016/source/jean_metzinger.jpg}
 	\end{minipage}
 	\hfill%
 	\begin{minipage}[t]{0.24\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/candy_bird_coco__impl_params.png}
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__jean_metzinger__neckarfront.jpg}
 	\end{minipage}
-	\caption{Our stylisation results of the content images (top row) due to the transformation of the models we trained in different styles with the approach of \cite{ULVL2016}. The respective style images are shown in the left column.}
-	\label{fig:ulyanov_et_al_2016_impl}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__jean_metzinger__neckarfront__impl_params.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/mosaic.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__mosaic__neckarfront.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__mosaic__neckarfront__impl_params.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/pleades.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__pleades__neckarfront.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__pleades__neckarfront__impl_params.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Style image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\paper{}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\implementation{}
+	\end{minipage}
+	\caption{Our stylisation results of the content image due to the transformation of the models we trained with the information in \paper{} and \implementation{} in different styles with the approach of \etal{Ulyanov} \cite{ULVL2016}. The respective style images are shown in the left column.}
+	\label{fig:ulyanov_et_al_2016_results}
 \end{figure}
 
 \subsection{Ulyanov et al. 2017}
-Modelle
+The authors published an improved version of their initial paper \cite{ULVL2016} with a significant change. They developed \emph{InstanceNorm} and used it as drop-in replacement for \emph{BatchNorm} layers. Unfortunately, no models exist for this approach either. In addition, the parameters deviate from the initial work. Thus, even with this replication, there are differences to the original work.
+
+Our stylisation results for some exemplary style images are shown in \figref{fig:ulyanov_et_al_2017_results}. It can be seen that with both \paper{} and \implementation{} the training of the models is unstable. In addition to unusable black result images, there are also images without stylisation. Furthermore, the same effect as before can be seen in \secref{sec:ulyanov_2016}. The images with \paper{} have been stylised without preprocessing, so the style representations are clearly smaller and the content of the content image is not recognisable.
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/tuebingen_neckarfront__andreas_praefcke.jpg}\\
+		content image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\hfill
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/candy.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__candy__neckarfront__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__candy__neckarfront__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/ulyanov_et_al_2016/source/jean_metzinger.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__jean_metzinger__neckarfront__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__jean_metzinger__neckarfront__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/mosaic.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__mosaic__neckarfront__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__mosaic__neckarfront__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/source/pleades.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__pleades__neckarfront__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/ulyanov_et_al_2016/results/ulyanov_et_al_2016__pleades__neckarfront__impl_params__instance_norm.jpg}
+	\end{minipage}
+	\hfill%
+	\\
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		Style image
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\paper{}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.24\textwidth}
+		\centering
+		\implementation{}
+	\end{minipage}
+	\caption{Our stylisation results of the content image due to the transformation of the models we trained with the information in \paper{} and \implementation{} in different styles with the approach of \etal{Ulyanov} \cite{UVL2017}. The respective style images are shown in the left column.}
+	\label{fig:ulyanov_et_al_2017_results}
+\end{figure}
 
