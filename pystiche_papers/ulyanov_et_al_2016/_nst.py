@@ -171,6 +171,10 @@ def stylization(
             edge_size = hyper_parameters.content_transform.edge_size
             transform = transforms.Resize((edge_size, edge_size))
         else:
+            # No image pre-processing is described in the paper. However, images with a
+            # height or width that is not divisible by 64 will result in a RuntimeError.
+            # In order to be able to use the stylisation for all images, a cropping is
+            # carried out here.
             transform = TopLeftCropToMultiple(multiple=64)
 
         input_image = transform(input_image)
