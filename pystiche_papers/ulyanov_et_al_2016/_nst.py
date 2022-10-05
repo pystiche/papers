@@ -8,7 +8,7 @@ from torchvision import transforms
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
-from ..utils import batch_up_image
+from ..utils import batch_up_image, TopLeftCropToMultiple
 from ._data import images as _images, style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
@@ -170,7 +170,13 @@ def stylization(
             # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
             edge_size = hyper_parameters.content_transform.edge_size
             transform = transforms.Resize((edge_size, edge_size))
-            input_image = transform(input_image)
+        else:
+            transform = TopLeftCropToMultiple(multiple=64)
+
+        input_image = transform(input_image)
+        new_height, new_width = input_image.shape[-2:]
+        assert new_height % 64 == 0
+        assert new_width % 64 == 0
 
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
