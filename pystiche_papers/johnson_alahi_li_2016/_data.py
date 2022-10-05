@@ -7,14 +7,13 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
-from pystiche import image
 from pystiche.data import (
     DownloadableImage,
     DownloadableImageCollection,
     ImageFolderDataset,
 )
 from pystiche.image import extract_image_size
-from pystiche_papers.utils import HyperParameters
+from pystiche_papers.utils import HyperParameters, TopLeftCropToMultiple
 
 from ..data.utils import FiniteCycleBatchSampler
 from ..utils.transforms import OptionalGrayscaleToFakegrayscale
@@ -35,19 +34,6 @@ LICENSE = (
     "(https://github.com/jcjohnson/fast-neural-style/blob/master/README.md#license)."
     "Proceed at your own risk."
 )
-
-
-class TopLeftCropToMultiple(nn.Module):
-    def __init__(self, multiple: int = 16):
-        super().__init__()
-        self.multiple = multiple
-
-    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-        old_height, old_width = image.extract_image_size(input_image)
-        new_height = old_height - old_height % self.multiple
-        new_width = old_width - old_width % self.multiple
-
-        return input_image[..., :new_height, :new_width]
 
 
 def content_transform(
