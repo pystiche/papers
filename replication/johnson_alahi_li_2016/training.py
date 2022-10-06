@@ -86,10 +86,6 @@ def adapted_hyper_parameters(impl_params, instance_norm, style):
 
 def main(args):
     dataset = paper.dataset(args.dataset_dir, impl_params=args.impl_params)
-    content_image_loader = paper.image_loader(
-        dataset,
-        pin_memory=str(args.device).startswith("cuda"),
-    )
 
     for style in args.style:
         style_image = read_style_image(
@@ -98,6 +94,12 @@ def main(args):
 
         hyper_parameters = adapted_hyper_parameters(
             args.impl_params, args.instance_norm, style
+        )
+
+        content_image_loader = paper.image_loader(
+            dataset,
+            hyper_parameters=hyper_parameters,
+            pin_memory=str(args.device).startswith("cuda"),
         )
 
         transformer = paper.training(
