@@ -121,13 +121,13 @@ def figure_2_author_information(args):
     images = paper.images()
     images.download(args.image_source_dir)
 
-    ####################author provided this information################################
+    # Gatys provided this information
     # compute layer_weights and use relu output -> impl_params=True
     hyper_parameters = paper.hyper_parameters(impl_params=True)
 
     hyper_parameters.nst.num_steps = 2000
     hyper_parameters.nst.starting_point = "random"
-    ####################################################################################
+
     content_image = images["neckarfront"].read(
         size=hyper_parameters.nst.image_size, device=args.device
     )
