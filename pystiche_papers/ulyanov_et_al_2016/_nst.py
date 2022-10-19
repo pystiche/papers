@@ -41,7 +41,7 @@ class OptionalResizeCenterCropToMultiple(nn.Module):
         transforms_.append(transforms.CenterCrop(new_length))
         transform = nn.Sequential(*transforms_)
 
-        return transform(input_image)
+        return cast(torch.Tensor,transform(input_image))
 
 
 def training(
