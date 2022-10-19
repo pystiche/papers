@@ -1,5 +1,6 @@
-from typing import cast, Optional, Union
+from typing import cast, Optional, Union, List
 
+import math
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -8,7 +9,7 @@ from torchvision import transforms
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
-from ..utils import batch_up_image, TopLeftCropToMultiple
+from ..utils import batch_up_image
 from ._data import images as _images, style_transform as _style_transform
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
@@ -21,6 +22,26 @@ from ._utils import (
 )
 
 __all__ = ["training", "stylization"]
+
+
+class OptionalResizeCenterCropToMultiple(nn.Module):
+    def __init__(self, multiple: int = 64):
+        super().__init__()
+        self.multiple = multiple
+
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = input_image.shape[-2:]
+        if old_height % 64 == 0 and old_width % 64 == 0:
+            return input_image
+
+        min_length = min([old_height, old_width])
+        new_length = math.ceil(min_length / self.multiple) * self.multiple
+        transforms_: List[nn.Module] = []
+        transforms_.append(transforms.Resize(new_length))
+        transforms_.append(transforms.CenterCrop(new_length))
+        transform = nn.Sequential(*transforms_)
+
+        return transform(input_image)
 
 
 def training(
@@ -173,14 +194,11 @@ def stylization(
         else:
             # No image pre-processing is described in the paper. However, images with a
             # height or width that is not divisible by 64 will result in a RuntimeError.
-            # In order to be able to use the stylisation for all images, a cropping is
-            # carried out here.
-            transform = TopLeftCropToMultiple(multiple=64)
+            # In order to be able to use the stylisation for all images, a resize and
+            # cropping is carried out here.
+            transform = OptionalResizeCenterCropToMultiple(multiple=64)
 
         input_image = transform(input_image)
-        new_height, new_width = input_image.shape[-2:]
-        assert new_height % 64 == 0
-        assert new_width % 64 == 0
 
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
