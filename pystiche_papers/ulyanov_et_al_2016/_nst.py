@@ -1,16 +1,18 @@
-from typing import cast, Optional, Union, List
+from typing import cast, Optional, Union
 
-import math
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import transforms
 
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import images as _images, style_transform as _style_transform
+from ._data import (
+    images as _images,
+    style_transform as _style_transform,
+    stylization_transform as _stylization_transform,
+)
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
 from ._utils import (
@@ -22,26 +24,6 @@ from ._utils import (
 )
 
 __all__ = ["training", "stylization"]
-
-
-class OptionalResizeCenterCropToMultiple(nn.Module):
-    def __init__(self, multiple: int = 64):
-        super().__init__()
-        self.multiple = multiple
-
-    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
-        old_height, old_width = input_image.shape[-2:]
-        if old_height % self.multiple == 0 and old_width % multiple == 0:
-            return input_image
-
-        min_length = min([old_height, old_width])
-        new_length = math.ceil(min_length / self.multiple) * self.multiple
-        # move this to the other imports
-        from torchvision.transforms import functional as F
-        
-        output_image = F.resize(input_image, new_length)
-        output_image = F.center_crop(output_image, new_length)
-        return output_image
 
 
 def training(
@@ -185,21 +167,15 @@ def stylization(
     postprocessor = _postprocessor()
     postprocessor = postprocessor.to(device)
 
+    stylization_transform = _stylization_transform(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
+    stylization_transform.to(device)
+
     with torch.no_grad():
-        if impl_params:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
-            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
-            edge_size = hyper_parameters.content_transform.edge_size
-            transform = transforms.Resize((edge_size, edge_size))
-        else:
-            # No image pre-processing is described in the paper. However, images with a
-            # height or width that is not divisible by 64 will result in a RuntimeError.
-            # In order to be able to use the stylisation for all images, a resize and
-            # cropping is carried out here.
-            transform = OptionalResizeCenterCropToMultiple(multiple=64)
-
-        input_image = transform(input_image)
-
+        input_image = stylization_transform(input_image)
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
 
