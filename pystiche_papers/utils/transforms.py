@@ -4,7 +4,7 @@ from torch import nn
 from pystiche import image
 
 __all__ = [
-    "OptionalGrayscaleToFakegrayscale"
+    "OptionalGrayscaleToFakegrayscale",
 ]
 
 
