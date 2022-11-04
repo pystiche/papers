@@ -198,7 +198,7 @@ class OptionalResizeCenterCropToMultiple(nn.Module):
 
         output_image = F.resize(input_image, new_length)
         output_image = F.center_crop(output_image, new_length)
-        return output_image
+        return cast(torch.Tensor, output_image)
 
 
 def stylization_transform(
@@ -215,7 +215,7 @@ def stylization_transform(
         # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
         # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
         edge_size = hyper_parameters.content_transform.edge_size
-        return transforms.Resize((edge_size, edge_size))
+        return cast(nn.Module, transforms.Resize((edge_size, edge_size)))
     else:
         # No image pre-processing is described in the paper. However, images with a
         # height or width that is not divisible by 64 will result in a RuntimeError.
