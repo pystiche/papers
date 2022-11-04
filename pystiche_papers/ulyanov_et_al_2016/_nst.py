@@ -31,17 +31,17 @@ class OptionalResizeCenterCropToMultiple(nn.Module):
 
     def forward(self, input_image: torch.Tensor) -> torch.Tensor:
         old_height, old_width = input_image.shape[-2:]
-        if old_height % 64 == 0 and old_width % 64 == 0:
+        if old_height % self.multiple == 0 and old_width % multiple == 0:
             return input_image
 
         min_length = min([old_height, old_width])
         new_length = math.ceil(min_length / self.multiple) * self.multiple
-        transforms_: List[nn.Module] = []
-        transforms_.append(transforms.Resize(new_length))
-        transforms_.append(transforms.CenterCrop(new_length))
-        transform = nn.Sequential(*transforms_)
-
-        return cast(torch.Tensor, transform(input_image))
+        # move this to the other imports
+        from torchvision.transforms import functional as F
+        
+        output_image = F.resize(input_image, new_length)
+        output_image = F.center_crop(output_image, new_length)
+        return output_image
 
 
 def training(
