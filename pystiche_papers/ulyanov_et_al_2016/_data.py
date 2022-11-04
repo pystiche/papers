@@ -1,6 +1,7 @@
 from typing import List, Iterable, Sized, Optional, Tuple, cast, Union, Iterator
 from urllib.parse import urljoin
 
+import math
 import torch
 from torch import nn
 from torchvision import transforms
@@ -23,6 +24,7 @@ from ._utils import hyper_parameters as _hyper_parameters
 __all__ = [
     "content_transform",
     "style_transform",
+    "stylization_transform",
     "images",
     "dataset",
     "image_loader",
@@ -179,6 +181,47 @@ def style_transform(
         hyper_parameters.style_transform.edge_size,
         interpolation=hyper_parameters.style_transform.interpolation,
     )
+
+
+class OptionalResizeCenterCropToMultiple(nn.Module):
+    def __init__(self, multiple: int = 64):
+        super().__init__()
+        self.multiple = multiple
+
+    def forward(self, input_image: torch.Tensor) -> torch.Tensor:
+        old_height, old_width = input_image.shape[-2:]
+        if old_height % self.multiple == 0 and old_width % self.multiple == 0:
+            return input_image
+
+        min_length = min([old_height, old_width])
+        new_length = math.ceil(min_length / self.multiple) * self.multiple
+
+        output_image = F.resize(input_image, new_length)
+        output_image = F.center_crop(output_image, new_length)
+        return cast(torch.Tensor, output_image)
+
+
+def stylization_transform(
+    impl_params: bool = True,
+    instance_norm: bool = True,
+    hyper_parameters: Optional[HyperParameters] = None,
+) -> nn.Module:
+    if hyper_parameters is None:
+        hyper_parameters = _hyper_parameters(
+            impl_params=impl_params, instance_norm=instance_norm
+        )
+
+    if impl_params:
+        # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
+        # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
+        edge_size = hyper_parameters.content_transform.edge_size
+        return cast(nn.Module, transforms.Resize((edge_size, edge_size)))
+    else:
+        # No image pre-processing is described in the paper. However, images with a
+        # height or width that is not divisible by 64 will result in a RuntimeError.
+        # In order to be able to use the stylisation for all images, a resize and
+        # cropping is carried out here.
+        return OptionalResizeCenterCropToMultiple(multiple=64)
 
 
 def images() -> DownloadableImageCollection:

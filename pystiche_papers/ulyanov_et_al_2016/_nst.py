@@ -3,13 +3,16 @@ from typing import cast, Optional, Union
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import transforms
 
 from pystiche import loss, misc, optim
 from pystiche_papers.utils import HyperParameters
 
 from ..utils import batch_up_image
-from ._data import images as _images, style_transform as _style_transform
+from ._data import (
+    images as _images,
+    style_transform as _style_transform,
+    stylization_transform as _stylization_transform,
+)
 from ._loss import perceptual_loss
 from ._modules import transformer as _transformer
 from ._utils import (
@@ -164,14 +167,15 @@ def stylization(
     postprocessor = _postprocessor()
     postprocessor = postprocessor.to(device)
 
-    with torch.no_grad():
-        if impl_params:
-            # https://github.com/pmeier/texture_nets/blob/aad2cc6f8a998fedc77b64bdcfe1e2884aa0fb3e/test.lua#L37
-            # https://github.com/pmeier/texture_nets/blob/b2097eccaec699039038970b191780f97c238816/stylization_process.lua#L30
-            edge_size = hyper_parameters.content_transform.edge_size
-            transform = transforms.Resize((edge_size, edge_size))
-            input_image = transform(input_image)
+    stylization_transform = _stylization_transform(
+        impl_params=impl_params,
+        instance_norm=instance_norm,
+        hyper_parameters=hyper_parameters,
+    )
+    stylization_transform.to(device)
 
+    with torch.no_grad():
+        input_image = stylization_transform(input_image)
         output_image = transformer(input_image)
         output_image = postprocessor(output_image)
 
