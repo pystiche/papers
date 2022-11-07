@@ -150,8 +150,9 @@ def figure_2_author_information(args):
 
     for style_image in style_images:
         print(f"Replicating Figure 2 {style_image.label} with author information")
-        # The ratio is between a larger and a smaller value, according to the
-        # author the larger value was 1e6 or 1e9 (1e9 dont work)
+        # The weight ratio from the paper is between a larger and a smaller value,
+        # according to the author the larger value was one of the discrete values 1e6 or
+        # 1e9 (1e9  leads to a Runtime Error)
         larger_value = 1e6
         hyper_parameters.style_loss.score_weight = larger_value
         hyper_parameters.content_loss.score_weight = (
@@ -161,7 +162,6 @@ def figure_2_author_information(args):
         output_image = paper.nst(
             content_image,
             style_image.image,
-            impl_params=True,
             hyper_parameters=hyper_parameters,
         )
 
