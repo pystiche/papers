@@ -1,0 +1,246 @@
+\section{Preliminaries} \label{sec:preliminaries}
+In the \gls{NST} technique, it is possible to adapt the result to a style with several parameters and settings to influence it positively \cite{GEB2016}. However, the replication has shown that there are differences in the specifications of these parameters between the implementation and the approach described in the original work. These deviations can even lead to significant visual differences in the result. 
+
+For this reason, this section gives an overview of the basic functioning of the \gls{NST}. The aim is to show which hyperparameters exist and what influence they have on the result. For this purpose, the role of pre-trained \gls{CNN} from image processing for the creation of feature representations within the \gls{NST} is explained first. On this basis, the loss function for the optimisation of the \gls{NST} is introduced for the image-based approaches. Subsequently, the additional parameters for the model-based \gls{NST} approaches are introduced. 
+
+\subsection{Encoder} \label{sec:encoder}
+For the recognition of objects in images, features are needed with which the objects can be distinguished. This task is simple for a human. For example, a bird can be recognised in an image if the object has features such as feathers, two wings, and a beak. For a machine, on the other hand, this task is complex because it has to extract the features from the pixel data \cite{Alp2020}. 
+
+Manually programming the features required for object recognition so that they can be recognised in all different forms, if this is possible at all, is not sensible \cite{Alp2020}. However, \glspl{CNN} are a category of neural networks that have proven to be very effective in areas such as image recognition and classification \cite{SZ2015,He2016}. They have been successfully applied to image processing problems such as face and object identification. In an \gls{CNN}, convolutional layers followed by an activation function perform the feature extraction task. This eliminates the need to manually select features and allows the algorithm to decide for itself which features are useful to separate the content of the images \cite{Alp2020}. 
+
+These layers are stacked on top of each other to form a deep pyramidal layout. In this layout, the input image is transformed into representations that increasingly take care of the actual content of the image \cite{ZF2014}. Fully connected layers follow these feature extraction layers to perform classification using the softmax activation function \cite{Alp2020}. 
+
+An \gls{CNN} that has already been trained to recognise objects in images has thus learned to assign features of the content of a given image. The \gls{NST} algorithms are characterised by using this feature extraction or encoder $E$ of the \gls{CNN} to extract representations of content and style \cite{Glas2021}. This is because using the features from a pre-trained \gls{CNN} has improved the quality of the synthesis in comparison to features in pixel-space~\cite{EL1999} or in a hand-crafted feature space~\cite{PS2000}. Therefore, for the \gls{NST}, the features of the intermediate convolutional layers of the encoder $E$ are used up to a layer $l$ for the algorithmic identification of the content \cite{GEB2016}. 
+
+Besides the architecture and the weights used, the image size of the input images also has an influence on this extracted representation. An example of style transfer with the same parameters but two different image sizes can be seen in \figref{fig:diff_size_nst}. It can be seen that the result differs due to the different extracted content and style representations of the encoder $E$.
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__size_256.jpg}
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__size_512.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Result with image size $256$
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Result with image size $512$
+	\end{minipage}
+	\caption{The result of a Neural Style Transfer with the same hyperparameters but a different image size of the images for the optimisation. The image size refers to the smaller image side for both the content image and the style image. On the left the result is shown with an image size of $256$ and on the right with an image size of $512$.}
+	\label{fig:diff_size_nst}
+\end{figure}
+
+\subsection{Image-based Neural Style Transfer}
+The technical principle of the image-based \gls{NST} is to define two distance functions and minimise their distances. The \emph{content loss function} \contentloss{} describes how different the content is between the synthesised image \image{} and the content image \contentimage{}. The \emph{style loss function} \styleloss{}, on the other hand, describes the distance of the synthesised image \image{} from the style image \styleimage{} with respect to their style \cite{Glas2021}. 
+
+The aim of the \gls{NST} is to synthesise an image by keeping the distance to these two functions as small as possible. Or mathematically, a minimisation of these functions is carried out \cite{Glas2021}. These two loss functions are merged for the minimisation by a weighted sum. The complete loss function \loss{} for the \gls{NST} is defined as follows \cite{GEB2016}:
+\begin{equation*}
+	\loss\of{\image\eqcommasep \contentimage\eqcommasep \styleimage} = \lambda_\text{C} \cdot \contentloss\of{\image\eqcommasep \contentimage} \eqspace+\eqspace \lambda_\text{S} \cdot \styleloss\of{\image\eqcommasep \styleimage} \eqtextdot
+\end{equation*}
+The weights $\lambda_\text{C}$ and $\lambda_\text{S}$ are hyperparameters that influence the weighting between the content and the style \cite{GEB2016}. 
+
+An example of the result with different weightings can be seen in \figref{fig:weighting_nst}. The figure shows the result of the \gls{NST} due to a stylisation with a constant content weight but different weights for the style. With a small style weight, the content is more dominant from the content image. However, the higher the weighting of the style, the more dominant is the representation of the style in the result.
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.25\textwidth}
+		\centering
+		\includegraphics[width=.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__style_weight_1.0.jpg}
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		\includegraphics[width=.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__style_weight_10.0.jpg}
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		\includegraphics[width=.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__style_weight_100.0.jpg}
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		\includegraphics[width=.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__style_weight_1000.0.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.25\textwidth}
+		\centering
+		$\lambda_\text{S} = 1$
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		$\lambda_\text{S} = 10$
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		$\lambda_\text{S} = 100$
+	\end{minipage}%
+	\begin{minipage}{.25\textwidth}
+		\centering
+		$\lambda_\text{S} = 1000$
+	\end{minipage}
+	\caption{The result of a Neural Style Transfer with different weights between the content loss function and the style loss function. From left to right, the results with a content weight of $\lambda_\text{C} = 1$ and a style weight of  $\lambda_\text{S} = \{1, 10, 100, 1000\}$ are shown.}
+	\label{fig:weighting_nst}
+\end{figure}
+
+The optimisation of such a loss function \loss{} is a central part of \gls{ML} \cite{Alp2020}. In \gls{NST}, the same optimisation algorithms are used to synthesise the new image \image{} by iteratively adjusting its pixel values. A general definition for the optimisation can be defined as follows \cite{GEB2016}:
+\begin{equation*}
+	\argmin{\image}{\loss\of{\image\eqcommasep \contentimage\eqcommasep \styleimage}} \eqtextdot
+\end{equation*} 
+The pixel values are adjusted with each iteration with a step size of the so-called learning rate so that the loss function becomes smaller. With each iteration, a result image is thus created, which represents a better \gls{NST} result after the definition of the loss functions.
+ 
+\figref{fig:iteration_nst} shows the results of an \gls{NST} procedure created with a different number of iterations. It can be seen that this makes the content of the content image clearer in the progress of the iterations. It should be noted that the optimisation converges and there are no longer any significant visual differences after a certain number of steps. This is also the explanation for the fact that the difference between the results of $500$ and $1000$ steps is small. 
+
+Besides the iterations, the starting point of the synthesised image \image{} has an influence on the result \cite{GEB2016}. The influence of a different initialisation can be seen in \figref{fig:diff_init_nst}. The result is shown once with a noise image and once with an initialisation with the content image. It can be seen that there are significant differences in the results. The initialisation with the content image is often used, as it allows the optimisation process to converge more quickly and produces subjectively better results in relation to the content of the image \cite{GEB2016}.
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.33\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__iteration_100.jpg}
+	\end{minipage}%
+	\begin{minipage}{.33\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__iteration_500.jpg}
+	\end{minipage}% 
+	\begin{minipage}{.33\textwidth}
+	\centering
+	\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__iteration_1000.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.33\textwidth}
+		\centering
+		Result after $100$ iteration
+	\end{minipage}%
+	\begin{minipage}{.33\textwidth}
+		\centering
+		Result after $500$ iteration
+	\end{minipage}%
+	\begin{minipage}{.33\textwidth}
+		\centering
+		Result after $1000$ iteration
+	\end{minipage}
+	\caption{The result of a Neural Style Transfer with a different number of optimisation steps. From left to right, the result image is shown after $100$, $500$, and $1000$ iterations.}
+	\label{fig:iteration_nst}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__start_content.jpg}
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__start_random.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Initialisation with content image
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Initialisation with random noise image
+	\end{minipage}
+	\caption{The result of a Neural Style Transfer with the same hyperparameters but a different initialisation of the synthesised image for the optimisation. The left side shows the result of an initialisation with the content image. The right side shows the result of an initialisation with a random noise image.}
+	\label{fig:diff_init_nst}
+\end{figure}
+
+The aim of calculating the \emph{content loss function} \contentloss{} is to hide unnecessary details and determine only the distance to the actual content of the image \cite{Glas2021}. As mentioned earlier, the features obtained from the higher layers of the encoder $E$ can be considered more related to the content of the image. Therefore, for the calculation of this loss, the features of content image and input image passed through the encoder $E$ to the layer $l_C$ are compared. The difference between these images is calculated by the \gls{MSE} between the extracted features with \cite{GEB2016}
+\begin{equation*}
+	\contentloss\of{\image\eqcommasep \contentimage} = \mean \parentheses{E^{l_\text{C}}\of{\image} - E^{l_\text{C}}\of{\contentimage}}^2 \eqtextdot
+\end{equation*}
+The overlined sum symbol without indices denotes the mean value of the following normalised tensors. This mean value is also known as grand sum.
+
+The calculation of the \emph{style loss function} \styleloss{} is similar to the \emph{content loss function} \contentloss{} with two differences. First, the features of several layers from the encoder $E$ are used. The reason for this is that it transfers style elements of different size and detail \cite{Glas2021}. The stylisation using different layers for the \emph{style loss function} \styleloss{} can be seen in \figref{fig:diff_depth_nst}. In this style, the colour in particular makes up the style in the first layers. In the deeper layers, however, more complex structures of the mosaic texture are transferred. The overall result with all four depths on the right is therefore a combination of these style details.
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.2\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__relu1_1.jpg}
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__relu2_2.jpg}
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__relu3_1.jpg}
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__relu4_1.jpg}
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+	\centering
+	\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper_bird__mosaic__full.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.2\textwidth}
+		\centering
+		Depth $1$
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		Depth $2$
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		Depth $3$
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		Depth $4$
+	\end{minipage}%
+	\begin{minipage}{.2\textwidth}
+		\centering
+		Depth $1-4$
+	\end{minipage}%
+	\caption{The result of a Neural Style Transfer using style representations from four different depths as well as the result with all four layers simultaneously is shown.}
+	\label{fig:diff_depth_nst}
+\end{figure}
+
+Another difference is that the features are not used directly. The reason for this is that the global arrangement or the content of the image is not important for the style of an image. The style of an image rather refers to how colours and shapes are used to create forms \cite{Glas2021}. To demonstrate this, \figref{fig:generated_style_nst} shows two images that have a similar style according to the definition of the \emph{style loss function} from \textsc{Gatys}, \textsc{Ecker}, and \textsc{Bethge} \cite{GEB2016}. Shown is the original style image \emph{The Starry Night} by \emph{Vincent van Gogh} and the generated style image. It can be seen that the generated style image has the same colours and contours as the original image. But the actual content like the houses in the lower part of the image are ignored.
+\begin{figure}[h]
+	\centering
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/source/starry_night__vincent_van_gogh.jpg}
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		\includegraphics[width=0.95\linewidth]{graphics/images/nst/results/nst_IST_paper__starry_night__generated.jpg}
+	\end{minipage}\\ \vspace{0.15cm}
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Original style image
+	\end{minipage}%
+	\begin{minipage}{.5\textwidth}
+		\centering
+		Generated style image
+	\end{minipage}
+	\caption{An original style image \emph{The Starry Night} by Vincent van Gogh (left) and a generated image (right) created with the style loss function according to \textsc{Gatys}, \textsc{Ecker}, and \textsc{Bethge}\cite{GEB2016} that has a similar style are shown.}
+	\label{fig:generated_style_nst}
+\end{figure} 
+In \gls{NST} there are various methods to capture these objective style properties. Since the calculation in detail is not relevant here, reference is made to the individual approaches for further details\cite{GEB2016,LW2016}. However, to indicate that the features are not used directly, the function $g(\cdot)$ is used. The style loss $\mathcal{L}_{\text{S, g}\eqcommasep l_\text{S}}$ on a layer $l_\text{S}$ can thus be determined as follows \cite{GEB2016}:
+\begin{equation*}
+	\mathcal{L}_{\text{S, g}\eqcommasep l_\text{S}}\of{\tensor{I}\eqcommasep \tensor{I}_\text{S}} = \mean \parentheses{g\of{E^{l_\text{S}}\of{\tensor{I}}} - g\of{E^{l_\text{S}}\of{\tensor{I}_\text{S}}}}^2\eqtextcomma
+\end{equation*}
+The total style loss $\mathcal{L}_\text{S}$ is finally obtained by a weighted sum of the losses on the selected layers with \cite{GEB2016}
+\begin{equation*}
+	\mathcal{L}_\text{S}\of{\tensor{I}\eqcommasep \tensor{I}_\text{S}} = \sum_{\substack{l_\text{S} \in\\L_\text{S, g}}} \lambda_{l_\text{S}} \cdot \mathcal{L}_{\text{S, g}\eqcommasep l_\text{S}}\of{\tensor{I}\eqcommasep \tensor{I}_\text{S}} \eqtextdot
+\end{equation*}
+
+In summary, in the image-based approaches, the stylised images are created in an iterative process by an optimisation process. This process has to be performed for each individual image, which means that these approaches are slow, but that the results can be better adapted. For this adaptation, there are several parameters or setting options with which the result can be influenced. These can be used to improve or adjust the result for a style image. However, for a replication of results, it is important to use the same hyperparameters in order to achieve at least comparable results. Otherwise, the results will show significant deviations, and it will not be possible to determine whether the replication was successful.
+
+\subsection{Model-based Neural Style Transfer}
+In contrast to the image-based \gls{NST}, the model-based \gls{NST} can be used to convert any content image into a stylised image without performing the optimisation for each individual image. The reason for this is that no single image is optimised, but a model or transformer \transformer{} consisting of several layers. The principle of the model-based \gls{NST} is therefore to learn a transformation with the transformer that transforms any input image into an artistic representation \cite{JAL2016}. 
+
+For this purpose, a dataset is needed for training so that the transformer can learn to apply the stylisation to different new images. The choice of dataset depends on the domain of the images to be transformed. As a rule, datasets with images that are also to be transformed after the training are used. This means, for example, if portraits are to be stylised, a dataset with portraits is used for the training. The reason for this is that it does not make sense to learn a transformation for landscapes if this transformation is used for portraits after the training \cite{JAL2016,ULVL2016,UVL2017}.
+
+The loss for the optimisation can be calculated using the procedures from the image-based \gls{NST}. However, during training, several images can be used simultaneously to calculate an average adjustment of the weights \cite{Alp2020}. This is also called batch size and can help the training to converge faster. The optimisation in this case aims to adjust the weights of the transformer in an iterative process to achieve better result images. The weights are initialised randomly. A general definition for the optimisation in the model-based \gls{NST} can be defined as follows \cite{JAL2016}:
+\begin{equation*}
+	\argmin{\transformer}{\loss\of{\image\eqcommasep \contentimage\eqcommasep \styleimage}} \eqtextdot
+\end{equation*} 
+After successful training, this transformer can then be used to transform any images without optimisation procedures \cite{JAL2016}.
+
+Various architectures exist for the structure of the transformer \transformer{}. These differ between the approaches. Basically, the architecture consists of blocks consisting of a convolution layer, an activation function followed by a normalisation layer. By stacking these blocks together, the transformer is able to learn the complex task of stylisation. The exact architecture of the approaches is not described here and reference is made to the approaches \cite{JAL2016,ULVL2016,UVL2017}. However, it must be said that a change to the described approach through additional layers or modified layers has an influence on the transformation and can thus affect the result.
+
+In summary, in model-based approaches, a model is trained in advance, which can then stylise any input image. The same loss functions as in the image-based methods can be used for training. Additional training parameters, the dataset and the architecture of the transformer are added to the parameters from the image-based method. Due to the random initialisation of the weights in the transformer, it is not to be expected that the results in the replication are identical.

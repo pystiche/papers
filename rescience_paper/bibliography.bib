@@ -1,0 +1,796 @@
+% Encoding: UTF-8
+@STRING{IEEE_J_AC         = "{IEEE} Trans. Autom. Control"}
+
+
+
+components, packaging and manufacturing
+@STRING{IEEE_J_ADVP       = "{IEEE} Trans. Adv. Packag."}
+
+IEEEabrv.bib
+V1.12 (2007/01/11)
+Copyright (c) 2002-2007 by Michael Shell
+See: http://www.michaelshell.org/
+for current contact information.
+
+BibTeX bibliography string definitions of the ABBREVIATED titles of
+IEEE journals and magazines and online publications.
+
+This file is designed for bibliography styles that require 
+abbreviated titles and is not for use in bibliographies that
+require full-length titles.
+
+Support sites:
+http://www.michaelshell.org/tex/ieeetran/
+http://www.ctan.org/tex-archive/macros/latex/contrib/IEEEtran/
+and/or
+http://www.ieee.org/
+
+Special thanks to Laura Hyslop and ken Rawson of IEEE for their help
+in obtaining the information needed to compile this file. Also,
+Volker Kuhlmann and Moritz Borgmann kindly provided some corrections
+and additions.
+
+*************************************************************************
+Legal Notice:
+This code is offered as-is without any warranty either expressed or
+implied; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE! 
+User assumes all risk.
+In no event shall IEEE or any contributor to this code be liable for
+any damages or losses, including, but not limited to, incidental,
+consequential, or any other damages, resulting from the use or misuse
+of any information contained here.
+
+All comments are the opinions of their respective authors and are not
+necessarily endorsed by the IEEE.
+
+This work is distributed under the LaTeX Project Public License (LPPL)
+( http://www.latex-project.org/ ) version 1.3, and may be freely used,
+distributed and modified. A copy of the LPPL, version 1.3, is included
+in the base LaTeX documentation of all distributions of LaTeX released
+2003/12/01 or later.
+Retain all contribution notices and credits.
+** Modified files should be clearly indicated as such, including  **
+** renaming them and changing author support contact information. **
+
+File list of work: IEEEabrv.bib, IEEEfull.bib, IEEEexample.bib,
+                   IEEEtran.bst, IEEEtranS.bst, IEEEtranSA.bst,
+                   IEEEtranN.bst, IEEEtranSN.bst, IEEEtran_bst_HOWTO.pdf
+*************************************************************************
+
+
+USAGE:
+
+\bibliographystyle{mybstfile}
+\bibliography{IEEEabrv,mybibfile}
+
+where the IEEE titles in the .bib database entries use the strings
+defined here. e.g.,
+
+
+   journal = IEEE_J_AC,
+
+
+to yield "{IEEE} Trans. Automat. Contr."
+
+
+IEEE uses abbreviated journal titles in their bibliographies -
+this file is suitable for work that is to be submitted to the IEEE.
+
+
+For work that requires full-length titles, you should use the full
+titles provided in the companion file, IEEEfull.bib.
+
+
+** NOTES **
+
+ 1. Journals have been grouped according to subject in order to make it
+    easier to locate and extract the definitions for related journals - 
+    as most works use references that are confined to a single topic.
+    Magazines are listed in straight alphabetical order.
+
+ 2. String names are closely based on IEEE's own internal acronyms.
+ 
+ 3. Abbreviations follow IEEE's style.
+
+ 4. Older, out-of-print IEEE titles are included (but not including titles
+    dating prior to IEEE's formation from the IRE and AIEE in 1963).
+
+ 5. The following NEW/current journal definitions have been disabled because
+    their abbreviations have not yet been verified:
+    
+    STRING{IEEE_J_CBB        = "{IEEE/ACM} Trans. Comput. Biology Bioinformatics"}
+    STRING{IEEE_J_CJECE      = "Canadian J. Elect. Comput. Eng."}
+    STRING{IEEE_J_DSC        = "{IEEE} Trans. Dependable Secure Comput."}
+    STRING{IEEE_O_DSO        = "{IEEE} Distrib. Syst. Online"}
+    
+ 6. The following OLD journal definitions have been disabled because
+    their abbreviations have not yet been found/verified:
+
+    STRING{IEEE_J_BCTV       = "{IEEE} Trans. Broadcast Television Receivers"}
+    STRING{IEEE_J_EWS        = "{IEEE} Trans. Eng. Writing Speech"}
+
+If you know what the proper abbreviation is for a string in #5 or #6 above,
+email me and I will correct them in the next release.
+
+
+
+
+
+IEEE Journals 
+
+
+
+aerospace and military
+@STRING{IEEE_J_AES        = "{IEEE} Trans. Aerosp. Electron. Syst."}
+@STRING{IEEE_J_AIRE       = "{IEEE} Trans. Airborne Electron."}
+@STRING{IEEE_J_ANE        = "{IEEE} Trans. Aerosp. Navig. Electron."}
+@STRING{IEEE_J_ANNE       = "{IEEE} Trans. Aeronaut. Navig. Electron."}
+@STRING{IEEE_J_AP         = "{IEEE} Trans. Antennas Propag."}
+
+
+
+industrial, commercial and consumer
+@STRING{IEEE_J_APPIND     = "{IEEE} Trans. Appl. Ind."}
+@STRING{IEEE_J_AS         = "{IEEE} Trans. Aerosp."}
+@STRING{IEEE_J_ASC        = "{IEEE} Trans. Appl. Supercond."}
+
+
+
+cybernetics, ergonomics, robots, man-machine, and automation
+@STRING{IEEE_J_ASE        = "{IEEE} Trans. Autom. Sci. Eng."}
+@STRING{IEEE_J_ASSP       = "{IEEE} Trans. Acoust., Speech, Signal Process."}
+@STRING{IEEE_J_AU         = "{IEEE} Trans. Audio"}
+@STRING{IEEE_J_AUEA       = "{IEEE} Trans. Audio Electroacoust."}
+
+
+
+electromagnetics, antennas, EMI, magnetics and microwave
+@STRING{IEEE_J_AWPL       = "{IEEE} Antennas Wireless Propag. Lett."}
+Note: The B-ME journal later dropped the hyphen and became the BME.
+@STRING{IEEE_J_B-ME       = "{IEEE} Trans. Bio-Med. Eng."}
+@STRING{IEEE_J_BC         = "{IEEE} Trans. Broadcast."}
+
+
+
+medical and biological
+@STRING{IEEE_J_BME        = "{IEEE} Trans. Biomed. Eng."}
+@STRING{IEEE_J_BMELC      = "{IEEE} Trans. Bio-Med. Electron."}
+
+
+
+computers, computation, networking and software
+@STRING{IEEE_J_C          = "{IEEE} Trans. Comput."}
+@STRING{IEEE_J_CAD        = "{IEEE} Trans. Comput.-Aided Design Integr. Circuits Syst."}
+@STRING{IEEE_J_CAL        = "{IEEE} Comput. Archit. Lett."}
+@STRING{IEEE_J_CAPT       = "{IEEE} Trans. Compon. Packag. Technol."}
+@STRING{IEEE_J_CAPTS      = "{IEEE} Trans. Compon. Packag. Technol."}
+@STRING{IEEE_J_CAS        = "{IEEE} Trans. Circuits Syst."}
+@STRING{IEEE_J_CASI       = "{IEEE} Trans. Circuits Syst. {I}"}
+in 2004 CASI and CASII renamed part title to CASI_RP and CASII_EB, respectively.
+@STRING{IEEE_J_CASI_RP    = "{IEEE} Trans. Circuits Syst. {I}"}
+@STRING{IEEE_J_CASII      = "{IEEE} Trans. Circuits Syst. {II}"}
+@STRING{IEEE_J_CASII_EB   = "{IEEE} Trans. Circuits Syst. {II}"}
+@STRING{IEEE_J_CASVT      = "{IEEE} Trans. Circuits Syst. Video Technol."}
+disabled till definition is verified
+STRING{IEEE_J_BCTV        = "{IEEE} Trans. Broadcast Television Receivers"}
+@STRING{IEEE_J_CE         = "{IEEE} Trans. Consum. Electron."}
+@STRING{IEEE_J_CHMT       = "{IEEE} Trans. Compon., Hybrids, Manuf. Technol."}
+@STRING{IEEE_J_COM        = "{IEEE} Trans. Commun."}
+
+
+
+communications
+@STRING{IEEE_J_COML       = "{IEEE} Commun. Lett."}
+@STRING{IEEE_J_COMT       = "{IEEE} Trans. Commun. Technol."}
+@STRING{IEEE_J_CPART      = "{IEEE} Trans. Compon. Parts"}
+@STRING{IEEE_J_CPMTA      = "{IEEE} Trans. Compon., Packag., Manuf. Technol. {A}"}
+@STRING{IEEE_J_CPMTB      = "{IEEE} Trans. Compon., Packag., Manuf. Technol. {B}"}
+@STRING{IEEE_J_CPMTC      = "{IEEE} Trans. Compon., Packag., Manuf. Technol. {C}"}
+@STRING{IEEE_J_CST        = "{IEEE} Trans. Control Syst. Technol."}
+@STRING{IEEE_J_CT         = "{IEEE} Trans. Circuit Theory"}
+@STRING{IEEE_J_DEI        = "{IEEE} Trans. Dielectr. Electr. Insul."}
+
+
+
+reliability
+IEEE seems to want "Mat." here, not "Mater."
+@STRING{IEEE_J_DMR        = "{IEEE} Trans. Device Mater. Rel."}
+
+
+
+energy and power
+@STRING{IEEE_J_EC         = "{IEEE} Trans. Energy Convers."}
+disabled till definition is verified
+STRING{IEEE_J_DSC         = "{IEEE} Trans. Dependable Secure Comput."}
+@STRING{IEEE_J_ECOMP      = "{IEEE} Trans. Electron. Comput."}
+@STRING{IEEE_J_ED         = "{IEEE} Trans. Electron Devices"}
+
+
+
+physics, electrons, nanotechnology, nuclear and quantum electronics
+@STRING{IEEE_J_EDL        = "{IEEE} Electron Device Lett."}
+@STRING{IEEE_J_EDU        = "{IEEE} Trans. Educ."}
+@STRING{IEEE_J_EI         = "{IEEE} Trans. Electr. Insul."}
+@STRING{IEEE_J_EM         = "{IEEE} Trans. Eng. Manag."}
+@STRING{IEEE_J_EMC        = "{IEEE} Trans. Electromagn. Compat."}
+@STRING{IEEE_J_EPM        = "{IEEE} Trans. Electron. Packag. Manuf."}
+
+
+
+semiconductors, superconductors, electrochemical and solid state
+@STRING{IEEE_J_ESSL       = "{IEEE/ECS} Electrochem. Solid-State Lett."}
+@STRING{IEEE_J_EVC        = "{IEEE} Trans. Evol. Comput."}
+@STRING{IEEE_J_FUZZ       = "{IEEE} Trans. Fuzzy Syst."}
+
+
+
+earth, wind, fire and water
+@STRING{IEEE_J_GE         = "{IEEE} Trans. Geosci. Electron."}
+@STRING{IEEE_J_GRS        = "{IEEE} Trans. Geosci. Remote Sens."}
+@STRING{IEEE_J_GRSL       = "{IEEE} Geosci. Remote Sens. Lett."}
+@STRING{IEEE_J_HFE        = "{IEEE} Trans. Hum. Factors Electron."}
+@STRING{IEEE_J_IA         = "{IEEE} Trans. Ind. Appl."}
+@STRING{IEEE_J_IE         = "{IEEE} Trans. Ind. Electron."}
+@STRING{IEEE_J_IECI       = "{IEEE} Trans. Ind. Electron. Contr. Instrum."}
+@STRING{IEEE_J_IFS        = "{IEEE} Trans. Inf. Forensics Security"}
+@STRING{IEEE_J_IGA        = "{IEEE} Trans. Ind. Gen. Appl."}
+@STRING{IEEE_J_IINF       = "{IEEE} Trans. Ind. Informat."}
+
+
+
+instrumentation and measurement
+@STRING{IEEE_J_IM         = "{IEEE} Trans. Instrum. Meas."}
+@STRING{IEEE_J_IP         = "{IEEE} Trans. Image Process."}
+
+
+
+coding, data, information, knowledge
+@STRING{IEEE_J_IT         = "{IEEE} Trans. Inf. Theory"}
+disabled till definition is verified
+STRING{IEEE_J_CBB         = "{IEEE/ACM} Trans. Comput. Biology Bioinformatics"}
+@STRING{IEEE_J_ITBM       = "{IEEE} Trans. Inf. Technol. Biomed."}
+
+
+
+autos, transportation and vehicles (non-aerospace)
+@STRING{IEEE_J_ITS        = "{IEEE} Trans. Intell. Transp. Syst."}
+
+
+
+computer graphics, imaging, and multimedia
+@STRING{IEEE_J_JDT        = "{IEEE/OSA} J. Display Technol."}
+
+
+
+insulation and materials
+@STRING{IEEE_J_JEM        = "{IEEE/TMS} J. Electron. Mater."}
+@STRING{IEEE_J_JLT        = "J. Lightw. Technol."}
+@STRING{IEEE_J_JQE        = "{IEEE} J. Quantum Electron."}
+@STRING{IEEE_J_JRA        = "{IEEE} J. Robot. Autom."}
+@STRING{IEEE_J_JSAC       = "{IEEE} J. Sel. Areas Commun."}
+@STRING{IEEE_J_JSSC       = "{IEEE} J. Solid-State Circuits"}
+@STRING{IEEE_J_JSTQE      = "{IEEE} J. Sel. Topics Quantum Electron."}
+@STRING{IEEE_J_KDE        = "{IEEE} Trans. Knowl. Data Eng."}
+@STRING{IEEE_J_MAG        = "{IEEE} Trans. Magn."}
+@STRING{IEEE_J_MC         = "{IEEE} Trans. Mobile Comput."}
+@STRING{IEEE_J_ME         = "{IEEE} Trans. Med. Electron."}
+
+
+
+mechanical
+@STRING{IEEE_J_MECH       = "{IEEE/ASME} Trans. Mechatronics"}
+@STRING{IEEE_J_MEMS       = "J. Microelectromech. Syst."}
+@STRING{IEEE_J_MFT        = "{IEEE} Trans. Manuf. Technol."}
+@STRING{IEEE_J_MGWL       = "{IEEE} Microw. Guided Wave Lett."}
+@STRING{IEEE_J_MI         = "{IEEE} Trans. Med. Imag."}
+@STRING{IEEE_J_MIL        = "{IEEE} Trans. Mil. Electron."}
+@STRING{IEEE_J_MM         = "{IEEE} Trans. Multimedia"}
+@STRING{IEEE_J_MMS        = "{IEEE} Trans. Man-Mach. Syst."}
+@STRING{IEEE_J_MTT        = "{IEEE} Trans. Microw. Theory Tech."}
+IEEE seems to want "Compon." here, not "Comp."
+@STRING{IEEE_J_MWCL       = "{IEEE} Microw. Wireless Compon. Lett."}
+@STRING{IEEE_J_NANO       = "{IEEE} Trans. Nanotechnol."}
+@STRING{IEEE_J_NB         = "{IEEE} Trans. Nanobiosci."}
+@STRING{IEEE_J_NET        = "{IEEE/ACM} Trans. Netw."}
+@STRING{IEEE_J_NN         = "{IEEE} Trans. Neural Netw."}
+@STRING{IEEE_J_NS         = "{IEEE} Trans. Nucl. Sci."}
+@STRING{IEEE_J_NSRE       = "{IEEE} Trans. Neural Syst. Rehabil. Eng."}
+@STRING{IEEE_J_OE         = "{IEEE} J. Ocean. Eng."}
+@STRING{IEEE_J_PAMI       = "{IEEE} Trans. Pattern Anal. Mach. Intell."}
+disabled till definition is verified
+STRING{IEEE_J_EWS         = "{IEEE} Trans. Eng. Writing Speech"}
+@STRING{IEEE_J_PC         = "{IEEE} Trans. Prof. Commun."}
+@STRING{IEEE_J_PDS        = "{IEEE} Trans. Parallel Distrib. Syst."}
+@STRING{IEEE_J_PEL        = "{IEEE} Power Electron. Lett."}
+@STRING{IEEE_J_PHP        = "{IEEE} Trans. Parts, Hybrids, Packag."}
+@STRING{IEEE_J_PMP        = "{IEEE} Trans. Parts, Mater., Packag."}
+
+
+
+education, engineering, history, IEEE, professional
+disabled till definition is verified
+STRING{IEEE_J_CJECE       = "Canadian J. Elect. Comput. Eng."}
+@STRING{IEEE_J_PROC       = "Proc. {IEEE}"}
+@STRING{IEEE_J_PS         = "{IEEE} Trans. Plasma Sci."}
+@STRING{IEEE_J_PSE        = "{IEEE} J. Product Safety Eng."}
+
+
+
+ optics, lightwave and photonics
+@STRING{IEEE_J_PTL        = "{IEEE} Photon. Technol. Lett."}
+@STRING{IEEE_J_PWRAS      = "{IEEE} Trans. Power App. Syst."}
+@STRING{IEEE_J_PWRD       = "{IEEE} Trans. Power Del."}
+@STRING{IEEE_J_PWRE       = "{IEEE} Trans. Power Electron."}
+@STRING{IEEE_J_PWRS       = "{IEEE} Trans. Power Syst."}
+@STRING{IEEE_J_R          = "{IEEE} Trans. Rel."}
+in 1989 JRA became RA
+in August 2004, RA split into ASE and RO
+@STRING{IEEE_J_RA         = "{IEEE} Trans. Robot. Autom."}
+@STRING{IEEE_J_RE         = "{IEEE} Trans. Rehabil. Eng."}
+@STRING{IEEE_J_RFI        = "{IEEE} Trans. Radio Freq. Interference"}
+@STRING{IEEE_J_RO         = "{IEEE} Trans. Robot."}
+@STRING{IEEE_J_SAP        = "{IEEE} Trans. Speech Audio Process."}
+@STRING{IEEE_J_SE         = "{IEEE} Trans. Softw. Eng."}
+
+
+
+sensors
+@STRING{IEEE_J_SENSOR     = "{IEEE} Sensors J."}
+@STRING{IEEE_J_SM         = "{IEEE} Trans. Semicond. Manuf."}
+@STRING{IEEE_J_SMC        = "{IEEE} Trans. Syst., Man, Cybern."}
+@STRING{IEEE_J_SMCA       = "{IEEE} Trans. Syst., Man, Cybern. {A}"}
+@STRING{IEEE_J_SMCB       = "{IEEE} Trans. Syst., Man, Cybern. {B}"}
+@STRING{IEEE_J_SMCC       = "{IEEE} Trans. Syst., Man, Cybern. {C}"}
+@STRING{IEEE_J_SP         = "{IEEE} Trans. Signal Process."}
+
+
+
+circuits, signals, systems, audio and controls
+@STRING{IEEE_J_SPL        = "{IEEE} Signal Process. Lett."}
+@STRING{IEEE_J_SSC        = "{IEEE} Trans. Syst. Sci. Cybern."}
+@STRING{IEEE_J_SU         = "{IEEE} Trans. Sonics Ultrason."}
+
+
+
+CAD
+@STRING{IEEE_J_TCAD       = "{IEEE} J. Technol. Comput. Aided Design"}
+@STRING{IEEE_J_TJMJ       = "{IEEE} Transl. J. Magn. Jpn."}
+@STRING{IEEE_J_UE         = "{IEEE} Trans. Ultrason. Eng."}
+@STRING{IEEE_J_UFFC       = "{IEEE} Trans. Ultrason., Ferroelectr., Freq. Control"}
+@STRING{IEEE_J_VC         = "{IEEE} Trans. Veh. Commun."}
+@STRING{IEEE_J_VCG        = "{IEEE} Trans. Vis. Comput. Graphics"}
+
+
+
+VLSI
+@STRING{IEEE_J_VLSI       = "{IEEE} Trans. {VLSI} Syst."}
+@STRING{IEEE_J_VT         = "{IEEE} Trans. Veh. Technol."}
+@STRING{IEEE_J_WCOM       = "{IEEE} Trans. Wireless Commun."}
+
+
+
+
+
+
+IEEE Magazines 
+
+
+
+@STRING{IEEE_M_AES        = "{IEEE} Aerosp. Electron. Syst. Mag."}
+@STRING{IEEE_M_AP         = "{IEEE} Antennas Propag. Mag."}
+@STRING{IEEE_M_ASSP       = "{IEEE} {ASSP} Mag."}
+@STRING{IEEE_M_C          = "{IEEE} Computer"}
+@STRING{IEEE_M_CAP        = "{IEEE} Comput. Appl. Power"}
+@STRING{IEEE_M_CAS        = "{IEEE} Circuits Syst. Mag."}
+@STRING{IEEE_M_CD         = "{IEEE} Circuits Devices Mag."}
+@STRING{IEEE_M_CGA        = "{IEEE} Comput. Graph. Appl."}
+@STRING{IEEE_M_CIM        = "{IEEE} Comput. Intell. Mag."}
+@STRING{IEEE_M_COM        = "{IEEE} Commun. Mag."}
+@STRING{IEEE_M_COMSOC     = "{IEEE} Commun. Soc. Mag."}
+@STRING{IEEE_M_CONC       = "{IEEE} Concurrency"}
+@STRING{IEEE_M_CS         = "{IEEE} Control Syst. Mag."}
+CSEM changed to CSE in 1999
+@STRING{IEEE_M_CSE        = "{IEEE} Comput. Sci. Eng."}
+@STRING{IEEE_M_CSEM       = "{IEEE} Comput. Sci. Eng. Mag."}
+@STRING{IEEE_M_DTC        = "{IEEE} Des. Test. Comput."}
+@STRING{IEEE_M_EI         = "{IEEE} Electr. Insul. Mag."}
+@STRING{IEEE_M_EMB        = "{IEEE} Eng. Med. Biol. Mag."}
+@STRING{IEEE_M_EMR        = "{IEEE} Eng. Manag. Rev."}
+@STRING{IEEE_M_ETR        = "{IEEE} ElectroTechnol. Rev."}
+@STRING{IEEE_M_EXP        = "{IEEE} Expert"}
+@STRING{IEEE_M_HIST       = "{IEEE} Ann. Hist. Comput."}
+@STRING{IEEE_M_IA         = "{IEEE} Ind. Appl. Mag."}
+@STRING{IEEE_M_IC         = "{IEEE} Internet Comput."}
+@STRING{IEEE_M_IM         = "{IEEE} Instrum. Meas. Mag."}
+@STRING{IEEE_M_IS         = "{IEEE} Intell. Syst."}
+@STRING{IEEE_M_ITP        = "{IEEE} {IT} Prof."}
+@STRING{IEEE_M_MICRO      = "{IEEE} Micro"}
+@STRING{IEEE_M_MM         = "{IEEE} Multimedia"}
+@STRING{IEEE_M_MW         = "{IEEE} Microw. Mag."}
+@STRING{IEEE_M_NET        = "{IEEE} Netw."}
+IEEE's editorial manual lists "Pers. Commun.", 
+but "Personal Commun. Mag." seems to be what is used in the journals
+@STRING{IEEE_M_PCOM       = "{IEEE} Personal Commun. Mag."}
+CAP and PER merged to form PE in 2003
+@STRING{IEEE_M_PE         = "{IEEE} Power Energy Mag."}
+@STRING{IEEE_M_PER        = "{IEEE} Power Eng. Rev."}
+@STRING{IEEE_M_POT        = "{IEEE} Potentials"}
+@STRING{IEEE_M_PVC        = "{IEEE} Pervasive Comput."}
+@STRING{IEEE_M_RA         = "{IEEE} Robot. Autom. Mag."}
+@STRING{IEEE_M_S          = "{IEEE} Softw."}
+@STRING{IEEE_M_SAP        = "{IEEE} Security Privacy"}
+@STRING{IEEE_M_SP         = "{IEEE} Signal Process. Mag."}
+@STRING{IEEE_M_SPECT      = "{IEEE} Spectr."}
+@STRING{IEEE_M_TODAY      = "Today's Engineer"}
+@STRING{IEEE_M_TS         = "{IEEE} Technol. Soc. Mag."}
+@STRING{IEEE_M_VT         = "{IEEE} Veh. Technol. Mag."}
+@STRING{IEEE_M_WC         = "{IEEE} Wireless Commun. Mag."}
+
+
+
+
+
+
+IEEE Online Publications 
+
+
+
+@STRING{IEEE_O_CSTO        = "{IEEE} Commun. Surveys Tuts."}
+
+@InProceedings{GEB+2017,
+  author        = {Gatys, Leon A. and Ecker, Alexander S. and Bethge, Matthias and Hertzmann, Aaron and Shechtman, Eli},
+  title         = {Controlling Perceptual Factors in Neural Style Transfer},
+  booktitle     = {{IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  year          = {2017},
+  abstract      = {Neural Style Transfer has shown very exciting results enabling new forms of image manipulation. Here we extend the existing method to introduce control over spatial location, colour information and across spatial scale. We demonstrate how this enhances the method by allowing high-resolution controlled stylisation and helps to alleviate common failure cases such as applying ground textures to sky regions. Furthermore, by decomposing style into these perceptual factors we enable the combination of style information from multiple sources to generate new, perceptually appealing styles from existing ones. We also describe how these methods can be used to more efficiently produce large size, high-quality stylisation. Finally we show how the introduced control measures can be applied in recent methods for Fast Neural Style Transfer.},
+  archiveprefix = {arXiv},
+  doi           = {10.1109/CVPR.2017.397},
+  eprint        = {1611.07865},
+}
+
+@InProceedings{GEB2015,
+  author    = {Gatys, Leon A. and Ecker, Alexander S. and Bethge, Matthias},
+  title     = {Texture Synthesis Using Convolutional Neural Networks},
+  booktitle = {Advances in Neural Information Processing Systems ({NIPS})},
+  year      = {2015},
+  abstract  = {Here we introduce a new model of natural textures based on the feature spaces of convolutional neural networks optimised for object recognition. Samples from the model are of high perceptual quality demonstrating the generative power of neural networks trained in a purely discriminative fashion. Within the model, textures are represented by the correlations between feature maps in several layers of the network. We show that across layers the texture representations increasingly capture the statistical properties of natural images while making object information more and more explicit. The model provides a new tool to generate stimuli for neuroscience and might offer insights into the deep representations learned by convolutional neural networks.},
+  url       = {http://papers.nips.cc/paper/5633-texture-synthesis-using-convolutional-neural-networks.pdf},
+}
+
+@InProceedings{GEB2016,
+  author        = {Gatys, Leon A. and Ecker, Alexander. S. and Bethge, Matthias},
+  title         = {Image Style Transfer Using Convolutional Neural Networks},
+  booktitle     = {{IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  year          = {2016},
+  abstract      = {Rendering the semantic content of an image in different styles is a difficult image processing task. Arguably, a major limiting factor for previous approaches has been the lack of image representations that explicitly represent semantic information and, thus, allow to separate image content from style. Here we use image representations derived from Convolutional Neural Networks optimised for object recognition, which make high level image information explicit. We introduce A Neural Algorithm of Artistic Style that can separate and recombine the image content and style of natural images. The algorithm allows us to produce new images of high perceptual quality that combine the content of an arbitrary photograph with the appearance of numerous wellknown artworks. Our results provide new insights into the deep image representations learned by Convolutional Neural Networks and demonstrate their potential for high level image synthesis and manipulation.},
+  archiveprefix = {arXiv},
+  doi           = {10.1109/CVPR.2016.265},
+  eprint        = {1508.06576},
+}
+
+@InProceedings{JAL2016,
+  author        = {Johnson, Justin and Alahi, Alexandre and Li, Fei-Fei},
+  title         = {Perceptual Losses for Real-Time Style Transfer and Super-Resolution},
+  booktitle     = {European Conference on Computer Vision ({ECCV})},
+  year          = {2016},
+  archiveprefix = {arXiv},
+  doi           = {10.1007/978-3-319-46475-6_43},
+  eprint        = {1603.08155},
+}
+
+@Article{JYF+2019,
+  author        = {Jing, Yongcheng and Yang, Yezhou and Feng, Zunlei and Ye, Jingwen and Yu, Yizhou and Song, Mingli},
+  title         = {Neural Style Transfer: A Review},
+  journal       = {{IEEE} Transactions on Visualization and Computer Graphics},
+  year          = {2019},
+  abstract      = {The seminal work of Gatys et al. demonstrated the power of Convolutional Neural Networks (CNNs) in creating artistic imagery by separating and recombining image content and style. This process of using CNNs to render a content image in different styles is referred to as Neural Style Transfer (NST). Since then, NST has become a trending topic both in academic literature and industrial applications. It is receiving increasing attention and a variety of approaches are proposed to either improve or extend the original NST algorithm. In this paper, we aim to provide a comprehensive overview of the current progress towards NST. We first propose a taxonomy of current algorithms in the field of NST. Then, we present several evaluation methods and compare different NST algorithms both qualitatively and quantitatively. The review concludes with a discussion of various applications of NST and open problems for future research. A list of papers discussed in this review, corresponding codes, pre-trained models and more comparison results are publicly available at: https://osf.io/f8tu4/.},
+  archiveprefix = {arXiv},
+  doi           = {10.1109/TVCG.2019.2921336},
+  eprint        = {1705.04058},
+}
+
+@InProceedings{LW2016,
+  author        = {Li, Chuan and Wand, Michael},
+  title         = {Combining Markov Random Fields and Convolutional Neural Networks for Image Synthesis},
+  booktitle     = {{IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  year          = {2016},
+  archiveprefix = {arXiv},
+  doi           = {10.1109/CVPR.2016.272},
+  eprint        = {1601.04589},
+}
+
+@InProceedings{PGM+2019,
+  author    = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and Kopf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+  title     = {{PyTorch}: An Imperative Style, High-Performance Deep Learning Library},
+  booktitle = {Advances in Neural Information Processing Systems ({NIPS})},
+  year      = {2019},
+  url       = {http://papers.neurips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library.pdf},
+}
+
+@InProceedings{SKLO2018,
+  author        = {Sanakoyeu, Artsiom and Kotovenko, Dmytro and Lang, Sabine and Ommer, Bjorn},
+  title         = {A Style-Aware Content Loss for Real-Time {HD} Style Transfer},
+  booktitle     = {Proceedings of the European Conference on Computer Vision ({ECCV})},
+  year          = {2018},
+  archiveprefix = {arXiv},
+  doi           = {10.1007/978-3-030-01237-3_43},
+  eprint        = {1807.10201},
+}
+
+@InProceedings{ULVL2016,
+  author        = {Ulyanov, Dmitry and Lebedev, Vadim and Vedaldi, Andrea and Lempitsky, Viktor S.},
+  title         = {Texture Networks: Feed-forward Synthesis of Textures and Stylized Images},
+  booktitle     = {International Conference on Machine Learning ({ICML})},
+  year          = {2016},
+  archiveprefix = {arXiv},
+  eprint        = {1603.03417},
+  url           = {http://proceedings.mlr.press/v48/ulyanov16.pdf},
+}
+
+@InProceedings{UVL2017,
+  author        = {Ulyanov, Dmitry and Vedaldi, Andrea and Lempitsky, Viktor S.},
+  title         = {Improved Texture Networks: Maximizing Quality and Diversity in Feed-Forward Stylization and Texture Synthesis},
+  booktitle     = {IEEE Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  year          = {2017},
+  archiveprefix = {arXiv},
+  doi           = {10.1109/CVPR.2017.437},
+  eprint        = {1701.02096},
+}
+
+@InProceedings{ZF2014,
+  author        = {Zeiler, Matthew D. and Fergus, Rob},
+  title         = {Visualizing and Understanding Convolutional Networks},
+  booktitle     = {European Conference on Computer Vision ({ECCV})},
+  year          = {2014},
+  archiveprefix = {arXiv},
+  doi           = {10.1007/978-3-319-10590-1_53},
+  eprint        = {1311.2901},
+}
+
+@InProceedings{ML2019,
+  author    = {Meier, Philip and Lohweg, Volker},
+  title     = {Content Representation for Neural Style Transfer Algorithms based on Structural Similarity},
+  booktitle = {Proceedings of the Workshop Computational Intelligence},
+  year      = {2019},
+}
+
+@Article{2018,
+  title        = {Is artificial intelligence set to become art’s next medium?},
+  journal      = {Christie's Inc.},
+  year         = {2018},
+  howpublished = {Online, accessed 08.03.2021},
+  url          = {https://www.christies.com/about-us/contact/terms-and-conditions-for-website-use},
+}
+
+@Article{ML2020,
+  author  = {Meier, Philip and Lohweg, Volker},
+  title   = {pystiche: A Framework for Neural Style Transfer},
+  journal = {Journal of Open Source Software {JOSS}},
+  year    = {2020},
+  doi     = {10.21105/joss.02761},
+}
+
+@Article{BPRS2018,
+  author    = {Baydin, Atilim Gunes and Pearlmutter, Barak A and Radul, Alexey Andreyevich and Siskind, Jeffrey Mark},
+  title     = {Automatic differentiation in machine learning: a survey},
+  journal   = {Journal of machine learning research},
+  year      = {2018},
+  volume    = {18},
+  publisher = {Journal of Machine Learning Research},
+}
+
+@PhdThesis{Zho2006,
+  author = {Zhou, Dongxiao},
+  title  = {Texture analysis and synthesis using a generic Markov-Gibbs image model},
+  school = {University of Auckland},
+  year   = {2006},
+  url    = {https://www.cs.auckland.ac.nz/~georgy/research/texture/thesis-html/thesis.html},
+}
+
+@Article{CDH+2018,
+  author   = {Camerer, Colin F and Dreber, Anna and Holzmeister, Felix and Ho, Teck-Hua and Huber, Jürgen and Johannesson, Magnus and Kirchler, Michael and Nave, Gideon and Nosek, Brian A and Pfeiffer, Thomas and Altmejd, Adam and Buttrick, Nick and Chan, Taizan and Chen, Yiling and Forsell, Eskil and Gampa, Anup and Heikensten, Emma and Hummer, Lily and Imai, Taisuke and Isaksson, Siri and Manfredi, Dylan and Rose, Julia and Wagenmakers, Eric-Jan and Wu, Hang},
+  title    = {{Evaluating the replicability of social science experiments in Nature and Science between 2010 and 2015}},
+  journal  = {Nature Human Behaviour},
+  year     = {2018},
+  volume   = {2},
+  number   = {9},
+  pages    = {637--644},
+  abstract = {{Being able to replicate scientific findings is crucial for scientific progress1–15. We replicate 21 systematically selected experimental studies in the social sciences published in Nature and Science between 2010 and 201516–36. The replications follow analysis plans reviewed by the original authors and pre-registered prior to the replications. The replications are high powered, with sample sizes on average about five times higher than in the original studies. We find a significant effect in the same direction as the original study for 13 (62\%) studies, and the effect size of the replications is on average about 50\% of the original effect size. Replicability varies between 12 (57\%) and 14 (67\%) studies for complementary replicability indicators. Consistent with these results, the estimated true-positive rate is 67\% in a Bayesian analysis. The relative effect size of true positives is estimated to be 71\%, suggesting that both false positives and inflated effect sizes of true positives contribute to imperfect reproducibility. Furthermore, we find that peer beliefs of replicability are strongly related to replicability, suggesting that the research community could predict which results would replicate and that failures to replicate were not the result of chance alone. Camerer et al. carried out replications of 21 Science and Nature social science experiments, successfully replicating 13 out of 21 (62\%). Effect sizes of replications were about half of the size of the originals.}},
+  doi      = {10.1038/s41562-018-0399-z},
+}
+
+@Article{AAA+2015,
+  author  = {Aarts, Alexander and Anderson, Joanna and Anderson, Christopher and Attridge, Peter and Attwood, Angela and Axt, Jordan and Babel, Molly and Bahník, Štěpán and Baranski, Erica and Barnett-Cowan, Michael and Bartmess, Elizabeth and Beer, Jennifer and Bell, Raoul and Bentley, Heather and Beyan, Leah and Binion, Grace and Borsboom, Denny and Bosch, Annick and Bosco, Frank and Penuliar, Mike},
+  title   = {Estimating the reproducibility of psychological science},
+  journal = {Science},
+  year    = {2015},
+  volume  = {349},
+  month   = {08},
+  doi     = {10.1126/science.aac4716},
+}
+
+@Article{Raf2020,
+  author       = {Raff, Edward},
+  title        = {Quantifying Independently Reproducible Machine Learning},
+  journal      = {The Gradient},
+  year         = {2020},
+  howpublished = {Online, accessed 20.04.2021},
+  url          = {https://thegradient.pub/independently-reproducible-machine-learning/},
+}
+
+@Article{Hut2018,
+  author  = {Hutson, Matthew},
+  title   = {Artificial intelligence faces reproducibility crisis},
+  journal = {Science (New York, N.Y.)},
+  year    = {2018},
+  doi     = {10.1126/science.359.6377.725},
+}
+
+@Article{Bak2016,
+  author       = {Baker, Monya},
+  title        = {1,500 scientists lift the lid on reproducibility},
+  journal      = {Springer Nature},
+  year         = {2016},
+  howpublished = {Online, accessed 20.04.2021},
+  url          = {https://www.nature.com/news/1-500-scientists-lift-the-lid-on-reproducibility-1.19970},
+}
+
+@Article{PVS+2020,
+  author  = {Pineau, Joelle and Vincent-Lamarre, Philippe and Sinha, Koustuv and Larivi{\`e}re, Vincent and Beygelzimer, Alina and d'Alch{\'e}-Buc, Florence and Fox, Emily and Larochelle, Hugo},
+  title   = {Improving reproducibility in machine learning research (a report from the neurips 2019 reproducibility program)},
+  journal = {arXiv preprint arXiv:2003.12206},
+  year    = {2020},
+}
+
+@Article{Ben2020,
+  author       = {Bengio, Yoshua},
+  title        = {Time to rethink the publication process in machine learning},
+  journal      = {Yoshua Bengio’s blog},
+  year         = {2020},
+  howpublished = {Online, accessed 26.04.2021},
+  url          = {https://yoshuabengio.org/2020/02/26/time-to-rethink-the-publication-process-in-machine-learning/},
+}
+
+@Article{Cha2019,
+  author       = {Charrez, Diego},
+  title        = {NeurIPS 2019 Stats},
+  journal      = {Medium},
+  year         = {2019},
+  howpublished = {Online, accessed 26.04.2021},
+  url          = {https://medium.com/@dcharrezt/neurips-2019-stats-c91346d31c8f},
+}
+
+@Article{CKK+2015,
+  author  = {Cacioppo, John T and Kaplan, Robert M and Krosnick, Jon A and Olds, James L and Dean, Heather},
+  title   = {Social, behavioral, and economic sciences perspectives on robust and reliable science},
+  journal = {Report of the Subcommittee on Replicability in Science Advisory Committee to the National Science Foundation Directorate for Social, Behavioral, and Economic Sciences},
+  year    = {2015},
+}
+
+@Misc{CheckList2020,
+  title        = {The Machine Learning Reproducibility Checklist (v2.0, Apr.7 2020)},
+  howpublished = {Online, accessed 26.04.2021},
+  url          = {https://www.cs.mcgill.ca/~jpineau/ReproducibilityChecklist.pdf},
+}
+
+@Article{Pet2018,
+  author       = {PeteWarden,},
+  title        = {The Machine Learning Reproducibility Crisis},
+  journal      = {Pete Warden's blog},
+  year         = {2018},
+  howpublished = {Online, accessed 26.04.2021},
+  url          = {https://petewarden.com/2018/03/19/the-machine-learning-reproducibility-crisis/},
+}
+
+@InProceedings{SZ2015,
+  author    = {Karen Simonyan and Andrew Zisserman},
+  title     = {Very Deep Convolutional Networks for Large-Scale Image Recognition},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2015},
+}
+
+@InProceedings{LMB+2014,
+  author       = {Lin, Tsung-Yi and Maire, Michael and Belongie, Serge and Hays, James and Perona, Pietro and Ramanan, Deva and Doll{\'a}r, Piotr and Zitnick, C Lawrence},
+  title        = {Microsoft coco: Common objects in context},
+  booktitle    = {European conference on computer vision},
+  year         = {2014},
+  pages        = {740--755},
+  organization = {Springer},
+}
+
+@Article{RDS+2015,
+  author  = {Olga Russakovsky and Jia Deng and Hao Su and Jonathan Krause and Sanjeev Satheesh and Sean Ma and Zhiheng Huang and Andrej Karpathy and Aditya Khosla and Michael Bernstein and Alexander C. Berg and Li Fei-Fei},
+  title   = {{ImageNet Large Scale Visual Recognition Challenge}},
+  journal = {International Journal of Computer Vision (IJCV)},
+  year    = {2015},
+  volume  = {115},
+  number  = {3},
+  pages   = {211-252},
+  doi     = {10.1007/s11263-015-0816-y},
+}
+
+@Article{ZLX+2014,
+  author    = {Zhou, Bolei and Lapedriza, Agata and Xiao, Jianxiong and Torralba, Antonio and Oliva, Aude},
+  title     = {Learning deep features for scene recognition using places database},
+  year      = {2014},
+  publisher = {Neural Information Processing Systems Foundation},
+}
+
+@InProceedings{He2016,
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {Proceedings of the IEEE conference on computer vision and pattern recognition},
+  title     = {Deep residual learning for image recognition},
+  year      = {2016},
+}
+
+@InProceedings{EL1999,
+  author    = {Efros, Alexei A. and Leung, Thomas K.},
+  title     = {Texture synthesis by non-parametric sampling},
+  booktitle = {Proceedings of the 7\textsuperscript{th} IEEE International Conference on Computer Vision (ICCV)},
+  year      = {1999},
+  abstract  = {A non-parametric method for texture synthesis is proposed. The texture synthesis process grows a new image outward from an initial seed, one pixel at a time. A Markov random field model is assumed, and the conditional distribution of a pixel given all its neighbors synthesized so far is estimated by querying the sample image and finding all similar neighborhoods. The degree of randomness is controlled by a single perceptually intuitive parameter. The method aims at preserving as much local structure as possible and produces good results for a wide variety of synthetic and real-world textures.},
+  doi       = {10.1109/ICCV.1999.790383},
+  timestamp = {2019-11-11},
+}
+
+@Article{PS2000,
+  author    = {Portilla, Javier and Simoncelli, Eero P.},
+  title     = {A Parametric Texture Model Based on Joint Statistics of Complex Wavelet Coefficients},
+  journal   = {International Journal of Computer Vision (IJCV)},
+  year      = {2000},
+  volume    = {40},
+  abstract  = {We present a universal statistical model for texture images in the context of an overcomplete complex wavelet transform. The model is parameterized by a set of statistics computed on pairs of coefficients corresponding to basis functions at adjacent spatial locations, orientations, and scales. We develop an efficient algorithm for synthesizing random images subject to these constraints, by iteratively projecting onto the set of images satisfying each constraint, and we use this to test the perceptual validity of the model. In particular, we demonstrate the necessity of subgroups of the parameter set by showing examples of texture synthesis that fail when those parameters are removed from the set. We also demonstrate the power of our model by successfully synthesizing examples drawn from a diverse collection of artificial and natural textures.},
+  day       = {01},
+  doi       = {10.1023/A:1026553619983},
+  timestamp = {2019-11-12},
+}
+
+@Book{Glas2021,
+  author    = {Glassner, A.},
+  publisher = {No Starch Press},
+  title     = {Deep Learning: A Visual Approach},
+  year      = {2021},
+  isbn      = {9781718500730},
+}
+
+@Book{Alp2020,
+  author    = {Alpaydin, E.},
+  publisher = {MIT Press},
+  title     = {Introduction to Machine Learning, fourth edition},
+  year      = {2020},
+  isbn      = {9780262043793},
+  series    = {Adaptive Computation and Machine Learning series},
+  lccn      = {2019028373},
+  url       = {https://books.google.de/books?id=tZnSDwAAQBAJ},
+}
+
+@Article{Ioa2021,
+  author       = {Ioannou, Lefteris},
+  journal      = {Medium},
+  title        = {Neural Style Transfer: Past, present, future},
+  year         = {2021},
+  howpublished = {Online, accessed 11.02.2022},
+  url          = {https://jrrlefteris6.medium.com/neural-style-transfer-past-present-future-b951977f0dee},
+}
+
+@Article{Kel2018,
+  author       = {Kelly, Christopher},
+  journal      = {Medium},
+  title        = {Real-Time Style Transfer for iOS— Transform your photos and videos into masterpieces},
+  year         = {2018},
+  howpublished = {Online, accessed 11.02.2022},
+  url          = {https://medium.com/@ghop02/real-time-style-transfer-for-ios-transform-your-photos-and-videos-into-masterpieces-f04111fcd2ff},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}
+
+disabled till definition is verified
+STRING{IEEE_O_DSO          = "{IEEE} Distrib. Syst. Online"}
+
+
+
+
+
+--
+EOF

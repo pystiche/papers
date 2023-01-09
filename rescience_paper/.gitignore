@@ -1,0 +1,12 @@
+# ignore everything, but the stuff below
+
+/*
+
+!/graphics
+!/sections
+!/bibliography.bib
+!/content.tex
+!/download.py
+!/metadata.yaml
+!/preamble.tex
+!/README.md

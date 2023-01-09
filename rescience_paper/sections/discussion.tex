@@ -1,0 +1,35 @@
+\newpage
+\section{Summary}
+In this replication study, we replicated six well-known \gls{NST} papers. In all papers, the approaches of the original papers were clearly described, but they were not always sufficient to repeat the approach and produce stylised images. The reason for this are the differences between the approach described in \paper{} and the approach implemented in \implementation{} described in \secref{sec:replicability}. \tabref{tab:replication_results} shows an overview of replications that were successful, unsuccessful, and probably successful by other hyperparameters.
+\begin{table*}[h]
+	\caption{Overview of replications that have been successfully replicated \cmark{}, unsuccessfully replicated \xmark{} and partially successfully replicated \tcmark{}. We suspect that the replications marked with \tcmark{} may be successful by other hyperparameters.}
+	\label{tab:replication_results}
+	\centering
+	\small
+	\begin{tabular}{c|c|c}
+		\hline
+		\bfseries Replication & \bfseries \paper{}& \bfseries \implementation{}\\
+		\hline\hline
+		\textsc{Gatys}, \textsc{Ecker}, and \textsc{Bethge} \cite{GEB2016} & \xmark{} & \tcmark{}\\
+		\textsc{Li} and \textsc{Wand} \cite{LW2016} & \xmark{}  & \tcmark{}\\
+		\etal{Gatys} \cite{GEB+2017}  & \cmark{} & \cmark{}\\
+		\etal{Johnson} \cite{JAL2016} & \xmark{}  & \cmark{} \\
+		\etal{Ulyanov} \cite{ULVL2016} & \xmark{}  & \tcmark{} \\
+		\etal{Ulyanov} \cite{UVL2017} & \xmark{}  & \xmark{}  \\
+		\hline
+	\end{tabular}
+\end{table*}
+
+We were able to replicate only one of the six papers successfully with the information from \paper{}. The successful replications also showed small changes compared to the results with  \implementation{}. This was because the changes had a minor impact on the optimisation process and additional factors were of a magnitude that hardly changed the style transfer significantly. In the other five replications, the deviations from \implementation{} resulted in either no stylisation of the images or unusable images. The reason for this is that the given information in \paper{} caused the training to fail or that the additional or missing factors were of an order of magnitude that significantly altered the weight between content and style.
+
+The replication of \implementation{} were more successful. We were able to achieve good stylised results for almost all replications. Overall, we were able to replicate five of the six papers with comparable results with \implementation{}. In the other cases, the results differed from the original results. These differences could not only be explained by a random initialisation of the models or the starting point. As it turned out, this was mainly due to the wrong hyperparameter. By communicating with the authors, we were able to improve the results or identify reasons such as a random starting point in the case of the replication results in \secref{sec:Gatys1results}. However, in many cases the hyperparameters used at that time could no longer be traced, which is why some of our results differ from those published by the original authors.
+
+The implementation of the replication was easy to implement due to the comprehensible and traceable descriptions of the authors. With the help of the preliminary work with the \texttt{pystiche} library it was thus possible to replicate the approaches in \texttt{pyTorch}, since the respective components are integrated for the individual approaches and only had to be assembled for the replication. This has reduced the effort to the essential points that cannot be taken over by \texttt{pystiche}, such as the architecture of the transformer, the loading of the required data, as well as the specific settings and hyperparameters. In addition, due to the differences, individual components had to be adapted, making the implementation more complex. This required that individual components from the library be modified to replicate the approaches as accurately as possible. This reusable code paves the way for future investigations of \gls{NST}. It gives researchers the ability to compare their approaches with others more easily. Finally, we hope that the code provided by the library \texttt{pystiche} will serve as a basis for new  \gls{NST} approaches and the results of this replication study are used to compare the approaches.
+
+
+
+
+
+
+
+
